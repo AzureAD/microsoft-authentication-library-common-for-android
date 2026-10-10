@@ -346,12 +346,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
 
-                        // Dynamically toggle multiple-windows support so that target="_blank"
-                        // interception is active ONLY on the TLR start page. On all other
-                        // pages the WebView behaves exactly as before.
+                        // Enable target="_blank" interception for all pages when flighted.
                         if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                                 .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
-                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
+                            mWebView.getSettings().setSupportMultipleWindows(true);
                         }
                     }
                 },
@@ -394,6 +392,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Set up the web view configurations.
+     * Popup window creation is logged; navigation telemetry starts only when a URL is intercepted.
      *
      * @param view          View
      * @param webViewClient AzureActiveDirectoryWebViewClient
@@ -479,37 +478,36 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @Override
             public boolean onCreateWindow(final WebView view, boolean isDialog,
                                           boolean isUserGesture, final Message resultMsg) {
-                if (resultMsg.obj == null) {
-                    Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
-                    return false;
-                }
-
-                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
-                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
-                final Span span = OTelUtility.createSpanFromParent(
-                        SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                final FragmentActivity host = getActivity();
+                final SpanContext parentSpanContext = host instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) host).getSpanContext() : null;
                 boolean windowHandled = false;
-                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                try {
+                    if (host == null) {
+                        Logger.error(methodTag, "onCreateWindow: authorization host is unavailable.", null);
+                        return false;
+                    }
+                    if (resultMsg == null || !(resultMsg.obj instanceof WebView.WebViewTransport)) {
+                        Logger.error(methodTag, "onCreateWindow: missing or invalid WebView transport.", null);
+                        return false;
+                    }
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
                     final WebView interceptorWebView = new WebView(view.getContext());
                     interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            handleInterceptedUrlFromNewWindow(view, v, request, span, isUserGesture);
+                            final Span navigationSpan = OTelUtility.createSpanFromParent(
+                                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                            handleInterceptedUrlFromNewWindow(view, v, request, navigationSpan, isUserGesture);
                             return true;
                         }
                     });
                     final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
-                    // Span status and end are handled in handleInterceptedUrlFromNewWindow,
-                    // which fires asynchronously when shouldOverrideUrlLoading is called.
                     windowHandled = true;
                 } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
-                    span.recordException(e);
-                    span.setStatus(StatusCode.ERROR);
-                    span.end();
                 }
                 return windowHandled;
             }
@@ -519,9 +517,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
-     * Routes the URL based on whether the main WebView is currently on a TLR page:
-     * - TLR page: opens the URL in an external browser.
-     * - Non-TLR page: loads the URL inline in the main WebView.
+     * User-initiated OpenID VC targets are delegated to the authentication WebView so its
+     * WebViewClient can launch the wallet. User-initiated HTTPS URLs open in the external browser
+     * without navigating the authentication WebView away from its current page. HTTPS URLs from
+     * non-user-initiated popups are loaded inline; other schemes are refused. If browser dispatch
+     * throws, HTTPS URLs are loaded inline. Wallet failures remain authentication errors, without
+     * inline fallback.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -536,36 +537,49 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    @NonNull final Span span,
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
+        span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
         try {
-            final String targetUrl = request.getUrl().toString();
-            final String currentPageUrl = mainWebView.getUrl();
-
-            if (targetUrl == null) {
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
-                Logger.warn(methodTag, "onCreateWindow: target URL is null, ignoring.");
-            } else if (!isUserGesture) {
-                // Not initiated by user gesture: load inline as a safe fallback instead of
-                // opening an external browser, to prevent programmatic/scripted popups.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
-                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
-                mainWebView.loadUrl(targetUrl);
-            } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-                // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
-                Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
-            } else if (!isTlrUrl(currentPageUrl)) {
-                // Non-TLR page: load inline, same as WebView default behavior.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR);
-                Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
-                mainWebView.loadUrl(targetUrl);
-            } else {
-                // TLR page: delegate to system browser so user can view terms externally.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
-                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
-                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                mainWebView.getContext().startActivity(browserIntent);
+            final String correlationId = getCorrelationId();
+            if (!StringUtil.isNullOrEmpty(correlationId)) {
+                span.setAttribute(AttributeName.correlation_id.name(), correlationId);
             }
-            span.setStatus(StatusCode.OK);
+            final Uri targetUri = request.getUrl();
+            if (targetUri == null || StringUtil.isNullOrEmpty(targetUri.toString())) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
+                span.setStatus(StatusCode.ERROR, "Missing popup destination");
+                Logger.error(methodTag, "onCreateWindow: popup destination is missing.", null);
+                return;
+            }
+            final String targetUrl = targetUri.toString();
+            final String destinationHost = targetUri.getHost();
+            final boolean isHttpsDestination =
+                    AuthenticationConstants.Broker.HTTPS_SCHEME.equalsIgnoreCase(targetUri.getScheme())
+                            && !StringUtil.isNullOrEmpty(destinationHost);
+            if (!StringUtil.isNullOrEmpty(destinationHost)) {
+                span.setAttribute(
+                        AttributeName.target_blank_navigation_destination_host.name(),
+                        destinationHost);
+            }
+
+            if (!isUserGesture) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+                if (!isHttpsDestination) {
+                    span.setStatus(StatusCode.ERROR);
+                    Logger.warn(methodTag, "onCreateWindow: refusing invalid HTTPS destination without user gesture.");
+                    return;
+                }
+                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading HTTPS URL inline.");
+                mainWebView.loadUrl(targetUrl);
+                span.setStatus(StatusCode.OK);
+            } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
+                dispatchPopupToWallet(mainWebView, targetUrl, span);
+            } else if (!isHttpsDestination) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
+                span.setStatus(StatusCode.ERROR);
+                Logger.error(methodTag, "onCreateWindow: URL is not a valid HTTPS destination, refusing to open.", null);
+            } else {
+                dispatchPopupToBrowser(mainWebView, targetUrl, span, methodTag);
+            }
         } catch (final Exception e) {
             span.recordException(e);
             span.setStatus(StatusCode.ERROR);
@@ -577,21 +591,49 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
-    /**
-     * Checks whether the given URL corresponds to a TLR (Terms, License, and Restrictions)
-     * start page.
-     *
-     * @param url The URL to check.
-     * @return {@code true} if the URL is a TLR start page, {@code false} otherwise.
-     */
-    @VisibleForTesting
-    boolean isTlrUrl(@Nullable final String url) {
-        if (url == null) {
-            return false;
+    private void dispatchPopupToWallet(@NonNull final WebView mainWebView,
+                                       @NonNull final String targetUrl,
+                                       @NonNull final Span span) {
+        span.setAttribute(
+                AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
+        } else {
+            throw new IllegalStateException("Authentication WebView client is unavailable.");
         }
-        final String lowerUrl = url.toLowerCase();
-        return lowerUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)
-                && lowerUrl.contains(AuthenticationConstants.Broker.TLR_START_PATH);
+    }
+
+    private void dispatchPopupToBrowser(@NonNull final WebView mainWebView,
+                                        @NonNull final String targetUrl,
+                                        @NonNull final Span span,
+                                        @NonNull final String methodTag) {
+        span.setAttribute(
+                AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
+        Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
+        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+        final Context context = mainWebView.getContext();
+        try {
+            context.startActivity(browserIntent);
+        } catch (final Exception e) {
+            final String exceptionType = e.getClass().getSimpleName();
+            SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
+            span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
+            Logger.warn(methodTag, "onCreateWindow: browser dispatch failed ("
+                    + exceptionType + "); requesting HTTPS inline fallback.");
+            try {
+                mainWebView.loadUrl(targetUrl);
+            } catch (final Exception fallbackException) {
+                SpanExtension.recordOutcome(span, "browser_fallback", "failed",
+                        fallbackException.getClass().getSimpleName());
+                throw fallbackException;
+            }
+            SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
+            span.setStatus(StatusCode.OK);
+            return;
+        }
+        span.setStatus(StatusCode.OK);
     }
 
     /**

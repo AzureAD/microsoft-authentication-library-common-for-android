@@ -1031,11 +1031,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * This scheme is used by OpenID Verifiable Credentials flows and must be
      * intercepted so a registered wallet app can handle it.
      *
-     * @param url The lowercase URL to check.
-     * @return true if the URL starts with the openid-vc:// scheme.
+     * @param url The URL to check.
+     * @return true if the parsed scheme is openid-vc, ignoring case.
      */
     private boolean isOpenIdVcUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX);
+        return AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(Uri.parse(url).getScheme());
     }
 
     private boolean isWebCpEnrollmentUrl(@NonNull final String url) {
@@ -1484,63 +1484,105 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param view The WebView that intercepted the navigation.
      * @param url  The original (non-lowercased) openid-vc:// URL.
      */
-    private void processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processOpenIdVcRequest";
-        view.stopLoading();
+    public boolean processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
-        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            // Resolve after any pinning so the handler check matches the final intent we will launch.
-            final android.content.pm.PackageManager pm = getActivity().getPackageManager();
-
-            // Return-to-caller is wired ONLY for the brokered flow, i.e. when this WebView is
-            // hosted in the broker's auth-service process (Authenticator / Company Portal / Link to
-            // Windows). In the brokerless/embedded case we fall back to the pre-existing behavior
-            // (launch the openid-vc handler without a return PendingIntent) - identical to
-            // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
-            // validated. It is also gated by its own flight so it can be rolled back entirely.
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
-                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
-                // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
-                // rely on resolveActivity() here: when more than one app claims the scheme it returns
-                // the system chooser (package "android"), which would drop the return PendingIntent
-                // even if the user then picked Authenticator. Pinning to a verified Authenticator
-                // fixes that and avoids showing a wallet chooser for a request only it can fulfill.
-                if (isAuthenticatorOpenIdVcHandler(intent)
-                        && isTrustedVcWalletPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
-                    intent.setPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
-                    attachReturnPendingIntent(intent, methodTag);
-                } else {
-                    // Authenticator is not an installed/verified openid-vc handler: preserve the
-                    // existing dispatch behavior but do NOT attach a return PendingIntent.
-                    Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
-                }
-            }
-
-            final ComponentName resolved = intent.resolveActivity(pm);
-            if (resolved != null) {
-                getActivity().startActivity(intent);
-                Logger.info(methodTag, "Launched external handler for OpenID VC request.");
-                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
-                span.setStatus(StatusCode.OK);
-            } else {
-                Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
-                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
-                span.setStatus(StatusCode.ERROR, "No handler found for openid-vc:// URI");
-                returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No application found to handle the OpenID Verifiable Credentials request.");
-            }
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
-            span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
-            span.recordException(e);
-            span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "Failed to launch handler for the OpenID Verifiable Credentials request.");
+        try {
+            return processOpenIdVcRequest(view, url, span);
         } finally {
             span.end();
         }
+    }
+
+    /**
+     * Handles an OpenID VC request using the caller-owned span.
+     *
+     * Dispatch exceptions are delivered through the authorization error callback.
+     * Fatal errors and telemetry failures propagate without invoking that callback.
+     *
+     * @param view the authentication WebView associated with the request.
+     * @param url the original OpenID VC URL.
+     * @param span the caller-owned span, which the caller must end.
+     * @return whether Android accepted wallet dispatch.
+     */
+    public boolean processOpenIdVcRequest(@NonNull final WebView view,
+                                        @NonNull final String url,
+                                        @NonNull final Span span) {
+        final String methodTag = TAG + ":processOpenIdVcRequest";
+        String errorCode;
+        String errorMessage;
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            Boolean handlerFound = null;
+            boolean untrustedHandler = false;
+            Exception dispatchFailure = null;
+            try {
+                view.stopLoading();
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                // Resolve after any pinning so the handler check matches the final intent we will launch.
+                final android.content.pm.PackageManager pm = getActivity().getPackageManager();
+
+                // Return-to-caller is wired ONLY for the brokered flow, i.e. when this WebView is
+                // hosted in the broker's auth-service process (Authenticator / Company Portal / Link to
+                // Windows). In the brokerless/embedded case we fall back to the pre-existing behavior
+                // (launch the openid-vc handler without a return PendingIntent) - identical to
+                // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
+                // validated. It is also gated by its own flight so it can be rolled back entirely.
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
+                        && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+                    // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
+                    // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
+                    // rely on resolveActivity() here: when more than one app claims the scheme it returns
+                    // the system chooser (package "android"), which would drop the return PendingIntent
+                    // even if the user then picked Authenticator. Pinning to a verified Authenticator
+                    // fixes that and avoids showing a wallet chooser for a request only it can fulfill.
+                    if (isAuthenticatorOpenIdVcHandler(intent)
+                            && isTrustedVcWalletPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+                        intent.setPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+                        attachReturnPendingIntent(intent, methodTag);
+                    } else {
+                        // Authenticator is not an installed/verified openid-vc handler: preserve the
+                        // existing dispatch behavior but do NOT attach a return PendingIntent.
+                        untrustedHandler = true;
+                    }
+                }
+
+                final ComponentName resolved = intent.resolveActivity(pm);
+                handlerFound = resolved != null;
+                if (resolved != null) {
+                    getActivity().startActivity(intent);
+                }
+            } catch (final Exception e) {
+                dispatchFailure = e;
+            }
+            if (untrustedHandler) {
+                Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
+                SpanExtension.recordOutcome(span, "return_to_caller", "untrusted_handler");
+            }
+            if (handlerFound != null) {
+                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), handlerFound.booleanValue());
+            }
+            if (dispatchFailure != null) {
+                Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", null);
+                SpanExtension.recordOutcome(span, "vc_dispatch", "failed",
+                        dispatchFailure.getClass().getSimpleName());
+                span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
+                errorCode = dispatchFailure instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
+                errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
+            } else if (Boolean.TRUE.equals(handlerFound)) {
+                Logger.info(methodTag, "Launched external handler for OpenID VC request.");
+                span.setStatus(StatusCode.OK);
+                return true;
+            } else {
+                Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
+                span.setStatus(StatusCode.ERROR, "No handler found for openid-vc:// URI");
+                errorCode = ErrorStrings.ACTIVITY_NOT_FOUND;
+                errorMessage = "No application found to handle the OpenID Verifiable Credentials request.";
+            }
+        }
+        // Callback failures must not be caught as dispatch failures and delivered a second time.
+        returnError(errorCode, errorMessage);
+        return false;
     }
 
     /**
@@ -1585,8 +1627,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA,
                     returnPendingIntent);
             Logger.info(methodTag, "Attached return PendingIntent to openid-vc intent.");
+            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "attached");
         } catch (final Exception e) {
             // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
+            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "failed", e.getClass().getSimpleName());
             Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
         }
     }
@@ -1603,8 +1647,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return false;
         }
         try {
-            return new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+            final boolean trusted = new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", trusted ? "verified" : "rejected");
+            return trusted;
         } catch (final Exception e) {
+            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", "failed", e.getClass().getSimpleName());
             Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
             return false;
         }
@@ -1622,12 +1669,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             for (final ResolveInfo info : getActivity().getPackageManager().queryIntentActivities(intent, 0)) {
                 if (info.activityInfo != null && authenticatorPackage.equals(info.activityInfo.packageName)) {
+                    SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "found");
                     return true;
                 }
             }
         } catch (final Exception e) {
+            SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "failed", e.getClass().getSimpleName());
             Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
+            return false;
         }
+        SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "not_found");
         return false;
     }
 
