@@ -528,6 +528,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
+            } else if (isBrokerExternalBrowserRedirect(url)) {
+                Logger.info(methodTag, "Broker WebView received an external-browser redirect.");
+                processBrokerExternalBrowserRedirect(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
@@ -577,6 +580,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isUriSSLProtected(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
+    }
+
+    @VisibleForTesting
+    boolean isBrokerExternalBrowserRedirect(@NonNull final String url) {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && BrokerWebViewExternalBrowserRedirect.isMarked(url);
+    }
+
+    private void processBrokerExternalBrowserRedirect(
+            @NonNull final WebView view,
+            @NonNull final String url) {
+        view.stopLoading();
+        if (!BrokerWebViewExternalBrowserRedirect.launch(getActivity(), url)) {
+            returnError(
+                    ErrorStrings.UNEXPECTED_ERROR,
+                    "No browser found to open the external redirect.");
+        }
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {

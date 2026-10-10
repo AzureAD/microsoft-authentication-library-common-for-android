@@ -852,7 +852,7 @@ public enum AttributeName {
 
     /**
      * Indicates which routing path was taken for a target=_blank URL intercepted
-     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     * by onCreateWindow.
      */
     target_blank_navigation_route,
 

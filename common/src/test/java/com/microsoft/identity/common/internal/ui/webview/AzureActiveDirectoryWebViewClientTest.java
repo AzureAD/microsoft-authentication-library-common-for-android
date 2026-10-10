@@ -272,6 +272,11 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
     private static final String TEST_OPENID_VC_URL = "openid-vc://credential-offer?credential_issuer=https%3A%2F%2Fexample.com&credential_configuration_ids=VerifiedEmployee";
+    private static final String TEST_BROKER_EXTERNAL_BROWSER_URL =
+            "https://issuer.example/issuance?tokenId=example-token"
+                    + "&broker_webview_external_browser=1&other=value#credential";
+    private static final String TEST_BROKER_EXTERNAL_BROWSER_DISABLED_URL =
+            "https://issuer.example/issuance?broker_webview_external_browser=true";
 
     // Authenticator activation app link test URLs
     private static final String TEST_AUTHENTICATOR_ACTIVATION_GLOBAL =
@@ -359,6 +364,89 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEBSITE_REQUEST_URL));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideMarkedBrokerExternalBrowserUrl_preservesUrlAndSession() {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        callback,
+                        url -> { },
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false);
+        final Intent browserIntent =
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_BROKER_EXTERNAL_BROWSER_URL))
+                        .addCategory(Intent.CATEGORY_BROWSABLE);
+        final ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.packageName = "com.example.browser";
+        resolveInfo.activityInfo.name = "com.example.browser.BrowserActivity";
+        Shadows.shadowOf(mActivity.getPackageManager())
+                .addResolveInfoForIntent(browserIntent, resolveInfo);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(webViewClient.shouldOverrideUrlLoading(
+                webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+
+        Mockito.verify(webView).stopLoading();
+        Mockito.verify(callback, never())
+                .onChallengeResponseReceived(Mockito.any(RawAuthorizationResult.class));
+        final Intent startedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull(startedIntent);
+        assertEquals(TEST_BROKER_EXTERNAL_BROWSER_URL, startedIntent.getDataString());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideExternalBrowserMarkerRequiresLiteralOne() {
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_DISABLED_URL));
+    }
+
+    @Test
+    public void testMarkedExternalBrowserUrlOutsideBroker_isNotIntercepted() {
+        try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class)) {
+            processUtil.when(() -> ProcessUtil.isRunningOnAuthService(Mockito.any(Context.class)))
+                    .thenReturn(false);
+
+            assertFalse(mWebViewClient.isBrokerExternalBrowserRedirect(
+                    TEST_BROKER_EXTERNAL_BROWSER_URL));
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideMarkedBrokerExternalBrowserUrlWithoutBrowser_returnsError() {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        callback,
+                        url -> { },
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(webViewClient.shouldOverrideUrlLoading(
+                webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+
+        Mockito.verify(webView).stopLoading();
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(
+                ErrorStrings.UNEXPECTED_ERROR,
+                ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
     }
 
     @Test

@@ -33,6 +33,9 @@ import static org.mockito.Mockito.when;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -48,6 +51,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -74,6 +78,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
     // Target URLs for handleInterceptedUrlFromNewWindow
     private static final String HTTPS_TARGET_URL = "https://terms.example.com/privacy";
+    private static final String MARKED_HTTPS_TARGET_URL =
+            "https://issuer.example/issuance?tokenId=example-token"
+                    + "&broker_webview_external_browser=1&other=value#credential";
     private static final String HTTP_TARGET_URL = "http://terms.example.com/privacy";
 
     @Before
@@ -185,44 +192,68 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_nonTlrPage_loadsInline() {
+    public void testHandleInterceptedUrl_unmarkedUrl_loadsInline() {
         final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
         final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
 
-        // mainWebView is on a non-TLR page
-        // Robolectric WebView.getUrl() returns null by default (no page loaded), which is non-TLR
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        // Should load URL inline
         verify(mainWebView).loadUrl(eq(HTTPS_TARGET_URL));
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR));
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_INLINE));
         verify(span).setStatus(StatusCode.OK);
         verify(span).end();
     }
 
     @Test
-    public void testHandleInterceptedUrl_tlrPage_delegatesToBrowser() {
+    public void testHandleInterceptedUrl_markedUrl_delegatesToBrowserAndPreservesUrl() {
         final Activity activity = Robolectric.buildActivity(Activity.class).get();
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
-        final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
+        final WebResourceRequest request = mockRequest(MARKED_HTTPS_TARGET_URL);
+        final Intent browserIntent =
+                new Intent(Intent.ACTION_VIEW, Uri.parse(MARKED_HTTPS_TARGET_URL))
+                        .addCategory(Intent.CATEGORY_BROWSABLE);
+        final ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.packageName = "com.example.browser";
+        resolveInfo.activityInfo.name = "com.example.browser.BrowserActivity";
+        Shadows.shadowOf(activity.getPackageManager())
+                .addResolveInfoForIntent(browserIntent, resolveInfo);
 
-        // Simulate main WebView being on a TLR page
-        when(mainWebView.getUrl()).thenReturn(TLR_URL);
         when(mainWebView.getContext()).thenReturn(activity);
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        // Should NOT load inline
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        final Intent startedIntent = Shadows.shadowOf(activity).getNextStartedActivity();
+        assertTrue(startedIntent != null);
+        assertTrue(MARKED_HTTPS_TARGET_URL.equals(startedIntent.getDataString()));
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR));
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_EXTERNAL_BROWSER));
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_markedUrlWithoutBrowser_loadsInlineAsRecovery() {
+        final WebView mainWebView = spy(new WebView(mContext));
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        final WebResourceRequest request = mockRequest(MARKED_HTTPS_TARGET_URL);
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, request, span, true);
+
+        verify(mainWebView).loadUrl(eq(MARKED_HTTPS_TARGET_URL));
+        verify(span).setAttribute(
+                eq(AttributeName.target_blank_navigation_route.name()),
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_LAUNCH_FAILED));
         verify(span).setStatus(StatusCode.OK);
         verify(span).end();
     }
