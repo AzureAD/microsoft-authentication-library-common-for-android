@@ -46,6 +46,7 @@ public class ArgumentException extends BaseException {
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
     public final static String REDIRECT_URI_ARGUMENT_NAME = "redirect_uri";
+    public final static String CALLER_PACKAGE_NAME_ARGUMENT_NAME = "callerPackageName";
     public final static String AUTHORITY_ARGUMENT_NAME = "authority";
     public final static String IACCOUNT_ARGUMENT_NAME = "account";
     public final static String AUTHENTICATION_SCHEME_ARGUMENT_NAME = "authentication_scheme";

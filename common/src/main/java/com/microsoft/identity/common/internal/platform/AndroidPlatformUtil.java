@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -129,7 +130,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
-
         if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
             Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
             return true;
@@ -167,7 +167,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public boolean isValidCallingApp(@NonNull final String redirectUri,
                                      @NonNull final String packageName,
-                                     final int callingUid) throws ClientException {
+                                     final int callingUid) throws ArgumentException {
         // SECURITY (AB#3687466): enforce the OS-attested caller ownership BEFORE the redirect-URI check
         // (and before any debug redirect bypass inside the two-argument overload), so caller-spoofing
         // rejection can never be short-circuited. Only if the caller owns the attested uid do we fall
@@ -187,11 +187,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
      * the app that owns the kernel-attested {@code callingUid}, rejecting request-bundle caller spoofing
      * (AB#3687466) fail-closed. See {@link #isValidCallingApp(String, String, int)} for the wiring.
      *
-     * @throws ClientException with {@code unknown_caller} if the package does not match the uid's packages,
-     *                         or the uid resolves to no package.
+     * @throws ArgumentException if the package does not match the uid's packages, or the uid resolves to
+     *                           no package.
      */
     private void validateCallerOwnedByUid(final int callingUid,
-                                          @NonNull final String callerPackageName) throws ClientException {
+                                          @NonNull final String callerPackageName) throws ArgumentException {
         final String methodTag = TAG + ":validateCallerOwnedByUid";
         final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
         final List<String> ownedPackages =
@@ -200,15 +200,21 @@ public class AndroidPlatformUtil implements IPlatformUtil {
             Logger.error(methodTag,
                     "No package could be resolved for the OS-attested calling uid. Rejecting request.",
                     null);
-            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
-                    "Unable to resolve the calling package from the OS-attested calling uid.");
+            throw new ArgumentException(
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
+                    ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME,
+                    "Unable to resolve a package for OS-attested calling uid " + callingUid
+                            + " while validating caller package '" + callerPackageName + "'.");
         }
         if (!ownedPackages.contains(callerPackageName)) {
             Logger.error(methodTag,
                     "Caller package in request bundle is not owned by the OS-attested calling uid. "
                             + "Rejecting potential impersonation.", null);
-            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
-                    "Caller package does not match the OS-attested calling app.");
+            throw new ArgumentException(
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
+                    ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME,
+                    "Caller package '" + callerPackageName
+                            + "' is not owned by OS-attested calling uid " + callingUid + ".");
         }
     }
     @Override
