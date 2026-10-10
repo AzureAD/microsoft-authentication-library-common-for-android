@@ -367,6 +367,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
 
+                        // Dynamically toggle multiple-windows support so that target="_blank"
+                        // interception is active ONLY on the TLR start page. On all other
+                        // pages the WebView behaves exactly as before.
+                        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
+                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
+                        }
                     }
                 },
                 mRedirectUri,
@@ -424,7 +431,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         webSettings.setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         webSettings.setJavaScriptEnabled(true);
-        webSettings.setSupportMultipleWindows(false);
 
         // Security settings to prevent unauthorized access - controlled by flight
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
