@@ -369,6 +369,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testUrlOverrideMarkedBrokerExternalBrowserUrl_preservesUrlAndSession() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
         final IAuthorizationCompletionCallback callback =
                 Mockito.mock(IAuthorizationCompletionCallback.class);
         final AzureActiveDirectoryWebViewClient webViewClient =
@@ -405,12 +406,21 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testUrlOverrideExternalBrowserMarkerRequiresLiteralOne() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(
                 mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_DISABLED_URL));
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testMarkedExternalBrowserUrlWithFlightDisabled_isNotIntercepted() {
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+    }
+
+    @Test
     public void testMarkedExternalBrowserUrlOutsideBroker_isNotIntercepted() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
         try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class)) {
             processUtil.when(() -> ProcessUtil.isRunningOnAuthService(Mockito.any(Context.class)))
                     .thenReturn(false);
@@ -423,6 +433,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testUrlOverrideMarkedBrokerExternalBrowserUrlWithoutBrowser_returnsError() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
         final IAuthorizationCompletionCallback callback =
                 Mockito.mock(IAuthorizationCompletionCallback.class);
         final AzureActiveDirectoryWebViewClient webViewClient =
@@ -447,6 +458,15 @@ public class AzureActiveDirectoryWebViewClientTest {
                 ErrorStrings.UNEXPECTED_ERROR,
                 ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+    }
+
+    private void enableBrokerWebViewExternalBrowserRedirectFlight() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)).thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     @Test

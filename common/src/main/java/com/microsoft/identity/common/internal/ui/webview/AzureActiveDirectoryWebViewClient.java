@@ -584,7 +584,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @VisibleForTesting
     boolean isBrokerExternalBrowserRedirect(@NonNull final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+        return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
+                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)
+                && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && BrokerWebViewExternalBrowserRedirect.isMarked(url);
     }
 
