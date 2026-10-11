@@ -414,6 +414,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testMarkedExternalBrowserUrlWithFlightDisabled_isNotIntercepted() {
+        setBrokerWebViewExternalBrowserRedirectFlight(false);
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(
                 mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_URL));
     }
@@ -461,9 +462,13 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     private void enableBrokerWebViewExternalBrowserRedirectFlight() {
+        setBrokerWebViewExternalBrowserRedirectFlight(true);
+    }
+
+    private void setBrokerWebViewExternalBrowserRedirectFlight(final boolean enabled) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(
-                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)).thenReturn(true);
+                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)).thenReturn(enabled);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);

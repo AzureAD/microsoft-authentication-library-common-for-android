@@ -239,7 +239,7 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
             "EnableBrokerWebViewExternalBrowserRedirect",
-            false),
+            true),
 
     /**
      * Flight to enable file upload support in the embedded WebView.
