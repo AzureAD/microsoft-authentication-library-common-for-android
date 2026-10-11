@@ -391,6 +391,9 @@ public class AzureActiveDirectoryWebViewClientTest {
         Shadows.shadowOf(mActivity.getPackageManager())
                 .addResolveInfoForIntent(browserIntent, resolveInfo);
         final WebView webView = Mockito.mock(WebView.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
 
         assertTrue(webViewClient.shouldOverrideUrlLoading(
                 webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
@@ -401,6 +404,13 @@ public class AzureActiveDirectoryWebViewClientTest {
         final Intent startedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertNotNull(startedIntent);
         assertEquals(TEST_BROKER_EXTERNAL_BROWSER_URL, startedIntent.getDataString());
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.is_redirect_url_opened_in_browser.name()));
+        assertEquals("broker_external_browser_launched",
+                span.attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.OK, span.statusCode());
     }
 
     @Test
@@ -447,6 +457,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                         "homeTenantId",
                         false);
         final WebView webView = Mockito.mock(WebView.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
 
         assertTrue(webViewClient.shouldOverrideUrlLoading(
                 webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
@@ -459,6 +472,13 @@ public class AzureActiveDirectoryWebViewClientTest {
                 ErrorStrings.UNEXPECTED_ERROR,
                 ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.is_redirect_url_opened_in_browser.name()));
+        assertEquals("broker_external_browser_launch_failed",
+                span.attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.ERROR, span.statusCode());
     }
 
     private void enableBrokerWebViewExternalBrowserRedirectFlight() {

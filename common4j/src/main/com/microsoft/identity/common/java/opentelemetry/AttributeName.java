@@ -856,6 +856,11 @@ public enum AttributeName {
      */
     target_blank_navigation_route,
 
+    /**
+     * Indicates the non-sensitive outcome of an operation.
+     */
+    operation_outcome,
+
     //endregion
 
     //region x-ms-clientdata server telemetry attributes

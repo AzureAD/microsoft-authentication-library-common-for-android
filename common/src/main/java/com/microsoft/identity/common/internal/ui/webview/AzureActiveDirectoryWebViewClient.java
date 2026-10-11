@@ -594,10 +594,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             @NonNull final WebView view,
             @NonNull final String url) {
         view.stopLoading();
-        if (!BrokerWebViewExternalBrowserRedirect.launch(getActivity(), url)) {
-            returnError(
-                    ErrorStrings.UNEXPECTED_ERROR,
-                    "No browser found to open the external redirect.");
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
+        span.setAttribute(AttributeName.is_redirect_url_opened_in_browser.name(), true);
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            if (BrokerWebViewExternalBrowserRedirect.launch(getActivity(), url)) {
+                span.setAttribute(
+                        AttributeName.operation_outcome.name(),
+                        "broker_external_browser_launched");
+                span.setStatus(StatusCode.OK);
+            } else {
+                span.setAttribute(
+                        AttributeName.operation_outcome.name(),
+                        "broker_external_browser_launch_failed");
+                span.setStatus(StatusCode.ERROR);
+                returnError(
+                        ErrorStrings.UNEXPECTED_ERROR,
+                        "No browser found to open the external redirect.");
+            }
+        } finally {
+            span.end();
         }
     }
 
