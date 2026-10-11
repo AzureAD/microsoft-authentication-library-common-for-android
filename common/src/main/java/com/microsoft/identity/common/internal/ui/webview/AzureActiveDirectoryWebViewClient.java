@@ -147,6 +147,7 @@ import io.opentelemetry.context.Scope;
  */
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
+    private static final String TELEMETRY_OUTCOME_FAILED = "failed";
 
     /**
      * Package name of the Google Play Store, the legitimate launch target for a broker-install
@@ -1564,7 +1565,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
             if (dispatchFailure != null) {
                 Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", null);
-                SpanExtension.recordOutcome(span, "vc_dispatch", "failed",
+                SpanExtension.recordOutcome(span, "vc_dispatch", TELEMETRY_OUTCOME_FAILED,
                         dispatchFailure.getClass().getSimpleName());
                 span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
                 errorCode = dispatchFailure instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
@@ -1630,7 +1631,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "attached");
         } catch (final Exception e) {
             // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
-            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "failed", e.getClass().getSimpleName());
+            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", TELEMETRY_OUTCOME_FAILED, e.getClass().getSimpleName());
             Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
         }
     }
@@ -1651,7 +1652,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", trusted ? "verified" : "rejected");
             return trusted;
         } catch (final Exception e) {
-            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", "failed", e.getClass().getSimpleName());
+            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", TELEMETRY_OUTCOME_FAILED, e.getClass().getSimpleName());
             Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
             return false;
         }
@@ -1674,7 +1675,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
         } catch (final Exception e) {
-            SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "failed", e.getClass().getSimpleName());
+            SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", TELEMETRY_OUTCOME_FAILED, e.getClass().getSimpleName());
             Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
             return false;
         }
