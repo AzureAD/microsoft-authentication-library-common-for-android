@@ -431,8 +431,10 @@ class DeviceRegistrationClientApplication {
         val responseSerialized = mController.execute(
             GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, redirectUri, scope)
         )
+        val result: DeviceTokenResult =
+            GetDeviceTokenV1Response.create(responseSerialized).deviceTokenResult
         Logger.info(methodTag, "Get device token ended successfully.")
-        return GetDeviceTokenV1Response.create(responseSerialized).deviceTokenResult
+        return result
     }
 
     /**
