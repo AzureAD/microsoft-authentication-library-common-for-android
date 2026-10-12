@@ -424,7 +424,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = "signIn",
                 scenario = any(),
-                scopes = listOf("User.Read"),
+                scopes = match { it.toSet() == setOf("User.Read", "openid", "profile", "offline_access") },
                 claimsRequestJson = claims
             )
         }

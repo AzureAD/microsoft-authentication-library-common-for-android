@@ -145,7 +145,7 @@ class NativeAuthV2SSPRFlowControllerTest {
 
     private fun signInAfterResetPasswordParameters(
         state: NativeAuthV2ContinuationState,
-        scopes: List<String> = emptyList(),
+        scopes: List<String>? = null,
         claimsRequestJson: String? = null
     ): NativeAuthV2SignInAfterResetPasswordCommandParameters =
         NativeAuthV2SignInAfterResetPasswordCommandParameters.builder()
@@ -162,7 +162,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     // -----------------------------------------------------------------------------------------
 
     @Test
-    fun testResetPasswordStartDoesNotSendTokenScopesOrClaims() {
+    fun testResetPasswordStartSendsDefaultScopesAndEntryClaims() {
         val claimsRequestJson = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
 
         every {
@@ -170,8 +170,8 @@ class NativeAuthV2SSPRFlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = any(),
                 scenario = any(),
-                scopes = emptyList(),
-                claimsRequestJson = null
+                scopes = match { it.toSet() == setOf("openid", "profile", "offline_access") },
+                claimsRequestJson = claimsRequestJson
             )
         } returns AuthorizeChallengeApiResult.UnknownError(
             correlationId = correlationId,
@@ -188,8 +188,25 @@ class NativeAuthV2SSPRFlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = any(),
                 scenario = any(),
-                scopes = emptyList(),
-                claimsRequestJson = null
+                scopes = match { it.toSet() == setOf("openid", "profile", "offline_access") },
+                claimsRequestJson = claimsRequestJson
+            )
+        }
+    }
+
+    @Test
+    fun testEntryExplicitOidcScopesDoNotDuplicateDefaultsIgnoringCase() {
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
+        controller.resetPasswordStart(
+            resetPasswordStartParameters().toBuilder().scopes(listOf("OPENID", "User.Read")).build()
+        )
+        verify(exactly = 1) {
+            mockStrategy.performAuthorizeChallengeStart(
+                correlationId, any(), any(),
+                match { it.size == 4 && it.contains("OPENID") && it.contains("User.Read") &&
+                    it.containsAll(listOf("profile", "offline_access")) },
+                null
             )
         }
     }
@@ -836,7 +853,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterResetPasswordTreatsBlankCallerClaimsAsAbsentWithoutFallback() {
+    fun testSignInAfterResetPasswordTreatsBlankCallerClaimsAsAbsentAndRetainsEntryClaims() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access")
         val flowClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
@@ -846,7 +863,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), null)
+            mockStrategy.performTokenRequest(any(), any(), any(), flowClaims)
         } returns SignInTokenApiResult.UnknownError(
             correlationId = correlationId,
             error = "invalid_grant",
@@ -865,7 +882,7 @@ class NativeAuthV2SSPRFlowControllerTest {
                     it.toSet() == setOf("openid", "offline_access", "profile")
                 },
                 correlationId = correlationId,
-                claimsRequestJson = null
+                claimsRequestJson = flowClaims
             )
         }
     }
@@ -958,5 +975,24 @@ class NativeAuthV2SSPRFlowControllerTest {
         }
 
         assertEquals(ClientException.TOKEN_CACHE_SAVE_FAILED, thrown.errorCode)
+    }
+
+    @Test
+    fun testContinuationNullScopesRetainEntryButExplicitEmptyUsesOnlyDefaults() {
+        val state = mockContinuationState()
+        every { state.scopesForTokenRequest() } returns listOf("Retained.Scope")
+        every { state.claimsRequestJsonForTokenRequest() } returns null
+        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
+            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
+        listOf<List<String>?>(null, emptyList()).forEach { scopes ->
+            controller.signInAfterResetPassword(signInAfterResetPasswordParameters(state, scopes))
+            val expected = setOf("openid", "profile", "offline_access") +
+                if (scopes == null) setOf("Retained.Scope") else emptySet()
+            verify(exactly = 1) {
+                mockStrategy.performTokenRequest("auth-code", match { it.toSet() == expected }, correlationId, null)
+            }
+        }
     }
 }

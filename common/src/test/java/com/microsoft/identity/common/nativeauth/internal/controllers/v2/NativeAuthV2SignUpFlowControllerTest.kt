@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -603,12 +604,21 @@ class NativeAuthV2SignUpFlowControllerTest {
             errorCodes = emptyList()
         )
 
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state))
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
 
         verify(exactly = 1) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
                 scopes = match { it.toSet() == expectedScopes },
+                correlationId = correlationId,
+                claimsRequestJson = any()
+            )
+        }
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = emptyList()))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest(
+                code = "auth-code",
+                scopes = match { it.toSet() == setOf("openid", "profile", "offline_access") },
                 correlationId = correlationId,
                 claimsRequestJson = any()
             )
@@ -701,6 +711,26 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals(ClientException.TOKEN_CACHE_SAVE_FAILED, thrown.errorCode)
     }
 
+    @Test
+    fun testSignUpEntrySendsDefaultScopesAndClaimsForNullEmptyAndExplicitScopes() {
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
+        for (scopes in listOf(null, emptyList(), listOf("User.Read"))) {
+            controller.signUpStart(
+                signUpStartParameters().toBuilder().scopes(scopes)
+                    .claimsRequestJson("{\"id_token\":{}}").build()
+            )
+            verify(exactly = 1) {
+                mockStrategy.performAuthorizeChallengeStart(
+                    correlationId, any(), any(),
+                    match { it.toSet() == (scopes.orEmpty() + listOf("openid", "profile", "offline_access")).toSet() },
+                    "{\"id_token\":{}}"
+                )
+            }
+            clearMocks(mockStrategy, answers = false)
+        }
+    }
+
     // -----------------------------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------------------------
@@ -776,7 +806,7 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     private fun signInAfterSignUpParameters(
         state: NativeAuthV2ContinuationState,
-        scopes: List<String> = emptyList(),
+        scopes: List<String>? = null,
         claimsRequestJson: String? = null,
         tokenCache: OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>? = null
     ): NativeAuthV2SignInAfterSignUpCommandParameters =

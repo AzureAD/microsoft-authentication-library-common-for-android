@@ -55,9 +55,17 @@ data class AuthorizeChallengeStartRequest private constructor(
             scopes: List<String>,
             requestUrl: String,
             headers: Map<String, String?>
+        ): AuthorizeChallengeStartRequest = create(clientId, scopes, requestUrl, headers, null)
+
+        /** Creates an entry request with optional claims, never added to intermediate HAL calls. */
+        fun create(
+            clientId: String,
+            scopes: List<String>,
+            requestUrl: String,
+            headers: Map<String, String?>,
+            claimsRequestJson: String?
         ): AuthorizeChallengeStartRequest {
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(scopes, "scopes")
             scopes.forEachIndexed { index, scope ->
                 ArgUtils.validateNonNullArg(scope, "scopes[$index]")
             }
@@ -69,7 +77,8 @@ data class AuthorizeChallengeStartRequest private constructor(
                 headers = headers,
                 parameters = NativeAuthAuthorizeChallengeStartRequestParameters(
                     clientId = clientId,
-                    scope = scopes.takeUnless { it.isEmpty() }?.joinToString(" ")
+                    scope = scopes.takeUnless { it.isEmpty() }?.joinToString(" "),
+                    claimsRequestJson = claimsRequestJson?.takeUnless { it.isBlank() }
                 )
             )
         }
@@ -83,15 +92,15 @@ data class AuthorizeChallengeStartRequest private constructor(
      * NativeAuthAuthorizeChallengeStartRequestParameters represents the request parameters sent as
      * part of the `/oauth2/v2.0/authorize-challenge` API call that starts a Native Auth V2 flow.
      */
-    data class NativeAuthAuthorizeChallengeStartRequestParameters(
+    data class NativeAuthAuthorizeChallengeStartRequestParameters @JvmOverloads constructor(
         @SerializedName("client_id") override val clientId: String,
-        @SerializedName("scope") val scope: String? = null
+        @SerializedName("scope") val scope: String? = null,
+        @SerializedName("claims") val claimsRequestJson: String? = null
     ) : NativeAuthRequestParameters() {
-        constructor(clientId: String) : this(clientId, null)
 
         override fun toUnsanitizedString(): String =
             "NativeAuthAuthorizeChallengeStartRequestParameters(clientId=$clientId, scope=$scope)"
 
-        override fun toString(): String = toUnsanitizedString()
+        override fun toString(): String = "NativeAuthAuthorizeChallengeStartRequestParameters()"
     }
 }

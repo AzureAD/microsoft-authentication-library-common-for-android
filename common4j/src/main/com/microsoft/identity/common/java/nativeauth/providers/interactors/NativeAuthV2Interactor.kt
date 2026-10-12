@@ -88,7 +88,8 @@ class NativeAuthV2Interactor(
 
         val request = requestProvider.createAuthorizeChallengeStartRequest(
             correlationId = correlationId,
-            scopes = scopes
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson
         )
 
         Logger.infoWithObject(

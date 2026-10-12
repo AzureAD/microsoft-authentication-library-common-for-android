@@ -66,6 +66,13 @@ class NativeAuthV2RequestProvider(
     fun createAuthorizeChallengeStartRequest(
         correlationId: String,
         scopes: List<String>
+    ): AuthorizeChallengeStartRequest = createAuthorizeChallengeStartRequest(correlationId, scopes, null)
+
+    /** Builds the entry form with scopes and optional claims. */
+    fun createAuthorizeChallengeStartRequest(
+        correlationId: String,
+        scopes: List<String>,
+        claimsRequestJson: String?
     ): AuthorizeChallengeStartRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -76,6 +83,7 @@ class NativeAuthV2RequestProvider(
         return AuthorizeChallengeStartRequest.create(
             clientId = config.clientId,
             scopes = scopes,
+            claimsRequestJson = claimsRequestJson,
             requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toString(),
             headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
