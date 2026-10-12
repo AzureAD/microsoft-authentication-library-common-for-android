@@ -177,6 +177,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                         error = authChallengeResult.error,
                         errorDescription = authChallengeResult.errorDescription,
                         errorCodes = authChallengeResult.errorCodes,
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                         correlationId = authChallengeResult.correlationId
                     )
                 }
@@ -188,8 +190,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
 
             val challenge = when (startResult) {
-                        subError = authChallengeResult.subError,
-                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
@@ -705,6 +705,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                         error = authChallengeResult.error,
                         errorDescription = authChallengeResult.errorDescription,
                         errorCodes = authChallengeResult.errorCodes,
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                         correlationId = authChallengeResult.correlationId
                     )
                 }
@@ -716,8 +718,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
 
             val firstFactorChallenge = when (startResult) {
-                        subError = authChallengeResult.subError,
-                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
@@ -1077,6 +1077,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     error = continueResult.error,
                     errorDescription = continueResult.errorDescription,
                     errorCodes = continueResult.errorCodes,
+                    subError = continueResult.subError,
+                    attributeValidationDetails = continueResult.attributeValidationDetails,
                     correlationId = continueResult.correlationId
                 )
             }
@@ -1089,8 +1091,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             claimsRequestJson = tokenCommandParameters.claimsRequestJson
         )
 
-                    subError = continueResult.subError,
-                    attributeValidationDetails = continueResult.attributeValidationDetails,
         val successTokenResult = when (tokenResult) {
             is SignInTokenApiResult.Success -> tokenResult
             is SignInTokenApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
@@ -1103,6 +1103,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     error = tokenResult.error,
                     errorDescription = tokenResult.errorDescription,
                     errorCodes = tokenResult.errorCodes,
+                    subError = tokenResult.subError,
+                    attributeValidationDetails = tokenResult.attributeValidationDetails,
                     correlationId = tokenResult.correlationId
                 )
             }
@@ -1115,8 +1117,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         return NativeAuthV2CommandResult.Complete(
-                    subError = tokenResult.subError,
-                    attributeValidationDetails = tokenResult.attributeValidationDetails,
             correlationId = complete.correlationId,
             authenticationResult = complete.authenticationResult,
             continuationToken = null,
@@ -1187,6 +1187,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                         error = authChallengeResult.error,
                         errorDescription = authChallengeResult.errorDescription,
                         errorCodes = authChallengeResult.errorCodes,
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                         correlationId = authChallengeResult.correlationId
                     )
                 }
@@ -1199,8 +1201,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 result = startResult,
                 retryState = null,
                 upfront = parameters
-                        subError = authChallengeResult.subError,
-                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
             )
             return result as? NativeAuthV2SignUpStartCommandResult
                 ?: unexpectedSignUpApiError(result, correlationId)
