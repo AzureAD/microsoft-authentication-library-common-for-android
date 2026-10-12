@@ -57,6 +57,7 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.internal.fido.PasskeyEndpointPolicy;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
@@ -452,6 +453,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_PASSKEY_ENDPOINT_POLICY_OBSERVATION)) {
+                    evaluatePasskeyEndpointPolicy(challenge);
+                }
                 final Activity currentActivity = getActivity();
                 final Context oTelContext = currentActivity instanceof AuthorizationActivity ? ((AuthorizationActivity)currentActivity).getOtelContext() : null;
                 // The legacyManager should only be getting added if the device is on Android 13 or lower and the library is MSAL/OneAuth with fragment or dialog mode.
@@ -554,6 +559,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
+    }
+
+    /**
+     * Observes both endpoint lists before provider selection when the observation flight is enabled.
+     */
+    private void evaluatePasskeyEndpointPolicy(@NonNull final FidoChallenge challenge) throws ClientException {
+        final boolean enforced = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENFORCE_PASSKEY_ENDPOINT_POLICY);
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessPasskeyEndpointPolicy.name());
+        try {
+            getPasskeyEndpointPolicy().evaluateAndRecord(mRequestUrl, challenge, span, enforced);
+            span.setStatus(StatusCode.OK);
+        } catch (final ClientException exception) {
+            span.recordException(exception);
+            span.setStatus(StatusCode.ERROR);
+            throw exception;
+        } finally {
+            span.end();
+        }
+    }
+
+    /**
+     * Returns the immutable native PassKey endpoint policy.
+     */
+    @NonNull
+    protected PasskeyEndpointPolicy getPasskeyEndpointPolicy() {
+        return PasskeyEndpointPolicy.DEFAULT;
     }
 
     /**

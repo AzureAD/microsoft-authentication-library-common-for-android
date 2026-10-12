@@ -368,7 +368,20 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Default is false.
      */
-    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false),
+
+    /**
+     * Master switch for native PassKey endpoint evaluation and telemetry. Default ON.
+     * When OFF, skip the policy entirely, including enforcement, and preserve legacy handling.
+     */
+    ENABLE_PASSKEY_ENDPOINT_POLICY_OBSERVATION("EnablePasskeyEndpointPolicyObservation", true),
+
+    /**
+     * Enforce the native PassKey endpoint policy before provider selection or any response.
+     * Only takes effect while ENABLE_PASSKEY_ENDPOINT_POLICY_OBSERVATION is enabled.
+     * Default OFF. Empty policy lists reject every challenge when enforcement is enabled.
+     */
+    ENFORCE_PASSKEY_ENDPOINT_POLICY("EnforcePasskeyEndpointPolicy", false);
 
     private String key;
     private Object defaultValue;
