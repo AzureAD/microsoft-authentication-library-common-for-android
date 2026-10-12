@@ -27,12 +27,13 @@ import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecordWithAccount
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants
+import com.microsoft.identity.deviceregistration.java.protocol.IDeviceRegistrationProtocol
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationPreAuthorizedV0Parameters
-import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreprovisioningBlobV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationPreAuthorizedV0Response
-import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreprovisioningBlobV1Response
 import org.junit.Assert.assertEquals
@@ -66,6 +67,37 @@ class DeviceRegistrationV1ProtocolTest {
     }
 
     @Test
+    fun protocolTypeVersionsMatchWireVersions() {
+        val protocols = listOf<IDeviceRegistrationProtocol>(
+            PreprovisioningBlobV1Parameters(correlationId, "tenant", null, "PROD"),
+            PreprovisioningBlobV1Response(correlationId, "signed-blob"),
+            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters(
+                correlationId, "tenant", "resource", "challenge", false, "MSAL", "1.0", "PROD"
+            ),
+            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
+                correlationId, DeviceRegistrationRecord("tenant", "", "device", false, true), AccountRecord()
+            )
+        )
+        val versionSuffix = Regex("V(\\d+)(Parameters|Response)$")
+
+        for (protocol in protocols) {
+            val typeName = protocol.javaClass.simpleName
+            val version = requireNotNull(versionSuffix.find(typeName)).groupValues[1]
+            assertEquals(typeName, "v$version", protocol.protocolName.substringAfterLast('.'))
+        }
+    }
+
+    @Test
+    fun protocolConstantVersionsMatchWireVersions() {
+        val versionSuffix = Regex("_V(\\d+)$")
+        for (field in DeviceRegistrationProtocolConstants::class.java.fields) {
+            val version = versionSuffix.find(field.name)?.groupValues?.get(1) ?: continue
+            val protocolName = field.get(null) as String
+            assertEquals(field.name, "v$version", protocolName.substringAfterLast('.'))
+        }
+    }
+
+    @Test
     fun blobParametersRoundTrip() {
         val request = PreprovisioningBlobV1Parameters(correlationId, "tenant", "resource", "PPE")
         val restored = PreprovisioningBlobV1Parameters.create(request.serialize())
@@ -94,10 +126,10 @@ class DeviceRegistrationV1ProtocolTest {
     @Test
     fun registrationParametersRoundTrip() {
         for (sharedDevice in listOf(true, false)) {
-            val request = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters(
+            val request = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters(
                 correlationId, "tenant", "resource", "encrypted-challenge", sharedDevice, "ONEAUTH", "1.0", "PROD"
             )
-            val restored = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters.create(request.serialize())
+            val restored = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(request.serialize())
 
             assertEquals(correlationId, restored.correlationId)
             assertEquals("tenant", restored.tenantId)
@@ -137,8 +169,8 @@ class DeviceRegistrationV1ProtocolTest {
             DeviceRegistrationRecordWithAccount("account", "tenant", "resource@example.com", "device", true, true)
         )
         for (record in records) {
-            val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response(correlationId, record, account)
-            val restored = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.create(response.serialize())
+            val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(correlationId, record, account)
+            val restored = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response.create(response.serialize())
 
             assertEquals(correlationId, restored.correlationId)
             assertEquals(record.javaClass, restored.deviceRegistrationRecord.javaClass)
@@ -157,7 +189,7 @@ class DeviceRegistrationV1ProtocolTest {
         assertEquals(oldBlob.jws, newBlob.jws)
 
         val oldJoin = DeviceRegistrationPreAuthorizedV0Response.create(serialized)
-        val newJoin = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.create(serialized)
+        val newJoin = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response.create(serialized)
         assertEquals(oldJoin.correlationId, newJoin.correlationId)
         assertEquals(oldJoin.deviceRegistrationRecord, newJoin.deviceRegistrationRecord)
         assertNull(newJoin.resourceAccountRecord)
@@ -175,12 +207,12 @@ class DeviceRegistrationV1ProtocolTest {
 
     @Test
     fun javaBooleanGetterMatchesExistingProtocols() {
-        val request = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters(
+        val request = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters(
             correlationId, "tenant", "resource", "challenge", true, "ONEAUTH", "1.0", "PROD"
         )
         assertEquals(
             true,
-            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters::class.java
+            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters::class.java
                 .getMethod("isRegisterAsSharedDevice").invoke(request)
         )
     }
@@ -196,7 +228,7 @@ class DeviceRegistrationV1ProtocolTest {
         assertNull(newBlob.discoveryEndpointName)
 
         val oldJoin = DeviceRegistrationPreAuthorizedV0Parameters.create(serialized)
-        val newJoin = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters.create(serialized)
+        val newJoin = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(serialized)
         assertEquals(oldJoin.correlationId, newJoin.correlationId)
         assertEquals(oldJoin.tenantId, newJoin.tenantId)
         assertEquals(oldJoin.isRegisterAsSharedDevice, newJoin.isRegisterAsSharedDevice)

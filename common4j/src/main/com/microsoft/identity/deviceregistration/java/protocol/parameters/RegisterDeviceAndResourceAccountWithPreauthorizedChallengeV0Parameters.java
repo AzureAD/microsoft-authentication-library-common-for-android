@@ -38,17 +38,17 @@ import lombok.experimental.Accessors;
  * The tenant, resource account, and environment must match preprovisioning.
  */
 @Accessors(prefix = "m")
-public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters extends AbstractDeviceRegistrationProtocolParameters {
+public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
-    private static final IDeviceRegistrationProtocolSerializer<RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters> serializer
-            = new DeviceRegistrationProtocolMoshiSerializer<>(RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters.class);
+    private static final IDeviceRegistrationProtocolSerializer<RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters> serializer
+            = new DeviceRegistrationProtocolMoshiSerializer<>(RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.class);
 
     /**
      * Deserializes protocol parameters.
      *
      * @param serializedData serialized protocol data
      */
-    public static RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters create(final byte[] serializedData) throws ClientException {
+    public static RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
     }
 
@@ -62,7 +62,7 @@ public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Paramet
      * @param sdkVersion calling SDK version
      * @param discoveryEndpointName DRS environment used during preprovisioning
      */
-    public RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters(@NonNull final UUID correlationId,
+    public RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters(@NonNull final UUID correlationId,
                                                        @NonNull final String tenantId,
                                                        @NonNull final String resourceAccountId,
                                                        @NonNull final String encryptedPreAuthorizedToken,

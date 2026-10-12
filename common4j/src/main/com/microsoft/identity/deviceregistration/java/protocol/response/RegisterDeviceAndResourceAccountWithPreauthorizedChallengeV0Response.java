@@ -40,17 +40,17 @@ import lombok.experimental.Accessors;
  * Both records are required. {@link AccountRecord} provides the concrete type for deserialization.
  */
 @Accessors(prefix = "m")
-public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response extends AbstractDeviceRegistrationProtocolResponse {
+public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response extends AbstractDeviceRegistrationProtocolResponse {
 
-    private static final IDeviceRegistrationProtocolSerializer<RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response> serializer
-            = new DeviceRegistrationProtocolMoshiSerializer<>(RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.class);
+    private static final IDeviceRegistrationProtocolSerializer<RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response> serializer
+            = new DeviceRegistrationProtocolMoshiSerializer<>(RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response.class);
 
     /**
      * Deserializes a protocol response.
      *
      * @param serializedData serialized protocol data
      */
-    public static RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response create(final byte[] serializedData) throws ClientException {
+    public static RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
     }
 
@@ -59,7 +59,7 @@ public class RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Respons
      * @param deviceRegistrationRecord completed device registration
      * @param resourceAccountRecord metadata for the provisioned resource account
      */
-    public RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response(@NonNull final UUID correlationId,
+    public RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(@NonNull final UUID correlationId,
                                                     @NonNull final IDeviceRegistrationRecord deviceRegistrationRecord,
                                                     @NonNull final AccountRecord resourceAccountRecord) {
         super(correlationId);

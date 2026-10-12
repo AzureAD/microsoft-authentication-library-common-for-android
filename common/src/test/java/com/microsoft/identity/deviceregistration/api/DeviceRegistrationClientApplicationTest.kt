@@ -43,14 +43,14 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDev
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreprovisioningBlobV1Parameters
-import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreprovisioningBlobV1Response
-import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
 import com.microsoft.identity.common.java.dto.AccountRecord
@@ -236,7 +236,7 @@ class DeviceRegistrationClientApplicationTest {
             environment = "login.windows-ppe.net"
             realm = "test-tenant"
         }
-        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response(
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
             correlationId, deviceRecord, accountRecord
         )
         val strategy = successStrategy(packer.pack(response))
@@ -247,7 +247,7 @@ class DeviceRegistrationClientApplicationTest {
             correlationId, SdkType.MSAL, "4.2.0", DrsDiscoveryEndpoint.PPE
         )
 
-        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters.create(
+        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(
             captureProtocolData(strategy, "protocol.register.device.and.resource.account.with.preauthorized.challenge.v0")
         )
         Assert.assertEquals(correlationId, parameters.correlationId)
@@ -270,7 +270,7 @@ class DeviceRegistrationClientApplicationTest {
         val correlationId = UUID.randomUUID()
         val deviceRecord = DeviceRegistrationRecord("test-tenant", "ra@test.com", "device-123", false, true)
         val accountRecord = AccountRecord().apply { localAccountId = "test-resource-account" }
-        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response(
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
             correlationId, deviceRecord, accountRecord
         )
         val strategy = successStrategy(packer.pack(response))
@@ -281,7 +281,7 @@ class DeviceRegistrationClientApplicationTest {
             correlationId, SdkType.MSAL, "4.2.0"
         )
 
-        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters.create(
+        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(
             captureProtocolData(strategy, "protocol.register.device.and.resource.account.with.preauthorized.challenge.v0")
         )
         Assert.assertEquals(correlationId, parameters.correlationId)
@@ -301,7 +301,7 @@ class DeviceRegistrationClientApplicationTest {
         val correlationId = UUID.randomUUID()
         val deviceRecord = DeviceRegistrationRecord("test-tenant", "ra@test.com", "device-123", false, true)
         val accountRecord = AccountRecord().apply { username = "ra@test.com" }
-        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response(
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
             correlationId, deviceRecord, accountRecord
         )
         val serializedResponse = String(response.serialize(), Charsets.UTF_8)

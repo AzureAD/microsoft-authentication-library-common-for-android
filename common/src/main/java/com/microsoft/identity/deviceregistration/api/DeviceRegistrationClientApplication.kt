@@ -46,7 +46,7 @@ import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationPreAuthorizedV0Parameters
-import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationWithTokensV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordsV0Parameters
@@ -60,7 +60,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.Prepro
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.UnregisterDeviceV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationPreAuthorizedV0Response
-import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationWithTokensV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
@@ -340,14 +340,14 @@ class DeviceRegistrationClientApplication {
         drsDiscoveryEndpoint: DrsDiscoveryEndpoint = DrsDiscoveryEndpoint.PROD
     ): DeviceAndResourceAccountRegistrationResult {
         val methodTag = "$TAG:registerDeviceAndResourceAccountWithPreauthorizedChallenge"
-        Logger.info(methodTag, "Registration (V1) started. CorrelationId: $correlationId")
+        Logger.info(methodTag, "Registration (V0) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
-            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters(
+            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters(
                 correlationId, tenantId, resourceAccountId, encryptedPreAuthorizedToken,
                 registerAsSharedDevice, sdkType.name, sdkVersion, drsDiscoveryEndpoint.name
             )
         )
-        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.create(responseSerialized)
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response.create(responseSerialized)
         val deviceRegistrationRecord: IDeviceRegistrationRecord? = response.deviceRegistrationRecord
         val resourceAccountRecord: AccountRecord? = response.resourceAccountRecord
         if (deviceRegistrationRecord == null || resourceAccountRecord == null) {
