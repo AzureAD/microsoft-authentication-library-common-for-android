@@ -949,5 +949,23 @@ public enum AttributeName {
      */
     pkeyauth_challenging_origin_source,
 
+    /** Version of the native PassKey endpoint policy. */
+    passkey_endpoint_policy_version,
+    /** Whether both independent native PassKey allowlists contain entries. */
+    passkey_endpoint_policy_configured,
+    /** Bounded original-request endpoint verdict; never a URL or hostname. */
+    passkey_incoming_endpoint_result,
+    /** Bounded response endpoint verdict; never a URL or hostname. */
+    passkey_submit_endpoint_result,
+    /** Original-request host classification: AAD_CLOUD, OTHER or UNAVAILABLE. */
+    passkey_incoming_host_class,
+    /** Response host classification: AAD_CLOUD, OTHER or UNAVAILABLE. */
+    passkey_submit_host_class,
+    /** Response path classification: CREDENTIAL, OTHER or UNAVAILABLE. */
+    passkey_submit_route_class,
+    /** Whether native PassKey endpoint enforcement was enabled. */
+    passkey_endpoint_policy_enforced,
+    /** Native PassKey policy action: ALLOW, WOULD_REJECT or BLOCK. */
+    passkey_endpoint_policy_action,
     //endregion
 }

@@ -159,6 +159,9 @@ public enum SpanName {
      */
     ProcessPKeyAuthChallenge,
 
+    /** Span name for native PassKey endpoint-policy evaluation before provider selection. */
+    ProcessPasskeyEndpointPolicy,
+
     /**
      * Span name for original-caller assessment during legacy broker account enumeration.
      */
