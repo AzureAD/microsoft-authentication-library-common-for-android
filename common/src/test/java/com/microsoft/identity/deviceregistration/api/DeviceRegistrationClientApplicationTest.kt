@@ -29,8 +29,10 @@ import com.microsoft.identity.common.internal.activebrokerdiscovery.IBrokerDisco
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
+import com.microsoft.identity.common.logging.Logger
 import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
@@ -307,6 +309,89 @@ class DeviceRegistrationClientApplicationTest {
         Assert.assertNull(result.extExpiresIn)
         Assert.assertNull(result.expiresOn)
         Assert.assertNull(result.notBefore)
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_validResult_logsSuccess() {
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            val result = drca.getDeviceTokenResult(
+                DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                "https://resource.example.com",
+                UUID.randomUUID(),
+                "test-client-id",
+                "msauth://com.test.app/callback"
+            )
+
+            Assert.assertEquals("device.token.jwt", result.accessToken)
+            logger.verify {
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }
+        }
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_malformedResponse_doesNotLogSuccess() {
+        val response = Bundle().apply {
+            putByteArray("protocol.data", "{".toByteArray(Charsets.UTF_8))
+        }
+        val drca = createDrca(successStrategy(response))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            val exception = Assert.assertThrows(ClientException::class.java) {
+                drca.getDeviceTokenResult(
+                    DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                    "https://resource.example.com",
+                    UUID.randomUUID(),
+                    "test-client-id",
+                    "msauth://com.test.app/callback"
+                )
+            }
+
+            Assert.assertEquals(ClientException.JSON_PARSE_FAILURE, exception.errorCode)
+            logger.verify({
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }, Mockito.never())
+        }
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_nullResult_doesNotLogSuccess() {
+        val response = Bundle().apply {
+            putByteArray(
+                "protocol.data",
+                """{"mDeviceTokenResult":null}""".toByteArray(Charsets.UTF_8)
+            )
+        }
+        val drca = createDrca(successStrategy(response))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            Assert.assertThrows(NullPointerException::class.java) {
+                drca.getDeviceTokenResult(
+                    DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                    "https://resource.example.com",
+                    UUID.randomUUID(),
+                    "test-client-id",
+                    "msauth://com.test.app/callback"
+                )
+            }
+
+            logger.verify({
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }, Mockito.never())
+        }
     }
 
     @Test
