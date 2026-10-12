@@ -443,7 +443,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
-    public void testUrlOverrideMarkedBrokerExternalBrowserUrlWithoutBrowser_returnsError() {
+    public void testUrlOverrideMarkedBrokerExternalBrowserUrlWithoutBrowser_loadsInWebView() {
         enableBrokerWebViewExternalBrowserRedirectFlight();
         final IAuthorizationCompletionCallback callback =
                 Mockito.mock(IAuthorizationCompletionCallback.class);
@@ -461,20 +461,16 @@ public class AzureActiveDirectoryWebViewClientTest {
                 new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
         OTelUtility.setSpanFactory(spanFactory);
 
-        assertTrue(webViewClient.shouldOverrideUrlLoading(
+        assertFalse(webViewClient.shouldOverrideUrlLoading(
                 webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
 
-        Mockito.verify(webView).stopLoading();
-        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
-                ArgumentCaptor.forClass(RawAuthorizationResult.class);
-        Mockito.verify(callback).onChallengeResponseReceived(resultCaptor.capture());
-        assertEquals(
-                ErrorStrings.UNEXPECTED_ERROR,
-                ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+        Mockito.verify(webView, never()).stopLoading();
+        Mockito.verify(callback, never())
+                .onChallengeResponseReceived(Mockito.any(RawAuthorizationResult.class));
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
         final RecordingSpan span = spanFactory.captured();
         assertNotNull(span);
-        assertEquals(Boolean.TRUE,
+        assertEquals(Boolean.FALSE,
                 span.attribute(AttributeName.is_redirect_url_opened_in_browser.name()));
         assertEquals("broker_external_browser_launch_failed",
                 span.attribute(AttributeName.operation_outcome.name()));
