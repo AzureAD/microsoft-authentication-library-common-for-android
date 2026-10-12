@@ -41,10 +41,12 @@ import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationClient
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.DrsDiscoveryEndpoint
+import com.microsoft.identity.deviceregistration.java.api.DeviceAndResourceAccountRegistrationResult
 import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationPreAuthorizedV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationWithTokensV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordsV0Parameters
@@ -54,9 +56,11 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetIns
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetRegistrationStateV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.InstallCertificateSilentlyV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreprovisioningBlobV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.UnregisterDeviceV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationPreAuthorizedV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationWithTokensV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
@@ -66,6 +70,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.GetInsta
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.InstallCertificateSilentlyV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.PreprovisioningBlobV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.request.SdkType
@@ -214,6 +219,41 @@ class DeviceRegistrationClientApplication {
     }
 
     /**
+     * Requests Broker to prepare device/session transport keys and return a signed provisioning blob.
+     *
+     * Forward the blob to the provisioning service for a registration challenge. If an RA is supplied,
+     * complete with [registerDeviceAndResourceAccountWithPreauthorizedChallenge] using the same
+     * tenant, account, and environment. Requires Broker support; no legacy fallback.
+     * Synchronous: call off the main thread and do not log the blob.
+     *
+     * @param tenantId Tenant in which the device will be registered.
+     * @param resourceAccountId Optional tenant-local Entra object ID; null omits RA-key preparation.
+     * @param correlationId Correlation ID for request tracing.
+     * @param drsDiscoveryEndpoint DRS environment for preparation and registration.
+     * @return Signed provisioning blob, not a registration challenge.
+     * @throws BaseException If Broker communication or preparation fails.
+     */
+    @JvmOverloads
+    @Throws(BaseException::class)
+    fun getPreprovisioningBlob(
+        tenantId: String,
+        resourceAccountId: String? = null,
+        correlationId: UUID,
+        drsDiscoveryEndpoint: DrsDiscoveryEndpoint = DrsDiscoveryEndpoint.PROD
+    ): String {
+        val methodTag = "$TAG:getPreprovisioningBlob"
+        Logger.info(methodTag, "GetPreprovisioningBlob (V1) started. CorrelationId: $correlationId")
+        val responseSerialized = mController.execute(
+            PreprovisioningBlobV1Parameters(
+                correlationId, tenantId, resourceAccountId, drsDiscoveryEndpoint.name
+            )
+        )
+        val result = PreprovisioningBlobV1Response.create(responseSerialized).jws
+        Logger.info(methodTag, "Blob returned successfully.")
+        return result
+    }
+
+    /**
      * Gets the registration state from ADRS.
      *
      * @param deviceRegistrationRecord record to query state for.
@@ -258,6 +298,50 @@ class DeviceRegistrationClientApplication {
         return registerWithPreAuthorizedTokenInternal(
             tenantId, encryptedPreAuthorizedToken, registerAsSharedDevice, true, drsDiscoveryEndpoint, correlationId
         )
+    }
+
+    /**
+      * Registers a device and provisions its resource account using previously prepared keys.
+      *
+      * First call [getPreprovisioningBlob] with the same tenant, resource account, and environment.
+      * Supply the service's challenge encrypted to the prepared session transport key (STK).
+      * Requires Broker support; no legacy or unencrypted fallback. Synchronous: call off the main
+      * thread and do not log the challenge or account metadata.
+     *
+     * @param tenantId Tenant used during preprovisioning.
+      * @param resourceAccountId Required tenant-local Entra object ID used during preprovisioning.
+      * @param encryptedPreAuthorizedToken STK-encrypted preauthorized challenge returned by the service.
+     * @param registerAsSharedDevice Whether the device should be registered as shared.
+     * @param correlationId Correlation ID for request tracing.
+      * @param sdkType Calling SDK type.
+      * @param sdkVersion Calling SDK version.
+      * @param drsDiscoveryEndpoint DRS environment used during preprovisioning.
+      * @return Device and resource-account metadata after both operations succeed.
+      * @throws BaseException If Broker communication, registration, or resource-account provisioning fails.
+     */
+    @JvmOverloads
+    @Throws(BaseException::class)
+    fun registerDeviceAndResourceAccountWithPreauthorizedChallenge(
+        tenantId: String,
+        resourceAccountId: String,
+        encryptedPreAuthorizedToken: String,
+        registerAsSharedDevice: Boolean,
+        correlationId: UUID,
+        sdkType: SdkType,
+        sdkVersion: String,
+        drsDiscoveryEndpoint: DrsDiscoveryEndpoint = DrsDiscoveryEndpoint.PROD
+    ): DeviceAndResourceAccountRegistrationResult {
+        val methodTag = "$TAG:registerDeviceAndResourceAccountWithPreauthorizedChallenge"
+        Logger.info(methodTag, "Registration (V1) started. CorrelationId: $correlationId")
+        val responseSerialized = mController.execute(
+            RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Parameters(
+                correlationId, tenantId, resourceAccountId, encryptedPreAuthorizedToken,
+                registerAsSharedDevice, sdkType.name, sdkVersion, drsDiscoveryEndpoint.name
+            )
+        )
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.create(responseSerialized)
+        Logger.info(methodTag, "Device registration and resource-account provisioning completed.")
+        return DeviceAndResourceAccountRegistrationResult(response.deviceRegistrationRecord, response.resourceAccountRecord)
     }
 
     /**
