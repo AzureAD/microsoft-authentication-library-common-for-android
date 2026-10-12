@@ -195,19 +195,31 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
-    fun testEntryExplicitOidcScopesDoNotDuplicateDefaultsIgnoringCase() {
+    fun testEntryAndTokenCanonicalizeOidcDefaultsWithoutChangingResourceScopes() {
+        val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
+        val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
         every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
             AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
         controller.resetPasswordStart(
-            resetPasswordStartParameters().toBuilder().scopes(listOf("OPENID", "User.Read")).build()
+            resetPasswordStartParameters().toBuilder().scopes(requestedScopes).build()
         )
         verify(exactly = 1) {
             mockStrategy.performAuthorizeChallengeStart(
                 correlationId, any(), any(),
-                match { it.size == 4 && it.contains("OPENID") && it.contains("User.Read") &&
-                    it.containsAll(listOf("profile", "offline_access")) },
+                expectedScopes,
                 null
             )
+        }
+        val state = mockContinuationState()
+        every { state.scopesForTokenRequest() } returns requestedScopes
+        every { state.claimsRequestJsonForTokenRequest() } returns null
+        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
+            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
+        controller.signInAfterResetPassword(signInAfterResetPasswordParameters(state, null))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest("auth-code", expectedScopes, correlationId, null)
         }
     }
 

@@ -79,9 +79,18 @@ import lombok.EqualsAndHashCode
 class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     private fun addV2DefaultScopes(scopes: List<String>?): List<String> {
-        val requestedScopes = scopes?.filterNotNull()?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
+        val requestedScopes = mutableListOf<String>()
+        scopes.orEmpty().filterNotNull().filter { it.isNotEmpty() }.forEach { scope ->
+            // Only OIDC defaults are canonicalized; resource scopes remain case-sensitive.
+            val defaultScope = AuthenticationConstants.DEFAULT_SCOPES.firstOrNull {
+                it.equals(scope, ignoreCase = true)
+            }
+            if (defaultScope == null || defaultScope !in requestedScopes) {
+                requestedScopes.add(defaultScope ?: scope)
+            }
+        }
         AuthenticationConstants.DEFAULT_SCOPES.forEach { defaultScope ->
-            if (requestedScopes.none { it.equals(defaultScope, ignoreCase = true) }) {
+            if (defaultScope !in requestedScopes) {
                 requestedScopes.add(defaultScope)
             }
         }

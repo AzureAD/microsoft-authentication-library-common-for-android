@@ -712,6 +712,29 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
+    fun testSignUpEntryAndTokenCanonicalizeOidcDefaultsWithoutChangingResourceScopes() {
+        val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
+        val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
+        controller.signUpStart(signUpStartParameters().toBuilder().scopes(requestedScopes).build())
+        verify(exactly = 1) {
+            mockStrategy.performAuthorizeChallengeStart(correlationId, any(), any(), expectedScopes, null)
+        }
+        val state = mockContinuationState()
+        every { state.scopesForTokenRequest() } returns requestedScopes
+        every { state.claimsRequestJsonForTokenRequest() } returns null
+        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
+            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest("auth-code", expectedScopes, correlationId, null)
+        }
+    }
+
+    @Test
     fun testSignUpEntrySendsDefaultScopesAndClaimsForNullEmptyAndExplicitScopes() {
         every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
             AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
