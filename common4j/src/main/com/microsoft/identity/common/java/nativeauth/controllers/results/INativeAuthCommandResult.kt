@@ -60,13 +60,15 @@ interface INativeAuthCommandResult : ILoggable {
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
      */
-    data class APIError(
+    data class APIError @JvmOverloads constructor(
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
         override val correlationId: String,
         override val errorCodes: List<Int>? = null,
-        val exception: Exception? = null
+        val exception: Exception? = null,
+        val subError: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,

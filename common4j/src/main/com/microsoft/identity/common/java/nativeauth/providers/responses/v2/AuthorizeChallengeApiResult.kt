@@ -76,7 +76,9 @@ sealed interface AuthorizeChallengeApiResult : ApiResult {
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val subError: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

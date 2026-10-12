@@ -371,6 +371,8 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
+        val subError: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null,
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription)"
@@ -388,6 +390,8 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
+        val subError: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null,
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"

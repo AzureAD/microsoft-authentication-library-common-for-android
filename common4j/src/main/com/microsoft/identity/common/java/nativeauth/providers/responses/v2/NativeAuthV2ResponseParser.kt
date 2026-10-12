@@ -84,7 +84,9 @@ class NativeAuthV2ResponseParser {
                     ?.takeUnless { it.isBlank() } ?: response.correlationId,
                 error = serverError.code ?: ApiErrorResult.INVALID_STATE,
                 errorDescription = serverError.message.orEmpty(),
-                errorCodes = extractAadstsCodes(serverError.message)
+                errorCodes = extractAadstsCodes(serverError.message),
+                subError = serverError.innerErrorCode,
+                attributeValidationDetails = validationDetails(serverError)
             )
         }
 
@@ -558,7 +560,7 @@ class NativeAuthV2ResponseParser {
                 )
 
             innerErrorCode == INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
-                unknownInteractionError(correlationId, code, message, errorCodes)
+                unknownInteractionError(correlationId, code, message, errorCodes, innerErrorCode, validationDetails(serverError))
 
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
@@ -568,14 +570,16 @@ class NativeAuthV2ResponseParser {
                         .flatMap { it.attributeIds }
                         .distinct()
                     if (invalidAttributes.isEmpty()) {
-                        unknownInteractionError(correlationId, code, message, errorCodes)
+                        unknownInteractionError(correlationId, code, message, errorCodes, innerErrorCode, validationDetails(serverError))
                     } else {
                         NativeAuthV2InteractionApiResult.InvalidAttributes(
                             correlationId = correlationId,
                             invalidAttributes = invalidAttributes,
                             error = code.orEmpty(),
                             errorDescription = message.orEmpty(),
-                            errorCodes = errorCodes
+                            errorCodes = errorCodes,
+                            subError = innerErrorCode,
+                            attributeValidationDetails = validationDetails(serverError)
                         )
                     }
                 }
@@ -587,7 +591,9 @@ class NativeAuthV2ResponseParser {
                     correlationId = correlationId,
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    subError = innerErrorCode,
+                    attributeValidationDetails = validationDetails(serverError)
                 )
 
             code == ERROR_INVALID_REQUEST && innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
@@ -621,7 +627,7 @@ class NativeAuthV2ResponseParser {
                     errorCodes = errorCodes
                 )
 
-            else -> unknownInteractionError(correlationId, code, message, errorCodes)
+            else -> unknownInteractionError(correlationId, code, message, errorCodes, innerErrorCode, validationDetails(serverError))
         }
     }
 
@@ -629,13 +635,20 @@ class NativeAuthV2ResponseParser {
         correlationId: String,
         code: String?,
         message: String?,
-        errorCodes: List<Int>?
+        errorCodes: List<Int>?,
+        subError: String? = null,
+        attributeValidationDetails: List<Map<String, Any?>>? = null
     ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
         correlationId = correlationId,
         error = code ?: ApiErrorResult.INVALID_STATE,
         errorDescription = message.orEmpty(),
-        errorCodes = errorCodes
+        errorCodes = errorCodes,
+        subError = subError,
+        attributeValidationDetails = attributeValidationDetails
     )
+
+    private fun validationDetails(error: NativeAuthV2HalApiResponse.HalServerError): List<Map<String, Any?>> =
+        error.details.map { mapOf("code" to it.code, "attributeIds" to it.attributeIds) }
 
     private fun missingLinkError(
         correlationId: String,

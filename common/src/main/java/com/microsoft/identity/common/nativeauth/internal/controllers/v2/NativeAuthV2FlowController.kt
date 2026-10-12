@@ -188,6 +188,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
 
             val challenge = when (startResult) {
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
@@ -714,6 +716,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
 
             val firstFactorChallenge = when (startResult) {
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
@@ -1085,6 +1089,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             claimsRequestJson = tokenCommandParameters.claimsRequestJson
         )
 
+                    subError = continueResult.subError,
+                    attributeValidationDetails = continueResult.attributeValidationDetails,
         val successTokenResult = when (tokenResult) {
             is SignInTokenApiResult.Success -> tokenResult
             is SignInTokenApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
@@ -1109,6 +1115,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         return NativeAuthV2CommandResult.Complete(
+                    subError = tokenResult.subError,
+                    attributeValidationDetails = tokenResult.attributeValidationDetails,
             correlationId = complete.correlationId,
             authenticationResult = complete.authenticationResult,
             continuationToken = null,
@@ -1191,6 +1199,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 result = startResult,
                 retryState = null,
                 upfront = parameters
+                        subError = authChallengeResult.subError,
+                        attributeValidationDetails = authChallengeResult.attributeValidationDetails,
             )
             return result as? NativeAuthV2SignUpStartCommandResult
                 ?: unexpectedSignUpApiError(result, correlationId)
@@ -1333,7 +1343,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 correlationId = result.correlationId,
                 error = result.error,
                 errorDescription = result.errorDescription,
-                errorCodes = result.errorCodes
+                errorCodes = result.errorCodes,
+                subError = result.subError,
+                attributeValidationDetails = result.attributeValidationDetails
             )
             is NativeAuthV2InteractionApiResult.InvalidAttributes -> if (retryState != null) {
                 NativeAuthV2CommandResult.AttributesInvalid(
@@ -1342,7 +1354,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     invalidAttributes = result.invalidAttributes,
                     error = result.error,
                     errorDescription = result.errorDescription,
-                    errorCodes = result.errorCodes
+                    errorCodes = result.errorCodes,
+                    subError = result.subError,
+                    attributeValidationDetails = result.attributeValidationDetails
                 )
             } else {
                 mapInteractionError(result)
@@ -1562,7 +1576,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             error = error,
             errorDescription = errorDescription,
             errorCodes = errorCodes,
-            correlationId = result.correlationId
+            correlationId = result.correlationId,
+            subError = (result as? ApiErrorResult)?.subError,
+            attributeValidationDetails = (result as? ApiErrorResult)?.attributeValidationDetails
         )
     }
 }
