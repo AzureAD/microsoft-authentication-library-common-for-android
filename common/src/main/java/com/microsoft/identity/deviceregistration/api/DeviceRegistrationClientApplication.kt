@@ -232,6 +232,7 @@ class DeviceRegistrationClientApplication {
      * @param drsDiscoveryEndpoint DRS environment for preparation and registration.
      * @return Signed provisioning blob, not a registration challenge.
      * @throws BaseException If Broker communication or preparation fails.
+    * @throws ClientException If the response JWS is missing or blank.
      */
     @JvmOverloads
     @Throws(BaseException::class)
@@ -248,7 +249,13 @@ class DeviceRegistrationClientApplication {
                 correlationId, tenantId, resourceAccountId, drsDiscoveryEndpoint.name
             )
         )
-        val result = PreprovisioningBlobV1Response.create(responseSerialized).jws
+        val result: String? = PreprovisioningBlobV1Response.create(responseSerialized).jws
+        if (result.isNullOrBlank()) {
+            throw ClientException(
+                ClientException.INVALID_BROKER_BUNDLE,
+                "Provisioning response must contain a non-blank JWS."
+            )
+        }
         Logger.info(methodTag, "Blob returned successfully.")
         return result
     }
@@ -318,6 +325,7 @@ class DeviceRegistrationClientApplication {
       * @param drsDiscoveryEndpoint DRS environment used during preprovisioning.
       * @return Device and resource-account metadata after both operations succeed.
       * @throws BaseException If Broker communication, registration, or resource-account provisioning fails.
+    * @throws ClientException If the response is missing either registration record.
      */
     @JvmOverloads
     @Throws(BaseException::class)
@@ -340,8 +348,16 @@ class DeviceRegistrationClientApplication {
             )
         )
         val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV1Response.create(responseSerialized)
+        val deviceRegistrationRecord: IDeviceRegistrationRecord? = response.deviceRegistrationRecord
+        val resourceAccountRecord: AccountRecord? = response.resourceAccountRecord
+        if (deviceRegistrationRecord == null || resourceAccountRecord == null) {
+            throw ClientException(
+                ClientException.INVALID_BROKER_BUNDLE,
+                "Registration response must contain both device and resource-account records."
+            )
+        }
         Logger.info(methodTag, "Device registration and resource-account provisioning completed.")
-        return DeviceAndResourceAccountRegistrationResult(response.deviceRegistrationRecord, response.resourceAccountRecord)
+        return DeviceAndResourceAccountRegistrationResult(deviceRegistrationRecord, resourceAccountRecord)
     }
 
     /**
