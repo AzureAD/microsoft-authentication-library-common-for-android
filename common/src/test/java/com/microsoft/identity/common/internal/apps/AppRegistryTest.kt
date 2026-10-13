@@ -364,19 +364,6 @@ class AppRegistryTest {
     }
 
     @Test
-    fun islandProductionIdentities_areIncludedRegardlessOfBrokerDebugTrust() {
-        val originalDebugTrust = BrokerData.getShouldTrustDebugBrokers()
-        try {
-            listOf(false, true, false).forEach { trustDebug ->
-                BrokerData.setShouldTrustDebugBrokers(trustDebug)
-                assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.containsAll(AppRegistry.ISLAND_FAMILY.apps))
-            }
-        } finally {
-            BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
-        }
-    }
-
-    @Test
     fun forceBrokerDiscoveryAllowList_whenDebugBrokersTrusted_containsCompanyPortalAndMockApps() {
         assertEquals(6, AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST.size)
         assertTrue(AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST.contains(AppRegistry.INTUNE_CE_PROD))
@@ -420,6 +407,18 @@ class AppRegistryTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.S])
 class AppRegistryProductionTrustTest {
+
+    @Test
+    fun browserSsoAllowlist_initializedWithoutDebugTrust_containsIslandButNotMsalTestApp() {
+        assertFalse(BrokerData.getShouldTrustDebugBrokers())
+
+        val authorizedApps = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
+        assertEquals(18, authorizedApps.size)
+        assertEquals(14, AppRegistry.ISLAND_FAMILY.apps.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_FAMILY.apps))
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_FAMILY.apps))
+        assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+    }
 
     @Test
     fun deviceAllowlists_whenDebugBrokersNotTrusted_containOnlyProductionMdepApps() {
