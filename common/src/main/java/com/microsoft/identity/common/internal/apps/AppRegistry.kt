@@ -307,31 +307,22 @@ object AppRegistry {
     }
 
     /**
-     * Existing Browser SSO baseline: Chrome variants and the initialization-time debug-trusted
-     * MSAL test app. Use [getBrowserSsoAuthorizedApps] for request-time Island eligibility.
-     */
-    @JvmField
-    val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
-        addAll(CHROME_BROWSER_SSO_APPS)
-        if (BrokerData.getShouldTrustDebugBrokers()) {
-            add(MSAL_TEST_APP)
-        }
-    }
-
-    /**
      * Returns Browser SSO identities eligible for the current request.
      * Common does not evaluate Broker flights; the consumer supplies the current Island decision.
      * Every returned identity still requires package and signing-certificate validation.
      *
      * @param isIslandEnabled Whether the consumer's Island Browser SSO flight permits this request.
-     * @return The unchanged baseline, plus all 14 production Island identities only when enabled.
+     * @return Chrome, the MSAL test app when debug trust permits it, and Island only when enabled.
      */
-    fun getBrowserSsoAuthorizedApps(isIslandEnabled: Boolean): Set<App> =
-        if (isIslandEnabled) {
-            BROWSER_SSO_AUTHORIZED_APPS + ISLAND_BROWSER_SSO_APPS
-        } else {
-            BROWSER_SSO_AUTHORIZED_APPS
+    fun getBrowserSsoAuthorizedApps(isIslandEnabled: Boolean): Set<App> = buildSet {
+        addAll(CHROME_BROWSER_SSO_APPS)
+        if (BrokerData.getShouldTrustDebugBrokers()) {
+            add(MSAL_TEST_APP)
         }
+        if (isIslandEnabled) {
+            addAll(ISLAND_BROWSER_SSO_APPS)
+        }
+    }
 
     /**
      * Apps authorized to trigger force broker discovery.

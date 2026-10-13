@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.broker.App
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
@@ -248,14 +247,12 @@ class AppRegistryTest {
 
     @Test
     fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeAndMsalTestAppOnly() {
-        assertEquals(5, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_CANARY))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.MSAL_TEST_APP))
-        assertFalse(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(false)
+        assertEquals(5, authorizedApps.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertTrue(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+        assertFalse(authorizedApps.contains(AppRegistry.EDGE))
+        assertTrue(authorizedApps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -347,16 +344,36 @@ class AppRegistryTest {
 
     @Test
     fun browserSsoEligibility_usesTheCurrentIslandDecisionWithoutChangingTheBaseline() {
-        val baseline = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
-        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps(false)
         assertEquals(
             baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS,
             AppRegistry.getBrowserSsoAuthorizedApps(true)
         )
         assertEquals(19, AppRegistry.getBrowserSsoAuthorizedApps(true).size)
-        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
         assertEquals(5, baseline.size)
         assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+    }
+
+    @Test
+    fun browserSsoEligibility_preservesMsalTestAppUnderCurrentDebugTrust() {
+        val originalDebugTrust = BrokerData.getShouldTrustDebugBrokers()
+        try {
+            listOf(false, true, false).forEach { trustDebug ->
+                BrokerData.setShouldTrustDebugBrokers(trustDebug)
+                listOf(false, true).forEach { islandEnabled ->
+                    val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(islandEnabled)
+                    assertEquals(trustDebug, authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+                    assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+                    assertEquals(
+                        islandEnabled,
+                        authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS)
+                    )
+                }
+            }
+        } finally {
+            BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
+        }
     }
 
     @Test
@@ -408,7 +425,7 @@ class AppRegistryProductionTrustTest {
     fun browserSsoEligibility_initializedWithoutDebugTrust_islandRequiresOnlyItsFlightDecision() {
         assertFalse(BrokerData.getShouldTrustDebugBrokers())
 
-        val baseline = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps(false)
         assertEquals(4, baseline.size)
         assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
         val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(true)
@@ -417,7 +434,7 @@ class AppRegistryProductionTrustTest {
         assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS))
         assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
-        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
     }
 
     @Test
