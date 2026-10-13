@@ -36,7 +36,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
-import com.microsoft.identity.common.java.broker.AppFamily
 
 /**
  * Registry of known apps and their signing certificate thumbprints.
@@ -265,16 +264,9 @@ object AppRegistry {
         }
     }
 
-    /** Chrome browser variants with their individual release signing identities. */
+    /** Chrome browser variants with their individual signing identities. */
     @JvmField
-    val CHROME_FAMILY = AppFamily(
-        apps = buildSet {
-            add(CHROME)
-            add(CHROME_BETA)
-            add(CHROME_DEV)
-            add(CHROME_CANARY)
-        }
-    )
+    val CHROME_BROWSER_SSO_APPS = setOf(CHROME, CHROME_BETA, CHROME_DEV, CHROME_CANARY)
 
     /**
      * Island production identities: six Play Store signers and the shared direct-distribution
@@ -283,63 +275,63 @@ object AppRegistry {
      * Broker must enforce the Island flight for every variant.
      */
     @JvmField
-    val ISLAND_FAMILY = AppFamily(
-        apps = buildSet {
-            val playStoreApps = listOf(
-                ISLAND, ISLAND_CANARY, ISLAND_BETA,
-                ISLAND_INTUNE, ISLAND_CANARY_INTUNE, ISLAND_BETA_INTUNE
-            )
-            addAll(playStoreApps)
-            playStoreApps.forEach { app ->
-                add(
-                    App(
-                        nickName = "${app.nickName} (direct distribution)",
-                        packageName = app.packageName,
-                        signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
-                    )
-                )
-            }
+    val ISLAND_BROWSER_SSO_APPS = buildSet {
+        val playStoreApps = listOf(
+            ISLAND, ISLAND_CANARY, ISLAND_BETA,
+            ISLAND_INTUNE, ISLAND_CANARY_INTUNE, ISLAND_BETA_INTUNE
+        )
+        addAll(playStoreApps)
+        playStoreApps.forEach { app ->
             add(
                 App(
-                    nickName = "Island Dev (direct distribution)",
-                    packageName = "io.island.IslandDev",
-                    signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
-                )
-            )
-            add(
-                App(
-                    nickName = "Island Dev Intune (direct distribution)",
-                    packageName = "io.island.island.dev.intune",
+                    nickName = "${app.nickName} (direct distribution)",
+                    packageName = app.packageName,
                     signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
                 )
             )
         }
-    )
-
-    /** Browser families recognized for Browser SSO, subject to Broker's family-specific policy. */
-    @JvmField
-    val BROWSER_SSO_APP_FAMILIES = setOf(CHROME_FAMILY, ISLAND_FAMILY)
+        add(
+            App(
+                nickName = "Island Dev (direct distribution)",
+                packageName = "io.island.IslandDev",
+                signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
+            )
+        )
+        add(
+            App(
+                nickName = "Island Dev Intune (direct distribution)",
+                packageName = "io.island.island.dev.intune",
+                signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
+            )
+        )
+    }
 
     /**
-     * Production signing identities for Browser SSO, plus the existing debug-trusted MSAL test app.
-     * Family membership does not bypass certificate validation or Broker's flight policy.
+     * Existing Browser SSO baseline: Chrome variants and the initialization-time debug-trusted
+     * MSAL test app. Use [getBrowserSsoAuthorizedApps] for request-time Island eligibility.
      */
     @JvmField
     val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
-        BROWSER_SSO_APP_FAMILIES.forEach { addAll(it.apps) }
+        addAll(CHROME_BROWSER_SSO_APPS)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
     }
 
     /**
-     * Finds the browser family for an explicitly registered package, including Dev variants.
+     * Returns Browser SSO identities eligible for the current request.
+     * Common does not evaluate Broker flights; the consumer supplies the current Island decision.
+     * Every returned identity still requires package and signing-certificate validation.
      *
-     * @param packageName Package resolved from the calling UID, or null if unresolved.
-     * @return Matching family, or null for an unregistered package. This does not establish trust.
+     * @param isIslandEnabled Whether the consumer's Island Browser SSO flight permits this request.
+     * @return The unchanged baseline, plus all 14 production Island identities only when enabled.
      */
-    fun getBrowserSsoAppFamily(packageName: String?): AppFamily? =
-        BROWSER_SSO_APP_FAMILIES.firstOrNull { it.containsPackage(packageName) }
+    fun getBrowserSsoAuthorizedApps(isIslandEnabled: Boolean): Set<App> =
+        if (isIslandEnabled) {
+            BROWSER_SSO_AUTHORIZED_APPS + ISLAND_BROWSER_SSO_APPS
+        } else {
+            BROWSER_SSO_AUTHORIZED_APPS
+        }
 
     /**
      * Apps authorized to trigger force broker discovery.

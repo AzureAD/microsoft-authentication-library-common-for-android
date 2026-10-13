@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.broker.App
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
@@ -248,14 +247,15 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeIslandAndMsalTestApp() {
-        assertEquals(19, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
+    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeAndMsalTestAppOnly() {
+        assertEquals(5, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_CANARY))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.MSAL_TEST_APP))
         assertFalse(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
+        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -269,7 +269,7 @@ class AppRegistryTest {
             "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
         )
 
-        val islandPlayStoreApps = AppRegistry.ISLAND_FAMILY.apps.filter {
+        val islandPlayStoreApps = AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
             it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
         }
         assertEquals(6, islandPlayStoreApps.size)
@@ -293,7 +293,7 @@ class AppRegistryTest {
             "io.island.IslandDev",
             "io.island.island.dev.intune"
         )
-        val directDistributionApps = AppRegistry.ISLAND_FAMILY.apps.filter {
+        val directDistributionApps = AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
             it.signingCertificateThumbprint == DIRECT_DISTRIBUTION_SIGNATURE
         }
         assertEquals(8, directDistributionApps.size)
@@ -301,19 +301,19 @@ class AppRegistryTest {
             expectedPackages,
             directDistributionApps.map { it.packageName }.toSet()
         )
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.containsAll(directDistributionApps))
+        assertTrue(AppRegistry.getBrowserSsoAuthorizedApps(true).containsAll(directDistributionApps))
     }
 
     @Test
     fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
-        AppRegistry.ISLAND_FAMILY.apps.forEach {
+        AppRegistry.ISLAND_BROWSER_SSO_APPS.forEach {
             assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
         }
     }
 
     @Test
     fun islandBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
-        val islandPackages = AppRegistry.ISLAND_FAMILY.apps.map { it.packageName }.toSet()
+        val islandPackages = AppRegistry.ISLAND_BROWSER_SSO_APPS.map { it.packageName }.toSet()
         val existingAuthorizationLists = listOf(
             AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
             AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
@@ -327,40 +327,36 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserFamilies_groupExactlyTheRegisteredVariants() {
+    fun browserIdentitySets_haveExactlyTheRegisteredVariants() {
         assertEquals(
             setOf(AppRegistry.CHROME, AppRegistry.CHROME_BETA,
                 AppRegistry.CHROME_DEV, AppRegistry.CHROME_CANARY),
-            AppRegistry.CHROME_FAMILY.apps
+            AppRegistry.CHROME_BROWSER_SSO_APPS
         )
-        assertEquals(14, AppRegistry.ISLAND_FAMILY.apps.size)
-        assertEquals(8, AppRegistry.ISLAND_FAMILY.apps.map { it.packageName }.toSet().size)
+        assertEquals(14, AppRegistry.ISLAND_BROWSER_SSO_APPS.size)
+        assertEquals(8, AppRegistry.ISLAND_BROWSER_SSO_APPS.map { it.packageName }.toSet().size)
         assertEquals(
             setOf(AppRegistry.ISLAND, AppRegistry.ISLAND_CANARY, AppRegistry.ISLAND_BETA,
                 AppRegistry.ISLAND_INTUNE, AppRegistry.ISLAND_CANARY_INTUNE,
                 AppRegistry.ISLAND_BETA_INTUNE),
-            AppRegistry.ISLAND_FAMILY.apps.filter {
+            AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
                 it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
             }.toSet()
         )
-        assertEquals(
-            setOf(AppRegistry.CHROME_FAMILY, AppRegistry.ISLAND_FAMILY),
-            AppRegistry.BROWSER_SSO_APP_FAMILIES
-        )
-        AppRegistry.BROWSER_SSO_APP_FAMILIES.forEach { family ->
-            family.apps.forEach {
-                assertSame(family, AppRegistry.getBrowserSsoAppFamily(it.packageName))
-            }
-        }
     }
 
     @Test
-    fun browserFamilyLookup_doesNotTreatPackagePrefixOrTestAppAsFamilyMembership() {
-        assertNull(AppRegistry.getBrowserSsoAppFamily(null))
-        assertNull(AppRegistry.getBrowserSsoAppFamily("io.island.unlisted"))
-        assertNull(AppRegistry.getBrowserSsoAppFamily("com.chrome.unlisted"))
-        assertNull(AppRegistry.getBrowserSsoAppFamily(AppRegistry.MSAL_TEST_APP.packageName))
-        assertSame(AppRegistry.ISLAND_FAMILY, AppRegistry.getBrowserSsoAppFamily("IO.ISLAND.ISLAND"))
+    fun browserSsoEligibility_usesTheCurrentIslandDecisionWithoutChangingTheBaseline() {
+        val baseline = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
+        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        assertEquals(
+            baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS,
+            AppRegistry.getBrowserSsoAuthorizedApps(true)
+        )
+        assertEquals(19, AppRegistry.getBrowserSsoAuthorizedApps(true).size)
+        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        assertEquals(5, baseline.size)
+        assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -409,15 +405,19 @@ class AppRegistryTest {
 class AppRegistryProductionTrustTest {
 
     @Test
-    fun browserSsoAllowlist_initializedWithoutDebugTrust_containsIslandButNotMsalTestApp() {
+    fun browserSsoEligibility_initializedWithoutDebugTrust_islandRequiresOnlyItsFlightDecision() {
         assertFalse(BrokerData.getShouldTrustDebugBrokers())
 
-        val authorizedApps = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
+        val baseline = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS
+        assertEquals(4, baseline.size)
+        assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(true)
         assertEquals(18, authorizedApps.size)
-        assertEquals(14, AppRegistry.ISLAND_FAMILY.apps.size)
-        assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_FAMILY.apps))
-        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_FAMILY.apps))
+        assertEquals(14, AppRegistry.ISLAND_BROWSER_SSO_APPS.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS))
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+        assertSame(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
     }
 
     @Test
