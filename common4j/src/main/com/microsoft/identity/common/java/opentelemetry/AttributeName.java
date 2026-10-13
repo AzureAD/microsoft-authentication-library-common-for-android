@@ -142,6 +142,18 @@ public enum AttributeName {
     camera_permission_result,
 
     /**
+     * Outcome of a WebView file upload request: "selected", "cancelled", or "no_data" (OK);
+     * "launch_error", "superseded", or "abandoned" (ERROR).
+     */
+    webview_file_upload_result,
+
+    /**
+     * Privacy-safe bucket for the number of files returned by the system picker:
+     * "0", "1", "2-5", or "6+".
+     */
+    webview_file_upload_file_count_bucket,
+
+    /**
      * The correlation id sent from client app
      */
     correlation_id,
@@ -522,6 +534,41 @@ public enum AttributeName {
      * Records whether the original request headers were withheld from a Device-CA load.
      */
     device_ca_request_headers_skipped,
+
+    /**
+     * Indicates whether native Device-CA management-app handoff routing is enabled.
+     */
+    is_native_device_ca_management_app_handoff_enabled,
+
+    /**
+     * Records the management owner detected for Device-CA routing.
+     */
+    device_ca_management_owner,
+
+    /**
+     * Records the terminal Device-CA routing outcome.
+     */
+    device_ca_routing_outcome,
+
+    /**
+     * Records whether Device-CA marker detection fell back to the legacy substring parser.
+     */
+    device_ca_legacy_marker_parser_fallback_used,
+
+    /**
+     * Records whether the package-targeted management-app HTTPS App Link had no handler, launched, or failed.
+     */
+    device_ca_management_app_link_outcome,
+
+    /**
+     * Records whether the generic Device-CA HTTPS fallback had no handler, launched, or failed.
+     */
+    device_ca_generic_https_launch_outcome,
+
+    /**
+     * Records whether the Device-CA URL was accepted by WebView or failed to load.
+     */
+    device_ca_webview_load_outcome,
 
     /**
      * Records the if webview received an SSL error and

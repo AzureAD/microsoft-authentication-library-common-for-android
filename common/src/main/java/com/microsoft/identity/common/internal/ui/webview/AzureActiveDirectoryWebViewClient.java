@@ -61,6 +61,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.DeviceCaUrlRoutingOutcome;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -93,7 +94,6 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
-import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -117,6 +117,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
@@ -152,6 +153,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * {@code intent://} request.
      */
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+    private static final String DEVICE_CA_QUERY_PARAMETER = "ismdmurl";
+    private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
+    private static final String HTTPS_URL_PREFIX = "https://";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -239,6 +243,64 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
         mUrlLoadTracker = urlLoadTracker;
+    }
+
+    @NonNull
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    DeviceCaRequestRouter createDeviceCaRequestRouter() {
+        return new DeviceCaRequestRouter(new DeviceCaRequestRouter.Host() {
+            @NonNull
+            @Override
+            public Activity activity() {
+                return getActivity();
+            }
+
+            @Override
+            public boolean isRunningOnAuthService() {
+                return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+            }
+
+            @Override
+            public boolean isFlightEnabled(@NonNull final CommonFlight flight) {
+                return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(flight);
+            }
+
+            @Override
+            public void launchCompanyPortal() {
+                AzureActiveDirectoryWebViewClient.this.launchCompanyPortal();
+            }
+
+            @Override
+            public boolean isWebCpInWebViewEnabled(@NonNull final String url) {
+                return isWebCpInWebviewFeatureEnabled(url);
+            }
+
+            @Override
+            public void openLinkInBrowser(@NonNull final String url) {
+                AzureActiveDirectoryWebViewClient.this.openLinkInBrowser(url);
+            }
+
+            @Override
+            public void returnMdmFlow() {
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            }
+
+            @Override
+            public void recordOnboardingStep(@NonNull final String stepId) {
+                AzureActiveDirectoryWebViewClient.this.recordOnboardingStep(stepId);
+            }
+
+            @Override
+            public void markWebCpFlowStarted() {
+                mInWebCpFlow = true;
+            }
+
+            @Override
+            public void loadUrlWithRequestHeaders(@NonNull final WebView view,
+                                                   @NonNull final String url) {
+                view.loadUrl(url, mRequestHeaders);
+            }
+        });
     }
 
     @VisibleForTesting
@@ -477,7 +539,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
             }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
-                // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
+                // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
             } else {
@@ -1066,18 +1128,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
-                processDeviceCaRequest(view, url);
-                span.setStatus(StatusCode.OK);
+                Logger.info(methodTag, "Website request is device CA; entering processDeviceCaRequest.");
+                span.setStatus(processDeviceCaRequest(view, url)
+                        ? StatusCode.OK
+                        : StatusCode.ERROR);
                 return;
             }
 
             if (isRedirectToPlaystoreToInstallCp(url) && mInWebCpFlow) {
+                Logger.info(methodTag, "Website request is a WebCP Play Store redirect.");
                 handlePlaystoreLaunchUrlFromWebCp(url);
                 span.setStatus(StatusCode.OK);
                 return;
             }
 
             // Default case: redirect to browser
+            Logger.info(methodTag, "Website request is neither device CA nor a WebCP Play Store redirect; using browser redirect.");
             handleBrowserRedirect(methodTag, url);
             span.setStatus(StatusCode.OK);
         } catch (final Throwable throwable) {
@@ -1134,88 +1200,68 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param view The {@link WebView} instance in which the request originated.
      * @param url  The URL representing the device CA request.
      */
-    private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processDeviceCaRequest";
-        Logger.info(methodTag, "This is a device CA request.");
-
-        // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
-        recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
-
-        if (shouldLaunchCompanyPortal()) {
-            // If CP is installed, redirect to CP.
-            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-            //       CP is currently working on this.
-            //       Until that comes, we'll only handle this in ipphone.
-            try {
-                launchCompanyPortal();
-                return;
-            } catch (final Exception ex) {
-                Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+    private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessDeviceCaRequest.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            final DeviceCaRequestRouter.RoutingResult routingResult =
+                    createDeviceCaRequestRouter().route(view, url);
+            final boolean succeeded = routingResult instanceof
+                    DeviceCaRequestRouter.RoutingResult.Completed;
+            span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
+            if (routingResult instanceof DeviceCaRequestRouter.RoutingResult.Failed) {
+                final Throwable throwable =
+                        ((DeviceCaRequestRouter.RoutingResult.Failed) routingResult).getThrowable();
+                completeDeviceCaRequestWithError(view, throwable.getMessage());
             }
+            return succeeded;
+        } catch (final Throwable throwable) {
+            Logger.error(TAG + ":processDeviceCaRequest",
+                    "Unexpected failure while routing device CA request.", throwable);
+            span.recordException(throwable);
+            span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
+                    DeviceCaUrlRoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
+            span.setStatus(StatusCode.ERROR);
+            final String errorMessage = throwable.getMessage();
+            completeDeviceCaRequestWithError(view,
+                    errorMessage != null ? errorMessage : throwable.toString());
+            return false;
+        } finally {
+            span.end();
         }
-
-        loadDeviceCaUrl(url, view);
     }
 
-    private boolean isDeviceCaRequest(@NonNull final String url) {
-        return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected boolean isDeviceCaRequest(@NonNull final String url) {
+        final String methodTag = TAG + ":isDeviceCaRequest";
+        try {
+            final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
+                Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
+            Logger.info(methodTag, "Parsed device CA marker check result: " + isDeviceCaRequest);
+            return isDeviceCaRequest;
+        } catch (final RuntimeException exception) {
+            Logger.warn(methodTag,
+                "Device CA marker query parsing failed; using the legacy substring parser."
+                    + " Exception: " + exception.getClass().getSimpleName());
+            SpanExtension.current().setAttribute(
+                AttributeName.device_ca_legacy_marker_parser_fallback_used.name(), true);
+            return url.contains(
+                AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        }
+    }
+
+    @NonNull
+    private String toHttpsUrl(@NonNull final String url) {
+        return url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX);
     }
 
     private boolean isHttpsScheme(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
-    // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
-    private boolean shouldLaunchCompanyPortal() {
-        final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-        return packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)
-                && IPPHONE_APP_SHA512_RELEASE_SIGNATURE.equals(packageHelper.getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
-                && packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME);
-    }
-
-    // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
-    @VisibleForTesting
-    protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
-        final String methodTag = TAG + ":loadDeviceCaUrl";
-        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
-        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
-                Logger.info(methodTag, "Loading device CA request in WebView.");
-                span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-                final String httpsUrl = originalUrl.replace(
-                        AuthenticationConstants.Broker.BROWSER_EXT_PREFIX,
-                        "https://");
-                final boolean authorizeOnlyForwardingEnabled =
-                        CommonFlightsManager.INSTANCE
-                                .getFlightsProvider()
-                                .isFlightEnabled(
-                                        CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
-                span.setAttribute(
-                        AttributeName.device_ca_authorize_only_forwarding_enabled.name(),
-                        authorizeOnlyForwardingEnabled);
-                if (authorizeOnlyForwardingEnabled) {
-                    span.setAttribute(
-                            AttributeName.device_ca_request_headers_skipped.name(),
-                            true);
-                    view.loadUrl(httpsUrl);
-                } else {
-                    view.loadUrl(httpsUrl, mRequestHeaders);
-                }
-            } else {
-                Logger.info(methodTag, "Loading device CA request in browser.");
-                span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
-                openLinkInBrowser(originalUrl);
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            }
-            span.setStatus(StatusCode.OK);
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
-            span.recordException(throwable);
-            span.setStatus(StatusCode.ERROR);
-            returnError(UNKNOWN_ERROR, throwable.getMessage());
-        } finally {
-            span.end();
-        }
+    private void completeDeviceCaRequestWithError(@NonNull final WebView view,
+                                                  @Nullable final String message) {
+        view.stopLoading();
+        returnError(UNKNOWN_ERROR, message);
     }
 
     // Method to decide if the WebView should load the WebCP URL based on the flights.
@@ -1590,7 +1636,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":openLinkInBrowser";
         Logger.info(methodTag, "Try to open url link in browser");
         final String link = url
-                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX);
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             getActivity().startActivity(intent);
@@ -1657,7 +1703,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             installLink = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
                     mMamCaInstallReferrerEnabled,
-                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX),
                     activity.getPackageName(),
                     parameters);
         }
@@ -2131,6 +2177,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     span.setAttribute(attributeName.name(), value);
                 }
             }
+        }
+        final String flowCorrelationId = getFlowCorrelationId();
+        if (!StringUtil.isNullOrEmpty(flowCorrelationId)) {
+            span.setAttribute(AttributeName.correlation_id.name(), flowCorrelationId);
         }
         return span;
     }
