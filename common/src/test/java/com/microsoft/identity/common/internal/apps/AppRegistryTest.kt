@@ -37,6 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.lang.reflect.Modifier
 
 /**
  * Unit tests for [AppRegistry].
@@ -353,6 +354,17 @@ class AppRegistryTest {
         assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
         assertEquals(5, baseline.size)
         assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+    }
+
+    @Test
+    fun browserSsoEligibility_exposesAJavaStaticEntryPoint() {
+        val method = AppRegistry::class.java.getDeclaredMethod(
+            "getBrowserSsoAuthorizedApps",
+            java.lang.Boolean.TYPE
+        )
+        assertTrue(Modifier.isStatic(method.modifiers))
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(false), method.invoke(null, false))
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(true), method.invoke(null, true))
     }
 
     @Test

@@ -314,6 +314,7 @@ object AppRegistry {
      * @param isIslandEnabled Whether the consumer's Island Browser SSO flight permits this request.
      * @return Chrome, the MSAL test app when debug trust permits it, and Island only when enabled.
      */
+    @JvmStatic
     fun getBrowserSsoAuthorizedApps(isIslandEnabled: Boolean): Set<App> = buildSet {
         addAll(CHROME_BROWSER_SSO_APPS)
         if (BrokerData.getShouldTrustDebugBrokers()) {
