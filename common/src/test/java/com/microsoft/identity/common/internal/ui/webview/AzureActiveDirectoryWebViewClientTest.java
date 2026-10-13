@@ -430,13 +430,13 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testMarkedExternalBrowserUrlOutsideBroker_isNotIntercepted() {
+    public void testMarkedExternalBrowserUrlOutsideBroker_isIntercepted() {
         enableBrokerWebViewExternalBrowserRedirectFlight();
         try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class)) {
             processUtil.when(() -> ProcessUtil.isRunningOnAuthService(Mockito.any(Context.class)))
                     .thenReturn(false);
 
-            assertFalse(mWebViewClient.isBrokerExternalBrowserRedirect(
+            assertTrue(mWebViewClient.isBrokerExternalBrowserRedirect(
                     TEST_BROKER_EXTERNAL_BROWSER_URL));
         }
     }
