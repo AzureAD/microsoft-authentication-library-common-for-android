@@ -37,6 +37,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -110,6 +112,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -338,7 +343,6 @@ public class AzureActiveDirectoryWebViewClientTest {
                     .save("");
         }
     }
-
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, ""));
@@ -372,6 +376,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Arrange: the return-to-caller flight is on, and Microsoft Authenticator is the resolved handler...
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         // ...and it passes BrokerValidator signature-pinning.
         try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
@@ -388,6 +394,11 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals(Arrays.asList("authenticator_lookup", "wallet_verification", "return_to_caller"),
+                telemetry.captured().mEventNames);
+        assertEquals("found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
+        assertEquals("verified", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals("attached", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
     }
 
     @Test
@@ -396,6 +407,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Arrange: the return-to-caller flight is on, but a non-Authenticator app claims the scheme.
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler("com.example.malicious");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         // Act: the untrusted package fails the Authenticator check before BrokerValidator is even consulted.
         final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
@@ -406,6 +419,10 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertNotNull("Expected the openid-vc handler to be started", started);
         assertFalse("Untrusted handler must NOT receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals("not_found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
+        assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
     }
 
     @Test
@@ -417,6 +434,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // gate (not just the package-name check) must prevent both package-pinning and attaching.
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
                 BrokerValidator.class,
@@ -433,6 +452,35 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals("rejected", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_verificationThrows_retainsFailureAfterLaunchAccepted() {
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString()))
+                        .thenThrow(new SecurityException("sensitive-query")))) {
+            assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+        }
+
+        assertEquals("failed", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals("SecurityException", telemetry.captured().eventAttribute("wallet_verification", AttributeName.error_type));
+        assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull(started);
+        assertFalse(started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     @Test
@@ -562,6 +610,191 @@ public class AzureActiveDirectoryWebViewClientTest {
                 ((ClientException) capturedResult.getException()).getErrorCode());
         assertTrue("Expected error message about no application found",
                 capturedResult.getException().getMessage().contains("No application found"));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_returnsTrueOnlyWhenLaunchAccepted() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertTrue(telemetry.captured().mEventNames.isEmpty());
+        assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_reusesWithoutCreatingOrEndingSpan() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+        final Span previousSpan = SpanExtension.current();
+
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.OK, span.mStatusCode);
+        assertEquals(true, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        assertTrue(span.mEventNames.isEmpty());
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_noHandler_preservesErrorAndCallerOwnership() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.ERROR, span.mStatusCode);
+        assertEquals("No handler found for openid-vc:// URI", span.mStatusDescription);
+        assertEquals(false, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        Mockito.verify(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        Mockito.verify(webView, Mockito.never()).loadUrl(anyString());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_noHandler_returnsFalseWithExplicitError() {
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertFalse(client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(ErrorStrings.ACTIVITY_NOT_FOUND, ((ClientException) result.getValue().getException()).getErrorCode());
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals("No handler found for openid-vc:// URI", telemetry.captured().mStatusDescription);
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
+        assertEquals(false, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_securityException_returnsFalseWithExplicitError() {
+        verifyWalletDispatchFailure(new SecurityException("sensitive-query"), ErrorStrings.UNKNOWN_ERROR);
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_activityDisappears_returnsFalseWithExplicitError() {
+        verifyWalletDispatchFailure(new ActivityNotFoundException("sensitive-query"), ErrorStrings.ACTIVITY_NOT_FOUND);
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_error_propagatesWithoutErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final OutOfMemoryError failure = new OutOfMemoryError();
+        Mockito.doThrow(failure).when(activity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(OutOfMemoryError.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL)));
+
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(telemetry.captured().mRecordedException);
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_successTelemetryFails_doesNotDeliverErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final RecordingSpan span = Mockito.spy(new RecordingSpan());
+        final IllegalStateException failure = new IllegalStateException("Telemetry failed");
+        Mockito.doThrow(failure).when(span).setStatus(StatusCode.OK);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span)));
+
+        Mockito.verify(activity).startActivity(any(Intent.class));
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(span.mRecordedException);
+        assertEquals(0, span.mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    private void verifyWalletDispatchFailure(final Throwable exception, final String errorCode) {
+        registerOpenIdVcHandler("com.example.wallet");
+        final WebView webView = Mockito.mock(WebView.class);
+        final Activity failingActivity = Mockito.spy(mActivity);
+        Mockito.doThrow(exception).when(failingActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                failingActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
+        assertNull(telemetry.captured().mRecordedException);
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals("Failed to launch handler for openid-vc:// URI",
+                telemetry.captured().mStatusDescription);
+        assertEquals("failed", telemetry.captured().eventAttribute("vc_dispatch", AttributeName.operation_outcome));
+        assertEquals(exception.getClass().getSimpleName(),
+                telemetry.captured().eventAttribute("vc_dispatch", AttributeName.error_type));
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
+        assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
+        assertNull(telemetry.captured().attribute(AttributeName.error_type.name()));
+        assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+        assertFalse(telemetry.captured().mAttributes.values().toString().contains("sensitive-query"));
+        assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
+        Mockito.verify(webView, never()).loadUrl(anyString());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_callbackThrows_doesNotDeliverTwice() {
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final IllegalStateException failure = new IllegalStateException("Callback failed");
+        Mockito.doThrow(failure).when(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+
+        try {
+            client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL);
+            Assert.fail("Expected callback exception");
+        } catch (final IllegalStateException e) {
+            assertEquals(failure, e);
+        }
+        Mockito.verify(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
     }
 
     @Test
@@ -1050,6 +1283,18 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesInvalidUrl() {
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INVALID_URL));
+    }
+
+    @Test
+    public void testUrlOverrideDefersMyAccountUrlToWebView() {
+        final String url = "https://myaccount.microsoft.com/";
+
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, url));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, mockNavigationRequest(url, true)));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, mockNavigationRequest(url, false)));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
     }
 
     @Test
@@ -1650,8 +1895,18 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     private static final class RecordingSpan implements Span {
         private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
-                private int mRecordedExceptionCount;
-                private StatusCode mStatusCode = StatusCode.UNSET;
+        private final List<String> mEventNames = new ArrayList<>();
+        private final List<Attributes> mEvents = new ArrayList<>();
+        private StatusCode mStatusCode = StatusCode.UNSET;
+        private String mStatusDescription = "";
+        private int mEndCount;
+        private Throwable mRecordedException;
+        private int mRecordedExceptionCount;
+
+        Object eventAttribute(final String eventName, final AttributeName attribute) {
+            final int index = mEventNames.indexOf(eventName);
+            return index < 0 ? null : mEvents.get(index).get(AttributeKey.stringKey(attribute.name()));
+        }
 
         /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
         Object attribute(final String keyName) {
@@ -1679,24 +1934,28 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public Span addEvent(final String name, final Attributes attributes) {
+            mEventNames.add(name);
+            mEvents.add(attributes);
             return this;
         }
 
         @Override
         public Span addEvent(final String name, final Attributes attributes, final long timestamp,
                              final TimeUnit unit) {
-            return this;
+            return addEvent(name, attributes);
         }
 
         @Override
         public Span setStatus(final StatusCode statusCode, final String description) {
-                        mStatusCode = statusCode;
+            mStatusCode = statusCode;
+            mStatusDescription = description;
             return this;
         }
 
         @Override
         public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
-                        mRecordedExceptionCount++;
+            mRecordedException = exception;
+            mRecordedExceptionCount++;
             return this;
         }
 
@@ -1707,10 +1966,12 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public void end() {
+            mEndCount++;
         }
 
         @Override
         public void end(final long timestamp, final TimeUnit unit) {
+            end();
         }
 
         @Override
