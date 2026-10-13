@@ -235,7 +235,7 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
 
     /**
-     * Flight to enable external-browser routing for marked URLs in broker-hosted WebViews.
+     * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
      */
     ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
             "EnableBrokerWebViewExternalBrowserRedirect",

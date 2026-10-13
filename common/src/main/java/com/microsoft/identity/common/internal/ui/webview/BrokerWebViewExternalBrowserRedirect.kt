@@ -29,7 +29,7 @@ import android.net.Uri
 import com.microsoft.identity.common.logging.Logger
 
 /**
- * Recognizes and launches server-selected external URLs from broker-hosted WebViews.
+ * Recognizes and launches server-selected external URLs from brokered and brokerless WebViews.
  */
 object BrokerWebViewExternalBrowserRedirect {
     private val TAG = BrokerWebViewExternalBrowserRedirect::class.java.simpleName
