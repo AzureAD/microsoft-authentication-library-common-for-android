@@ -67,6 +67,15 @@ public abstract class AbstractJwtRequest {
         public static final String SESSION_KEY_CRYPTO = "session_key_crypto";
         public static final String PURPOSE = "purpose";
         public static final String CLIENT_SCENARIO = "client_scenario";
+        public static final String PREVIOUS_TOKEN = "previous_token";
+        public static final String KEY_TYPE = "key_type";
+        public static final String HASH_ALG = "hash_alg";
+        public static final String RP_ID = "rp_id";
+        public static final String FIDO_VER = "fido_ver";
+        public static final String SIGNATURE = "signature";
+        public static final String AUTH_DATA = "auth_data";
+        public static final String KEY_ID = "key_id";
+        public static final String CLIENT_DATA_JSON = "clientDataJSON";
     }
 
     @SerializedName(ClaimNames.REFRESH_TOKEN)
