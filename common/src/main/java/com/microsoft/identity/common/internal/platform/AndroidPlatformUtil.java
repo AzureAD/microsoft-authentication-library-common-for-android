@@ -198,7 +198,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                 uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);
         if (ownedPackages.isEmpty()) {
             Logger.error(methodTag,
-                    "No package could be resolved for the OS-attested calling uid. Rejecting request.",
+                    "No package could be resolved for the OS-attested calling uid . Rejecting request. callingUid: " + callingUid,
                     null);
             throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
                     "Unable to resolve the calling package from the OS-attested calling uid.");
@@ -206,7 +206,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         if (!ownedPackages.contains(callerPackageName)) {
             Logger.error(methodTag,
                     "Caller package in request bundle is not owned by the OS-attested calling uid. "
-                            + "Rejecting potential impersonation.", null);
+                            + "Rejecting potential impersonation. callerPackageName:  " + callerPackageName, null);
             throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
                     "Caller package does not match the OS-attested calling app.");
         }
