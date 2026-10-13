@@ -231,8 +231,9 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
      * to be intercepted via onCreateWindow and opened in an external browser.
+     * Defaults off for brokerless consumers; BrokerFlight supplies the broker default.
      */
-    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
 
     /**
      * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.

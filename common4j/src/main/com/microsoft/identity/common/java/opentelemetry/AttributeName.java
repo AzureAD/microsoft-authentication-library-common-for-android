@@ -142,6 +142,18 @@ public enum AttributeName {
     camera_permission_result,
 
     /**
+     * Outcome of a WebView file upload request: "selected", "cancelled", or "no_data" (OK);
+     * "launch_error", "superseded", or "abandoned" (ERROR).
+     */
+    webview_file_upload_result,
+
+    /**
+     * Privacy-safe bucket for the number of files returned by the system picker:
+     * "0", "1", "2-5", or "6+".
+     */
+    webview_file_upload_file_count_bucket,
+
+    /**
      * The correlation id sent from client app
      */
     correlation_id,
@@ -852,12 +864,25 @@ public enum AttributeName {
 
     /**
      * Indicates which routing path was taken for a target=_blank URL intercepted
-     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     * by onCreateWindow: null_url, no_user_gesture, openid_vc,
+     * non_ssl, browser, or browser_fallback.
      */
     target_blank_navigation_route,
 
     /**
-     * Indicates the non-sensitive outcome of an operation.
+     * The destination host for a target=_blank URL intercepted by onCreateWindow.
+     */
+    target_blank_navigation_destination_host,
+
+    /**
+     * Whether the popup was initiated by a user gesture.
+     */
+    target_blank_navigation_is_user_gesture,
+
+    /**
+     * Latest operation result. Named span events retain each decision's outcome independently;
+     * failures use the existing error_type attribute with an exception class only.
+     * Dispatch/load acceptance does not confirm destination completion.
      */
     operation_outcome,
 

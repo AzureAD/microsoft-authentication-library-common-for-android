@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.apps
 
+import android.os.Build
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -34,11 +35,13 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for [AppRegistry].
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.P])
 class AppRegistryTest {
 
     @Test
@@ -160,6 +163,38 @@ class AppRegistryTest {
     }
 
     @Test
+    fun bootMenuApps_haveProdAndDebugIdentities() {
+        assertApp(
+            app = AppRegistry.BOOT_MENU_PROD,
+            nickName = "Microsoft Boot Menu (prod)",
+            packageName = "com.microsoft.apps.bootmenu",
+            signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+        )
+        assertApp(
+            app = AppRegistry.BOOT_MENU_DEBUG,
+            nickName = "Microsoft Boot Menu (debug)",
+            packageName = "com.microsoft.apps.bootmenu",
+            signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+        )
+    }
+
+    @Test
+    fun mdepZteServiceApps_haveProdAndDebugIdentities() {
+        assertApp(
+            app = AppRegistry.MDEP_ZTE_SERVICE_PROD,
+            nickName = "Microsoft MDEP ZTE Service (prod)",
+            packageName = "com.microsoft.mdep.zte.service",
+            signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+        )
+        assertApp(
+            app = AppRegistry.MDEP_ZTE_SERVICE_DEBUG,
+            nickName = "Microsoft MDEP ZTE Service (debug)",
+            packageName = "com.microsoft.mdep.zte.service",
+            signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+        )
+    }
+
+    @Test
     fun ssoTokenAuthorizedApps_whenDebugBrokersTrusted_containsEdgeAndDebugAppsOnly() {
         assertEquals(5, AppRegistry.SSO_TOKEN_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.SSO_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
@@ -172,7 +207,11 @@ class AppRegistryTest {
 
     @Test
     fun getDeviceTokenAuthorizedApps_whenDebugBrokersTrusted_containsDeviceTokenApps() {
-        assertEquals(6, AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.size)
+        assertEquals(10, AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.size)
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_PROD))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_DEBUG))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_AOSP_AGENT_PROD))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDE_APP_PROD))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_AOSP_AGENT_DEBUG))
@@ -184,7 +223,11 @@ class AppRegistryTest {
 
     @Test
     fun deviceRegistrationAuthorizedApps_whenDebugBrokersTrusted_containsProdAndDebugRegistrationApps() {
-        assertEquals(13, AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.size)
+        assertEquals(17, AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.size)
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_PROD))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_DEBUG))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(BrokerData.prodMicrosoftAuthenticator))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(BrokerData.prodCompanyPortal))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_CE_PROD))
@@ -240,6 +283,38 @@ class AppRegistryTest {
         @BeforeClass
         fun setUpClass() {
             BrokerData.setShouldTrustDebugBrokers(true)
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDownClass() {
+            BrokerData.setShouldTrustDebugBrokers(BuildConfig.DEBUG)
+        }
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.S])
+class AppRegistryProductionTrustTest {
+
+    @Test
+    fun deviceAllowlists_whenDebugBrokersNotTrusted_containOnlyProductionMdepApps() {
+        for (authorizedApps in listOf(
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS
+        )) {
+            assertTrue(authorizedApps.contains(AppRegistry.BOOT_MENU_PROD))
+            assertTrue(authorizedApps.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+            assertFalse(authorizedApps.contains(AppRegistry.BOOT_MENU_DEBUG))
+            assertFalse(authorizedApps.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun setUpClass() {
+            BrokerData.setShouldTrustDebugBrokers(false)
         }
 
         @JvmStatic
