@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -77,6 +78,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
+import org.mockito.MockedConstruction;
 import org.mockito.InOrder;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -145,6 +147,157 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final ArgumentCaptor<WebChromeClient> client = ArgumentCaptor.forClass(WebChromeClient.class);
         verify(mainWebView).setWebChromeClient(client.capture());
         return client.getValue();
+    }
+
+    @Test
+    public void testOnCreateWindow_setupFailureAfterAllocation_destroysInterceptor() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final Message message = Message.obtain();
+        message.obj = mainWebView.new WebViewTransport();
+
+        try (final MockedConstruction<WebView> windows = mockConstruction(WebView.class)) {
+            assertFalse(client.onCreateWindow(mainWebView, false, true, message));
+            final WebView interceptor = windows.constructed().get(0);
+            verify(interceptor).destroy();
+            client.onCloseWindow(interceptor);
+            mFragment.onDestroyView();
+            verify(interceptor, times(1)).destroy();
+        }
+    }
+
+    @Test
+    public void testOnCloseWindow_withoutNavigation_destroysOnlyTrackedInterceptor() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0,
+                mainWebView.new WebViewTransport());
+
+        try (final MockedConstruction<WebView> windows = mockConstruction(WebView.class)) {
+            assertTrue(client.onCreateWindow(mainWebView, false, true, message));
+            final WebView interceptor = windows.constructed().get(0);
+            verify(interceptor).setWebChromeClient(client);
+            client.onCloseWindow(mainWebView);
+            verify(mainWebView, never()).destroy();
+            client.onCloseWindow(interceptor);
+            client.onCloseWindow(interceptor);
+            mFragment.onDestroyView();
+            verify(interceptor, times(1)).destroy();
+        }
+    }
+
+    @Test
+    public void testOnDestroyView_withoutNavigation_destroysAllOutstandingInterceptors() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+
+        try (final MockedConstruction<WebView> windows = mockConstruction(WebView.class)) {
+            for (int i = 0; i < 2; i++) {
+                final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0,
+                        mainWebView.new WebViewTransport());
+                assertTrue(client.onCreateWindow(mainWebView, false, true, message));
+            }
+            mFragment.onDestroyView();
+            mFragment.onDestroyView();
+            for (final WebView interceptor : windows.constructed()) {
+                verify(interceptor, times(1)).destroy();
+            }
+            verify(mainWebView, never()).destroy();
+        }
+    }
+
+    @Test
+    public void testNavigationCleanup_pendingAtTeardown_destroysOnce() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptor = mock(WebView.class);
+        when(interceptor.post(ArgumentMatchers.any(Runnable.class))).thenReturn(true);
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptor, mockRequest(HTTPS_TARGET_URL), mockSpan(), false);
+        final ArgumentCaptor<Runnable> cleanup = ArgumentCaptor.forClass(Runnable.class);
+        verify(interceptor).post(cleanup.capture());
+        verify(interceptor, never()).destroy();
+
+        mFragment.onDestroyView();
+        cleanup.getValue().run();
+        verify(interceptor, times(1)).destroy();
+    }
+
+    @Test
+    public void testNavigationCleanup_postRejected_destroysImmediately() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptor = mock(WebView.class);
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptor, mockRequest(HTTPS_TARGET_URL), mockSpan(), false);
+
+        verify(interceptor).destroy();
+        mFragment.onDestroyView();
+        verify(interceptor, times(1)).destroy();
+    }
+
+    @Test
+    public void testOnDestroy_pendingCleanup_destroysInterceptorWithoutDestroyView() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptor = mock(WebView.class);
+        when(interceptor.post(ArgumentMatchers.any(Runnable.class))).thenReturn(true);
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptor, mockRequest(HTTPS_TARGET_URL), mockSpan(), false);
+        final ArgumentCaptor<Runnable> cleanup = ArgumentCaptor.forClass(Runnable.class);
+        verify(interceptor).post(cleanup.capture());
+
+        mFragment.onDestroy();
+        cleanup.getValue().run();
+        verify(interceptor, times(1)).destroy();
+    }
+
+    @Test
+    public void testNavigationCleanup_spanCreationThrows_stillDestroysInterceptor() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0,
+                mainWebView.new WebViewTransport());
+
+        try (final MockedConstruction<WebView> windows = mockConstruction(WebView.class);
+             final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
+            assertTrue(client.onCreateWindow(mainWebView, false, true, message));
+            final WebView interceptor = windows.constructed().get(0);
+            final ArgumentCaptor<android.webkit.WebViewClient> callback =
+                    ArgumentCaptor.forClass(android.webkit.WebViewClient.class);
+            verify(interceptor).setWebViewClient(callback.capture());
+            telemetry.when(() -> OTelUtility.createSpanFromParent(
+                    eq(SpanName.WebViewTargetBlankNavigation.name()), ArgumentMatchers.isNull()))
+                    .thenThrow(new IllegalStateException("Span creation failed"));
+
+            assertThrows(IllegalStateException.class, () -> ReflectionHelpers.callInstanceMethod(
+                    callback.getValue(), "shouldOverrideUrlLoading",
+                    ReflectionHelpers.ClassParameter.from(WebView.class, interceptor),
+                    ReflectionHelpers.ClassParameter.from(WebResourceRequest.class,
+                            mockRequest(HTTPS_TARGET_URL))));
+
+            verify(interceptor).destroy();
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        }
+    }
+
+    @Test
+    public void testNavigationCleanup_spanEndThrows_stillPostsCleanup() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptor = mock(WebView.class);
+        final Span span = mockSpan();
+        doThrow(new IllegalStateException("Telemetry failure")).when(span).end();
+
+        assertThrows(IllegalStateException.class, () -> mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptor, mockRequest(HTTPS_TARGET_URL), span, false));
+
+        verify(interceptor).post(ArgumentMatchers.any(Runnable.class));
+        verify(interceptor).destroy();
     }
 
     @Test
@@ -234,6 +387,11 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                     ReflectionHelpers.ClassParameter.from(WebResourceRequest.class,
                             mockRequest(HTTPS_TARGET_URL)));
             assertTrue(navigationHandled);
+            assertTrue(ReflectionHelpers.callInstanceMethod(
+                    Shadows.shadowOf(interceptor).getWebViewClient(), "shouldOverrideUrlLoading",
+                    ReflectionHelpers.ClassParameter.from(WebView.class, interceptor),
+                    ReflectionHelpers.ClassParameter.from(WebResourceRequest.class,
+                            mockRequest(HTTPS_TARGET_URL))));
 
             telemetry.verify(() -> OTelUtility.createSpanFromParent(
                     SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext));

@@ -90,9 +90,12 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
@@ -117,6 +120,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
 
     private WebView mWebView;
+    private final Set<WebView> mInterceptorWebViews = new HashSet<>();
 
     private boolean mPasskeyWebListenerHooked;
 
@@ -482,6 +486,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 final SpanContext parentSpanContext = host instanceof AuthorizationActivity
                         ? ((AuthorizationActivity) host).getSpanContext() : null;
                 boolean windowHandled = false;
+                WebView interceptorWebView = null;
                 try {
                     if (host == null) {
                         Logger.error(methodTag, "onCreateWindow: authorization host is unavailable.", null);
@@ -492,13 +497,29 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         return false;
                     }
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
-                    final WebView interceptorWebView = new WebView(view.getContext());
+                    interceptorWebView = new WebView(view.getContext());
+                    mInterceptorWebViews.add(interceptorWebView);
+                    interceptorWebView.setWebChromeClient(this);
                     interceptorWebView.setWebViewClient(new WebViewClient() {
+                        private boolean mNavigationHandled;
+
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            final Span navigationSpan = OTelUtility.createSpanFromParent(
-                                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
-                            handleInterceptedUrlFromNewWindow(view, v, request, navigationSpan, isUserGesture);
+                            if (mNavigationHandled || !mInterceptorWebViews.contains(v)) {
+                                return true;
+                            }
+                            mNavigationHandled = true;
+                            boolean handlerStarted = false;
+                            try {
+                                final Span navigationSpan = OTelUtility.createSpanFromParent(
+                                        SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                                handlerStarted = true;
+                                handleInterceptedUrlFromNewWindow(view, v, request, navigationSpan, isUserGesture);
+                            } finally {
+                                if (!handlerStarted) {
+                                    scheduleInterceptorWebViewCleanup(v);
+                                }
+                            }
                             return true;
                         }
                     });
@@ -508,11 +529,40 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     windowHandled = true;
                 } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
+                } finally {
+                    if (!windowHandled && interceptorWebView != null) {
+                        destroyInterceptorWebView(interceptorWebView);
+                    }
                 }
                 return windowHandled;
             }
+
+            @Override
+            public void onCloseWindow(final WebView window) {
+                destroyInterceptorWebView(window);
+            }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
+    }
+
+    private void scheduleInterceptorWebViewCleanup(@NonNull final WebView interceptorWebView) {
+        if (mInterceptorWebViews.contains(interceptorWebView)
+                && !interceptorWebView.post(() -> destroyInterceptorWebView(interceptorWebView))) {
+            Logger.warn(TAG, "Unable to post popup cleanup; destroying the interceptor immediately.");
+            destroyInterceptorWebView(interceptorWebView);
+        }
+    }
+
+    private void destroyInterceptorWebView(@NonNull final WebView interceptorWebView) {
+        if (mInterceptorWebViews.remove(interceptorWebView)) {
+            interceptorWebView.destroy();
+        }
+    }
+
+    private void destroyInterceptorWebViews() {
+        for (final WebView interceptorWebView : new ArrayList<>(mInterceptorWebViews)) {
+            destroyInterceptorWebView(interceptorWebView);
+        }
     }
 
     /**
@@ -525,7 +575,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * inline fallback.
      *
      * @param mainWebView        The main authentication WebView.
-     * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
+     * @param interceptorWebView The temporary interceptor WebView. Cleanup is posted after handling;
+     *                           window close or fragment teardown also releases it if still outstanding.
      * @param request            The intercepted URL request.
      * @param span               The telemetry span to record which routing path is taken.
      * @param isUserGesture      Whether the popup was initiated by a user gesture (e.g. a click).
@@ -537,8 +588,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    @NonNull final Span span,
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
-        span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
+        mInterceptorWebViews.add(interceptorWebView);
         try {
+            span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
             final String correlationId = getCorrelationId();
             if (!StringUtil.isNullOrEmpty(correlationId)) {
                 span.setAttribute(AttributeName.correlation_id.name(), correlationId);
@@ -585,9 +637,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             span.setStatus(StatusCode.ERROR);
             Logger.error(methodTag, "Error handling target=_blank URL.", e);
         } finally {
-            span.end();
-            // Destroy the interceptor WebView after it has served its purpose
-            interceptorWebView.post(interceptorWebView::destroy);
+            try {
+                span.end();
+            } finally {
+                scheduleInterceptorWebViewCleanup(interceptorWebView);
+            }
         }
     }
 
@@ -823,6 +877,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
+        destroyInterceptorWebViews();
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
         // Cancel any in-flight switch-browser async work so its continuation does not resume
@@ -856,6 +911,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @Override
     public void onDestroyView() {
+        destroyInterceptorWebViews();
         if (mPasskeyWebListenerHooked && mWebView != null) {
             PasskeyWebListener.unhook(mWebView);
             mPasskeyWebListenerHooked = false;
