@@ -35,34 +35,22 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResp
  * to obtain a string suitable for
  * [com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.addBlockingError].
  *
- * Returns null when the response carries no error or the error is not blocking.
+ * Returns null when the response carries no qualifying error.
  *
  * Per design spec (Mobile Onboarding Telemetry §10), the `x-ms-clitelem` header
  * supplies both an `errorCode` (position 2) and a `subErrorCode` (position 3).
  * This parser prefers the sub-error code when present (it is the most specific
- * attribution signal) and falls back to the server error code; both are surfaced
- * to the onboarding blob via `addBlockingError`.
+ * attribution signal) and falls back to the server error code; only the selected
+ * value is surfaced to the onboarding blob via `addBlockingError`.
  */
 object OnboardingBlockingErrorParser {
 
     /**
-     * AADSTS error codes that look like blocking errors syntactically (5-digit
-     * server error codes from eSTS) but are NOT onboarding-remediation signals.
-     * These flow through the parser the same as any other server error, so we
-     * filter them here at the policy boundary so callers don't have to.
-     *
-     *  - 50058 UserInformationNotProvided   (no SSO session — user just needs to sign in)
-     *  - 50097 DeviceAuthenticationRequired (in-flow device auth challenge; if WPJ runs we
-     *                                        already record DeviceRegistrationStarted as a step)
-     *  - 50126 InvalidUserNameOrPassword    (wrong credentials — user error)
+     * Returns true for the eSTS "no error" sentinel, which must not be recorded as a
+     * blocking error. Null and blank values are handled by the caller's validation.
      */
-    private val NON_ONBOARDING_AADSTS_CODES = setOf("50058", "50097", "50126")
-
-    /**
-     * Returns true if the candidate error code should be excluded from the
-     * onboarding blob's `blocking_errors[]`. See [NON_ONBOARDING_AADSTS_CODES].
-     */
-    private fun isExcluded(candidate: String): Boolean = candidate in NON_ONBOARDING_AADSTS_CODES
+    @JvmStatic
+    fun isNonBlockingOnboardingErrorCode(code: String?): Boolean = code == "0"
 
     /**
      * Extract a blocking-error attribution string from a [MicrosoftTokenResponse].
@@ -75,9 +63,6 @@ object OnboardingBlockingErrorParser {
      * Position-2 of the `x-ms-clitelem` header is `0` when there is no error — those
      * cases are filtered out so callers don't pollute the blob with `"0"`.
      *
-     * Codes in [NON_ONBOARDING_AADSTS_CODES] are also filtered out as they are not
-     * onboarding-remediation signals.
-     *
      * @return blocking error identifier suitable for `addBlockingError(...)`, or null
      */
     @JvmStatic
@@ -85,12 +70,12 @@ object OnboardingBlockingErrorParser {
         if (tokenResponse == null) return null
 
         val subError = tokenResponse.cliTelemSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
+        if (!subError.isNullOrBlank() && !isNonBlockingOnboardingErrorCode(subError)) {
             return subError
         }
 
         val error = tokenResponse.cliTelemErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
+        if (!error.isNullOrBlank() && !isNonBlockingOnboardingErrorCode(error)) {
             return error
         }
 
@@ -102,9 +87,6 @@ object OnboardingBlockingErrorParser {
      * Useful when the caller does not have a [MicrosoftTokenResponse] in hand
      * (e.g. parsing a redirect response in a WebView client).
      *
-     * Codes in [NON_ONBOARDING_AADSTS_CODES] are filtered out the same as in the
-     * [MicrosoftTokenResponse] overload.
-     *
      * @return blocking error identifier suitable for `addBlockingError(...)`, or null
      */
     @JvmStatic
@@ -115,12 +97,12 @@ object OnboardingBlockingErrorParser {
         val cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(xMsCliTelemHeader) ?: return null
 
         val subError = cliTelemInfo.serverSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
+        if (!subError.isNullOrBlank() && !isNonBlockingOnboardingErrorCode(subError)) {
             return subError
         }
 
         val error = cliTelemInfo.serverErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
+        if (!error.isNullOrBlank() && !isNonBlockingOnboardingErrorCode(error)) {
             return error
         }
 
@@ -142,7 +124,6 @@ object OnboardingBlockingErrorParser {
      * Filters out:
      *  - empty entries (e.g. trailing commas)
      *  - the literal `"0"` (eSTS's "no error" sentinel)
-     *  - codes in [NON_ONBOARDING_AADSTS_CODES]
      *  - duplicates (preserves first-occurrence order)
      *
      * @return ordered list of qualifying AADSTS codes; empty if none qualify
@@ -152,7 +133,7 @@ object OnboardingBlockingErrorParser {
         if (errorCodes.isNullOrBlank()) return emptyList()
         return errorCodes.split(",")
             .map { it.trim() }
-            .filter { it.isNotEmpty() && it != "0" && !isExcluded(it) }
+            .filter { it.isNotEmpty() && !isNonBlockingOnboardingErrorCode(it) }
             .distinct()
     }
 }

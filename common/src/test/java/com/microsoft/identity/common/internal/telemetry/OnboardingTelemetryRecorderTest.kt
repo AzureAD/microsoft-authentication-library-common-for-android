@@ -141,6 +141,21 @@ class OnboardingTelemetryRecorderTest {
     }
 
     @Test
+    fun testFinalizeBlob_AadstsCodesPreserveOccurrencesAndLastError() {
+        for (code in listOf("50058", "50097", "50126", "50058", "50097", "50126")) {
+            recorder.addBlockingError(code)
+        }
+
+        val blob = JSONObject(recorder.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals(6, errors.length())
+        for ((index, code) in listOf("50058", "50097", "50126", "50058", "50097", "50126").withIndex()) {
+            Assert.assertEquals(code, errors.getString(index))
+        }
+        Assert.assertEquals("50126", blob.getString("last_blocking_error"))
+    }
+
+    @Test
     fun testFinalizeBlob_ContainsSeedFields() {
         recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
 
