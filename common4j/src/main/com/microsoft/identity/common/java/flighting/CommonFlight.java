@@ -200,9 +200,9 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight controlling silent-caller validation: when enabled (default), a silent broker token
      * request whose self-reported caller package is not owned by the kernel-attested calling uid
-     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466). Acts as a
-     * secure-by-default, ECS-backed kill-switch for the check in
-     * {@code BrokerSilentTokenCommandParameters.validate()}.
+     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466).
+     * Broker applies this gate when admitting the original request, before local execution or
+     * passthrough. Token command parameter validation does not repeat this caller check.
      */
     VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
 
