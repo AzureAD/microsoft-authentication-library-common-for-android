@@ -36,6 +36,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
 /**
  * Registry of known apps and their signing certificate thumbprints.
@@ -308,19 +310,19 @@ object AppRegistry {
 
     /**
      * Returns Browser SSO identities eligible for the current request.
-     * Common does not evaluate Broker flights; the consumer supplies the current Island decision.
+     * Evaluates the current Island flight through the shared Common flight manager.
+     * Without a host-initialized provider, the flight's default denies Island.
      * Every returned identity still requires package and signing-certificate validation.
      *
-     * @param isIslandEnabled Whether the consumer's Island Browser SSO flight permits this request.
      * @return Chrome, the MSAL test app when debug trust permits it, and Island only when enabled.
      */
     @JvmStatic
-    fun getBrowserSsoAuthorizedApps(isIslandEnabled: Boolean): Set<App> = buildSet {
+    fun getBrowserSsoAuthorizedApps(): Set<App> = buildSet {
         addAll(CHROME_BROWSER_SSO_APPS)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
-        if (isIslandEnabled) {
+        if (CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO)) {
             addAll(ISLAND_BROWSER_SSO_APPS)
         }
     }

@@ -28,15 +28,24 @@ import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import org.junit.After
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.lang.reflect.Modifier
 
 /**
@@ -45,6 +54,22 @@ import java.lang.reflect.Modifier
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class AppRegistryTest {
+    private var islandEnabled = false
+
+    @Before
+    fun setUpFlights() {
+        val provider = mock<IFlightsProvider>()
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
+            .thenAnswer { islandEnabled }
+        val manager = mock<IFlightsManager>()
+        whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+    }
+
+    @After
+    fun resetFlights() {
+        CommonFlightsManager.resetFlightsManager()
+    }
 
     @Test
     fun edgeApps_haveSharedSignatureAndDistinctPackages() {
@@ -248,7 +273,7 @@ class AppRegistryTest {
 
     @Test
     fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeAndMsalTestAppOnly() {
-        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(false)
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
         assertEquals(5, authorizedApps.size)
         assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertTrue(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
@@ -299,7 +324,8 @@ class AppRegistryTest {
             expectedPackages,
             directDistributionApps.map { it.packageName }.toSet()
         )
-        assertTrue(AppRegistry.getBrowserSsoAuthorizedApps(true).containsAll(directDistributionApps))
+        islandEnabled = true
+        assertTrue(AppRegistry.getBrowserSsoAuthorizedApps().containsAll(directDistributionApps))
     }
 
     @Test
@@ -344,14 +370,16 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoEligibility_usesTheCurrentIslandDecisionWithoutChangingTheBaseline() {
-        val baseline = AppRegistry.getBrowserSsoAuthorizedApps(false)
+    fun browserSsoEligibility_usesTheCurrentFlightWithoutChangingTheBaseline() {
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
+        islandEnabled = true
         assertEquals(
             baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS,
-            AppRegistry.getBrowserSsoAuthorizedApps(true)
+            AppRegistry.getBrowserSsoAuthorizedApps()
         )
-        assertEquals(19, AppRegistry.getBrowserSsoAuthorizedApps(true).size)
-        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        assertEquals(19, AppRegistry.getBrowserSsoAuthorizedApps().size)
+        islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
         assertEquals(5, baseline.size)
         assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
@@ -359,12 +387,12 @@ class AppRegistryTest {
     @Test
     fun browserSsoEligibility_exposesAJavaStaticEntryPoint() {
         val method = AppRegistry::class.java.getDeclaredMethod(
-            "getBrowserSsoAuthorizedApps",
-            java.lang.Boolean.TYPE
+            "getBrowserSsoAuthorizedApps"
         )
         assertTrue(Modifier.isStatic(method.modifiers))
-        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(false), method.invoke(null, false))
-        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(true), method.invoke(null, true))
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
+        islandEnabled = true
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
     }
 
     @Test
@@ -373,12 +401,13 @@ class AppRegistryTest {
         try {
             listOf(false, true, false).forEach { trustDebug ->
                 BrokerData.setShouldTrustDebugBrokers(trustDebug)
-                listOf(false, true).forEach { islandEnabled ->
-                    val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(islandEnabled)
+                listOf(false, true).forEach { enabled ->
+                    islandEnabled = enabled
+                    val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
                     assertEquals(trustDebug, authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
                     assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
                     assertEquals(
-                        islandEnabled,
+                        enabled,
                         authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS)
                     )
                 }
@@ -386,6 +415,16 @@ class AppRegistryTest {
         } finally {
             BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
         }
+    }
+
+    @Test
+    fun islandEligibility_withoutAHostFlightProvider_usesTheDisabledDefault() {
+        CommonFlightsManager.resetFlightsManager()
+        assertEquals("EnableIslandBrowserSso", CommonFlight.ENABLE_ISLAND_BROWSER_SSO.key)
+        assertEquals(false, CommonFlight.ENABLE_ISLAND_BROWSER_SSO.defaultValue)
+        val apps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertTrue(apps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertTrue(apps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -432,21 +471,39 @@ class AppRegistryTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.S])
 class AppRegistryProductionTrustTest {
+    private var islandEnabled = false
+
+    @Before
+    fun setUpFlights() {
+        val provider = mock<IFlightsProvider>()
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
+            .thenAnswer { islandEnabled }
+        val manager = mock<IFlightsManager>()
+        whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+    }
+
+    @After
+    fun resetFlights() {
+        CommonFlightsManager.resetFlightsManager()
+    }
 
     @Test
-    fun browserSsoEligibility_initializedWithoutDebugTrust_islandRequiresOnlyItsFlightDecision() {
+    fun browserSsoEligibility_initializedWithoutDebugTrust_islandRequiresOnlyItsFlight() {
         assertFalse(BrokerData.getShouldTrustDebugBrokers())
 
-        val baseline = AppRegistry.getBrowserSsoAuthorizedApps(false)
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
         assertEquals(4, baseline.size)
         assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
-        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps(true)
+        islandEnabled = true
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
         assertEquals(18, authorizedApps.size)
         assertEquals(14, AppRegistry.ISLAND_BROWSER_SSO_APPS.size)
         assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS))
         assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
-        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps(false))
+        islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
     }
 
     @Test

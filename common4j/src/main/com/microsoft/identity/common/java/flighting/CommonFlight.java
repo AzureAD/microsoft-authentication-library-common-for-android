@@ -38,6 +38,12 @@ import lombok.NonNull;
  */
 public enum CommonFlight implements IFlightConfig {
     /**
+     * Allows registered Island production browser identities to request Browser SSO headers.
+     * Disabled by default; the Broker Browser SSO entry point also requires its global SSO flight.
+     */
+    ENABLE_ISLAND_BROWSER_SSO("EnableIslandBrowserSso", false),
+
+    /**
      * Flight to control whether or not to use Network capability for performing network check.
      */
     USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false),
