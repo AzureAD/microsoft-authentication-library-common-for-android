@@ -101,8 +101,10 @@ and therefore monitors broker-hosted execution; brokerless behavior is covered b
 client tests but is not measured by this dashboard.
 
 1. Once the client build and marked traffic are present in production, verify that
-   `operation_outcome` is queryable in `android_spans` and that observed feature spans
-   contain a recognized terminal outcome consistent with their span status.
+   `operation_outcome` is queryable in `android_spans` and that spans classified by a
+   recognized feature outcome have the expected status. Because there is no independent
+   feature discriminator, the dashboard cannot detect feature spans that omit
+   `operation_outcome`.
 2. Review every sampled `broker_external_browser_launch_failed` span during the initial
    client rollout because no production failure baseline exists. Fewer than 10 marked
    requests per day are expected before public preview.
@@ -118,14 +120,15 @@ pre-deployment validation.
 Review the dashboard after a client version containing the change begins receiving marked
 traffic. Review tiles in this order:
 
-1. **Feature span volume and telemetry completeness**
+1. **Feature span volume and classified outcome consistency**
    - Count `ProcessWebsiteRequest` spans with either feature-specific outcome by Broker Host
      App Version.
    - Before public preview is announced, compare the sampled volume with the expectation of
      no more than 10 total marked requests per day. Because the span is sampled at 50%, do
      not expect telemetry for every request or treat an empty interval as proof of no usage.
-   - Verify every sampled feature span has exactly one recognized terminal outcome and
-     status.
+   - Verify that each classified feature span has the expected outcome-to-status mapping.
+     These tiles cannot measure outcome-attribute completeness because `operation_outcome`
+     is also the feature discriminator.
    - For sampled feature spans where `correlation_id_v2` is present, cross-reference it with
      eSTS or VID telemetry and confirm that the request belongs to the new VID feature.
 2. **External launch success rate**

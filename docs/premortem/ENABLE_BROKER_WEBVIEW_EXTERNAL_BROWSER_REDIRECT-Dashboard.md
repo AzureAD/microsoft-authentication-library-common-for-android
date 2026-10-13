@@ -116,8 +116,10 @@ android_spans
     round(100.0 * status_mismatches / sampled_spans, 2)
 ```
 
-This query cannot detect a feature span that completely omitted `operation_outcome`,
-because the outcome is also the attribute used to identify the feature span.
+This query validates status consistency only among spans already classified by a recognized
+feature outcome. It cannot detect a feature span that completely omitted
+`operation_outcome`, because the outcome is also the attribute used to identify the feature
+span. Do not use this tile as an outcome-attribute completeness guardrail.
 
 ## Tile 4: Failed-launch WebView fallback drilldown
 
