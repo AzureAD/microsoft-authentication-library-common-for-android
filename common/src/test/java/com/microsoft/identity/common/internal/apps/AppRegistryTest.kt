@@ -206,7 +206,7 @@ class AppRegistryTest {
 
     @Test
     fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeIslandAndMsalTestApp() {
-        assertEquals(11, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
+        assertEquals(19, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
@@ -216,7 +216,7 @@ class AppRegistryTest {
     }
 
     @Test
-    fun islandBrowserSsoReleaseApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
+    fun islandPlayStoreApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
         val expectedIdentities = mapOf(
             "io.island.Island" to "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw==",
             "io.island.IslandCanary" to "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ==",
@@ -226,20 +226,20 @@ class AppRegistryTest {
             "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
         )
 
-        val islandReleaseApps = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.filter {
-            it.packageName in expectedIdentities
+        val islandPlayStoreApps = AppRegistry.ISLAND_FAMILY.apps.filter {
+            it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
         }
-        assertEquals(6, islandReleaseApps.size)
+        assertEquals(6, islandPlayStoreApps.size)
         assertEquals(
             expectedIdentities,
-            islandReleaseApps.associate {
+            islandPlayStoreApps.associate {
                 it.packageName to it.signingCertificateThumbprint
             }
         )
     }
 
     @Test
-    fun islandBrowserSsoDebugApps_haveExactlyEightPackagesAndTheSharedUserdebugCertificate() {
+    fun islandDirectDistributionApps_haveExactlyEightPackagesAndTheSharedProductionCertificate() {
         val expectedPackages = setOf(
             "io.island.Island",
             "io.island.IslandCanary",
@@ -250,39 +250,27 @@ class AppRegistryTest {
             "io.island.IslandDev",
             "io.island.island.dev.intune"
         )
-        val expectedSignature =
-            "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
-
-        assertEquals(8, AppRegistry.ISLAND_FAMILY.debugApps.size)
+        val directDistributionApps = AppRegistry.ISLAND_FAMILY.apps.filter {
+            it.signingCertificateThumbprint == DIRECT_DISTRIBUTION_SIGNATURE
+        }
+        assertEquals(8, directDistributionApps.size)
         assertEquals(
             expectedPackages,
-            AppRegistry.ISLAND_FAMILY.debugApps.map { it.packageName }.toSet()
+            directDistributionApps.map { it.packageName }.toSet()
         )
-        assertTrue(
-            AppRegistry.ISLAND_FAMILY.debugApps.all {
-                it.signingCertificateThumbprint == expectedSignature
-            }
-        )
-        assertTrue(
-            AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.intersect(
-                AppRegistry.ISLAND_FAMILY.debugApps
-            ).isEmpty()
-        )
+        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.containsAll(directDistributionApps))
     }
 
     @Test
     fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
-        val identities = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS +
-                AppRegistry.ISLAND_FAMILY.debugApps
-
-        identities.forEach {
+        AppRegistry.ISLAND_FAMILY.apps.forEach {
             assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
         }
     }
 
     @Test
     fun islandBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
-        val islandPackages = AppRegistry.ISLAND_FAMILY.debugApps.map { it.packageName }.toSet()
+        val islandPackages = AppRegistry.ISLAND_FAMILY.apps.map { it.packageName }.toSet()
         val existingAuthorizationLists = listOf(
             AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
             AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
@@ -300,21 +288,24 @@ class AppRegistryTest {
         assertEquals(
             setOf(AppRegistry.CHROME, AppRegistry.CHROME_BETA,
                 AppRegistry.CHROME_DEV, AppRegistry.CHROME_CANARY),
-            AppRegistry.CHROME_FAMILY.releaseApps
+            AppRegistry.CHROME_FAMILY.apps
         )
-        assertTrue(AppRegistry.CHROME_FAMILY.debugApps.isEmpty())
+        assertEquals(14, AppRegistry.ISLAND_FAMILY.apps.size)
+        assertEquals(8, AppRegistry.ISLAND_FAMILY.apps.map { it.packageName }.toSet().size)
         assertEquals(
             setOf(AppRegistry.ISLAND, AppRegistry.ISLAND_CANARY, AppRegistry.ISLAND_BETA,
                 AppRegistry.ISLAND_INTUNE, AppRegistry.ISLAND_CANARY_INTUNE,
                 AppRegistry.ISLAND_BETA_INTUNE),
-            AppRegistry.ISLAND_FAMILY.releaseApps
+            AppRegistry.ISLAND_FAMILY.apps.filter {
+                it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
+            }.toSet()
         )
         assertEquals(
             setOf(AppRegistry.CHROME_FAMILY, AppRegistry.ISLAND_FAMILY),
             AppRegistry.BROWSER_SSO_APP_FAMILIES
         )
         AppRegistry.BROWSER_SSO_APP_FAMILIES.forEach { family ->
-            (family.releaseApps + family.debugApps).forEach {
+            family.apps.forEach {
                 assertSame(family, AppRegistry.getBrowserSsoAppFamily(it.packageName))
             }
         }
@@ -330,18 +321,13 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoAllowedApps_selectDebugIdentitiesUsingCurrentTrustPolicy() {
+    fun islandProductionIdentities_areIncludedRegardlessOfBrokerDebugTrust() {
         val originalDebugTrust = BrokerData.getShouldTrustDebugBrokers()
         try {
-            BrokerData.setShouldTrustDebugBrokers(false)
-            assertEquals(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS, AppRegistry.getBrowserSsoAuthorizedApps())
-            BrokerData.setShouldTrustDebugBrokers(true)
-            assertEquals(
-                AppRegistry.BROWSER_SSO_AUTHORIZED_APPS + AppRegistry.ISLAND_FAMILY.debugApps,
-                AppRegistry.getBrowserSsoAuthorizedApps()
-            )
-            BrokerData.setShouldTrustDebugBrokers(false)
-            assertEquals(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS, AppRegistry.getBrowserSsoAuthorizedApps())
+            listOf(false, true, false).forEach { trustDebug ->
+                BrokerData.setShouldTrustDebugBrokers(trustDebug)
+                assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.containsAll(AppRegistry.ISLAND_FAMILY.apps))
+            }
         } finally {
             BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
         }
@@ -371,6 +357,9 @@ class AppRegistryTest {
     }
 
     companion object {
+        private const val DIRECT_DISTRIBUTION_SIGNATURE =
+            "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
         @JvmStatic
         @BeforeClass
         fun setUpClass() {

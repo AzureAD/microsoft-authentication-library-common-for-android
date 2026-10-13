@@ -10,21 +10,18 @@ package com.microsoft.identity.common.java.broker
  *
  * This is application grouping metadata, not an OAuth family of client IDs.
  *
- * @property releaseApps Application identities signed with release certificates.
- * @property debugApps Application identities requiring the consumer's debug-trust policy.
+ * @property apps Explicit package and signing-certificate identities belonging to the family.
  */
 data class AppFamily(
-    val releaseApps: Set<App>,
-    val debugApps: Set<App> = emptySet()
+    val apps: Set<App>
 ) {
     /**
-     * Checks explicit package membership, including debug-only variants.
+     * Checks explicit package membership across all registered signing identities.
      * A match does not verify the caller's signing certificate.
      *
      * @param packageName Package resolved by the platform, or null for an unresolved caller.
      * @return Whether the package belongs to this family, ignoring case as caller validation does.
      */
     fun containsPackage(packageName: String?): Boolean =
-        releaseApps.any { it.packageName.equals(packageName, ignoreCase = true) } ||
-                debugApps.any { it.packageName.equals(packageName, ignoreCase = true) }
+        apps.any { it.packageName.equals(packageName, ignoreCase = true) }
 }
