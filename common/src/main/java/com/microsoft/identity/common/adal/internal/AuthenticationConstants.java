@@ -1318,11 +1318,16 @@ public final class AuthenticationConstants {
         public static final String AMAZON_APP_REDIRECT_PREFIX = "aea://";
 
         /**
+         * Custom URI scheme for OpenID Verifiable Credentials.
+         */
+        public static final String OPENID_VC_SCHEME = "openid-vc";
+
+        /**
          * Custom URI scheme prefix for OpenID Verifiable Credentials.
          * WebView cannot load this scheme natively; it must be intercepted and
          * forwarded to an external handler (wallet app) via an ACTION_VIEW intent.
          */
-        public static final String OPENID_VC_SCHEME_PREFIX = "openid-vc://";
+        public static final String OPENID_VC_SCHEME_PREFIX = OPENID_VC_SCHEME + "://";
 
         /**
          * Prefix for the Authenticator MFA linking.
@@ -1501,11 +1506,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
         /**
-         * Path segment for the TLR (Total loss recovery) start page.
-         */
-        public static final String TLR_START_PATH = "/tlr/start";
-
-        /**
          * WebView routing value when the target URL from a target=_blank navigation is null.
          */
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL = "null_url";
@@ -1516,14 +1516,19 @@ public final class AuthenticationConstants {
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL = "non_ssl";
 
         /**
-         * WebView routing value when the target URL is loaded inline (non-TLR page).
+         * WebView routing value when an OpenID VC target is delegated to the authentication WebView.
          */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR = "non_tlr_flow";
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC = "openid_vc";
 
         /**
-         * WebView routing value when the target URL is delegated to the system browser (TLR page).
+         * WebView routing value when the target URL is delegated to the system browser.
          */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_TLR = "tlr_flow";
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER = "browser";
+
+        /**
+         * HTTPS popup loaded inline after external browser dispatch failed.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK = "browser_fallback";
 
         /**
          * WebView routing value when the popup was not initiated by a user gesture.
