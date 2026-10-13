@@ -53,4 +53,28 @@ public class CommonFlightsManagerTest {
     public void tearDown() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
+
+    @Test
+    public void testMultipleWindows_defaultsOffWithoutConsumerFlightsManager() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        Assert.assertEquals(Boolean.FALSE, CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getDefaultValue());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+    }
+
+    @Test
+    public void testMultipleWindows_consumerCanExplicitlyEnableAndDisable() {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        provider.addFlight(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getKey(), "true");
+        Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+
+        provider.addFlight(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getKey(), "false");
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+    }
 }
