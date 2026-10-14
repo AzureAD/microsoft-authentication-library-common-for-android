@@ -146,11 +146,12 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Flight to withhold the original request headers from Device-CA loads so credentials are
-     * forwarded only by the validated WebCP authorize path.
+     * forwarded only by the validated WebCP authorize path. This is disabled by default for
+     * gradual rollout; an explicit {@code true} value enables authorize-only forwarding.
      */
     ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING(
             "EnableDeviceCaAuthorizeOnlyCredentialForwarding",
-            true),
+            false),
 
     /**
      * Flight to enable the Playstore URL launch for broker apps.
@@ -234,6 +235,13 @@ public enum CommonFlight implements IFlightConfig {
      * Defaults off for brokerless consumers; BrokerFlight supplies the broker default.
      */
     ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
+
+    /**
+     * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
+     */
+    ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
+            "EnableBrokerWebViewExternalBrowserRedirect",
+            true),
 
     /**
      * Flight to enable file upload support in the embedded WebView.
