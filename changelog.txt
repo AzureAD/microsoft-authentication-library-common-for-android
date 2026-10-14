@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MAJOR] Replace AppRegistry.BROWSER_SSO_AUTHORIZED_APPS with getBrowserSsoAuthorizedApps(), which evaluates default-off EnableIslandBrowserSso per request and preserves Chrome/debug-trusted MSAL test-app support alongside eligible Island production identities (AB#3780783) (#3298)
 - [MINOR] Add the InstallCertDeepLinkActivity span name for Broker's legacy install-certificate deep-link caller telemetry (AB#3771034) (#3293)
 - [PATCH] Default authorize-only Device-CA credential forwarding to off for gradual ECS rollout
 - [PATCH] Enforce authorize-only Device-CA credential forwarding by withholding original request headers from Device-CA WebView loads by default, with explicit ECS disablement as the rollback path (AB#3766458)
