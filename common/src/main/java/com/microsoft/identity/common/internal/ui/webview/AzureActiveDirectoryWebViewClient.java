@@ -529,6 +529,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
+            } else if (isBrokerExternalBrowserRedirect(url)) {
+                Logger.info(methodTag, "Broker WebView received an external-browser redirect.");
+                return processBrokerExternalBrowserRedirect(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
@@ -578,6 +581,39 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isUriSSLProtected(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
+    }
+
+    @VisibleForTesting
+    boolean isBrokerExternalBrowserRedirect(@NonNull final String url) {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
+                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)
+                && BrokerWebViewExternalBrowserRedirect.isMarked(url);
+    }
+
+    private boolean processBrokerExternalBrowserRedirect(
+            @NonNull final WebView view,
+            @NonNull final String url) {
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            if (BrokerWebViewExternalBrowserRedirect.launch(getActivity(), url)) {
+                view.stopLoading();
+                span.setAttribute(AttributeName.is_redirect_url_opened_in_browser.name(), true);
+                span.setAttribute(
+                        AttributeName.operation_outcome.name(),
+                        "broker_external_browser_launched");
+                span.setStatus(StatusCode.OK);
+                return true;
+            } else {
+                span.setAttribute(AttributeName.is_redirect_url_opened_in_browser.name(), false);
+                span.setAttribute(
+                        AttributeName.operation_outcome.name(),
+                        "broker_external_browser_launch_failed");
+                span.setStatus(StatusCode.ERROR);
+                return false;
+            }
+        } finally {
+            span.end();
+        }
     }
 
     private boolean isBlankPageRequest(@NonNull final String url) {
