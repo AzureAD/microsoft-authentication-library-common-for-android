@@ -458,6 +458,8 @@ class AppRegistryTest {
         @BeforeClass
         fun setUpClass() {
             BrokerData.setShouldTrustDebugBrokers(true)
+            // Initialize trust-dependent snapshots before any test temporarily changes debug trust.
+            AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST
         }
 
         @JvmStatic
