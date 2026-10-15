@@ -254,6 +254,34 @@ class AuthUxJavaScriptInterfaceTest {
         Assert.assertTrue(sink.received.isEmpty())
     }
 
+    @Test
+    fun `test telemetry-only capabilities reject number matching`() {
+        val bridge = AuthUxJavaScriptInterface(
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = true,
+                numberMatchingAllowed = false
+            )
+        )
+
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test closed processor ignores queued callbacks`() {
+        val sink = RecordingTelemetrySink()
+        val bridge = AuthUxJavaScriptInterface(sink)
+        bridge.close()
+
+        bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(bridge.isClosed)
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
     /** Test double that records every telemetry event routed to the sink. */
     private class RecordingTelemetrySink(
         /** When false, simulates a host that is not ready to consume yet (e.g. no recorder). */

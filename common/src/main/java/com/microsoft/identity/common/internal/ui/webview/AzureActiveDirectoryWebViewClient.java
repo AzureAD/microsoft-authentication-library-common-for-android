@@ -51,6 +51,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
@@ -198,7 +199,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     @Nullable
     private String mLastCommittedRequestUrl;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     // Whether the host opted in to MAM-CA install-referrer tagging for this request.
@@ -333,12 +333,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * If both conditions are met, it adds the JavaScript interface to the WebView.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(TAG, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
-        }
+        setAuthUxBridgeSession(AuthUxBridgeSession.create(
+                view,
+                url,
+                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()),
+                mOnboardingTelemetryRecorder != null,
+                CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)
+        ));
     }
 
     /**
@@ -363,15 +365,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: record domain navigation (best-effort, no-op if no recorder).
         recordLastLoadedDomain(url);
 
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
-        }
     }
 
     /**
@@ -2196,10 +2189,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        closeAuthUxBridgeSession();
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
         mCertBasedAuthFactory.onDestroy();
+    }
+
+    /**
+     * Closes only the request-owned Auth UX bridge resources.
+     */
+    public void closeAuthUxBridgeSession() {
+        if (mAuthUxBridgeSession != null) {
+            mAuthUxBridgeSession.close();
+            mAuthUxBridgeSession = null;
+        }
     }
 
     /**
