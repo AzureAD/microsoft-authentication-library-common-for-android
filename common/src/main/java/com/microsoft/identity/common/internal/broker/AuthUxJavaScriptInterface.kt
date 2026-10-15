@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Immutable context for a single Auth UX `log_telemetry` message.
@@ -77,8 +78,13 @@ fun interface AuthUxTelemetrySink {
  *  absent, telemetry messages are parsed and validated without producing a side effect.
  */
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
-    private val telemetrySink: AuthUxTelemetrySink? = null
-) {
+    private val telemetrySink: AuthUxTelemetrySink? = null,
+    private val capabilities: AuthUxRequestCapabilities = AuthUxRequestCapabilities.BROKER
+) : AuthUxMessageProcessor {
+    private val closed = AtomicBoolean(false)
+
+    override val isClosed: Boolean
+        get() = closed.get()
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -155,7 +161,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      *         }
      *
      * Telemetry (`log_telemetry`) — non-mutating; forwards an opaque server error code to the
-     * onboarding telemetry sink (AB#3688631 / AB#3688632):
+     * onboarding telemetry sink:
      *         {
      *             "correlationID": "SOME_CORRELATION_ID",
      *             "action_name":"log_telemetry",
@@ -179,7 +185,15 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      */
     @JavascriptInterface
     fun receiveAuthUxMessage(jsonPayload: String) {
+        process(jsonPayload)
+    }
+
+    override fun process(jsonPayload: String) {
         val methodTag = "$TAG:receiveAuthUxMessage"
+        if (closed.get()) {
+            Logger.info(methodTag, "Ignoring Auth UX payload after request closure.")
+            return
+        }
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
 
         try {
@@ -222,10 +236,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             when {
                 // Match telemetry first so params.operation cannot route it to Number Matching.
-                actionName == ActionNames.LOG_TELEMETRY ->
+                actionName == ActionNames.LOG_TELEMETRY && capabilities.telemetryAllowed ->
                     handleLogTelemetry(correlationId, parameters, methodTag)
 
-                operation == OperationNames.NUMBER_MATCHING ->
+                operation == OperationNames.NUMBER_MATCHING && capabilities.numberMatchingAllowed ->
                     NumberMatchHelper.storeNumberMatch(
                         parameters.sessionId,
                         parameters.codeMatch
@@ -264,7 +278,12 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                     )
                 }
             }
+
         }
+    }
+
+    override fun close() {
+        closed.set(true)
     }
 
     private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload {

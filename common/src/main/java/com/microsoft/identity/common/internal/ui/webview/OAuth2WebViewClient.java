@@ -44,6 +44,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
@@ -80,6 +81,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public static ExpectedPage mExpectedPage = null;
 
     protected boolean mAuthUxJavaScriptInterfaceAdded = false;
+    protected AuthUxBridgeSession mAuthUxBridgeSession;
 
     /**
      * @return context
@@ -208,6 +210,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+        if (mAuthUxBridgeSession != null) {
+            mAuthUxBridgeSession.onPageFinished(view);
+        }
         mPageLoadedCallback.onPageLoaded(url);
 
         //Supports UI Automation... informing that the webview resource is now idle
@@ -246,8 +251,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
 
-        // Re-evaluate adding AuthUx JavaScript Interface
-        if (shouldExposeJavaScriptInterface(url)) {
+        if (mAuthUxBridgeSession != null) {
+            mAuthUxBridgeSession.onPageStarted(view, url);
+        } else if (shouldExposeJavaScriptInterface(url)) {
+            // Re-evaluate adding AuthUx JavaScript Interface
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
@@ -261,6 +268,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         Logger.info(methodTag,"WebView starts loading.");
         super.onPageStarted(view, url, favicon);
+    }
+
+    protected void setAuthUxBridgeSession(final AuthUxBridgeSession authUxBridgeSession) {
+        mAuthUxBridgeSession = authUxBridgeSession;
+        mAuthUxJavaScriptInterfaceAdded = false;
     }
 
     private void checkStartUrl(final String url) {
