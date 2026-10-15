@@ -37,6 +37,105 @@ class NativeAuthV2ResponseParserTest {
     private val parser = NativeAuthV2ResponseParser()
 
     @Test
+    fun parseAuthorizeChallenge_prefersExplicitErrorCodesIncludingEmptyArray() {
+        for (codes in listOf(listOf(100, 200), emptyList())) {
+            val result = parser.parseAuthorizeChallenge(
+                response = responseFrom(
+                    """{"error":"InsufficientAuthorization",
+                        "error_description":"AADSTS500127: No authenticated credentials.",
+                        "error_codes":$codes,"trace_id":"server-trace",
+                        "timestamp":"2026-10-15 11:00:20Z"}"""
+                ),
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.SIGN_IN,
+                scopes = emptyList()
+            ) as AuthorizeChallengeApiResult.UnknownError
+
+            assertEquals(codes, result.errorCodes)
+            assertEquals("server-trace", result.traceId)
+            assertEquals("2026-10-15 11:00:20Z", result.timestamp)
+        }
+    }
+
+    @Test
+    fun parseInteraction_preservesDiagnosticsAcrossTypedAndUnknownErrors() {
+        val cases = listOf(
+            Triple("invalidGrant", "invalidOneTimeCode", NativeAuthV2InteractionApiResult.InvalidCode::class.java),
+            Triple("invalidGrant", "invalidUserNameOrPassword", NativeAuthV2InteractionApiResult.InvalidCredentials::class.java),
+            Triple("invalidRequest", "passwordTooWeak", NativeAuthV2InteractionApiResult.InvalidPassword::class.java),
+            Triple("invalidRequest", "attributeValidationError", NativeAuthV2InteractionApiResult.InvalidAttributes::class.java),
+            Triple("invalidRequest", "userNotFound", NativeAuthV2InteractionApiResult.UnknownError::class.java)
+        )
+        for ((code, innerCode, expectedClass) in cases) {
+            val result = parser.parseInteraction(
+                responseFrom(
+                    """{"error":{"code":"$code","message":"AADSTS10040172: Service diagnostic.",
+                        "correlationId":"service-correlation","traceId":"service-trace",
+                        "timestamp":"unmodified-timestamp","innerError":{"code":"$innerCode",
+                        "details":[{"code":"attributeValidationFailed","attributeIds":["email"]}]}}}"""
+                ),
+                previousState(NativeAuthV2FlowScenario.SIGN_UP)
+            )
+
+            assertEquals(innerCode, expectedClass, result.javaClass)
+            val error = result as ApiErrorResult
+            assertEquals("service-trace", error.traceId)
+            assertEquals("unmodified-timestamp", error.timestamp)
+            assertEquals("service-correlation", error.correlationId)
+            assertEquals(listOf(10040172), error.errorCodes)
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_missingOrMalformedDiagnosticFieldsRemainNull() {
+        for (json in listOf(
+            """{"error":"future_error"}""",
+            """{"error":"future_error","trace_id":123,"timestamp":{}}""",
+            """{"error":{"code":"future_error","traceId":[],"timestamp":false}}"""
+        )) {
+            val result = parser.parseAuthorizeChallenge(
+                responseFrom(json), NativeAuthV2LinkRelation.SIGN_IN,
+                NativeAuthV2FlowScenario.SIGN_IN, emptyList()
+            ) as AuthorizeChallengeApiResult.UnknownError
+            assertNull(result.traceId)
+            assertNull(result.timestamp)
+            assertNull(result.errorCodes)
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_browserFallbackRetainsDiagnostics() {
+        val result = parser.parseAuthorizeChallenge(
+            responseFrom(
+                """{"error":{"code":"redirect_to_web","message":"AADSTS123: Browser required.",
+                    "traceId":"fallback-trace","timestamp":"service-time"}}"""
+            ),
+            NativeAuthV2LinkRelation.SIGN_IN, NativeAuthV2FlowScenario.SIGN_IN, emptyList()
+        ) as AuthorizeChallengeApiResult.Redirect
+        assertEquals("fallback-trace", result.traceId)
+        assertEquals("service-time", result.timestamp)
+        assertEquals(listOf(123), result.errorCodes)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_invalidErrorCodesFallBackToMessage() {
+        for (codes in listOf("null", "\"bad\"", "[100,\"200\"]", "[1.5]", "[2147483648]", "[2147483647.0000001]", "[null]")) {
+            val result = parser.parseAuthorizeChallenge(
+                response = responseFrom(
+                    """{"error":"InsufficientAuthorization",
+                        "error_description":"AADSTS500127: No authenticated credentials.",
+                        "error_codes":$codes}"""
+                ),
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.SIGN_IN,
+                scopes = emptyList()
+            ) as AuthorizeChallengeApiResult.UnknownError
+
+            assertEquals(codes, listOf(500127), result.errorCodes)
+        }
+    }
+
+    @Test
     fun parseInteraction_whenActionMissing_returnsUnknownErrorForMissingActionField() {
         val response = responseFrom("""{"continuationToken":"token"}""")
 
@@ -1138,14 +1237,16 @@ class NativeAuthV2ResponseParserTest {
             correlationId = CORRELATION_ID
         )
 
-    private fun previousState(): NativeAuthV2ContinuationState {
+    private fun previousState(
+        scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.RESET_PASSWORD
+    ): NativeAuthV2ContinuationState {
         val seedResponse = responseFrom("""{"continuationToken":"seed"}""")
         return NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
             response = seedResponse,
             continuationToken = "seed",
             entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
             scopes = listOf("User.Read"),
-            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
+            scenario = scenario
         )
     }
 
