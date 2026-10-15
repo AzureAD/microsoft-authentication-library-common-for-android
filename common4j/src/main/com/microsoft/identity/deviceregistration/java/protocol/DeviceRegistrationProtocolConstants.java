@@ -28,7 +28,10 @@ package com.microsoft.identity.deviceregistration.java.protocol;
 public final class DeviceRegistrationProtocolConstants {
     public static final String DEVICE_REGISTRATION_WITH_TOKENS_V0 = "protocol.device.registration.with.tokens.v0";
     public static final String DEVICE_REGISTRATION_PREAUTHORIZED_V0 = "protocol.device.registration.preauthorized.v0";
+    public static final String REGISTER_DEVICE_AND_RESOURCE_ACCOUNT_WITH_PREAUTHORIZED_CHALLENGE_V0 =
+            "protocol.register.device.and.resource.account.with.preauthorized.challenge.v0";
     public static final String GET_PRE_PROVISIONED_BLOB_V0 = "protocol.get.pre.provisioned.blob.v0";
+    public static final String GET_PRE_PROVISIONED_BLOB_V1 = "protocol.get.pre.provisioned.blob.v1";
     public static final String GET_REGISTRATION_STATE_V0 = "protocol.get.state.v0";
     public static final String GET_DEVICE_TOKEN_V0 = "protocol.get.device.token.v0";
     public static final String GET_DEVICE_TOKEN_V1 = "protocol.get.device.token.v1";

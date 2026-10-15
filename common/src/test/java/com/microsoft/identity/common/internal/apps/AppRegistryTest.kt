@@ -22,24 +22,54 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.apps
 
+import android.os.Build
+import android.util.Base64
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import org.junit.After
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import java.lang.reflect.Modifier
 
 /**
  * Unit tests for [AppRegistry].
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.P])
 class AppRegistryTest {
+    private var islandEnabled = false
+
+    @Before
+    fun setUpFlights() {
+        val provider = mock<IFlightsProvider>()
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
+            .thenAnswer { islandEnabled }
+        val manager = mock<IFlightsManager>()
+        whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+    }
+
+    @After
+    fun resetFlights() {
+        CommonFlightsManager.resetFlightsManager()
+    }
 
     @Test
     fun edgeApps_haveSharedSignatureAndDistinctPackages() {
@@ -160,6 +190,38 @@ class AppRegistryTest {
     }
 
     @Test
+    fun bootMenuApps_haveProdAndDebugIdentities() {
+        assertApp(
+            app = AppRegistry.BOOT_MENU_PROD,
+            nickName = "Microsoft Boot Menu (prod)",
+            packageName = "com.microsoft.apps.bootmenu",
+            signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+        )
+        assertApp(
+            app = AppRegistry.BOOT_MENU_DEBUG,
+            nickName = "Microsoft Boot Menu (debug)",
+            packageName = "com.microsoft.apps.bootmenu",
+            signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+        )
+    }
+
+    @Test
+    fun mdepZteServiceApps_haveProdAndDebugIdentities() {
+        assertApp(
+            app = AppRegistry.MDEP_ZTE_SERVICE_PROD,
+            nickName = "Microsoft MDEP ZTE Service (prod)",
+            packageName = "com.microsoft.mdep.zte.service",
+            signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+        )
+        assertApp(
+            app = AppRegistry.MDEP_ZTE_SERVICE_DEBUG,
+            nickName = "Microsoft MDEP ZTE Service (debug)",
+            packageName = "com.microsoft.mdep.zte.service",
+            signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+        )
+    }
+
+    @Test
     fun ssoTokenAuthorizedApps_whenDebugBrokersTrusted_containsEdgeAndDebugAppsOnly() {
         assertEquals(5, AppRegistry.SSO_TOKEN_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.SSO_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
@@ -172,7 +234,11 @@ class AppRegistryTest {
 
     @Test
     fun getDeviceTokenAuthorizedApps_whenDebugBrokersTrusted_containsDeviceTokenApps() {
-        assertEquals(6, AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.size)
+        assertEquals(10, AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.size)
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_PROD))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_DEBUG))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+        assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_AOSP_AGENT_PROD))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.MDE_APP_PROD))
         assertTrue(AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_AOSP_AGENT_DEBUG))
@@ -184,7 +250,11 @@ class AppRegistryTest {
 
     @Test
     fun deviceRegistrationAuthorizedApps_whenDebugBrokersTrusted_containsProdAndDebugRegistrationApps() {
-        assertEquals(13, AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.size)
+        assertEquals(17, AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.size)
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_PROD))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.BOOT_MENU_DEBUG))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+        assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(BrokerData.prodMicrosoftAuthenticator))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(BrokerData.prodCompanyPortal))
         assertTrue(AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS.contains(AppRegistry.INTUNE_CE_PROD))
@@ -202,14 +272,159 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeVariantsAndMsalTestApp() {
-        assertEquals(5, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_CANARY))
-        assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.MSAL_TEST_APP))
-        assertFalse(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
+    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeAndMsalTestAppOnly() {
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertEquals(5, authorizedApps.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertTrue(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+        assertFalse(authorizedApps.contains(AppRegistry.EDGE))
+        assertTrue(authorizedApps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+    }
+
+    @Test
+    fun islandPlayStoreApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
+        val expectedIdentities = mapOf(
+            "io.island.Island" to "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw==",
+            "io.island.IslandCanary" to "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ==",
+            "io.island.IslandBeta" to "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA==",
+            "io.island.island.intune" to "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA==",
+            "io.island.island.canary.intune" to "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww==",
+            "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+        )
+
+        val islandPlayStoreApps = AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
+            it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
+        }
+        assertEquals(6, islandPlayStoreApps.size)
+        assertEquals(
+            expectedIdentities,
+            islandPlayStoreApps.associate {
+                it.packageName to it.signingCertificateThumbprint
+            }
+        )
+    }
+
+    @Test
+    fun islandDirectDistributionApps_haveExactlyEightPackagesAndTheSharedProductionCertificate() {
+        val expectedPackages = setOf(
+            "io.island.Island",
+            "io.island.IslandCanary",
+            "io.island.IslandBeta",
+            "io.island.island.intune",
+            "io.island.island.canary.intune",
+            "io.island.island.beta.intune",
+            "io.island.IslandDev",
+            "io.island.island.dev.intune"
+        )
+        val directDistributionApps = AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
+            it.signingCertificateThumbprint == DIRECT_DISTRIBUTION_SIGNATURE
+        }
+        assertEquals(8, directDistributionApps.size)
+        assertEquals(
+            expectedPackages,
+            directDistributionApps.map { it.packageName }.toSet()
+        )
+        islandEnabled = true
+        assertTrue(AppRegistry.getBrowserSsoAuthorizedApps().containsAll(directDistributionApps))
+    }
+
+    @Test
+    fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
+        AppRegistry.ISLAND_BROWSER_SSO_APPS.forEach {
+            assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
+        }
+    }
+
+    @Test
+    fun islandBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
+        val islandPackages = AppRegistry.ISLAND_BROWSER_SSO_APPS.map { it.packageName }.toSet()
+        val existingAuthorizationLists = listOf(
+            AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS,
+            AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST
+        )
+
+        existingAuthorizationLists.forEach { authorizedApps ->
+            assertTrue(authorizedApps.none { it.packageName in islandPackages })
+        }
+    }
+
+    @Test
+    fun browserIdentitySets_haveExactlyTheRegisteredVariants() {
+        assertEquals(
+            setOf(AppRegistry.CHROME, AppRegistry.CHROME_BETA,
+                AppRegistry.CHROME_DEV, AppRegistry.CHROME_CANARY),
+            AppRegistry.CHROME_BROWSER_SSO_APPS
+        )
+        assertEquals(14, AppRegistry.ISLAND_BROWSER_SSO_APPS.size)
+        assertEquals(8, AppRegistry.ISLAND_BROWSER_SSO_APPS.map { it.packageName }.toSet().size)
+        assertEquals(
+            setOf(AppRegistry.ISLAND, AppRegistry.ISLAND_CANARY, AppRegistry.ISLAND_BETA,
+                AppRegistry.ISLAND_INTUNE, AppRegistry.ISLAND_CANARY_INTUNE,
+                AppRegistry.ISLAND_BETA_INTUNE),
+            AppRegistry.ISLAND_BROWSER_SSO_APPS.filter {
+                it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
+            }.toSet()
+        )
+    }
+
+    @Test
+    fun browserSsoEligibility_usesTheCurrentFlightWithoutChangingTheBaseline() {
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
+        islandEnabled = true
+        assertEquals(
+            baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS,
+            AppRegistry.getBrowserSsoAuthorizedApps()
+        )
+        assertEquals(19, AppRegistry.getBrowserSsoAuthorizedApps().size)
+        islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
+        assertEquals(5, baseline.size)
+        assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+    }
+
+    @Test
+    fun browserSsoEligibility_exposesAJavaStaticEntryPoint() {
+        val method = AppRegistry::class.java.getDeclaredMethod(
+            "getBrowserSsoAuthorizedApps"
+        )
+        assertTrue(Modifier.isStatic(method.modifiers))
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
+        islandEnabled = true
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
+    }
+
+    @Test
+    fun browserSsoEligibility_preservesMsalTestAppUnderCurrentDebugTrust() {
+        val originalDebugTrust = BrokerData.getShouldTrustDebugBrokers()
+        try {
+            listOf(false, true, false).forEach { trustDebug ->
+                BrokerData.setShouldTrustDebugBrokers(trustDebug)
+                listOf(false, true).forEach { enabled ->
+                    islandEnabled = enabled
+                    val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
+                    assertEquals(trustDebug, authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+                    assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+                    assertEquals(
+                        enabled,
+                        authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS)
+                    )
+                }
+            }
+        } finally {
+            BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
+        }
+    }
+
+    @Test
+    fun islandEligibility_withoutAHostFlightProvider_usesTheDisabledDefault() {
+        CommonFlightsManager.resetFlightsManager()
+        assertEquals("EnableIslandBrowserSso", CommonFlight.ENABLE_ISLAND_BROWSER_SSO.key)
+        assertEquals(false, CommonFlight.ENABLE_ISLAND_BROWSER_SSO.defaultValue)
+        val apps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertTrue(apps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertTrue(apps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -236,10 +451,79 @@ class AppRegistryTest {
     }
 
     companion object {
+        private const val DIRECT_DISTRIBUTION_SIGNATURE =
+            "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
         @JvmStatic
         @BeforeClass
         fun setUpClass() {
             BrokerData.setShouldTrustDebugBrokers(true)
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDownClass() {
+            BrokerData.setShouldTrustDebugBrokers(BuildConfig.DEBUG)
+        }
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.S])
+class AppRegistryProductionTrustTest {
+    private var islandEnabled = false
+
+    @Before
+    fun setUpFlights() {
+        val provider = mock<IFlightsProvider>()
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
+            .thenAnswer { islandEnabled }
+        val manager = mock<IFlightsManager>()
+        whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+    }
+
+    @After
+    fun resetFlights() {
+        CommonFlightsManager.resetFlightsManager()
+    }
+
+    @Test
+    fun browserSsoEligibility_initializedWithoutDebugTrust_islandRequiresOnlyItsFlight() {
+        assertFalse(BrokerData.getShouldTrustDebugBrokers())
+
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertEquals(4, baseline.size)
+        assertTrue(baseline.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+        islandEnabled = true
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertEquals(18, authorizedApps.size)
+        assertEquals(14, AppRegistry.ISLAND_BROWSER_SSO_APPS.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS))
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+        islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
+    }
+
+    @Test
+    fun deviceAllowlists_whenDebugBrokersNotTrusted_containOnlyProductionMdepApps() {
+        for (authorizedApps in listOf(
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS
+        )) {
+            assertTrue(authorizedApps.contains(AppRegistry.BOOT_MENU_PROD))
+            assertTrue(authorizedApps.contains(AppRegistry.MDEP_ZTE_SERVICE_PROD))
+            assertFalse(authorizedApps.contains(AppRegistry.BOOT_MENU_DEBUG))
+            assertFalse(authorizedApps.contains(AppRegistry.MDEP_ZTE_SERVICE_DEBUG))
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun setUpClass() {
+            BrokerData.setShouldTrustDebugBrokers(false)
         }
 
         @JvmStatic

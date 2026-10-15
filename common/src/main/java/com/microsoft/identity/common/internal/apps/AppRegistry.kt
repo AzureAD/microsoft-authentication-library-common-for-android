@@ -36,6 +36,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
 /**
  * Registry of known apps and their signing certificate thumbprints.
@@ -103,6 +105,51 @@ object AppRegistry {
         signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
     )
 
+    /** Play Store signing identity for Island. */
+    val ISLAND = App(
+        nickName = "Island",
+        packageName = "io.island.Island",
+        signingCertificateThumbprint = "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw=="
+    )
+
+    /** Play Store signing identity for Island Canary. */
+    val ISLAND_CANARY = App(
+        nickName = "Island Canary",
+        packageName = "io.island.IslandCanary",
+        signingCertificateThumbprint = "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ=="
+    )
+
+    /** Play Store signing identity for Island Beta. */
+    val ISLAND_BETA = App(
+        nickName = "Island Beta",
+        packageName = "io.island.IslandBeta",
+        signingCertificateThumbprint = "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA=="
+    )
+
+    /** Play Store signing identity for Island with Intune integration. */
+    val ISLAND_INTUNE = App(
+        nickName = "Island Intune",
+        packageName = "io.island.island.intune",
+        signingCertificateThumbprint = "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA=="
+    )
+
+    /** Play Store signing identity for Island Canary with Intune integration. */
+    val ISLAND_CANARY_INTUNE = App(
+        nickName = "Island Canary Intune",
+        packageName = "io.island.island.canary.intune",
+        signingCertificateThumbprint = "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww=="
+    )
+
+    /** Play Store signing identity for Island Beta with Intune integration. */
+    val ISLAND_BETA_INTUNE = App(
+        nickName = "Island Beta Intune",
+        packageName = "io.island.island.beta.intune",
+        signingCertificateThumbprint = "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+    )
+
+    private const val ISLAND_DIRECT_DISTRIBUTION_SIGNATURE =
+        "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
     val INTUNE_CE_PROD = App(
         nickName = "Intune Company Portal (prod)",
         packageName = INTUNE_APP_PACKAGE_NAME,
@@ -145,6 +192,30 @@ object AppRegistry {
         signingCertificateThumbprint = "k0ZSm/+bEPZAq6mXujRXqP3B6+Zb2yXCiqwuvtCooLfKS91zvHCf+D9FFUYIkJyIKmn1onyWbwRXHEWfS5SaHQ=="
     )
 
+    val BOOT_MENU_PROD = App(
+        nickName = "Microsoft Boot Menu (prod)",
+        packageName = "com.microsoft.apps.bootmenu",
+        signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+    )
+
+    val BOOT_MENU_DEBUG = App(
+        nickName = "Microsoft Boot Menu (debug)",
+        packageName = "com.microsoft.apps.bootmenu",
+        signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+    )
+
+    val MDEP_ZTE_SERVICE_PROD = App(
+        nickName = "Microsoft MDEP ZTE Service (prod)",
+        packageName = "com.microsoft.mdep.zte.service",
+        signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+    )
+
+    val MDEP_ZTE_SERVICE_DEBUG = App(
+        nickName = "Microsoft MDEP ZTE Service (debug)",
+        packageName = "com.microsoft.mdep.zte.service",
+        signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -160,11 +231,15 @@ object AppRegistry {
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
         add(MDE_APP_PROD)
+        add(BOOT_MENU_PROD)
+        add(MDEP_ZTE_SERVICE_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(MDE_APP_DEBUG)
+            add(BOOT_MENU_DEBUG)
+            add(MDEP_ZTE_SERVICE_DEBUG)
         }
     }
 
@@ -176,6 +251,8 @@ object AppRegistry {
         add(INTUNE_AOSP_AGENT_PROD)
         add(TEAMS_IPPHONE_PROD)
         add(MDE_APP_PROD)
+        add(BOOT_MENU_PROD)
+        add(MDEP_ZTE_SERVICE_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
@@ -184,21 +261,69 @@ object AppRegistry {
             add(INTUNE_CE_DEBUG)
             add(TEAMS_IPPHONE_DEBUG)
             add(MDE_APP_DEBUG)
+            add(BOOT_MENU_DEBUG)
+            add(MDEP_ZTE_SERVICE_DEBUG)
         }
     }
 
+    /** Chrome browser variants with their individual signing identities. */
+    @JvmField
+    val CHROME_BROWSER_SSO_APPS = setOf(CHROME, CHROME_BETA, CHROME_DEV, CHROME_CANARY)
+
     /**
-     * Apps authorized to request Browser SSO headers (PRT credentials).
-     * Currently limited to Chrome browser variants.
+     * Island production identities: six Play Store signers and the shared direct-distribution
+     * signer for eight packages, including both Dev variants. The partner's historically named
+     * "debug" signer is a production distribution key, not a Broker debug-trust identity.
+     * Broker must enforce the Island flight for every variant.
      */
     @JvmField
-    val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
-        add(CHROME)
-        add(CHROME_BETA)
-        add(CHROME_DEV)
-        add(CHROME_CANARY)
+    val ISLAND_BROWSER_SSO_APPS = buildSet {
+        val playStoreApps = listOf(
+            ISLAND, ISLAND_CANARY, ISLAND_BETA,
+            ISLAND_INTUNE, ISLAND_CANARY_INTUNE, ISLAND_BETA_INTUNE
+        )
+        addAll(playStoreApps)
+        playStoreApps.forEach { app ->
+            add(
+                App(
+                    nickName = "${app.nickName} (direct distribution)",
+                    packageName = app.packageName,
+                    signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
+                )
+            )
+        }
+        add(
+            App(
+                nickName = "Island Dev (direct distribution)",
+                packageName = "io.island.IslandDev",
+                signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
+            )
+        )
+        add(
+            App(
+                nickName = "Island Dev Intune (direct distribution)",
+                packageName = "io.island.island.dev.intune",
+                signingCertificateThumbprint = ISLAND_DIRECT_DISTRIBUTION_SIGNATURE
+            )
+        )
+    }
+
+    /**
+     * Returns Browser SSO identities eligible for the current request.
+     * Evaluates the current Island flight through the shared Common flight manager.
+     * Without a host-initialized provider, the flight's default denies Island.
+     * Every returned identity still requires package and signing-certificate validation.
+     *
+     * @return Chrome, the MSAL test app when debug trust permits it, and Island only when enabled.
+     */
+    @JvmStatic
+    fun getBrowserSsoAuthorizedApps(): Set<App> = buildSet {
+        addAll(CHROME_BROWSER_SSO_APPS)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
+        }
+        if (CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO)) {
+            addAll(ISLAND_BROWSER_SSO_APPS)
         }
     }
 
