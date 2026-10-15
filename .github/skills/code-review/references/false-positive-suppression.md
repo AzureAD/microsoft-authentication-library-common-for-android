@@ -47,3 +47,11 @@ For example, verify the actual population logic before claiming where `clientDat
 - Do not ask for redundant documentation that accurately restates all non-obvious behavior already.
 - Do not suggest `val final`, Java `final` for a Kotlin local/property, or `@NonNull` for Kotlin.
 - Do not flag intentional thread confinement, read-only data after construction, or generated code with known synchronization wrappers.
+
+## Calls under locks
+
+Do not flag a call solely because its declared type is an interface/abstract class, its concrete Java or Kotlin method is overridable (including Java virtual and Kotlin `open` methods), or it invokes a callback under a lock. Verify runtime implementations, actual lock/wait edges, concurrent reachability, and invariant access using the [focused concurrency trace](concurrency-threading.md#runtime-target-trace). Do not whitelist `List`/`Map` by name: suppress a bounded nonblocking read only after verifying the concrete implementation and owner guard.
+
+Suppress benign same-thread JVM monitor reentry when the invariant is complete, and verified deferred callbacks after release with no caller wait when state, ordering, and lifetime remain valid. These are not exemptions for a callback accessing partial state, a worker awaited under its required lock, or non-reentrant `Mutex` reacquisition. Confinement, immutability, and generated-wrapper suppressions apply only if the changed implementation/callback preserves those boundaries.
+
+An unknown external/native/reflective callee is an analysis limit, not a probable deadlock or proof of safety. Allow at most one clearly non-blocking `Sanity check:` contract note only when the diff already establishes a specific local risk, such as uncontrolled callback execution under a shared auth-cache lock; identify the exact missing contract. Stay silent for a generic unresolved interface call without such evidence, and do not duplicate a lock-order finding. Do not assign automatic High severity or merge-blocker status to dispatch syntax.
