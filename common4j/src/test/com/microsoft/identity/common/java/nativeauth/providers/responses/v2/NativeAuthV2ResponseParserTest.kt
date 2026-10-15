@@ -58,6 +58,114 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseErrors_preservesSuppliedPayloadDiagnosticsAcrossScenarios() {
+        val attributeMessage = "Enter a valid \"email\" value.\nTry again."
+        val details = listOf(
+            mapOf(
+                "code" to "attributeValidationFailed",
+                "attributeIds" to listOf("email"),
+                "message" to attributeMessage
+            )
+        )
+        val cases = listOf(
+            Triple(
+                """{"error":"InsufficientAuthorization",
+                    "error_description":"AADSTS500127: No authenticated credentials.",
+                    "error_codes":[500127],"correlation_id":"service-correlation",
+                    "trace_id":"service-trace","timestamp":"service-time"}""",
+                null, 500127
+            ),
+            Triple(
+                """{"error":{"code":"invalidRequest",
+                    "message":"AADSTS1002027: Attribute validation failed.",
+                    "correlationId":"service-correlation","traceId":"service-trace",
+                    "timestamp":"service-time","innerError":{"code":"attributeValidationError",
+                    "details":[{"code":"attributeValidationFailed","attributeIds":["email"],
+                    "message":"Enter a valid \"email\" value.\nTry again."}]}}}""",
+                "attributeValidationError", 1002027
+            ),
+            Triple(
+                """{"error":{"code":"invalidRequest",
+                    "message":"AADSTS10040172: User not found.",
+                    "correlationId":"service-correlation","traceId":"service-trace",
+                    "timestamp":"service-time","innerError":{"code":"userNotFound"}},
+                    "sign_up":"/tenant/api/v0.1/signup/start"}""",
+                "userNotFound", 10040172
+            )
+        )
+        val scenarios = listOf(
+            NativeAuthV2FlowScenario.SIGN_IN,
+            NativeAuthV2FlowScenario.SIGN_UP,
+            NativeAuthV2FlowScenario.RESET_PASSWORD
+        )
+        for ((json, subError, errorCode) in cases) {
+            fun assertDiagnostics(error: ApiErrorResult) {
+                assertEquals(
+                    if (subError == null) "InsufficientAuthorization" else "invalidRequest",
+                    error.error
+                )
+                assertEquals(
+                    when (errorCode) {
+                        500127 -> "AADSTS500127: No authenticated credentials."
+                        1002027 -> "AADSTS1002027: Attribute validation failed."
+                        else -> "AADSTS10040172: User not found."
+                    },
+                    error.errorDescription
+                )
+                assertEquals(listOf(errorCode), error.errorCodes)
+                assertEquals("service-correlation", error.correlationId)
+                assertEquals("service-trace", error.traceId)
+                assertEquals("service-time", error.timestamp)
+                assertEquals(subError, error.subError)
+                assertEquals(
+                    if (subError == "attributeValidationError") details else emptyList(),
+                    error.attributeValidationDetails
+                )
+            }
+            for (scenario in scenarios) {
+                val response = responseFrom(json)
+                val authorizeResult = parser.parseAuthorizeChallenge(
+                    response, NativeAuthV2LinkRelation.SIGN_IN, scenario, emptyList()
+                )
+                assertTrue(authorizeResult is AuthorizeChallengeApiResult.UnknownError)
+                assertDiagnostics(authorizeResult as ApiErrorResult)
+
+                val interactionResult = parser.parseInteraction(response, previousState(scenario))
+                if (scenario == NativeAuthV2FlowScenario.SIGN_UP &&
+                    subError == "attributeValidationError") {
+                    assertTrue(interactionResult is NativeAuthV2InteractionApiResult.InvalidAttributes)
+                    assertEquals(
+                        listOf("email"),
+                        (interactionResult as NativeAuthV2InteractionApiResult.InvalidAttributes).invalidAttributes
+                    )
+                } else {
+                    assertTrue(interactionResult is NativeAuthV2InteractionApiResult.UnknownError)
+                }
+                assertDiagnostics(interactionResult as ApiErrorResult)
+            }
+        }
+    }
+
+    @Test
+    fun parseInteraction_missingOrMalformedDetailMessagesPreservesExistingMapShape() {
+        for (messageField in listOf("", ""","message":null""", ""","message":42""",
+            ""","message":{}""", ""","message":[]""", ""","message":false""")) {
+            val result = parser.parseInteraction(
+                responseFrom(
+                    """{"error":{"code":"invalidRequest","innerError":{"code":"attributeValidationError",
+                        "details":[{"code":"attributeValidationFailed","attributeIds":["email"]$messageField}]}}}"""
+                ),
+                previousState(NativeAuthV2FlowScenario.SIGN_UP)
+            ) as NativeAuthV2InteractionApiResult.InvalidAttributes
+
+            assertEquals(
+                listOf(mapOf("code" to "attributeValidationFailed", "attributeIds" to listOf("email"))),
+                result.attributeValidationDetails
+            )
+        }
+    }
+
+    @Test
     fun parseInteraction_preservesDiagnosticsAcrossTypedAndUnknownErrors() {
         val cases = listOf(
             Triple("invalidGrant", "invalidOneTimeCode", NativeAuthV2InteractionApiResult.InvalidCode::class.java),

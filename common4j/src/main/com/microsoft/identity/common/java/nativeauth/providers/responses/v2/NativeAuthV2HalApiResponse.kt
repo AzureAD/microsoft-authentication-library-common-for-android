@@ -84,11 +84,13 @@ class NativeAuthV2HalApiResponse private constructor(
 
     /**
      * A single entry of `error.innerError.details`, pairing an error [code] (for example
-     * `userAlreadyExists` or `passwordPolicyViolation`) with the [attributeIds] it applies to.
+     * `userAlreadyExists` or `passwordPolicyViolation`) with the [attributeIds] it applies to
+     * and the optional, unmodified service [message].
      */
     data class HalErrorDetail(
         val code: String?,
-        val attributeIds: List<String>
+        val attributeIds: List<String>,
+        val message: String? = null
     )
 
     val isWebFallbackRequired: Boolean
@@ -370,7 +372,8 @@ class NativeAuthV2HalApiResponse private constructor(
                     .orEmpty()
                 HalErrorDetail(
                     code = detailMap[ERROR_CODE_KEY] as? String,
-                    attributeIds = attributeIds
+                    attributeIds = attributeIds,
+                    message = detailMap[ERROR_MESSAGE_KEY] as? String
                 )
             }
         }

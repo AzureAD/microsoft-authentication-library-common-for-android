@@ -147,7 +147,11 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun testSignUpStartSurfacesUserAlreadyExists() {
         val entryState = mockContinuationState()
-        val details = listOf(mapOf("code" to "userAlreadyExists", "attributeIds" to listOf("email")))
+        val details = listOf(mapOf(
+            "code" to "userAlreadyExists",
+            "attributeIds" to listOf("email"),
+            "message" to "An account already exists for this email."
+        ))
         stubAuthorizeChallengeStart(entryState)
         every { mockStrategy.performSignUpStart(entryState) } returns
             NativeAuthV2InteractionApiResult.UserAlreadyExists(
@@ -176,7 +180,11 @@ class NativeAuthV2SignUpFlowControllerTest {
     fun testSignUpStartMapsInvalidAttributesToRetryableAttributesInvalid() {
         val entryState = mockContinuationState()
         val submittedState = mockContinuationState()
-        val details = listOf(mapOf("code" to "attributeRequired", "attributeIds" to listOf("city")))
+        val details = listOf(mapOf(
+            "code" to "attributeRequired",
+            "attributeIds" to listOf("city"),
+            "message" to "Enter a city."
+        ))
         every {
             entryState.withAdditionalSubmittedAttributes(
                 match {
@@ -223,7 +231,11 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun testSignUpStartPreservesUnknownErrorDiagnostics() {
         val entryState = mockContinuationState()
-        val details = listOf(mapOf("code" to "futureValidationCode", "attributeIds" to listOf("city")))
+        val details = listOf(mapOf(
+            "code" to "futureValidationCode",
+            "attributeIds" to listOf("city"),
+            "message" to "Unrecognized attribute diagnostic."
+        ))
         stubAuthorizeChallengeStart(entryState)
         every { mockStrategy.performSignUpStart(entryState) } returns
             NativeAuthV2InteractionApiResult.UnknownError(

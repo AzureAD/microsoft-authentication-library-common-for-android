@@ -668,7 +668,10 @@ class NativeAuthV2ResponseParser {
     )
 
     private fun validationDetails(error: NativeAuthV2HalApiResponse.HalServerError): List<Map<String, Any?>> =
-        error.details.map { mapOf("code" to it.code, "attributeIds" to it.attributeIds) }
+        error.details.map { detail ->
+            val fields = mapOf("code" to detail.code, "attributeIds" to detail.attributeIds)
+            detail.message?.let { fields + ("message" to it) } ?: fields
+        }
 
     private fun missingLinkError(
         correlationId: String,
