@@ -84,7 +84,8 @@ data class NativeAuthV2TokenRequest private constructor(
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("code") val code: String,
         @SerializedName("scope") val scope: String,
-        @SerializedName("claims") val claimsRequestJson: String?,
+        // V2 claims belong on initial authorize-challenge, never on the token wire request.
+        @Transient val claimsRequestJson: String?,
         @SerializedName("client_info") private val clientInfo: Boolean = true
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, scope=$scope, clientInfo=$clientInfo)"

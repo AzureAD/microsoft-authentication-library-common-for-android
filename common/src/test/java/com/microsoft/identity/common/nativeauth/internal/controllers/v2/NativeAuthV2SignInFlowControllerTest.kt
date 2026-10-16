@@ -397,6 +397,8 @@ class NativeAuthV2SignInFlowControllerTest {
     fun testSignInStartCarriesScopesAndClaimsIntoAuthorizeChallengeAndToken() {
         val passwordState = mockContinuationState()
         val readyState = mockContinuationState()
+        val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
+        val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
         val claims = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         val tokenScopes = slot<List<String>>()
         stubStartThroughPasswordChallenge(passwordState)
@@ -416,7 +418,7 @@ class NativeAuthV2SignInFlowControllerTest {
         )
 
         controller.signInStart(
-            signInStartParameters(scopes = listOf("User.Read"), claimsRequestJson = claims)
+            signInStartParameters(scopes = requestedScopes, claimsRequestJson = claims)
         )
 
         verify(exactly = 1) {
@@ -424,7 +426,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = "signIn",
                 scenario = any(),
-                scopes = listOf("User.Read"),
+                scopes = expectedScopes,
                 claimsRequestJson = claims
             )
         }
@@ -436,7 +438,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 claimsRequestJson = claims
             )
         }
-        assertTrue(tokenScopes.captured.containsAll(listOf("User.Read", "openid", "offline_access", "profile")))
+        assertEquals(expectedScopes, tokenScopes.captured)
     }
 
     // -----------------------------------------------------------------------------------------
