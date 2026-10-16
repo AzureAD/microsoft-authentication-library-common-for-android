@@ -31,6 +31,48 @@ import org.junit.Test
 class NativeAuthV2HalApiResponseTest {
 
     @Test
+    fun from_preservesAttributeDetailMessagesVerbatim() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidRequest","innerError":{"code":"attributeValidationError",
+                "details":[
+                    {"code":"attributeValidationFailed","attributeIds":["email"],"message":"Enter a valid value."},
+                    {"code":"attributeRequired","message":"A \"quoted\" value.\nNext line."},
+                    {"code":"futureDetail","attributeIds":[],"message":""}
+                ]}}}"""
+        )
+
+        assertEquals(
+            listOf(
+                NativeAuthV2HalApiResponse.HalErrorDetail(
+                    "attributeValidationFailed", listOf("email"), "Enter a valid value."
+                ),
+                NativeAuthV2HalApiResponse.HalErrorDetail(
+                    "attributeRequired", emptyList(), "A \"quoted\" value.\nNext line."
+                ),
+                NativeAuthV2HalApiResponse.HalErrorDetail("futureDetail", emptyList(), "")
+            ),
+            response.serverError?.details
+        )
+    }
+
+    @Test
+    fun from_missingOrMalformedDetailMessagesDoNotDiscardOtherFields() {
+        for (messageField in listOf("", ""","message":null""", ""","message":42""",
+            ""","message":{}""", ""","message":[]""", ""","message":false""")) {
+            val response = responseFrom(
+                """{"error":{"code":"invalidRequest","innerError":{"details":[
+                    {"code":"attributeValidationFailed","attributeIds":["email"]$messageField}
+                ]}}}"""
+            )
+
+            assertEquals(
+                listOf(NativeAuthV2HalApiResponse.HalErrorDetail("attributeValidationFailed", listOf("email"))),
+                response.serverError?.details
+            )
+        }
+    }
+
+    @Test
     fun error_buildsClientSideErrorWithoutFlowState() {
         val response = NativeAuthV2HalApiResponse.error(
             statusCode = 500,
