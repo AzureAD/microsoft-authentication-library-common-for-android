@@ -82,7 +82,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -90,11 +90,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -112,14 +113,105 @@ public class CommandDispatcher {
     // Cache the pool size for the session
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static final int SILENT_REQUEST_THREAD_POOL_SIZE = computeSilentRequestThreadPoolSize();
-    private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
-    private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
+    private static volatile int sMaximumQueuedCommands = 64;
+    private static final Object sAdmissionLock = new Object();
+    private static int sMaximumOutstandingCallers = 128;
+    private static int sAdmittedCallers;
+    private static volatile ExecutorService sInteractiveExecutor = createBoundedExecutor(1, 1);
+    private static volatile ExecutorService sSilentExecutor =
+            createBoundedExecutor(SILENT_REQUEST_THREAD_POOL_SIZE, SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static volatile ExecutorService sDCFExecutor =
+            createBoundedExecutor(DCF_REQUEST_THREAD_POOL_SIZE, DCF_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
-    private static InteractiveTokenCommand sCommand = null;
+    private static volatile InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final Object mapAccessLock = new Object();
+    private static final ConcurrentMap<FinalizableResultFuture<CommandResult>, QueuedCommand> sCommandTasks =
+            new ConcurrentHashMap<>();
+
+    private static ThreadPoolExecutor createBoundedExecutor(final int core, final int maximum) {
+        return new ThreadPoolExecutor(core, maximum, 30L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(sMaximumQueuedCommands));
+    }
+
+    /**
+     * Configures admission while idle, before submitting work. Accepted callbacks also retain a caller slot until
+     * delivery. Reconfiguration with outstanding work fails instead of dropping or resurrecting commands.
+     */
+    public static void configureMemoryLimits(final int maximumQueuedCommands, final int maximumOutstandingCallers,
+                                             final long maximumResultPayloadBytes) {
+        if (maximumQueuedCommands <= 0 || maximumOutstandingCallers <= 0 || maximumResultPayloadBytes < 0) {
+            throw new IllegalArgumentException("Invalid command memory limits");
+        }
+        final ExecutorService oldSilent;
+        final ExecutorService oldInteractive;
+        final ExecutorService oldDcf;
+        synchronized (mapAccessLock) {
+            synchronized (sAdmissionLock) {
+                if (sAdmittedCallers != 0 || !sCommandTasks.isEmpty()
+                        || busy(sSilentExecutor) || busy(sInteractiveExecutor) || busy(sDCFExecutor)) {
+                    throw new IllegalStateException("Command memory limits can only change while idle");
+                }
+                sMaximumQueuedCommands = maximumQueuedCommands;
+                sMaximumOutstandingCallers = maximumOutstandingCallers;
+                oldSilent = sSilentExecutor;
+                oldInteractive = sInteractiveExecutor;
+                oldDcf = sDCFExecutor;
+                final ThreadPoolExecutor silentPool = (ThreadPoolExecutor) oldSilent;
+                sSilentExecutor = createBoundedExecutor(silentPool.getCorePoolSize(), silentPool.getMaximumPoolSize());
+                sInteractiveExecutor = createBoundedExecutor(1, 1);
+                sDCFExecutor = createBoundedExecutor(DCF_REQUEST_THREAD_POOL_SIZE, DCF_REQUEST_THREAD_POOL_SIZE);
+                sCommandResultCache.setMaximumPayloadBytes(maximumResultPayloadBytes);
+            }
+        }
+        oldSilent.shutdown();
+        oldInteractive.shutdown();
+        oldDcf.shutdown();
+    }
+
+    private static boolean busy(final ExecutorService executor) {
+        final ThreadPoolExecutor pool = (ThreadPoolExecutor) executor;
+        return pool.getActiveCount() != 0 || !pool.getQueue().isEmpty();
+    }
+
+    /** Returns accepted callers whose terminal callbacks have not yet been delivered or detached. */
+    public static int getAdmittedCallerCount() {
+        synchronized (sAdmissionLock) {
+            return sAdmittedCallers;
+        }
+    }
+
+    private static CallerReservation reserveCaller() {
+        synchronized (sAdmissionLock) {
+            if (sAdmittedCallers < sMaximumOutstandingCallers) {
+                ++sAdmittedCallers;
+                return new CallerReservation();
+            }
+        }
+        // Posting another callback here would make the platform's callback queue the unbounded overflow queue.
+        throw new RejectedExecutionException("Command caller capacity exhausted",
+                new ClientException(ClientException.COMMAND_QUEUE_FULL, "Too many outstanding command callers"));
+    }
+
+    private static final class CallerReservation implements AutoCloseable {
+        private final AtomicBoolean released = new AtomicBoolean();
+        private String correlationId;
+
+        @Override
+        public void close() {
+            if (released.compareAndSet(false, true)) {
+                synchronized (sAdmissionLock) {
+                    --sAdmittedCallers;
+                }
+            }
+        }
+    }
+
+    private static final class CallerRegistration {
+        private CallerReservation reservation;
+        private BiConsumer<CommandResult, Throwable> consumer;
+    }
 
     /**
      * Enum representing the possible outcomes of silent executor termination during reset.
@@ -136,7 +228,7 @@ public class CommandDispatcher {
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
-    private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+    private static volatile ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
      * Outcome of cancellation signal processing for a timed-out ATS request.
@@ -228,23 +320,17 @@ public class CommandDispatcher {
         return getSilentRequestThreadPoolSize();
     }
 
-    /**
-     * Remove all keys that are the command reference from the executing command map.  Since if they key has
-     * been changed, remove will not work, construct a new map and add all keys that are not identically
-     * that key into the new map.  <strong>MUST</strong> only be used under the mapAccessLock.
-     *
-     * @param command the command whose identity to use to cleanse the map.
-     */
-    // Suppressing rawtype warnings due to the generic type BaseCommand
-    @SuppressWarnings(WarningType.rawtype_warning)
-    private static void cleanMap(BaseCommand command) {
-        ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
-        for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (!(command == e.getKey())) {
-                newMap.put(e.getKey(), e.getValue());
+    private static void removeExecutingFuture(final FinalizableResultFuture<CommandResult> future) {
+        synchronized (mapAccessLock) {
+            // Commands can mutate their hash during execution. Also, an older worker must not remove its replacement.
+            final ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> remaining = new ConcurrentHashMap<>();
+            for (final Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> entry : sExecutingCommandMap.entrySet()) {
+                if (entry.getValue() != future) {
+                    remaining.put(entry.getKey(), entry.getValue());
+                }
             }
+            sExecutingCommandMap = remaining;
         }
-        sExecutingCommandMap = newMap;
     }
 
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
@@ -269,23 +355,28 @@ public class CommandDispatcher {
 
     //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public static void clearState() throws Exception {
+        final ExecutorService oldSilent;
+        final ExecutorService oldInteractive;
+        final ExecutorService oldDcf;
         synchronized (mapAccessLock) {
+            oldSilent = sSilentExecutor;
+            oldInteractive = sInteractiveExecutor;
+            oldDcf = sDCFExecutor;
+            sSilentExecutor = createBoundedExecutor(getSilentRequestThreadPoolSize(), getSilentRequestThreadPoolSize());
+            sInteractiveExecutor = createBoundedExecutor(1, 1);
+            sDCFExecutor = createBoundedExecutor(DCF_REQUEST_THREAD_POOL_SIZE, DCF_REQUEST_THREAD_POOL_SIZE);
             sExecutingCommandMap.clear();
+            sRequestStateMap.clear();
         }
-        // Clear timeout tracking map
-        sRequestStateMap.clear();
-        
-        sSilentExecutor.shutdownNow();
-        sInteractiveExecutor.shutdownNow();
-        Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
-        f.setAccessible(false);
-
-        f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newSingleThreadExecutor());
-        f.setAccessible(false);
+        try {
+            shutdownNowAndCancel(oldSilent);
+        } finally {
+            try {
+                shutdownNowAndCancel(oldInteractive);
+            } finally {
+                shutdownNowAndCancel(oldDcf);
+            }
+        }
     }
 
     /**
@@ -396,6 +487,8 @@ public class CommandDispatcher {
         final CommandResult commandResult;
         try {
             commandResult = submitSilentReturningFuture(command).get();
+        } catch (final RejectedExecutionException e) {
+            throw admissionException(e);
         } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         }
@@ -423,6 +516,8 @@ public class CommandDispatcher {
         final CommandResult commandResult;
         try {
             commandResult = submitSilentReturningFuture(command).get();
+        } catch (final RejectedExecutionException e) {
+            throw admissionException(e);
         } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         }
@@ -451,14 +546,14 @@ public class CommandDispatcher {
     //       currently, CommandResult from BaseCommand<AcquireTokenResult> stores "ILocalAuthenticationResult".
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
-        final String methodTag = TAG +  ":submitAcquireTokenSilentSync";
         final CommandResult commandResult;
         // Initialize to null, will be set after submitSilentReturningFuture returns
         // when it's guaranteed to be initialized on the parameters
         String correlationId = null;
         FinalizableResultFuture<CommandResult> future = null;
+        final CallerRegistration registration = new CallerRegistration();
         try {
-            future = submitSilentReturningFuture(command);
+            future = submitCommand(command, registration, true);
             correlationId = command.getParameters().getCorrelationId();
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = future.get();
@@ -467,28 +562,26 @@ public class CommandDispatcher {
                 commandResult = future.get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final TimeoutException e) {
-            // Signal the worker thread to disconnect the active HTTP connection.
-            // Flight-gated for safe rollout — when false, behavior is identical to current code.
-            if (future != null
-                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .getBooleanValue(CommonFlight.ENABLE_HTTP_CANCELLATION_ON_TIMEOUT)) {
-                future.cancelSignal();
-                Logger.info(methodTag,
-                    "COMMAND_TIMEOUT_CANCELLATION: cancelSignal() invoked."
-                    + " correlationId=" + (correlationId != null ? correlationId : "unknown")
-                    + ", activeCount=" + getSilentRequestActiveCount()
-                    + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
-            }
+            final RequestState state = correlationId == null ? null : sRequestStateMap.get(correlationId);
+            final int activeThreads = getSilentRequestActiveCount();
+            final int queuedRequests = ((ThreadPoolExecutor) sSilentExecutor).getQueue().size();
+            detachCaller(command, future, registration);
             // Classify timeout based on request state using correlation ID
             final String effectiveCorrelationId = correlationId != null ? correlationId : "unknown";
             throw createTimeoutException(
                     "submitAcquireTokenSilentSync",
                     effectiveCorrelationId,
-                    correlationId != null ? sRequestStateMap.get(correlationId) : null,
-                    getSilentRequestActiveCount(),
-                    ((ThreadPoolExecutor) sSilentExecutor).getQueue().size(),
+                    state,
+                    activeThreads,
+                    queuedRequests,
                     e);
-        } catch (final InterruptedException | ExecutionException e) {
+        } catch (final RejectedExecutionException e) {
+            throw admissionException(e);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            detachCaller(command, future, registration);
+            throw ExceptionAdapter.baseExceptionFromException(e);
+        } catch (final ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         } finally {
             // Only clean up if correlationId was initialized
@@ -530,11 +623,61 @@ public class CommandDispatcher {
      * branch: no command is queued on behalf of a joining caller, so the event would be untrue, and
      * the resulting flow would misread as executor starvation rather than as a dedup.
      *
-     * @param command
+     * @param command command to submit
+     * @throws RejectedExecutionException if the caller/callback budget is full; its cause is
+     *         {@link ClientException#COMMAND_QUEUE_FULL}. No callback is posted for an unaccepted caller.
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
                                                                                      @NonNull final BaseCommand command) {
+        return submitCommand(command, new CallerRegistration(), true);
+    }
+
+    private static BaseException admissionException(final RejectedExecutionException exception) {
+        return exception.getCause() instanceof ClientException ? (ClientException) exception.getCause()
+                : ExceptionAdapter.baseExceptionFromException(exception);
+    }
+
+    private static void detachCaller(final BaseCommand command, final FinalizableResultFuture<CommandResult> future,
+                                     final CallerRegistration registration) {
+        if (future == null || registration.consumer == null) {
+            return;
+        }
+        boolean cancel = false;
+        synchronized (mapAccessLock) {
+            if (future.removeWhenComplete(registration.consumer)) {
+                registration.reservation.close();
+                sRequestStateMap.remove(command.getParameters().getCorrelationId());
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .getBooleanValue(CommonFlight.ENABLE_HTTP_CANCELLATION_ON_TIMEOUT)) {
+                    if (future.getPendingConsumerCount() == 0 && !future.isDone()) {
+                        removeExecutingFuture(future);
+                        cancel = true;
+                    }
+                }
+            }
+        }
+        if (cancel) {
+            future.cancelSignal();
+        }
+    }
+
+    private static FinalizableResultFuture<CommandResult> submitCommand(
+            @NonNull final BaseCommand command, final CallerRegistration registration, final boolean coalesce) {
+        registration.reservation = reserveCaller();
+        try {
+            return submitAdmittedCommand(command, registration, coalesce);
+        } catch (final RuntimeException | Error failure) {
+            registration.reservation.close();
+            if (command.getParameters().getCorrelationId() != null) {
+                sRequestStateMap.remove(command.getParameters().getCorrelationId());
+            }
+            throw failure;
+        }
+    }
+
+    private static FinalizableResultFuture<CommandResult> submitAdmittedCommand(
+            final BaseCommand command, final CallerRegistration registration, final boolean coalesce) {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
         final String methodName;
         final ExecutorService commandExecutor;
@@ -546,18 +689,17 @@ public class CommandDispatcher {
 
         // set correlation id on parameters as it may not already be set
         commandParameters.setCorrelationId(correlationId);
+        registration.reservation.correlationId = correlationId;
 
-        final boolean isDeviceCodeFlowRequest = isDeviceCodeFlowRequest(command);
+        final boolean isDeviceCodeFlowRequest = coalesce && isDeviceCodeFlowRequest(command);
         // Use DCF thread pool for DCF requests so that in case user chooses to follow interactive sign in,
         // future silent calls are not blocked
         if (isDeviceCodeFlowRequest) {
-            commandExecutor = sDCFExecutor;
             codeMarkerManager.markCode(ACQUIRE_TOKEN_DCF_START);
             methodName = ":submitDCF";
         } else {
-            commandExecutor = sSilentExecutor;
             codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_START);
-            methodName = ":submitSilent";
+            methodName = coalesce ? ":submitSilent" : ":submit";
         }
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
@@ -569,51 +711,41 @@ public class CommandDispatcher {
             sRequestStateMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
         }
 
+        final FinalizableResultFuture<CommandResult> finalFuture;
+        final boolean owner;
+        final boolean registered;
+        final boolean eligible = coalesce && command.isEligibleForCaching();
+        registration.consumer = getCommandResultConsumer(command, registration.reservation);
         synchronized (mapAccessLock) {
+            commandExecutor = isDeviceCodeFlowRequest ? sDCFExecutor : sSilentExecutor;
             // Update state: lock acquired, now queued for thread pool, only track non-DCF requests
             if (!isDeviceCodeFlowRequest) {
                 sRequestStateMap.put(correlationId, RequestState.QUEUED);
             }
 
-            final FinalizableResultFuture<CommandResult> finalFuture;
-            if (command.isEligibleForCaching()) {
-                FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
-
-                if (null == future) {
-                    future = new FinalizableResultFuture<>();
-                    final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
-
-                    if (null == putValue) {
-                        // our value was inserted.
-                        future.whenComplete(getCommandResultConsumer(command));
-                    } else {
-                        // Our value was not inserted, grab the one that was and hang a new listener off it
-                        putValue.whenComplete(getCommandResultConsumer(command));
-                        // This request is sharing another request's future - it's effectively EXECUTING
-                        // Update state to prevent incorrect timeout classification as QUEUED
-                        // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
-                        if (!isDeviceCodeFlowRequest) {
-                            sRequestStateMap.put(correlationId, RequestState.EXECUTING);
-                        }
-                        return putValue;
-                    }
-                } else {
-                    future.whenComplete(getCommandResultConsumer(command));
-                    // This request is sharing another request's future - it's effectively EXECUTING
-                    // Update state to prevent incorrect timeout classification as QUEUED
-                    // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
-                    if (!isDeviceCodeFlowRequest) {
-                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
-                    }
-                    return future;
+            final FinalizableResultFuture<CommandResult> existing = eligible ? sExecutingCommandMap.get(command) : null;
+            if (existing != null && !existing.getCancellationSignal().isCancelled()) {
+                finalFuture = existing;
+                owner = false;
+                if (!isDeviceCodeFlowRequest) {
+                    sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                 }
-
-                finalFuture = future;
             } else {
                 finalFuture = new FinalizableResultFuture<>();
-                finalFuture.whenComplete(getCommandResultConsumer(command));
+                owner = true;
+                if (eligible) {
+                    sExecutingCommandMap.put(command, finalFuture);
+                }
             }
-
+            registered = finalFuture.tryWhenComplete(registration.consumer);
+        }
+        if (!registered) {
+            finalFuture.whenComplete(registration.consumer);
+        }
+        if (!owner) {
+            return finalFuture;
+        }
+        try {
             SpanExtension.current().setAttribute(
                     AttributeName.num_concurrent_silent_requests.name(),
                     sExecutingCommandMap.size()
@@ -637,17 +769,14 @@ public class CommandDispatcher {
                     commandParameters.getEventCollector(),
                     EventTag.BrokerCommandQueued
             );
-            commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
+            submitTrackedCommand(commandExecutor, command, finalFuture, new Runnable() {
                 @Override
                 public void run() {
                     TelemetryHelper.addEvent(
                             commandParameters.getEventCollector(),
                             EventTag.BrokerCommandExecutionStart
                     );
-                    // Get the cancellation signal owned by this future and set it on
-                    // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
                     final CancellationSignal cancellationSignal = finalFuture.getCancellationSignal();
-                    CancellationSignal.setForCurrentThread(cancellationSignal);
 
                     // Update state: thread has picked up the request, now executing
                     // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
@@ -673,9 +802,7 @@ public class CommandDispatcher {
                                 + " correlationId=" + correlationId
                                 + ", activeCount=" + getSilentRequestActiveCount()
                                 + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
-                            // Do not set exception on the future — the original caller already
-                            // received TimeoutException from future.get(). Setting an exception
-                            // here would prematurely fail dedup callers still within their timeout.
+                            finalFuture.setException(cancelledCommandException());
                             return;
                         }
 
@@ -693,49 +820,35 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
-                        // If this exception was caused by cancellation (CancellationSignal.cancel()
-                        // disconnected the HttpURLConnection), suppress it — the original caller
-                        // already received TimeoutException from future.get(). Propagating this
-                        // would prematurely fail dedup callers still within their own timeout window.
+                        Logger.error(TAG + methodName, "Command execution or result delivery failed", t);
                         if (cancellationSignal.isCancelled()) {
                             SpanExtension.current().setAttribute(
                                     AttributeName.cancellation_outcome.name(),
                                     CancellationOutcome.disconnected_during_execution.name());
                             Logger.info(TAG + methodName,
-                                "CANCELLED_EXECUTION: Worker exception suppressed after cancellation."
+                                "CANCELLED_EXECUTION: Worker completed after cancellation."
                                 + " correlationId=" + correlationId);
-                        } else {
-                            Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                            finalFuture.setException(new ExecutionException(t));
+                        }
+                        finalFuture.setException(new ExecutionException(t));
+                        if (t instanceof Error) {
+                            throw (Error) t;
                         }
                     } finally {
-                        // Clear ThreadLocal to prevent leaks — MUST be before mapAccessLock.
-                        // Java guarantees the finally block executes even on early `return`
-                        // from the pre-start cancellation check above.
-                        CancellationSignal.clearCurrentThread();
-
-                        synchronized (mapAccessLock) {
-                            if (command.isEligibleForCaching()) {
-                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
-                                if (mapFuture == null) {
-                                    // If this has happened, the command that we started with has mutated.  We will
-                                    // examine every entry in the map, find the one with the same object identity
-                                    // and remove it.
-                                    // ADO:TODO:1153495 - Rekey this map with stable string keys.
-                                    Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
-                                            + " the calling application was " + command.getParameters().getApplicationName(), null);
-                                    cleanMap(command);
-                                }
-                            }
-                            finalFuture.setCleanedUp();
-                        }
                         DiagnosticContext.INSTANCE.clear();
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
-            }));
-            return finalFuture;
+            });
+        } catch (final RuntimeException | Error failure) {
+            try {
+                finalFuture.setException(failure);
+            } finally {
+                removeExecutingFuture(finalFuture);
+                finalFuture.setCleanedUp();
+            }
+            throw failure;
         }
+        return finalFuture;
     }
 
     public static void submitAndForget(@NonNull final BaseCommand command){
@@ -744,61 +857,54 @@ public class CommandDispatcher {
 
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
-        final String methodName = ":submit";
+        return submitCommand(command, new CallerRegistration(), false);
+    }
 
-        final CommandParameters commandParameters = command.getParameters();
-        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
-                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() :
-                        commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+    private static ClientException cancelledCommandException() {
+        return new ClientException(ClientException.INTERRUPTED_OPERATION, "Command cancelled before completion");
+    }
 
-        // set correlation id on parameters as it may not already be set
-        commandParameters.setCorrelationId(correlationId);
-
-        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
-        Logger.info(
-                TAG,
-                "RefreshOnCommand with CorrelationId: "
-                        + correlationId
-        );
-
-        synchronized (mapAccessLock) {
-            final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
-            finalFuture.whenComplete(getCommandResultConsumer(command));
-            // Recorded before execute() so this event can never be timestamped after
-            // BrokerCommandExecutionStart, which the worker thread may record immediately.
-            TelemetryHelper.addEvent(
-                    commandParameters.getEventCollector(),
-                    EventTag.BrokerCommandQueued
-            );
-            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
-                @Override
-                public void run() {
-                    TelemetryHelper.addEvent(
-                            commandParameters.getEventCollector(),
-                            EventTag.BrokerCommandExecutionStart
-                    );
-
-                    try {
-                        //initializing again since the request is transferred to a different thread pool
-                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                                commandParameters.getSdkVersion());
-
-                        CommandResult commandResult = executeCommand(command);
-                        Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
-                                + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
-                                + " is cacheable : " + command.isEligibleForCaching());
-                        finalFuture.setResult(commandResult);
-                    } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                        finalFuture.setException(new ExecutionException(t));
-                    } finally {
-                        DiagnosticContext.INSTANCE.clear();
-                    }
-
-                }
-            }));
-            return finalFuture;
+    private static void submitTrackedCommand(final ExecutorService executor, final BaseCommand command,
+                                             final FinalizableResultFuture<CommandResult> future,
+                                             final Runnable operation) {
+        final String correlationId = command.getParameters().getCorrelationId();
+        final QueuedCommand task = new QueuedCommand(executor, future, OtelContextExtension.wrap(operation), () -> {
+            if (!future.isDone()) {
+                future.setException(cancelledCommandException());
+            }
+        }, () -> {
+            sCommandTasks.remove(future);
+            removeExecutingFuture(future);
+            if (correlationId != null) {
+                sRequestStateMap.remove(correlationId);
+            }
+            future.setCleanedUp();
+        });
+        sCommandTasks.put(future, task);
+        task.registerCancellation();
+        if (task.isFinished()) {
+            return;
+        }
+        try {
+            executor.execute(task);
+        } catch (final RejectedExecutionException rejected) {
+            try {
+                future.setException(new ClientException(ClientException.COMMAND_QUEUE_FULL,
+                        "Command executor cannot accept more work"));
+            } finally {
+                task.cancelBeforeExecution();
+            }
+        } catch (final RuntimeException | Error failure) {
+            try {
+                future.setException(failure);
+            } finally {
+                task.cancelBeforeExecution();
+            }
+            throw failure;
+        }
+        // Cancellation can win between registering its callback and the executor inserting the wrapper.
+        if (task.isFinished()) {
+            task.removeFromQueue();
         }
     }
 
@@ -816,7 +922,8 @@ public class CommandDispatcher {
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
+            final CallerReservation reservation) {
 
         final String methodName = ":getCommandResultConsumer";
 
@@ -826,13 +933,7 @@ public class CommandDispatcher {
                 if (null != throwable) {
                     Logger.info(TAG + methodName, "Request encountered an exception " +
                             "(this maybe a duplicate request which caries the exception encountered by the original request)");
-                    command.getParameters().getPlatformComponents().getPlatformUtil().postCommandResult(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    commandCallBackOnError(command, throwable);
-                                }
-                            });
+                    returnCommandResult(command, null, throwable, reservation);
                     return;
                 }
 
@@ -845,7 +946,7 @@ public class CommandDispatcher {
                                     + result.getStatus().getLogStatus());
                 }
                 // Return command result will post() result for us.
-                returnCommandResult(command, result);
+                returnCommandResult(command, result, null, reservation);
             }
         };
     }
@@ -858,6 +959,11 @@ public class CommandDispatcher {
 
     public static void clearCommandCache() {
         sCommandResultCache.clear();
+    }
+
+    /** Drops advisory result-cache memory only. Does not cancel work or remove persisted credentials. */
+    public static void trimMemory() {
+        sCommandResultCache.trimMemory();
     }
 
     /**
@@ -947,30 +1053,50 @@ public class CommandDispatcher {
          */
         private static void returnCommandResult (
         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
-        @NonNull final CommandResult result){
-
-            final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
-            platformUtil.onReturnCommandResult(command);
-            platformUtil.postCommandResult(new Runnable() {
-                @Override
-                public void run() {
-                    switch (result.getStatus()) {
-                        case ERROR:
-                            commandCallbackOnError(command, result);
-                            break;
-                        case COMPLETED:
-                            commandCallbackOnTaskCompleted(command, result);
-                            break;
-                        case CANCEL:
-                            command.getCallback().onCancel();
-                            break;
-                        default:
-
-                    }
+        @Nullable final CommandResult result, @Nullable final Throwable throwable,
+        final CallerReservation reservation){
+            try {
+                final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
+                if (throwable == null) {
+                    platformUtil.onReturnCommandResult(command);
                 }
-            });
+                platformUtil.postCommandResult(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (throwable != null) {
+                                commandCallBackOnError(command, throwable);
+                                return;
+                            }
+                            switch (result.getStatus()) {
+                                case ERROR:
+                                    commandCallbackOnError(command, result);
+                                    break;
+                                case COMPLETED:
+                                    commandCallbackOnTaskCompleted(command, result);
+                                    break;
+                                case CANCEL:
+                                    command.getCallback().onCancel();
+                                    break;
+                                default:
+                            }
+                        } finally {
+                            releaseCaller(command, reservation);
+                        }
+                    }
+                });
+            } catch (final RuntimeException | Error failure) {
+                releaseCaller(command, reservation);
+                throw failure;
+            }
         }
 
+        private static void releaseCaller(final BaseCommand command, final CallerReservation reservation) {
+            if (reservation.correlationId != null) {
+                sRequestStateMap.remove(reservation.correlationId);
+            }
+            reservation.close();
+        }
 
         // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
         @SuppressWarnings(WarningType.unchecked_warning)
@@ -1047,35 +1173,36 @@ public class CommandDispatcher {
 
         public static void beginInteractive (final InteractiveTokenCommand command) {
             final String methodName = ":beginInteractive";
-            synchronized (sLock) {
-
-                //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
-                if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
-                    // Send a broadcast to cancel if any active auth request is present.
-                    if(LocalBroadcaster.INSTANCE.hasReceivers(CANCEL_AUTHORIZATION_REQUEST)) {
-                        LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
-                    } else if (LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT)) {
-                        // This means that there is previous interactive request(s) waiting for Authorization result, however
-                        // the actual authorization process for that request has not been started as there are no registered listener/receivers
-                        // for "CANCEL_AUTHORIZATION_REQUEST". This results in the sInteractiveExecutor thread being in deadlock
-                        // state and not able to process any more interactive requests. To get out of this deadlock and be able to
-                        // process future interactive request we need to shutdown and restart the sInteractiveExecutor executor service.
-                        Logger.info(TAG + methodName,
-                                "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
-                                        "Restarting the interactive executor service to enable processing interactive requests again.");
-                        List<Runnable> cancelledRequests = sInteractiveExecutor.shutdownNow();
-                        sInteractiveExecutor = Executors.newSingleThreadExecutor();
-                        Logger.info(TAG + methodName, "Cancelled execution of " + cancelledRequests.size() + " interactive requests.");
+            final CallerReservation reservation = reserveCaller();
+            final FinalizableResultFuture<CommandResult> future = new FinalizableResultFuture<>();
+            future.whenComplete(getCommandResultConsumer(command, reservation));
+            final ExecutorService executor;
+            ExecutorService restartedExecutor = null;
+            try {
+                synchronized (sLock) {
+                    if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                            || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+                        if (LocalBroadcaster.INSTANCE.hasReceivers(CANCEL_AUTHORIZATION_REQUEST)) {
+                            LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
+                        } else if (LocalBroadcaster.INSTANCE.hasReceivers(RETURN_AUTHORIZATION_REQUEST_RESULT)) {
+                            // A result receiver without a cancellation listener can leave the previous worker waiting for UI.
+                            Logger.info(TAG + methodName, "Restarting a blocked interactive executor");
+                            restartedExecutor = sInteractiveExecutor;
+                            sInteractiveExecutor = createBoundedExecutor(1, 1);
+                        }
                     }
+                    executor = sInteractiveExecutor;
                 }
-
+                if (restartedExecutor != null) {
+                    shutdownNowAndCancel(restartedExecutor);
+                }
                 // Recorded before execute() so this event can never be timestamped after
                 // BrokerCommandExecutionStart, which the worker thread may record immediately.
                 TelemetryHelper.addEvent(
                         command.getParameters().getEventCollector(),
                         EventTag.BrokerCommandQueued
                 );
-                sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
+                submitTrackedCommand(executor, command, future, new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
@@ -1110,16 +1237,14 @@ public class CommandDispatcher {
 
                             CommandResult commandResult;
 
-                            LocalBroadcaster.INSTANCE.registerCallback(
-                                    RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
-
-                            sCommand = command;
+                            synchronized (sLock) {
+                                LocalBroadcaster.INSTANCE.registerCallback(
+                                        RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
+                                sCommand = command;
+                            }
 
                             //Try executing request
                             commandResult = executeCommand(command);
-                            sCommand = null;
-
-                            LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
 
                             // If we received an exception during the receiver callback execution,
                             // we should set that as the command result
@@ -1131,12 +1256,33 @@ public class CommandDispatcher {
                                     "Completed interactive request for correlation id : **" + correlationId +
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
-                            returnCommandResult(command, commandResult);
+                            clearInteractiveCommand(command);
+                            future.setResult(commandResult);
+                        } catch (final Throwable failure) {
+                            Logger.error(TAG + methodName, "Interactive execution or result delivery failed", failure);
+                            clearInteractiveCommand(command);
+                            future.setException(failure);
+                            if (failure instanceof Error) {
+                                throw (Error) failure;
+                            }
                         } finally {
+                            clearInteractiveCommand(command);
                             DiagnosticContext.INSTANCE.clear();
                         }
                     }
-                }));
+                });
+            } catch (final RuntimeException | Error failure) {
+                reservation.close();
+                throw failure;
+            }
+        }
+
+        private static void clearInteractiveCommand(final InteractiveTokenCommand command) {
+            synchronized (sLock) {
+                if (sCommand == command) {
+                    sCommand = null;
+                    LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
+                }
             }
         }
 
@@ -1146,8 +1292,9 @@ public class CommandDispatcher {
             int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
             int resultCode = propertyBag.<Integer>getOrDefault(RESULT_CODE, -1);
 
-            if (sCommand != null) {
-                sCommand.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
+            final InteractiveTokenCommand command = sCommand;
+            if (command != null) {
+                command.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
             } else {
                 Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
             }
@@ -1208,18 +1355,56 @@ public class CommandDispatcher {
     public static void stopSilentRequestExecutor() {
         final String methodTag = TAG + ":stopSilentRequestExecutor";
         Logger.info(methodTag, "shutting down..");
-        sSilentExecutor.shutdown();
+        final ExecutorService executor = sSilentExecutor;
+        executor.shutdown();
         try {
-            if (!sSilentExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+            if (!executor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
                 Logger.warn(methodTag, "terminating now");
-                sSilentExecutor.shutdownNow();
+                shutdownNowAndCancel(executor);
             }
         } catch (final InterruptedException e) {
             Logger.warn(methodTag, "terminating again");
-            sSilentExecutor.shutdownNow();
+            shutdownNowAndCancel(executor);
+            Thread.currentThread().interrupt();
         }
     }
 
+    private static List<Runnable> shutdownNowAndCancel(final ExecutorService executor) {
+        // Seal submission before the snapshot. The dropped list also covers a wrapper missed by registry iteration.
+        final List<Runnable> dropped = executor.shutdownNow();
+        final List<QueuedCommand> tasks = new ArrayList<>();
+        for (final QueuedCommand task : sCommandTasks.values()) {
+            if (task.executor == executor) {
+                tasks.add(task);
+            }
+        }
+        for (final Runnable task : dropped) {
+            if (task instanceof QueuedCommand) {
+                tasks.add((QueuedCommand) task);
+            }
+        }
+        Error fatalCallbackFailure = null;
+        for (final QueuedCommand task : tasks) {
+            try {
+                try {
+                    task.future.cancelSignal();
+                } finally {
+                    if (!task.future.isDone()) {
+                        task.future.setException(cancelledCommandException());
+                    }
+                }
+            } catch (final RuntimeException | Error callbackFailure) {
+                Logger.error(TAG, "Command cancellation callback failed during shutdown", callbackFailure);
+                if (callbackFailure instanceof Error && fatalCallbackFailure == null) {
+                    fatalCallbackFailure = (Error) callbackFailure;
+                }
+            }
+        }
+        if (fatalCallbackFailure != null) {
+            throw fatalCallbackFailure;
+        }
+        return dropped;
+    }
     /**
      * Checks if the given package name belongs to a Broker application.
      *
@@ -1298,12 +1483,7 @@ public class CommandDispatcher {
         final ExecutorService oldExecutor;
         synchronized (mapAccessLock) {
             oldExecutor = sSilentExecutor;
-            sSilentExecutor = new ThreadPoolExecutor(
-                    effectivePoolSize, // core pool size
-                    effectivePoolSize*2, // max pool size
-                    30L, // keep-alive time for idle threads above core pool size
-                    TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<Runnable>(effectivePoolSize));
+            sSilentExecutor = createBoundedExecutor(effectivePoolSize, effectivePoolSize * 2);
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
         }
@@ -1338,7 +1518,7 @@ public class CommandDispatcher {
                 Logger.warn(methodTag, "Executor did not terminate gracefully within " +
                         EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
 
-                final List<Runnable> droppedTasks = executor.shutdownNow();
+                final List<Runnable> droppedTasks = shutdownNowAndCancel(executor);
 
                 if (!droppedTasks.isEmpty()) {
                     Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
@@ -1355,12 +1535,12 @@ public class CommandDispatcher {
             }
         } catch (final InterruptedException e) {
             Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
-            executor.shutdownNow();
+            shutdownNowAndCancel(executor);
             Thread.currentThread().interrupt();
         } catch (final RuntimeException e) {
             Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
             try {
-                executor.shutdownNow();
+                shutdownNowAndCancel(executor);
             } catch (final RuntimeException ignored) {
                 Logger.error(methodTag, "Failed to force shutdown executor", ignored);
             }
@@ -1379,4 +1559,3 @@ public class CommandDispatcher {
         resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
-

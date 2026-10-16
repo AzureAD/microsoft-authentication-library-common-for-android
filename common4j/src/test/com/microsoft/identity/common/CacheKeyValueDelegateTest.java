@@ -25,7 +25,9 @@ package com.microsoft.identity.common;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -76,6 +78,37 @@ public class CacheKeyValueDelegateTest {
     @Before
     public void setUp() {
         mDelegate = new CacheKeyValueDelegate();
+    }
+
+    @Test
+    public void cachedFieldMetadata_preservesInheritedCustomFieldsAndUnknownNestedValues() {
+        final String json = "{\"home_account_id\":\"synthetic-home\",\"secret\":\"synthetic-secret\","
+                + "\"custom_name\":\"custom-value\",\"future\":{\"nested\":[1,true,\"value\"]}}";
+        final CustomAccessToken token = mDelegate.fromCacheValue(json, CustomAccessToken.class);
+        assertEquals("synthetic-home", token.getHomeAccountId());
+        assertEquals("synthetic-secret", token.getSecret());
+        assertEquals("custom-value", token.customName);
+        assertEquals(new JsonParser().parse("{\"nested\":[1,true,\"value\"]}"),
+                token.getAdditionalFields().get("future"));
+        assertEquals(1, token.getAdditionalFields().size());
+        final CustomAccessToken roundTrip = mDelegate.fromCacheValue(mDelegate.generateCacheValue(token), CustomAccessToken.class);
+        assertEquals(token.customName, roundTrip.customName);
+        assertEquals(token.getAdditionalFields(), roundTrip.getAdditionalFields());
+    }
+
+    @Test
+    public void knownAndAlternateFields_preserveStreamingOrderEvenWithDuplicateNames() {
+        final AccessTokenRecord token = mDelegate.fromCacheValue(
+                "{\"token_type\":\"Bearer\",\"access_token_type\":\"pop\",\"token_type\":\"Bearer\","
+                        + "\"future\":1,\"future\":2}", AccessTokenRecord.class);
+        assertEquals("Bearer", token.getAccessTokenType());
+        assertEquals("pop", token.getAdditionalFields().get("access_token_type").getAsString());
+        assertEquals(2, token.getAdditionalFields().get("future").getAsInt());
+    }
+
+    private static final class CustomAccessToken extends AccessTokenRecord {
+        @SerializedName("custom_name")
+        private String customName;
     }
 
     private static String wrapInEscapeSequenceChars(final String inputString) {

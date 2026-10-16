@@ -46,7 +46,7 @@ import com.microsoft.identity.common.java.util.ported.Supplier;
 
 import net.jcip.annotations.ThreadSafe;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,7 +69,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
 import io.opentelemetry.api.trace.Span;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -85,7 +84,6 @@ import lombok.NonNull;
  * <p>
  * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
-@AllArgsConstructor
 @ThreadSafe
 public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
@@ -94,6 +92,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
     public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     protected static final int DEFAULT_STREAM_BUFFER_SIZE_BYTE = 1024;
+    public static final int DEFAULT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 
     private static final AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
@@ -106,6 +105,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * Size of the stream buffer.
      */
     private final int streamBufferSize;
+    private final int maxResponseBytes;
 
     /**
      * To be set in {@link java.net.URLConnection#setConnectTimeout(int)}.
@@ -137,6 +137,42 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final SSLSocketFactoryWrapper sslSocketFactory;
 
     /**
+     * Preserves the constructor used by existing Common consumers.
+     */
+    public UrlConnectionHttpClient(final IRetryPolicy<HttpResponse> retryPolicy,
+                                   final int streamBufferSize,
+                                   final int connectTimeoutMs,
+                                   final int readTimeoutMs,
+                                   @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
+                                   @Nullable final Supplier<Integer> readTimeoutMsSupplier,
+                                   final SSLSocketFactoryWrapper sslSocketFactory) {
+        this(retryPolicy, streamBufferSize, connectTimeoutMs, readTimeoutMs,
+                connectTimeoutMsSupplier, readTimeoutMsSupplier, sslSocketFactory,
+                DEFAULT_MAX_RESPONSE_BYTES);
+    }
+
+    private UrlConnectionHttpClient(final IRetryPolicy<HttpResponse> retryPolicy,
+                                    final int streamBufferSize,
+                                    final int connectTimeoutMs,
+                                    final int readTimeoutMs,
+                                    @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
+                                    @Nullable final Supplier<Integer> readTimeoutMsSupplier,
+                                    final SSLSocketFactoryWrapper sslSocketFactory,
+                                    final int maxResponseBytes) {
+        if (streamBufferSize <= 0 || maxResponseBytes <= 0) {
+            throw new IllegalArgumentException("HTTP buffer and response limits must be positive");
+        }
+        this.retryPolicy = retryPolicy;
+        this.streamBufferSize = streamBufferSize;
+        this.connectTimeoutMs = connectTimeoutMs;
+        this.readTimeoutMs = readTimeoutMs;
+        this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
+        this.readTimeoutMsSupplier = readTimeoutMsSupplier;
+        this.sslSocketFactory = sslSocketFactory;
+        this.maxResponseBytes = maxResponseBytes;
+    }
+
+    /**
      * Default Constructor, for constructing Lombok's Builder only. Do not expose.
      */
     @Builder
@@ -147,12 +183,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                     @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
                                     @Nullable final Supplier<Integer> readTimeoutMsSupplier,
                                     @Nullable final List<String> supportedSslProtocols,
-                                    @Nullable final SSLContext sslContext) {
+                                    @Nullable final SSLContext sslContext,
+                                    @Nullable final Integer maxResponseBytes) {
 
         this.retryPolicy = retryPolicy != null ?
                 retryPolicy : new NoRetryPolicy();
         this.streamBufferSize = streamBufferSize != null ?
                 streamBufferSize : DEFAULT_STREAM_BUFFER_SIZE_BYTE;
+        this.maxResponseBytes = maxResponseBytes != null ? maxResponseBytes : DEFAULT_MAX_RESPONSE_BYTES;
+        if (this.streamBufferSize <= 0 || this.maxResponseBytes <= 0) {
+            throw new IllegalArgumentException("HTTP buffer and response limits must be positive");
+        }
         this.connectTimeoutMs = connectTimeoutMs != null ?
                 connectTimeoutMs : CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.URL_CONNECTION_CONNECT_TIME_OUT);
         this.readTimeoutMs = readTimeoutMs != null ?
@@ -307,28 +348,19 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     /**
-     * Convert stream into the string.
-     *
-     * @param inputStream {@link InputStream} to be converted to be a string.
-     * @return The converted string
-     * @throws IOException Thrown when failing to access inputStream stream.
+     * Preserves the existing character-count telemetry without retaining a second full body representation.
      */
-    private String convertStreamToString(final InputStream inputStream) throws IOException {
-        try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
-                    AuthenticationConstants.CHARSET_UTF8));
-            final char[] buffer = new char[streamBufferSize];
-            final StringBuilder stringBuilder = new StringBuilder();
-            int charsRead;
-
-            while ((charsRead = reader.read(buffer)) > -1) {
-                stringBuilder.append(buffer, 0, charsRead);
+    private int countResponseCharacters(final byte[] body) throws IOException {
+        int length = 0;
+        try (final InputStreamReader reader = new InputStreamReader(
+                new ByteArrayInputStream(body), AuthenticationConstants.CHARSET_UTF8)) {
+            final char[] buffer = new char[Math.min(streamBufferSize, 4096)];
+            int count;
+            while ((count = reader.read(buffer)) != -1) {
+                length += count;
             }
-
-            return stringBuilder.toString();
-        } finally {
-            safeCloseStream(inputStream);
         }
+        return length;
     }
 
     /**
@@ -391,6 +423,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     "Request cancelled due to command-level timeout",
                     e);
             }
+            if (e instanceof ResponseSizeLimitException) {
+                throw new ClientException(ClientException.RESPONSE_TOO_LARGE, e.getMessage(), e);
+            }
             throw ConnectionError.getClientException(e);
         } finally {
             // Unregister cancel action — either we're done or an exception was thrown.
@@ -428,14 +463,18 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
             final Date date = new Date(urlConnection.getDate());
 
-            final String responseBody = responseStream == null
-                    ? ""
-                    : convertStreamToString(responseStream);
-
-            response = new HttpResponse(
+            final long declaredLength = "HEAD".equals(urlConnection.getRequestMethod())
+                    || statusCode == HttpURLConnection.HTTP_NO_CONTENT
+                    || statusCode == HttpURLConnection.HTTP_NOT_MODIFIED
+                    ? -1 : urlConnection.getContentLengthLong();
+            final byte[] responseBody = ResponseBodyReader.read(
+                    responseStream, declaredLength, maxResponseBytes, streamBufferSize);
+            final int responseCharacters = countResponseCharacters(responseBody);
+            response = HttpResponse.fromOwnedBytes(
                     date,
                     statusCode,
                     responseBody,
+                    responseCharacters,
                     urlConnection.getHeaderFields()
             );
 
@@ -460,15 +499,21 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
             span.setAttribute(
                     AttributeName.response_body_length.name(),
-                    responseBody.length()
+                    responseCharacters
             );
             span.setAttribute(
                     AttributeName.http_status_code.name(),
                     response.getStatusCode()
             );
+        } catch (final ResponseSizeLimitException e) {
+            urlConnection.disconnect();
+            throw e;
         } finally {
-            completionCallback.accept(response);
-            safeCloseStream(responseStream);
+            try {
+                completionCallback.accept(response);
+            } finally {
+                safeCloseStream(responseStream);
+            }
         }
 
         return response;

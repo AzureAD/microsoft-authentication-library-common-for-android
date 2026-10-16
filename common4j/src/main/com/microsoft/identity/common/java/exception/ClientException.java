@@ -104,6 +104,14 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * The HTTP response exceeded the configured body-byte ceiling. Retrying the same response is not a recovery.
+     */
+    public static final String RESPONSE_TOO_LARGE = "response_too_large";
+
+    /** Accepted command/callback capacity is exhausted. Retry with backoff after outstanding work drains. */
+    public static final String COMMAND_QUEUE_FULL = "command_queue_full";
+
+    /**
      * Indicates a msal client update is required.
      */
     public static final String CLIENT_UPDATE_REQUIRED = "client_update_required";

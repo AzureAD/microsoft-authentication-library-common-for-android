@@ -60,6 +60,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     ClientException.INTERRUPTED_OPERATION,
                     ClientException.INVALID_BROKER_BUNDLE,
+                    ClientException.COMMAND_QUEUE_FULL,
+                    ClientException.RESPONSE_TOO_LARGE,
                     ClientException.IO_ERROR));
 
     @Nullable

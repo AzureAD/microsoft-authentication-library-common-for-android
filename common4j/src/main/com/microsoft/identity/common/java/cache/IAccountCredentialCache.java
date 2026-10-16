@@ -35,6 +35,13 @@ import java.util.Set;
 public interface IAccountCredentialCache {
 
     /**
+     * Releases derived in-memory state without deleting persisted accounts or credentials.
+     * Implementations without an in-memory accelerator have nothing to release.
+     */
+    default void trimMemory() {
+    }
+
+    /**
      * Saves the supplied Account in the cache.
      *
      * @param account The Account to save.

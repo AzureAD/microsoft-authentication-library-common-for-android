@@ -93,13 +93,18 @@ public class ResultFuture<T> implements Future<T> {
      *
      * @param exception The Exception to set.
      */
-    public synchronized void setException(@NonNull final Throwable exception) {
-        mException = exception;
-        mCountDownLatch.countDown();
-
-        for (final BiConsumer<T, Throwable> consumer : mConsumers) {
-            consumer.accept(mResult, exception);
+    public void setException(@NonNull final Throwable exception) {
+        final List<BiConsumer<T, Throwable>> consumers;
+        synchronized (this) {
+            if (isDone()) {
+                return;
+            }
+            mException = exception;
+            consumers = new ArrayList<>(mConsumers);
+            mConsumers.clear();
+            mCountDownLatch.countDown();
         }
+        notifyConsumers(consumers, mResult, exception);
     }
 
     /**
@@ -107,15 +112,18 @@ public class ResultFuture<T> implements Future<T> {
      *
      * @param result The Result to set.
      */
-    public synchronized void setResult(@Nullable final T result) {
-        mResult = result;
-        mCountDownLatch.countDown();
-
-        for (final BiConsumer<T, Throwable> consumer : mConsumers) {
-            consumer.accept(result, mException);
+    public void setResult(@Nullable final T result) {
+        final List<BiConsumer<T, Throwable>> consumers;
+        synchronized (this) {
+            if (isDone()) {
+                return;
+            }
+            mResult = result;
+            consumers = new ArrayList<>(mConsumers);
+            mConsumers.clear();
+            mCountDownLatch.countDown();
         }
-
-        mConsumers.clear();
+        notifyConsumers(consumers, result, mException);
     }
 
     /**
@@ -124,12 +132,61 @@ public class ResultFuture<T> implements Future<T> {
      *
      * @param consumerToAdd The BiConsumer to invoke.
      */
-    public synchronized void whenComplete(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
-        if (isDone()) {
-            consumerToAdd.accept(mResult, mException);
-            return;
+    public void whenComplete(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
+        final T result;
+        final Throwable exception;
+        synchronized (this) {
+            if (!isDone()) {
+                mConsumers.add(consumerToAdd);
+                return;
+            }
+            result = mResult;
+            exception = mException;
         }
+        consumerToAdd.accept(result, exception);
+    }
 
-        mConsumers.add(consumerToAdd);
+    /** Registers a pending callback without ever invoking it inline. False means completion already won the race. */
+    public synchronized boolean tryWhenComplete(@NonNull final BiConsumer<T, Throwable> consumer) {
+        if (isDone()) {
+            return false;
+        }
+        mConsumers.add(consumer);
+        return true;
+    }
+
+    /**
+     * Detaches a still-pending caller without canceling shared work or affecting other callers.
+     */
+    public synchronized boolean removeWhenComplete(@NonNull final BiConsumer<T, Throwable> consumer) {
+        return mConsumers.remove(consumer);
+    }
+
+    /** Returns the number of callbacks that still await terminal completion. */
+    public synchronized int getPendingConsumerCount() {
+        return mConsumers.size();
+    }
+
+    private void notifyConsumers(final List<BiConsumer<T, Throwable>> consumers,
+                                 final T result, final Throwable exception) {
+        // One failing callback must not strand other accepted callers or their cleanup reservations.
+        Throwable failure = null;
+        for (final BiConsumer<T, Throwable> consumer : consumers) {
+            try {
+                consumer.accept(result, exception);
+            } catch (final RuntimeException | Error e) {
+                if (failure == null) {
+                    failure = e;
+                } else if (failure != e) {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
+        if (failure instanceof Error) {
+            throw (Error) failure;
+        }
+        if (failure instanceof RuntimeException) {
+            throw (RuntimeException) failure;
+        }
     }
 }

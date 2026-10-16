@@ -29,6 +29,7 @@ import net.jcip.annotations.Immutable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nullable;
 
@@ -42,6 +43,8 @@ public class HttpResponse {
 
     private final int mStatusCode;
     private final String mResponseBody;
+    private final byte[] mResponseBodyBytes;
+    private final int mResponseCharacters;
     private final Map<String, List<String>> mResponseHeaders;
     private final Date mDate;
 
@@ -64,7 +67,25 @@ public class HttpResponse {
         mDate = new Date(date.getTime());
         mStatusCode = statusCode;
         mResponseBody = responseBody;
+        mResponseBodyBytes = null;
+        mResponseCharacters = responseBody == null ? 0 : responseBody.length();
         mResponseHeaders = headerFields;
+    }
+
+    private HttpResponse(final Date date, final int statusCode, final byte[] body,
+                         final int characters, final Map<String, List<String>> headerFields) {
+        mDate = new Date(date.getTime());
+        mStatusCode = statusCode;
+        mResponseBody = null;
+        mResponseBodyBytes = body;
+        mResponseCharacters = characters;
+        mResponseHeaders = headerFields;
+    }
+
+    // The transport transfers its private buffer; public accessors never expose that owned array.
+    static HttpResponse fromOwnedBytes(final Date date, final int statusCode, final byte[] body,
+                                      final int characters, final Map<String, List<String>> headerFields) {
+        return new HttpResponse(date, statusCode, body, characters, headerFields);
     }
 
     public Date getDate() {
@@ -82,7 +103,20 @@ public class HttpResponse {
      * @return The raw server response.
      */
     public String getBody() {
-        return mResponseBody;
+        return mResponseBodyBytes == null ? mResponseBody : new String(mResponseBodyBytes, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns a caller-owned UTF-8 body without materializing an intermediate String for transport responses.
+     * Legacy responses constructed with a null String body return null.
+     */
+    @Nullable
+    public byte[] getBodyBytes() {
+        if (mResponseBodyBytes != null) {
+            return mResponseBodyBytes.clone();
+        }
+        final String body = getBody();
+        return body == null ? null : body.getBytes(StandardCharsets.UTF_8);
     }
 
     /**
@@ -138,7 +172,7 @@ public class HttpResponse {
     public String toString() {
         return "HttpResponse{" +
                 "mStatusCode=" + mStatusCode +
-                ", mResponseBody='" + mResponseBody + '\'' +
+                ", mResponseCharacters=" + mResponseCharacters +
                 ", mResponseHeaders=" + mResponseHeaders +
                 '}';
     }

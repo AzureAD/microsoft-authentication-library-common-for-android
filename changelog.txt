@@ -1,5 +1,7 @@
 vNext
 ----------
+- [MAJOR] Bound HTTP responses to 8 MiB and command admission to 64 queued commands per executor and 128 outstanding callers by default; add configurable limits and explicit response_too_large/command_queue_full errors. Caller-budget rejection is synchronous and posts no callback.
+- [MINOR] Add raw HTTP response bytes, bounded indexed token-cache lookups and memory-only payload trimming, and a 16 MiB/250-entry command-result cache with monotonic expiry.
 - [MAJOR] Replace AppRegistry.BROWSER_SSO_AUTHORIZED_APPS with getBrowserSsoAuthorizedApps(), which evaluates default-off EnableIslandBrowserSso per request and preserves Chrome/debug-trusted MSAL test-app support alongside eligible Island production identities (AB#3780783) (#3298)
 - [MINOR] Add the InstallCertDeepLinkActivity span name for Broker's legacy install-certificate deep-link caller telemetry (AB#3771034) (#3293)
 - [PATCH] Default authorize-only Device-CA credential forwarding to off for gradual ECS rollout

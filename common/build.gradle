@@ -119,11 +119,15 @@ if (project.hasProperty("distCommon4jVersion") && project.distCommon4jVersion !=
 boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryEnabledFlag")
 boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
 boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
+boolean cacheMemoryBenchmarkOnly = project.hasProperty("cacheMemoryBenchmarkOnly")
 
 def robolectricRepoUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
 def robolectricRepoPassword = System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
+    if (cacheMemoryBenchmarkOnly) {
+        testBuildType 'release'
+    }
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         namespace 'com.microsoft.identity.common'
@@ -215,6 +219,12 @@ android {
     }
 
     sourceSets {
+        androidTest {
+            if (cacheMemoryBenchmarkOnly) {
+                java.srcDirs = ['src/cacheBenchmark/java']
+                manifest.srcFile 'src/cacheBenchmark/AndroidManifest.xml'
+            }
+        }
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
             aidl.srcDirs = ['src/main/aidl']
@@ -312,14 +322,21 @@ dependencies {
     // instrumented classpath. Today common's androidTest suite consumes testutils solely for the
     // retry rule; if it starts using other testutils helpers whose deps are excluded here, those
     // will fail at runtime (NoClassDefFoundError) and this exclusion will need revisiting.
-    androidTestImplementation(project(path: ':testutils')) {
-        transitive = false
+    if (!cacheMemoryBenchmarkOnly) {
+        androidTestImplementation(project(path: ':testutils')) {
+            transitive = false
+        }
     }
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
-    androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
+    if (cacheMemoryBenchmarkOnly) {
+        androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+    }
+    if (!cacheMemoryBenchmarkOnly) {
+        androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
+        androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
+            exclude group: 'com.android.support', module: 'support-annotations'
+        })
+    }
 
     implementation "io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion"
     implementation("io.opentelemetry:opentelemetry-extension-kotlin:$rootProject.ext.openTelemetryExtensionKotlinVersion")

@@ -22,3 +22,8 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 ### Android Studio Build Requirement
 Please note that this project uses [Lombok](https://projectlombok.org/) internally and while using Android Studio you will need to install [Lombok Plugin](https://plugins.jetbrains.com/plugin/6317-lombok) to get the project to build successfully within Android Studio.
+
+### Authentication Memory Bounds
+
+See [Android memory limits](docs/android-memory-limits.md) for HTTP, command admission, and cache defaults,
+configuration/migration guidance, memory-only trimming hooks, and regression coverage.

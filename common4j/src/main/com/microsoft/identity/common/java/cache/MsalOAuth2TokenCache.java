@@ -667,7 +667,8 @@ public class MsalOAuth2TokenCache
         List<Credential> refreshTokens;
 
         {
-            final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+            final List<Credential> allCredentials = getCredentialSnapshot(
+                    clientId, applicationIdentifier, mamEnrollmentIdentifier, target, account, authScheme);
 
             accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                     allCredentials,
@@ -767,6 +768,29 @@ public class MsalOAuth2TokenCache
 
         Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result.build()));
         return result.build();
+    }
+
+    private List<Credential> getCredentialSnapshot(final String clientId, final String applicationIdentifier,
+                                                   final String mamEnrollmentIdentifier, final String target,
+                                                   final AccountRecord account,
+                                                   final AbstractAuthenticationScheme authScheme) {
+        if (usesStandardMemoryCache()) {
+            return ((SharedPreferencesAccountCredentialCacheWithMemoryCache) mAccountCredentialCache)
+                    .getCredentialSnapshot(account.getHomeAccountId(), account.getEnvironment(), account.getRealm(),
+                            getAccessTokenCredentialTypeForAuthenticationScheme(authScheme), clientId,
+                            applicationIdentifier, mamEnrollmentIdentifier, target, authScheme.getName());
+        }
+        return mAccountCredentialCache.getCredentials();
+    }
+
+    private boolean usesStandardMemoryCache() {
+        return mAccountCredentialCache.getClass() == SharedPreferencesAccountCredentialCacheWithMemoryCache.class;
+    }
+
+    private boolean usesScopedAccountReads() {
+        // Preserve virtual account/cache policies supplied by derived implementations.
+        return usesStandardMemoryCache() && (getClass() == MsalOAuth2TokenCache.class
+                || getClass() == MsalCppOAuth2TokenCache.class || getClass() == MicrosoftFamilyOAuth2TokenCache.class);
     }
 
     /**
@@ -886,7 +910,10 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens;
 
         {
-            final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+            final List<Credential> allCredentials = usesStandardMemoryCache() ? mAccountCredentialCache.getCredentialsFilteredBy(
+                    accountRecord.getHomeAccountId(), accountRecord.getEnvironment(),
+                    new HashSet<>(Arrays.asList(IdToken, CredentialType.V1IdToken)), clientId,
+                    null, null, accountRecord.getRealm(), null, null, null) : mAccountCredentialCache.getCredentials();
 
             idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                     accountRecord.getHomeAccountId(),
@@ -972,7 +999,7 @@ public class MsalOAuth2TokenCache
                         + "Realm: [" + realm + "]"
         );
 
-        final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
+        final List<AccountRecord> allAccounts = getAppAccountCandidates(environment, clientId, homeAccountId, null);
 
         Logger.info(
                 TAG + methodName,
@@ -1037,6 +1064,11 @@ public class MsalOAuth2TokenCache
                 TAG + methodName,
                 "LocalAccountId: [" + localAccountId + "]"
         );
+
+        if (usesScopedAccountReads()) {
+            final List<AccountRecord> candidates = getAppAccountCandidates(environment, clientId, null, localAccountId);
+            return candidates.isEmpty() ? null : candidates.get(0);
+        }
 
         final List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
         if (accountRecordList.isEmpty()) {
@@ -1247,9 +1279,9 @@ public class MsalOAuth2TokenCache
                 );
 
         // Grab all of the AccountRecords associated with this clientId
-        final List<AccountRecord> allAppAccounts = getAccounts(
+        final List<AccountRecord> allAppAccounts = getAppAccountCandidates(
                 accountRecord.getEnvironment(),
-                clientId
+                clientId, accountRecord.getHomeAccountId(), null
         );
 
         // Iterate and populate
@@ -1260,6 +1292,30 @@ public class MsalOAuth2TokenCache
         }
 
         return Collections.unmodifiableList(allTenantAccounts);
+    }
+
+    private List<AccountRecord> getAppAccountCandidates(final String environment, final String clientId,
+                                                       final String homeAccountId, final String localAccountId) {
+        if (!usesScopedAccountReads()) {
+            return getAccounts(environment, clientId);
+        }
+        final List<AccountRecord> candidates = localAccountId == null
+                ? mAccountCredentialCache.getAccountsFilteredBy(homeAccountId, environment, null)
+                : ((SharedPreferencesAccountCredentialCacheWithMemoryCache) mAccountCredentialCache)
+                        .getAccountsByLocalId(environment, localAccountId);
+        final List<AccountRecord> result = new ArrayList<>();
+        for (final AccountRecord account : candidates) {
+            if (localAccountId != null && !localAccountId.equals(account.getLocalAccountId())) {
+                continue;
+            }
+            final List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                    account.getHomeAccountId(), environment, new HashSet<>(Arrays.asList(IdToken, V1IdToken, RefreshToken)),
+                    clientId, null, null, null, null, null, null);
+            if (accountHasCredential(account, credentials)) {
+                result.add(account);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -1538,7 +1594,7 @@ public class MsalOAuth2TokenCache
                                                    @NonNull final String homeAccountId) {
         final String methodName = ":getAccountByHomeAccountId";
 
-        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+        final List<AccountRecord> accounts = getAppAccountCandidates(environment, clientId, homeAccountId, null);
 
         Logger.verbosePII(
                 TAG + methodName,
@@ -1686,7 +1742,10 @@ public class MsalOAuth2TokenCache
 
         final List<Credential> accessTokens;
 
-        {
+        if (usesStandardMemoryCache()) {
+            accessTokens = ((SharedPreferencesAccountCredentialCacheWithMemoryCache) mAccountCredentialCache)
+                    .getTokenWriteCandidates(referenceToken, mustMatchExactClaims);
+        } else {
             accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                     referenceToken.getHomeAccountId(),
                     referenceToken.getEnvironment(),
@@ -1708,8 +1767,10 @@ public class MsalOAuth2TokenCache
                 "Inspecting " + accessTokens.size() + " accessToken[s]."
         );
 
+        final Set<String> referenceScopes = scopesAsSet(referenceToken);
+        referenceScopes.removeAll(AuthenticationConstants.DEFAULT_SCOPES);
         for (final Credential accessToken : accessTokens) {
-            if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken, true)) {
+            if (scopesIntersect(referenceScopes, (AccessTokenRecord) accessToken, true)) {
                 Logger.infoPII(
                         TAG + ":" + methodName,
                         "Removing credential: " + accessToken
@@ -1724,17 +1785,15 @@ public class MsalOAuth2TokenCache
         );
     }
 
-    private boolean scopesIntersect(final AccessTokenRecord token1,
+    private boolean scopesIntersect(final Set<String> token1Scopes,
                                     final AccessTokenRecord token2,
                                     boolean omitDefaultScopes) {
         final String methodName = "scopesIntersect";
 
-        final Set<String> token1Scopes = scopesAsSet(token1);
         final Set<String> token2Scopes = scopesAsSet(token2);
 
         if (omitDefaultScopes) {
             // Remove the default scopes (if present), do not consider them in lookup criteria
-            token1Scopes.removeAll(AuthenticationConstants.DEFAULT_SCOPES);
             token2Scopes.removeAll(AuthenticationConstants.DEFAULT_SCOPES);
         }
 
@@ -1761,7 +1820,7 @@ public class MsalOAuth2TokenCache
     private Set<String> scopesAsSet(final AccessTokenRecord token) {
         final String scopeString = token.getTarget();
         if (!StringUtil.isNullOrEmpty(scopeString)) {
-            final String[] scopeArray = scopeString.split("\\s+");
+            final String[] scopeArray = AbstractAccountCredentialCache.SCOPE_SEPARATOR.split(scopeString);
             final Set<String> scopesAsSet = new HashSet<>();
             for (final String scope : scopeArray) {
                 scopesAsSet.add(scope.toLowerCase(Locale.US));
@@ -1860,6 +1919,14 @@ public class MsalOAuth2TokenCache
 
     protected IAccountCredentialCache getAccountCredentialCache() {
         return mAccountCredentialCache;
+    }
+
+    /**
+     * Releases derived account/credential memory without deleting persisted tokens or changing query completeness.
+     * May wait for an active cache operation. Hosts should invoke this off the UI thread on memory pressure.
+     */
+    public void trimMemory() {
+        getAccountCredentialCache().trimMemory();
     }
 
     IAccountCredentialAdapter<

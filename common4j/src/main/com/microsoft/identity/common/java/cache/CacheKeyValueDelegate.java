@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountCredentialBase;
@@ -41,8 +42,11 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.lang.reflect.Field;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +78,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      */
     public static final String CACHE_VALUE_SEPARATOR = "-";
     private static final String FOCI_PREFIX = "foci-";
+    private static final Map<Class<? extends AccountCredentialBase>, Set<String>> EXPECTED_FIELDS = expectedFields();
 
     private final Gson mGson;
 
@@ -224,22 +229,21 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final T resultObject = (T) mGson.fromJson(string, t);
 
             if (!StringUtil.isNullOrEmpty(string)) {
-                // Turn the incoming String into a JSONObject
-                final JsonObject incomingJson = new JsonParser().parse(string).getAsJsonObject();
-
-                // Get all of the fields we were expecting to get
                 final Set<String> expectedFields = getExpectedJsonFields(t);
-
-                // Remove the expected fields from the initial JSONObject
-                for (final String expectedField : expectedFields) {
-                    incomingJson.remove(expectedField);
-                }
-
-                // Add whatever is leftover to the additionalFields Map
                 final Map<String, JsonElement> additionalFields = new HashMap<>();
-
-                for (final String key : incomingJson.keySet()) {
-                    additionalFields.put(key, incomingJson.get(key));
+                // Preserve Gson's streaming duplicate/alternate-field ordering without building a second full tree.
+                try (final JsonReader reader = new JsonReader(new StringReader(string))) {
+                    reader.setLenient(true);
+                    reader.beginObject();
+                    while (reader.hasNext()) {
+                        final String name = reader.nextName();
+                        if (expectedFields.contains(name)) {
+                            reader.skipValue();
+                        } else {
+                            additionalFields.put(name, new JsonParser().parse(reader));
+                        }
+                    }
+                    reader.endObject();
                 }
 
                 resultObject.setAdditionalFields(additionalFields);
@@ -247,7 +251,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
             // return the fully-formed object
             return resultObject;
-        } catch (JsonSyntaxException e) {
+        } catch (final JsonSyntaxException | IOException e) {
             Logger.error(
                     TAG + ":" + methodName,
                     "Failed to parse cache value.",
@@ -265,6 +269,21 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * @return A Set of expected JSON values, as Strings.
      */
     private static Set<String> getExpectedJsonFields(final Class<? extends AccountCredentialBase> clazz) {
+        final Set<String> known = EXPECTED_FIELDS.get(clazz);
+        return known == null ? reflectExpectedJsonFields(clazz) : known;
+    }
+
+    private static Map<Class<? extends AccountCredentialBase>, Set<String>> expectedFields() {
+        final Map<Class<? extends AccountCredentialBase>, Set<String>> fields = new HashMap<>();
+        for (final Class<? extends AccountCredentialBase> type : Arrays.asList(
+                AccountRecord.class, AccessTokenRecord.class, RefreshTokenRecord.class,
+                IdTokenRecord.class, PrimaryRefreshTokenRecord.class)) {
+            fields.put(type, Collections.unmodifiableSet(reflectExpectedJsonFields(type)));
+        }
+        return Collections.unmodifiableMap(fields);
+    }
+
+    private static Set<String> reflectExpectedJsonFields(final Class<? extends AccountCredentialBase> clazz) {
         final Set<String> serializedNames = new HashSet<>();
         final List<Field> fieldsToInspect = getFieldsUpTo(clazz, AccountCredentialBase.class);
         final List<Field> annotatedFields = getSerializedNameAnnotatedFields(fieldsToInspect);

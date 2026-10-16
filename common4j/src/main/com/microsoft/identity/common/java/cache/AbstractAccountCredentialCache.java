@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -52,6 +53,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
     private static final String NEW_LINE = "\n";
+    static final Pattern SCOPE_SEPARATOR = Pattern.compile("\\s+");
 
     // SharedPreferences used to store Accounts and Credentials
     protected final INameValueStorage<String> mSharedPreferencesFileManager;
@@ -155,6 +157,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
         final boolean mustMatchOnKid = !StringUtil.isNullOrEmpty(kid);
         final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
+        final Set<String> soughtTargets = mustMatchOnTarget ? targetSet(target, true) : null;
 
         Logger.verbose(
                 TAG,
@@ -222,10 +225,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    if(!targetsIntersect(target, accessToken.getTarget(), true)) continue;
+                    if(!targetsIntersect(soughtTargets, accessToken.getTarget(), true)) continue;
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    if(!targetsIntersect(target, refreshToken.getTarget(), true)) continue;
+                    if(!targetsIntersect(soughtTargets, refreshToken.getTarget(), true)) continue;
                 } else {
                     Logger.verbose(TAG, "Query specified target-match, but no target to match.");
                 }
@@ -274,39 +277,29 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      *
      * @param targetToMatch     The target value[s] our cache-query is looking for.
      * @param credentialTarget  The target against which our sought value will be compared.
-     * @param omitDefaultScopes True if MSAL's default scopes should be considered in this lookup.
-     *                          False otherwise.
+     * @param omitDefaultScopes True if MSAL's default scopes should be ignored in this lookup.
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
     static boolean targetsIntersect(@NonNull final String targetToMatch,
                                     @NonNull final String credentialTarget,
                                     final boolean omitDefaultScopes) {
-        // The credentialTarget must contain all of the scopes in the targetToMatch
-        // It may contain more, but it must contain minimally those
-        // Matching is case-insensitive
-        final String splitCriteria = "\\s+";
-        final String[] targetToMatchArray = targetToMatch.trim().split(splitCriteria);
-        final String[] credentialTargetArray = credentialTarget.trim().split(splitCriteria);
+        return targetsIntersect(targetSet(targetToMatch, omitDefaultScopes), credentialTarget, omitDefaultScopes);
+    }
 
-        // Declare Sets to contain these scopes
-        final Set<String> soughtTargetSet = new HashSet<>();
-        final Set<String> credentialTargetSet = new HashSet<>();
+    private static boolean targetsIntersect(final Set<String> soughtTargets, final String credentialTarget,
+                                            final boolean omitDefaultScopes) {
+        return targetSet(credentialTarget, omitDefaultScopes).containsAll(soughtTargets);
+    }
 
-        // Add the array values to these sets, lowercasing them
-        for (final String target : targetToMatchArray) {
-            soughtTargetSet.add(target.toLowerCase(Locale.ROOT));
+    private static Set<String> targetSet(final String target, final boolean omitDefaultScopes) {
+        final Set<String> scopes = new HashSet<>();
+        for (final String scope : SCOPE_SEPARATOR.split(target.trim())) {
+            scopes.add(scope.toLowerCase(Locale.ROOT));
         }
-
-        for (final String target : credentialTargetArray) {
-            credentialTargetSet.add(target.toLowerCase(Locale.ROOT));
-        }
-
         if (omitDefaultScopes) {
-            soughtTargetSet.removeAll(DEFAULT_SCOPES);
-            credentialTargetSet.removeAll(DEFAULT_SCOPES);
+            scopes.removeAll(DEFAULT_SCOPES);
         }
-
-        return credentialTargetSet.containsAll(soughtTargetSet);
+        return scopes;
     }
 }

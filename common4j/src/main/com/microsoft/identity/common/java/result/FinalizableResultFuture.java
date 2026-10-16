@@ -40,8 +40,8 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
     /**
      * Cancellation signal owned by this future. Shared by all callers (original + dedup)
      * and the worker thread. The worker registers its {@link java.net.HttpURLConnection}
-     * on this signal; on timeout, any caller can invoke {@link #cancelSignal()} to
-     * disconnect the worker's active connection.
+     * on this signal. Explicit cancellation affects the whole group; the dispatcher detaches
+     * individual timed-out callers before deciding whether the remaining work can be cancelled.
      */
     private final CancellationSignal mCancellationSignal = new CancellationSignal();
 
@@ -68,8 +68,8 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
     /**
      * Returns the cancellation signal owned by this future.
      * All callers (original + dedup) and the worker thread share this single signal.
-     * The worker registers its {@link java.net.HttpURLConnection} on it; any caller
-     * that times out calls {@link #cancelSignal()} to disconnect the worker's connection.
+     * The worker registers its {@link java.net.HttpURLConnection} on it. Cancelling this signal
+     * affects every caller sharing the future, not just the caller holding this reference.
      *
      * @return the cancellation signal for this future
      */

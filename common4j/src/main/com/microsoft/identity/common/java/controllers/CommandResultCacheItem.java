@@ -22,34 +22,40 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
 public class CommandResultCacheItem {
 
-    private final static int VALIDITY_DURATION = 30;
-
-    private CommandResult mValue;
-    private Date mExpiresOn;
+    static final long VALIDITY_NANOS = TimeUnit.SECONDS.toNanos(30);
+    private final CommandResult mValue;
+    private final long mExpiresOn;
+    private final long mPayloadBytes;
+    private final LongSupplier mClock;
 
     public CommandResultCacheItem(CommandResult value){
-        mValue = value;
-        mExpiresOn = getExpiresOn();
+        this(value, System.nanoTime(), 0, System::nanoTime);
     }
 
-    private Date getExpiresOn(){
-        final Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, VALIDITY_DURATION);
-        return calendar.getTime();
+    CommandResultCacheItem(final CommandResult value, final long now, final long payloadBytes,
+                           final LongSupplier clock) {
+        mValue = value;
+        mExpiresOn = now + VALIDITY_NANOS;
+        mPayloadBytes = payloadBytes;
+        mClock = clock;
     }
 
     public boolean isExpired(){
-        final Calendar calendar = Calendar.getInstance();
-        final Date now = calendar.getTime();
-
-        return now.after(mExpiresOn);
+        return isExpired(mClock.getAsLong());
     }
 
+    boolean isExpired(final long now) {
+        return now - mExpiresOn >= 0;
+    }
+
+    long getPayloadBytes() {
+        return mPayloadBytes;
+    }
     public CommandResult getValue(){
         return mValue;
     }
