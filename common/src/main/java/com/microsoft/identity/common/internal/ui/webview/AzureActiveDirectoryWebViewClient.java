@@ -50,6 +50,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -332,14 +334,58 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * If both conditions are met, it adds the JavaScript interface to the WebView.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
+        final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
+        final boolean isBrokerAuthProcess =
+                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+        final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
+        final boolean brokerMasterFlightEnabled =
+                CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+        Logger.info(
+                methodTag,
+                "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
+                        + isBrokerAuthProcess
+                        + "], hasTelemetrySink=["
+                        + (telemetrySink != null)
+                        + "], brokerMasterFlightEnabled=["
+                        + brokerMasterFlightEnabled
+                        + "]."
+        );
         setAuthUxBridgeSession(AuthUxBridgeSession.create(
                 view,
                 url,
-                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()),
-                mOnboardingTelemetryRecorder != null,
-                CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)
+                isBrokerAuthProcess,
+                telemetrySink,
+                brokerMasterFlightEnabled
         ));
+    }
+
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    AuthUxTelemetrySink createAuthUxTelemetrySink() {
+        final String methodTag = TAG + ":createAuthUxTelemetrySink";
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            Logger.info(
+                    methodTag,
+                    "No onboarding telemetry recorder is attached; the Auth UX telemetry sink "
+                            + "will not be created."
+            );
+            return null;
+        }
+        Logger.info(
+                methodTag,
+                "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
+        );
+        return event -> {
+            Logger.info(
+                    methodTag,
+                    event.getCorrelationId(),
+                    "Forwarding a validated Auth UX telemetry occurrence to the onboarding recorder."
+            );
+            recorder.addBlockingError(event.getErrorCode());
+            return true;
+        };
     }
 
     /**
