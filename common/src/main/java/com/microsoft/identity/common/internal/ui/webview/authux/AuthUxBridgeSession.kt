@@ -45,6 +45,16 @@ class AuthUxBridgeSession private constructor(
 ) : AutoCloseable {
     private val closed = AtomicBoolean(false)
 
+    /**
+     * Updates legacy JavaScript-interface exposure when a main-frame navigation starts.
+     *
+     * The interface is added for approved Auth UX URLs and removed before an unapproved or
+     * federated page loads. WebMessageListener and disabled sessions require no per-navigation
+     * changes because their origin-scoped surfaces are registered for the request lifetime.
+     *
+     * @param view the WebView starting the navigation.
+     * @param url the URL being loaded, or null when unavailable.
+     */
     fun onPageStarted(view: WebView, url: String?) {
         if (mode != AuthUxTransportMode.JAVASCRIPT_INTERFACE || closed.get()) {
             return
@@ -67,6 +77,14 @@ class AuthUxBridgeSession private constructor(
         }
     }
 
+    /**
+     * Installs the page-facing compatibility facade after an approved legacy page finishes loading.
+     *
+     * The facade forwards `window.broker.postMessageToBroker(...)` calls to the installed
+     * JavaScript interface. Other transport modes use a document-start facade or expose no bridge.
+     *
+     * @param view the WebView that finished loading.
+     */
     fun onPageFinished(view: WebView) {
         if (mode == AuthUxTransportMode.JAVASCRIPT_INTERFACE &&
             javaScriptInterfaceAdded &&
@@ -77,6 +95,13 @@ class AuthUxBridgeSession private constructor(
         }
     }
 
+    /**
+     * Closes message processing and removes all request-owned bridge surfaces.
+     *
+     * Processing is closed before transport cleanup so queued callbacks become inert. Cleanup is
+     * best-effort, idempotent, and releases the document-start script, WebMessageListener, legacy
+     * JavaScript interface, and retained WebView reference owned by this session.
+     */
     override fun close() {
         if (!closed.compareAndSet(false, true)) {
             Logger.info(TAG, "Ignoring duplicate Auth UX bridge session close.")
@@ -204,7 +229,10 @@ class AuthUxBridgeSession private constructor(
                     telemetryAllowed = true,
                     numberMatchingAllowed = false
                 )
-                else -> null
+                else -> {
+                    // Non-broker requests without a recorder have no supported Auth UX capability.
+                    null
+                }
             }
 
             if (capabilities == null) {
@@ -222,7 +250,7 @@ class AuthUxBridgeSession private constructor(
                 return disabled(webKitAdapter)
             }
 
-            // TODO(WP2): Pass the request-owned onboarding telemetry sink instead of null.
+            // TODO(WP2 follow-up PR): Replace null with the request-owned onboarding telemetry sink.
             val processor = AuthUxJavaScriptInterface(
                 telemetrySink = null,
                 capabilities = capabilities

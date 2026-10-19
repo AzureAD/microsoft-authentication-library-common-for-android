@@ -52,6 +52,11 @@ class AuthUxWebMessageListener(
             return
         }
 
+        if (message.type != WebMessageCompat.TYPE_STRING) {
+            Logger.warn(TAG, "Rejected Auth UX WebMessage callback with unsupported data type.")
+            return
+        }
+
         val data = message.data
         if (data == null) {
             Logger.info(TAG, "Ignoring Auth UX WebMessage callback with no data.")

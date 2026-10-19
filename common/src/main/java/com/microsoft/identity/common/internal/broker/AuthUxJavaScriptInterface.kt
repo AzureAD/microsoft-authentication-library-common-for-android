@@ -81,6 +81,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     private val telemetrySink: AuthUxTelemetrySink? = null,
     private val capabilities: AuthUxRequestCapabilities = AuthUxRequestCapabilities.BROKER
 ) : AuthUxMessageProcessor {
+    // Serializes callbacks with close() so teardown waits for in-flight side effects and rejects queued work.
+    private val lifecycleLock = Any()
     private val closed = AtomicBoolean(false)
 
     override val isClosed: Boolean
@@ -189,6 +191,12 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     }
 
     override fun process(jsonPayload: String) {
+        synchronized(lifecycleLock) {
+            processWhileOpen(jsonPayload)
+        }
+    }
+
+    private fun processWhileOpen(jsonPayload: String) {
         val methodTag = "$TAG:receiveAuthUxMessage"
         if (closed.get()) {
             Logger.info(methodTag, "Ignoring Auth UX payload after request closure.")
@@ -283,7 +291,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     }
 
     override fun close() {
-        closed.set(true)
+        synchronized(lifecycleLock) {
+            closed.set(true)
+        }
     }
 
     private fun parseJsonToAuthUxJsonPayloadObject(jsonString: String): AuthUxJsonPayload {

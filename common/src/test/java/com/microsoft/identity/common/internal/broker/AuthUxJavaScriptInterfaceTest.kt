@@ -31,6 +31,9 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mockStatic
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class AuthUxJavaScriptInterfaceTest {
 
@@ -280,6 +283,49 @@ class AuthUxJavaScriptInterfaceTest {
         Assert.assertTrue(bridge.isClosed)
         Assert.assertTrue(sink.received.isEmpty())
         Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test close waits for admitted callback before returning`() {
+        val sinkEntered = CountDownLatch(1)
+        val releaseSink = CountDownLatch(1)
+        val closeStarted = CountDownLatch(1)
+        val closeCompleted = CountDownLatch(1)
+        val sink = AuthUxTelemetrySink {
+            sinkEntered.countDown()
+            check(releaseSink.await(5, TimeUnit.SECONDS)) {
+                "Timed out waiting to release the telemetry sink."
+            }
+            true
+        }
+        val bridge = AuthUxJavaScriptInterface(sink)
+        val executor = Executors.newFixedThreadPool(2)
+
+        try {
+            val processingFuture = executor.submit {
+                bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+            }
+            Assert.assertTrue(sinkEntered.await(5, TimeUnit.SECONDS))
+
+            val closeFuture = executor.submit {
+                closeStarted.countDown()
+                bridge.close()
+                closeCompleted.countDown()
+            }
+            Assert.assertTrue(closeStarted.await(5, TimeUnit.SECONDS))
+
+            Assert.assertFalse(closeCompleted.await(100, TimeUnit.MILLISECONDS))
+            releaseSink.countDown()
+
+            processingFuture.get(5, TimeUnit.SECONDS)
+            closeFuture.get(5, TimeUnit.SECONDS)
+
+            Assert.assertTrue(closeCompleted.await(1, TimeUnit.SECONDS))
+            Assert.assertTrue(bridge.isClosed)
+        } finally {
+            releaseSink.countDown()
+            executor.shutdownNow()
+        }
     }
 
     /** Test double that records every telemetry event routed to the sink. */

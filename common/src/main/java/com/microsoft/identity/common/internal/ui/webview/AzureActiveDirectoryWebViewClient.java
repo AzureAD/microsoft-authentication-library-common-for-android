@@ -2202,7 +2202,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void closeAuthUxBridgeSession() {
         if (mAuthUxBridgeSession != null) {
             mAuthUxBridgeSession.close();
-            mAuthUxBridgeSession = null;
+            // Retain the closed session as a terminal sentinel so late navigation callbacks cannot
+            // re-enter OAuth2WebViewClient's legacy no-session bridge path after request teardown.
         }
     }
 

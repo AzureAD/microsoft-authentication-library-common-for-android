@@ -137,6 +137,22 @@ class AuthUxWebMessageListenerTest {
         assertEquals(emptyList<String>(), processor.payloads)
     }
 
+    @Test
+    fun `array buffer message is rejected`() {
+        val processor = RecordingProcessor()
+        val listener = AuthUxWebMessageListener(processor, AuthUxOriginPolicy())
+
+        listener.onPostMessage(
+            webView,
+            WebMessageCompat(byteArrayOf(1)),
+            Uri.parse("https://login.microsoftonline.com"),
+            true,
+            replyProxy
+        )
+
+        assertEquals(emptyList<String>(), processor.payloads)
+    }
+
     private fun message(data: String): WebMessageCompat =
         mock(WebMessageCompat::class.java).also {
             `when`(it.data).thenReturn(data)
