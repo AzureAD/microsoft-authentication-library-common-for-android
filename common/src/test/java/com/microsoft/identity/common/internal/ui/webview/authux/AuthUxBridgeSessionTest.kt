@@ -206,9 +206,81 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
+    fun `listener registration failure rolls back before JavaScript interface`() {
+        val operations = mutableListOf<String>()
+        org.mockito.Mockito.doAnswer {
+            operations.add("legacy-interface-added")
+            null
+        }.`when`(webView).addJavascriptInterface(any(), eq("broker"))
+        val adapter = FakeWebKitAdapter(
+            failListenerRegistration = true,
+            operationLog = operations
+        )
+
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            true,
+            false,
+            true,
+            adapter
+        )
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertFalse(adapter.scriptAdded)
+        assertTrue(adapter.listenerRemoved)
+        assertEquals(
+            listOf(
+                "listener-add-attempt",
+                "listener-remove-attempt",
+                "listener-removed",
+                "legacy-interface-added"
+            ),
+            operations
+        )
+    }
+
+    @Test
+    fun `listener post registration failure rolls back before JavaScript interface`() {
+        val operations = mutableListOf<String>()
+        org.mockito.Mockito.doAnswer {
+            operations.add("legacy-interface-added")
+            null
+        }.`when`(webView).addJavascriptInterface(any(), eq("broker"))
+        val adapter = FakeWebKitAdapter(
+            failAfterListenerRegistration = true,
+            operationLog = operations
+        )
+
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            true,
+            false,
+            true,
+            adapter
+        )
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertTrue(adapter.listenerAdded)
+        assertFalse(adapter.scriptAdded)
+        assertTrue(adapter.listenerRemoved)
+        assertEquals(
+            listOf(
+                "listener-add-attempt",
+                "listener-added",
+                "listener-remove-attempt",
+                "listener-removed",
+                "legacy-interface-added"
+            ),
+            operations
+        )
+    }
+
+    @Test
     fun `uncertain listener rollback disables request`() {
         val adapter = FakeWebKitAdapter(
-            failScriptRegistration = true,
+            failAfterListenerRegistration = true,
             failListenerRemoval = true
         )
 
@@ -222,6 +294,8 @@ class AuthUxBridgeSessionTest {
         )
 
         assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+        assertTrue(adapter.listenerAdded)
+        assertFalse(adapter.scriptAdded)
         verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
     }
 
@@ -293,9 +367,12 @@ class AuthUxBridgeSessionTest {
     private class FakeWebKitAdapter(
         private val listenerSupported: Boolean = true,
         private val documentStartSupported: Boolean = true,
+        private val failListenerRegistration: Boolean = false,
+        private val failAfterListenerRegistration: Boolean = false,
         private val failScriptRegistration: Boolean = false,
         private val failAfterScriptRegistration: Boolean = false,
-        private val failListenerRemoval: Boolean = false
+        private val failListenerRemoval: Boolean = false,
+        private val operationLog: MutableList<String>? = null
     ) : AuthUxWebKitAdapter {
         private val scriptHandler = mock(ScriptHandler::class.java)
         var listenerAdded = false
@@ -323,16 +400,26 @@ class AuthUxBridgeSessionTest {
             allowedOriginRules: Set<String>,
             listener: WebViewCompat.WebMessageListener
         ) {
+            operationLog?.add("listener-add-attempt")
+            if (failListenerRegistration) {
+                throw IllegalStateException("listener registration failed")
+            }
             listenerAdded = true
             listenerAllowedOrigins = allowedOriginRules
+            operationLog?.add("listener-added")
+            if (failAfterListenerRegistration) {
+                throw IllegalStateException("listener registration failed after installation")
+            }
         }
 
         override fun removeWebMessageListener(webView: WebView, objectName: String) {
             listenerRemoveCount++
+            operationLog?.add("listener-remove-attempt")
             if (failListenerRemoval) {
                 throw IllegalStateException("listener removal failed")
             }
             listenerRemoved = true
+            operationLog?.add("listener-removed")
         }
 
         override fun addDocumentStartScript(
