@@ -67,6 +67,16 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
+    fun `broker request is disabled when master flight is off`() {
+        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = false)
+    }
+
+    @Test
+    fun `broker recorder does not bypass disabled master flight`() {
+        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = true)
+    }
+
+    @Test
     fun `listener-only support selects JavaScript interface`() {
         val adapter = FakeWebKitAdapter(documentStartSupported = false)
 
@@ -362,6 +372,31 @@ class AuthUxBridgeSessionTest {
         assertTrue(script.contains("broker.postMessageToBroker"))
         assertTrue(script.contains("window.__authUxNativeBridge.postMessage"))
         assertTrue(script.contains("JSON.stringify(message)"))
+    }
+
+    private fun assertBrokerMasterFlightDisabled(
+        hasOnboardingTelemetryRecorder: Boolean
+    ) {
+        val adapter = FakeWebKitAdapter()
+        val session = AuthUxBridgeSession.create(
+            webView = webView,
+            initialUrl = LOGIN_URL,
+            isBrokerAuthProcess = true,
+            hasOnboardingTelemetryRecorder = hasOnboardingTelemetryRecorder,
+            brokerMasterFlightEnabled = false,
+            webKitAdapter = adapter
+        )
+
+        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+        assertFalse(adapter.listenerAdded)
+        assertFalse(adapter.scriptAdded)
+
+        session.onPageStarted(webView, LOGIN_URL)
+        session.onPageFinished(webView)
+
+        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+        verify(webView, never()).evaluateJavascript(any(), any())
+        verify(webView, never()).removeJavascriptInterface("broker")
     }
 
     private class FakeWebKitAdapter(
