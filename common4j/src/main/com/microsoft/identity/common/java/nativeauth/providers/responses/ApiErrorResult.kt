@@ -34,6 +34,12 @@ abstract class ApiErrorResult @JvmOverloads constructor(
     open val attributeValidationDetails: List<Map<String, Any?>>? = null
 ): ApiResult
 {
+    /** Unmodified service trace identifier, when supplied by the endpoint. */
+    open val traceId: String? get() = null
+
+    /** Unmodified service timestamp; no client-side date conversion is applied. */
+    open val timestamp: String? get() = null
+
     companion object {
         val INVALID_STATE = "invalid_state"
     }

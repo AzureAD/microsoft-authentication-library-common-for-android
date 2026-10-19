@@ -37,6 +37,60 @@ class NativeAuthV2ResponseHandlerTest {
     private val handler = NativeAuthV2ResponseHandler()
 
     @Test
+    fun getTokenApiResponse_explicitErrorCodesIncludingEmptyArrayOverrideMessage() {
+        for (codes in listOf(emptyList(), listOf(123, 456))) {
+            val result = handler.getTokenApiResponse(
+                CORRELATION_ID,
+                response(400, """{"error":"invalid_grant",
+                    "error_description":"AADSTS50126: Credentials rejected.","error_codes":$codes,
+                    "trace_id":123,"timestamp":{}}""")
+            ) as SignInTokenApiResult.UnknownError
+            assertEquals(codes, result.errorCodes)
+            assertNull(result.traceId)
+            assertNull(result.timestamp)
+        }
+    }
+
+    @Test
+    fun getTokenApiResponse_preservesDiagnosticsForRecoverableTokenErrors() {
+        val cases = listOf(
+            "mfa_required" to SignInTokenApiResult.MFARequired::class.java,
+            "registration_required" to SignInTokenApiResult.JITRequired::class.java,
+            "invalid_oob_value" to SignInTokenApiResult.CodeIncorrect::class.java
+        )
+        for ((subError, expectedClass) in cases) {
+            val result = handler.getTokenApiResponse(
+                CORRELATION_ID,
+                response(400, """{"error":"invalid_grant","suberror":"$subError",
+                    "continuation_token":"token","error_description":"AADSTS123: Diagnostic.",
+                    "trace_id":"recoverable-trace","timestamp":"raw-time"}""")
+            )
+            assertEquals(expectedClass, result.javaClass)
+            val error = result as ApiErrorResult
+            assertEquals(listOf(123), error.errorCodes)
+            assertEquals("recoverable-trace", error.traceId)
+            assertEquals("raw-time", error.timestamp)
+        }
+    }
+
+    @Test
+    fun getTokenApiResponse_invalidErrorCodesFallBackToMessageWithoutChangingClassification() {
+        for (codes in listOf("null", "\"bad\"", "[100,\"200\"]", "[1.5]", "[2147483648]", "[2147483647.0000001]", "[null]")) {
+            val result = handler.getTokenApiResponse(
+                CORRELATION_ID,
+                response(
+                    400,
+                    """{"error":"invalid_grant","error_description":"AADSTS50126: Credentials rejected.",
+                        "error_codes":$codes}"""
+                )
+            )
+
+            assertTrue(codes, result is SignInTokenApiResult.UnknownError)
+            assertEquals(codes, listOf(50126), (result as ApiErrorResult).errorCodes)
+        }
+    }
+
+    @Test
     fun getTokenApiResponse_whenStatusCodeUnavailable_returnsTypedUnknownError() {
         val result = handler.getTokenApiResponse(
             requestCorrelationId = CORRELATION_ID,
@@ -219,6 +273,74 @@ class NativeAuthV2ResponseHandlerTest {
         assertEquals(CORRELATION_ID, error.correlationId)
         assertEquals("invalid_request", error.error)
         assertEquals("Bad request.", error.errorDescription)
+        assertNull(error.subError)
+    }
+
+    @Test
+    fun getTokenApiResponse_preservesSubErrorsAcrossTokenErrorMappings() {
+        val cases = listOf(
+            Triple("invalid_request", emptyList(), SignInTokenApiResult.UnknownError::class.java),
+            Triple("invalid_request", listOf(90000), SignInTokenApiResult.UnknownError::class.java),
+            Triple("invalid_request", listOf(50142), SignInTokenApiResult.UnknownError::class.java),
+            Triple("invalid_grant", emptyList(), SignInTokenApiResult.UnknownError::class.java),
+            Triple("invalid_grant", listOf(50126), SignInTokenApiResult.InvalidCredentials::class.java),
+            Triple("invalid_grant", listOf(400002), SignInTokenApiResult.InvalidAuthenticationType::class.java),
+            Triple("user_not_found", listOf(50034), SignInTokenApiResult.UserNotFound::class.java),
+            Triple("future_error", listOf(90000), SignInTokenApiResult.UnknownError::class.java)
+        )
+
+        for ((errorCode, errorCodes, resultClass) in cases) {
+            for (subError in listOf("FutureServiceSubError", "", null)) {
+                val context = "$errorCode, $errorCodes, suberror=$subError"
+                val subErrorJson = subError?.let { "\"$it\"" } ?: "null"
+                val result = handler.getTokenApiResponse(
+                    requestCorrelationId = CORRELATION_ID,
+                    response = response(
+                        statusCode = 400,
+                        body = """{
+                            "error":"$errorCode",
+                            "error_description":"Service diagnostic.",
+                            "error_codes":$errorCodes,
+                            "trace_id":"token-trace",
+                            "timestamp":"2026-10-15 11:00:20Z",
+                            "suberror":$subErrorJson
+                        }"""
+                    )
+                )
+
+                assertEquals(context, resultClass, result.javaClass)
+                val error = result as ApiErrorResult
+                assertEquals(context, subError, error.subError)
+                assertEquals(context, "token-trace", error.traceId)
+                assertEquals(context, "2026-10-15 11:00:20Z", error.timestamp)
+                assertEquals(context, errorCode, error.error)
+                assertEquals(context, errorCodes, error.errorCodes)
+                assertEquals(context, CORRELATION_ID, error.correlationId)
+                assertTrue(context, error.errorDescription.orEmpty().endsWith("Service diagnostic."))
+            }
+        }
+    }
+
+    @Test
+    fun getTokenApiResponse_whenRequiredContinuationTokenIsMissing_preservesSubError() {
+        for (subError in listOf("mfa_required", "registration_required")) {
+            val result = handler.getTokenApiResponse(
+                requestCorrelationId = CORRELATION_ID,
+                response = response(
+                    statusCode = 400,
+                    body = """{"error":"invalid_grant","suberror":"$subError",
+                        "trace_id":"token-trace","timestamp":"raw-time"}"""
+                )
+            )
+
+            assertTrue(result is SignInTokenApiResult.UnknownError)
+            val error = result as ApiErrorResult
+            assertEquals(subError, error.subError)
+            assertEquals("token-trace", error.traceId)
+            assertEquals("raw-time", error.timestamp)
+            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+            assertEquals("oauth/v2.0/token did not return a continuation token", error.errorDescription)
+        }
     }
 
     @Test

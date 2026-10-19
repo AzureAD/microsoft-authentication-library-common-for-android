@@ -175,12 +175,14 @@ interface NativeAuthV2CommandResult {
      * The developer can retry through the state object used for the failed call.
      * Applies to the submit-code step.
      */
-    data class IncorrectCode(
+    data class IncorrectCode @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2SignInSubmitCodeCommandResult,
@@ -253,12 +255,14 @@ interface NativeAuthV2CommandResult {
      * The developer must restart the flow with corrected credentials.
      * Applies to the sign-in start step.
      */
-    data class InvalidCredentials(
+    data class InvalidCredentials @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2SignInStartCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.InvalidCredentials(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -272,12 +276,14 @@ interface NativeAuthV2CommandResult {
      * retry through the state object used for the failed call.
      * Applies to the submit-password step.
      */
-    data class IncorrectPassword(
+    data class IncorrectPassword @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2SubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectPassword(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -291,12 +297,14 @@ interface NativeAuthV2CommandResult {
      * The developer can retry through the state object used for the failed call.
      * Applies to the submit-new-password step.
      */
-    data class PasswordNotAccepted(
+    data class PasswordNotAccepted @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordNotAccepted(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -325,11 +333,13 @@ interface NativeAuthV2CommandResult {
      * The username provided is not registered in the tenant.
      * Applies to the start step.
      */
-    data class UserNotFound(
+    data class UserNotFound @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SignInStartCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
@@ -364,7 +374,7 @@ interface NativeAuthV2CommandResult {
      * [continuationState] with corrected values. Applies to the sign-up start and submit-attributes
      * steps.
      */
-    data class AttributesInvalid(
+    data class AttributesInvalid @JvmOverloads constructor(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val invalidAttributes: List<String>,
@@ -373,6 +383,8 @@ interface NativeAuthV2CommandResult {
         val errorCodes: List<Int>? = null,
         val subError: String? = null,
         val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription)"
@@ -385,13 +397,15 @@ interface NativeAuthV2CommandResult {
      * An account already exists for the identifier supplied to sign-up.
      * Applies to the sign-up start and submit-attributes steps.
      */
-    data class UserAlreadyExists(
+    data class UserAlreadyExists @JvmOverloads constructor(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
         val subError: String? = null,
         val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"

@@ -38,6 +38,12 @@ import lombok.NonNull;
  */
 public enum CommonFlight implements IFlightConfig {
     /**
+     * Allows registered Island production browser identities to request Browser SSO headers.
+     * Disabled by default; the Broker Browser SSO entry point also requires its global SSO flight.
+     */
+    ENABLE_ISLAND_BROWSER_SSO("EnableIslandBrowserSso", false),
+
+    /**
      * Flight to control whether or not to use Network capability for performing network check.
      */
     USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false),
@@ -146,11 +152,12 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Flight to withhold the original request headers from Device-CA loads so credentials are
-     * forwarded only by the validated WebCP authorize path.
+     * forwarded only by the validated WebCP authorize path. This is disabled by default for
+     * gradual rollout; an explicit {@code true} value enables authorize-only forwarding.
      */
     ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING(
             "EnableDeviceCaAuthorizeOnlyCredentialForwarding",
-            true),
+            false),
 
     /**
      * Flight to enable the Playstore URL launch for broker apps.
@@ -198,13 +205,15 @@ public enum CommonFlight implements IFlightConfig {
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
     /**
-     * Flight controlling silent-caller validation: when enabled (default), a silent broker token
+     * Flight controlling silent-caller validation: when enabled, a silent broker token
      * request whose self-reported caller package is not owned by the kernel-attested calling uid
-     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466). Acts as a
-     * secure-by-default, ECS-backed kill-switch for the check in
-     * {@code BrokerSilentTokenCommandParameters.validate()}.
+     * ({@code Binder.getCallingUid()}) fails the platform check with {@code unknown_caller}
+     * (AB#3687466). Broker ATS admission returns an {@code ArgumentException} for that failure.
+     * Broker applies this gate when admitting the original request, before local execution or
+     * passthrough. Disabled by default while rolling out; redirect validation still runs.
+     * Token command parameter validation does not repeat this caller check.
      */
-    VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", false),
 
     /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
@@ -231,8 +240,16 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
      * to be intercepted via onCreateWindow and opened in an external browser.
+     * Defaults off for brokerless consumers; BrokerFlight supplies the broker default.
      */
-    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
+
+    /**
+     * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
+     */
+    ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
+            "EnableBrokerWebViewExternalBrowserRedirect",
+            true),
 
     /**
      * Flight to enable file upload support in the embedded WebView.
