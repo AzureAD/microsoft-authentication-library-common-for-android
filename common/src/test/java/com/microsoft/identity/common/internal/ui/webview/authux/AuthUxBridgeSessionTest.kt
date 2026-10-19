@@ -37,6 +37,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -114,6 +115,44 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
+    fun `legacy navigation manages interface and facade until session is closed`() {
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            true,
+            false,
+            true,
+            FakeWebKitAdapter(documentStartSupported = false)
+        )
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        verify(webView).addJavascriptInterface(any(), eq("broker"))
+
+        session.onPageFinished(webView)
+        verify(webView).evaluateJavascript(any(), any())
+
+        session.onPageStarted(webView, FEDERATED_URL)
+        verify(webView).removeJavascriptInterface("broker")
+        session.onPageFinished(webView)
+        verify(webView, times(1)).evaluateJavascript(any(), any())
+
+        session.onPageStarted(webView, LOGIN_URL)
+        verify(webView, times(2)).addJavascriptInterface(any(), eq("broker"))
+        session.onPageFinished(webView)
+        verify(webView, times(2)).evaluateJavascript(any(), any())
+
+        session.close()
+        verify(webView, times(2)).removeJavascriptInterface("broker")
+
+        session.onPageStarted(webView, LOGIN_URL)
+        session.onPageFinished(webView)
+
+        verify(webView, times(2)).addJavascriptInterface(any(), eq("broker"))
+        verify(webView, times(2)).evaluateJavascript(any(), any())
+        verify(webView, times(2)).removeJavascriptInterface("broker")
+    }
+
+    @Test
     fun `http default port selects WebMessageListener`() {
         val adapter = FakeWebKitAdapter()
         val session = AuthUxBridgeSession.create(
@@ -130,7 +169,7 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
-    fun `document script failure rolls listener back before JavaScript interface`() {
+    fun `document script failure without handle disables request`() {
         val adapter = FakeWebKitAdapter(failScriptRegistration = true)
 
         val session = AuthUxBridgeSession.create(
@@ -142,9 +181,28 @@ class AuthUxBridgeSessionTest {
             adapter
         )
 
-        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
         assertTrue(adapter.listenerRemoved)
-        verify(webView).addJavascriptInterface(any(), eq("broker"))
+        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+    }
+
+    @Test
+    fun `document script post registration failure disables request`() {
+        val adapter = FakeWebKitAdapter(failAfterScriptRegistration = true)
+
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            true,
+            false,
+            true,
+            adapter
+        )
+
+        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+        assertTrue(adapter.scriptAdded)
+        assertTrue(adapter.listenerRemoved)
+        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
     }
 
     @Test
@@ -236,6 +294,7 @@ class AuthUxBridgeSessionTest {
         private val listenerSupported: Boolean = true,
         private val documentStartSupported: Boolean = true,
         private val failScriptRegistration: Boolean = false,
+        private val failAfterScriptRegistration: Boolean = false,
         private val failListenerRemoval: Boolean = false
     ) : AuthUxWebKitAdapter {
         private val scriptHandler = mock(ScriptHandler::class.java)
@@ -286,11 +345,15 @@ class AuthUxBridgeSessionTest {
             }
             scriptAdded = true
             scriptAllowedOrigins = allowedOriginRules
+            if (failAfterScriptRegistration) {
+                throw IllegalStateException("script registration failed after installation")
+            }
             return scriptHandler
         }
     }
 
     companion object {
         private const val LOGIN_URL = "https://login.microsoftonline.com/common/oauth2/authorize"
+        private const val FEDERATED_URL = "https://federation.example.com/login"
     }
 }

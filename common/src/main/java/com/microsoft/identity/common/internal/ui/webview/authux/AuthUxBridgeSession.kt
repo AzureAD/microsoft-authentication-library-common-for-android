@@ -273,6 +273,7 @@ class AuthUxBridgeSession private constructor(
             val allowedOrigins = originPolicy.getRegistrationOriginRules()
 
             var listenerMayBeRegistered = false
+            var scriptRegistrationAttempted = false
             var handler: ScriptHandler? = null
             return try {
                 // Assume registration may have modified WebView state before throwing so rollback
@@ -284,6 +285,9 @@ class AuthUxBridgeSession private constructor(
                     allowedOrigins,
                     AuthUxWebMessageListener(processor, originPolicy)
                 )
+                // A thrown registration call may have installed the script without returning its
+                // removal handle. Treat that state as uncertain rather than falling back.
+                scriptRegistrationAttempted = true
                 handler = webKitAdapter.addDocumentStartScript(
                     webView,
                     WEB_MESSAGE_LISTENER_FACADE_SCRIPT,
@@ -301,7 +305,7 @@ class AuthUxBridgeSession private constructor(
                 )
             } catch (t: Throwable) {
                 Logger.error(TAG, "WebMessageListener Auth UX setup failed; rolling back.", t)
-                var rollbackComplete = true
+                var rollbackComplete = !scriptRegistrationAttempted || handler != null
                 try {
                     handler?.remove()
                 } catch (cleanupFailure: Throwable) {
