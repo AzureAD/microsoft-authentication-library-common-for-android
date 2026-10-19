@@ -781,6 +781,8 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { state.scopesForTokenRequest() } returns emptyList()
         every { state.hasSubmittedAttribute(any()) } returns false
         every { state.withAdditionalSubmittedAttributes(any()) } returns state
+        every { state.pendingSignUpAttributesForSubmission() } returns null
+        every { state.requiresSignUpPasswordRecollection() } returns false
         return state
     }
 

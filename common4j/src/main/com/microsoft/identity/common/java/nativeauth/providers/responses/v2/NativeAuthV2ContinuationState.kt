@@ -63,7 +63,9 @@ class NativeAuthV2ContinuationState private constructor(
     // for them again or rejects their values. Empty for every other flow.
     internal val submittedAttributes: Set<String> = emptySet(),
     private val enrollmentChannels: Map<String, String>? = emptyMap(),
-    private val resetPasswordUpdateSubmitted: Boolean = false
+    private val resetPasswordUpdateSubmitted: Boolean = false,
+    private val pendingSignUpAttributes: Map<String, String>? = null,
+    private val pendingSignUpPasswordRecollection: Boolean = false
 ) : ILoggable, Serializable {
 
     /**
@@ -118,9 +120,37 @@ class NativeAuthV2ContinuationState private constructor(
             authenticationFactor = authenticationFactor,
             submittedAttributes = Collections.unmodifiableSet(merged),
             enrollmentChannels = enrollmentChannels,
-            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = if (merged.isEmpty()) pendingSignUpAttributes else null,
+            pendingSignUpPasswordRecollection = merged.isEmpty() && pendingSignUpPasswordRecollection
         )
     }
+
+    /**
+     * Retains the non-password initial sign-up values when enrollment interrupts their submission.
+     * Only the need to recollect a password is retained, never its value or a password buffer.
+     * The context is discarded by [withAdditionalSubmittedAttributes] on credential submission.
+     */
+    fun withPendingSignUpAttributes(
+        attributes: Map<String, String>,
+        requiresPasswordRecollection: Boolean
+    ): NativeAuthV2ContinuationState {
+        require(scenario == NativeAuthV2FlowScenario.SIGN_UP && submittedAttributes.isEmpty())
+        require(attributes.keys.none { it.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) })
+        return NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
+            resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes)),
+            requiresPasswordRecollection
+        )
+    }
+
+    /** Returns a defensive copy of pending initial sign-up values for the controller's submission. */
+    fun pendingSignUpAttributesForSubmission(): Map<String, String>? =
+        pendingSignUpAttributes?.let { LinkedHashMap(it) }
+
+    /** Whether an interrupted initial password must be collected again before the initial submit. */
+    fun requiresSignUpPasswordRecollection(): Boolean = pendingSignUpPasswordRecollection
 
     /**
      * Returns the scopes retained for the
@@ -143,7 +173,8 @@ class NativeAuthV2ContinuationState private constructor(
     internal fun withResetPasswordUpdateSubmitted(): NativeAuthV2ContinuationState =
         NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
-            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
+            pendingSignUpAttributes, pendingSignUpPasswordRecollection
         )
 
     /**
@@ -177,7 +208,9 @@ class NativeAuthV2ContinuationState private constructor(
             authenticationFactor = authenticationFactor,
             submittedAttributes = submittedAttributes,
             enrollmentChannels = enrollmentChannels,
-            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = pendingSignUpAttributes,
+            pendingSignUpPasswordRecollection = pendingSignUpPasswordRecollection
         )
     }
 
@@ -280,7 +313,9 @@ class NativeAuthV2ContinuationState private constructor(
                         }
                     })
                 } else emptyMap(),
-                resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted
+                resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
+                pendingSignUpAttributes = previous.pendingSignUpAttributes,
+                pendingSignUpPasswordRecollection = previous.pendingSignUpPasswordRecollection
             )
         }
 

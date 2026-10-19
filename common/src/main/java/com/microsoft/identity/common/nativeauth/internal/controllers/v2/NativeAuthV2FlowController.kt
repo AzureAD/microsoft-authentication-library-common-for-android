@@ -1339,6 +1339,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * the sign-up completes server-side, [NativeAuthV2CommandResult.AttributesInvalid] when a value
      * is rejected (retryable through the same state), [NativeAuthV2CommandResult.UserAlreadyExists],
      * or an [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
+     * When enrollment interrupted the initial sign-up, retained non-password values are merged
+     * only after validating caller keys; a recollected password completes that initial submission.
      */
     fun submitAttributes(parameters: NativeAuthV2SubmitAttributesCommandParameters): NativeAuthV2SubmitAttributesCommandResult {
         LogSession.logMethodCall(
@@ -1355,11 +1357,22 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             if (validationError != null) {
                 return validationError
             }
+            val pendingAttributes = parameters.continuationState.pendingSignUpAttributesForSubmission()
+            if (pendingAttributes != null &&
+                parameters.continuationState.requiresSignUpPasswordRecollection() &&
+                parameters.password?.isNotEmpty() != true
+            ) {
+                return NativeAuthV2CommandResult.PasswordRequired(
+                    parameters.getCorrelationId(), parameters.continuationState
+                )
+            }
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
             val result = performSignUpSubmitAttributes(
                 oAuth2Strategy = oAuth2Strategy,
                 state = parameters.continuationState,
-                attributes = parameters.attributes,
+                attributes = if (pendingAttributes == null) parameters.attributes else {
+                    LinkedHashMap(pendingAttributes).apply { putAll(parameters.attributes) }
+                },
                 password = parameters.password,
                 upfront = null
             )
@@ -1428,7 +1441,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         upfront: SignUpV2StartCommandParameters?
     ): INativeAuthCommandResult {
         return when (result) {
-            is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(result)
+            is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(
+                if (upfront == null) result else result.copy(
+                    continuationState = result.continuationState.withPendingSignUpAttributes(
+                        upfrontAttributeValues(upfront), upfront.password?.isNotEmpty() == true
+                    )
+                )
+            )
             is NativeAuthV2InteractionApiResult.AttributesRequired -> handleSignUpAttributesRequired(
                 oAuth2Strategy = oAuth2Strategy,
                 attributesRequired = result,
@@ -1492,7 +1511,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * submitted in a single request, regardless of which attributes the server asked for, and the
      * submitted names are recorded on the continuation state by the interactor.
      *
-     * On any later step ([upfront] is null) the server is requesting more information. A `password`
+     * If enrollment interrupted that first step, the state retains its non-password values.
+     * Resume their upfront submission, recollecting an interrupted password rather than storing it.
+     *
+     * On any later step (no [upfront] or pending initial values) the server requests more information. A `password`
      * not yet submitted is surfaced as [NativeAuthV2CommandResult.PasswordRequired] so the app can
      * collect it; any ordinary attribute is surfaced as
      * [NativeAuthV2CommandResult.AttributesRequired], including one previously submitted with an
@@ -1512,6 +1534,20 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 state = nextState,
                 attributes = upfrontAttributeValues(upfront),
                 password = upfront.password,
+                upfront = null
+            )
+        }
+
+        nextState.pendingSignUpAttributesForSubmission()?.let { pendingAttributes ->
+            if (nextState.requiresSignUpPasswordRecollection()) {
+                return NativeAuthV2CommandResult.PasswordRequired(
+                    attributesRequired.correlationId, nextState
+                )
+            }
+            return performSignUpSubmitAttributes(
+                oAuth2Strategy = oAuth2Strategy,
+                state = nextState,
+                attributes = pendingAttributes,
                 upfront = null
             )
         }

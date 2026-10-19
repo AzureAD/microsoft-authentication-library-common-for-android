@@ -84,6 +84,30 @@ class NativeAuthV2EnrollmentTest {
     }
 
     @Test
+    fun pendingSignUpInputIsDefensiveNonPasswordContextClearedOnCredentialSubmission() {
+        val state = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response("""{"continuationToken":"start"}"""), "start", emptyList(), null,
+            NativeAuthV2LinkRelation.SIGN_UP, NativeAuthV2FlowScenario.SIGN_UP)
+        val input = linkedMapOf("email" to "original@contoso.com", "displayName" to "Original")
+        val pending = state.withPendingSignUpAttributes(input, true)
+        input["email"] = "mutated@contoso.com"
+        val exposed = pending.pendingSignUpAttributesForSubmission() as MutableMap
+        exposed["email"] = "mutated-again@contoso.com"
+        assertEquals("original@contoso.com", pending.pendingSignUpAttributesForSubmission()?.get("email"))
+        assertTrue(pending.requiresSignUpPasswordRecollection())
+        assertNotNull(pending.withAdditionalSubmittedAttributes(listOf("displayName"))
+            .pendingSignUpAttributesForSubmission())
+        val submitted = pending.withAdditionalSubmittedAttributes(listOf("email"))
+        assertNull(submitted.pendingSignUpAttributesForSubmission())
+        assertFalse(submitted.requiresSignUpPasswordRecollection())
+        assertTrue(runCatching {
+            state.withPendingSignUpAttributes(mapOf("email" to "original", "Password" to "secret"), true)
+        }.exceptionOrNull() is IllegalArgumentException)
+        assertFalse(pending.toString().contains("original@contoso.com"))
+        assertFalse(pending.toUnsanitizedString().contains("Original"))
+    }
+
+    @Test
     fun activationRequiresExplicitLinkAndCodeMetadata() {
         val valid = """{"action":"activate","continuationToken":"new","hint":"masked","codeLength":6,
             "_links":{"activate":{"href":"/activate?dc=1"}}}"""
