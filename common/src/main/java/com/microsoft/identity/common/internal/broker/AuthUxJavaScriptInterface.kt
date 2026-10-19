@@ -244,8 +244,17 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             when {
                 // Match telemetry first so params.operation cannot route it to Number Matching.
-                actionName == ActionNames.LOG_TELEMETRY && capabilities.telemetryAllowed ->
-                    handleLogTelemetry(correlationId, parameters, methodTag)
+                actionName == ActionNames.LOG_TELEMETRY -> {
+                    if (capabilities.telemetryAllowed) {
+                        handleLogTelemetry(correlationId, parameters, methodTag)
+                    } else {
+                        Logger.warn(
+                            methodTag,
+                            correlationId,
+                            "Auth UX telemetry is not allowed for this request."
+                        )
+                    }
+                }
 
                 operation == OperationNames.NUMBER_MATCHING && capabilities.numberMatchingAllowed ->
                     NumberMatchHelper.storeNumberMatch(

@@ -632,6 +632,37 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test disabled telemetry cannot fall through to number matching`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(
+            telemetrySink = sink,
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = false,
+                numberMatchingAllowed = true
+            )
+        )
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "operation": "number_matching",
+                    "sessionID": "$mockSessionId",
+                    "code_match": "$mockNumberMatchValue",
+                    "errorCode": $mockErrorCode
+                }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
     fun `test unknown action_name carrying an errorCode does not invoke the sink`() {
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
