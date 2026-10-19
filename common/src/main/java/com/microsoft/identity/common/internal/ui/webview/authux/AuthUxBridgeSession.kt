@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.webkit.ScriptHandler
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import com.microsoft.identity.common.logging.Logger
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -190,7 +191,7 @@ class AuthUxBridgeSession private constructor(
             webView: WebView,
             initialUrl: String?,
             isBrokerAuthProcess: Boolean,
-            hasOnboardingTelemetryRecorder: Boolean,
+            telemetrySink: AuthUxTelemetrySink?,
             brokerMasterFlightEnabled: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
@@ -200,7 +201,7 @@ class AuthUxBridgeSession private constructor(
             val capabilities = when {
                 isBrokerAuthProcess && !brokerMasterFlightEnabled -> null
                 isBrokerAuthProcess -> AuthUxRequestCapabilities.BROKER
-                hasOnboardingTelemetryRecorder -> AuthUxRequestCapabilities(
+                telemetrySink != null -> AuthUxRequestCapabilities(
                     telemetryAllowed = true,
                     numberMatchingAllowed = false
                 )
@@ -222,9 +223,8 @@ class AuthUxBridgeSession private constructor(
                 return disabled(webKitAdapter)
             }
 
-            // TODO(WP2): Pass the request-owned onboarding telemetry sink instead of null.
             val processor = AuthUxJavaScriptInterface(
-                telemetrySink = null,
+                telemetrySink = telemetrySink,
                 capabilities = capabilities
             )
 

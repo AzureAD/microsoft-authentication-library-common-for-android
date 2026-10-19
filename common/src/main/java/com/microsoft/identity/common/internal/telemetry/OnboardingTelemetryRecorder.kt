@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import androidx.annotation.GuardedBy
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
 import com.microsoft.identity.common.logging.Logger
@@ -66,6 +67,7 @@ class OnboardingTelemetryRecorder(
     private val target: String, // sorted, space-joined scopes
     context: Context
 ) : IOnboardingTelemetryRecorder {
+    private val stateLock = Any()
 
     // Use applicationContext so this recorder, which may outlive the originating
     // Activity/Fragment, never holds a reference that would leak that context.
@@ -77,10 +79,15 @@ class OnboardingTelemetryRecorder(
     private val onboardingMode: String
 
     // Populated fields
+    @GuardedBy("stateLock")
     private val stepsList: MutableList<StepEntry> = mutableListOf()
+    @GuardedBy("stateLock")
     private val blockingErrors: MutableList<String> = mutableListOf()
+    @GuardedBy("stateLock")
     private var lastLoadedDomain: String? = null
+    @GuardedBy("stateLock")
     private var profile: String? = null
+    @GuardedBy("stateLock")
     private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
@@ -122,7 +129,9 @@ class OnboardingTelemetryRecorder(
      */
     override fun addStep(stepId: String) {
         val isoTimestamp = SimpleDateFormat(ISO_TIMESTAMP_FORMAT, Locale.US).format(Date())
-        stepsList.add(StepEntry(stepId, isoTimestamp))
+        synchronized(stateLock) {
+            stepsList.add(StepEntry(stepId, isoTimestamp))
+        }
     }
 
     /**
@@ -136,10 +145,11 @@ class OnboardingTelemetryRecorder(
      *                  not a numeric service auth error code.
      */
     override fun addBlockingError(errorCode: String) {
-        blockingErrors.add(errorCode)
-
         // Persist session correlation to SharedPreferences immediately on block
         persistSessionCorrelation()
+        synchronized(stateLock) {
+            blockingErrors.add(errorCode)
+        }
     }
 
     /**
@@ -148,7 +158,9 @@ class OnboardingTelemetryRecorder(
      * @param domain The domain URL (e.g., "login.microsoftonline.com")
      */
     fun setLastLoadedDomain(domain: String) {
-        lastLoadedDomain = domain
+        synchronized(stateLock) {
+            lastLoadedDomain = domain
+        }
     }
 
     /**
@@ -158,7 +170,9 @@ class OnboardingTelemetryRecorder(
      *                [OnboardingTelemetryConstants.PROFILE_WORK]
      */
     fun setProfile(profile: String) {
-        this.profile = profile
+        synchronized(stateLock) {
+            this.profile = profile
+        }
     }
 
     /**
@@ -174,7 +188,9 @@ class OnboardingTelemetryRecorder(
      * @param flowTag Caller-defined experiment/variant identifier.
      */
     fun addUxFlowUsed(flowTag: String) {
-        uxFlowUsed.add(flowTag)
+        synchronized(stateLock) {
+            uxFlowUsed.add(flowTag)
+        }
     }
 
     /**
@@ -188,6 +204,7 @@ class OnboardingTelemetryRecorder(
      * @return Populated blob JSON string, or empty string if [sessionCorrelationId] is empty
      */
     override fun finalizeBlob(): String {
+        Logger.info(TAG, "Finalizing onboarding telemetry blob for session $sessionCorrelationId")
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,
@@ -195,6 +212,16 @@ class OnboardingTelemetryRecorder(
                     "to avoid emitting telemetry that cannot be joined with the broker side or with retries"
             )
             return IOnboardingTelemetryRecorder.EMPTY_BLOB
+        }
+
+        val snapshot = synchronized(stateLock) {
+            RecorderSnapshot(
+                steps = stepsList.toList(),
+                blockingErrors = blockingErrors.toList(),
+                lastLoadedDomain = lastLoadedDomain,
+                profile = profile,
+                uxFlowUsed = uxFlowUsed.toList()
+            )
         }
 
         return try {
@@ -206,7 +233,7 @@ class OnboardingTelemetryRecorder(
 
                 // StepsList
                 val steps = JSONArray()
-                for (entry in stepsList) {
+                for (entry in snapshot.steps) {
                     steps.put(JSONObject().apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
@@ -216,37 +243,37 @@ class OnboardingTelemetryRecorder(
 
                 // Platform builder fields
                 val errorsArray = JSONArray()
-                for (error in blockingErrors) {
+                for (error in snapshot.blockingErrors) {
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
                 // last_blocking_error is only meaningful when at least one was recorded;
                 // omit the field on smooth-success flows rather than serializing a sentinel.
-                if (blockingErrors.isNotEmpty()) {
+                if (snapshot.blockingErrors.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                        blockingErrors.last()
+                        snapshot.blockingErrors.last()
                     )
                 }
 
-                lastLoadedDomain?.let {
+                snapshot.lastLoadedDomain?.let {
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
 
-                if (stepsList.isNotEmpty()) {
+                if (snapshot.steps.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
-                        stepsList.last().stepId
+                        snapshot.steps.last().stepId
                     )
                 }
 
-                profile?.let {
+                snapshot.profile?.let {
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowUsed.isNotEmpty()) {
+                if (snapshot.uxFlowUsed.isNotEmpty()) {
                     val flows = JSONArray()
-                    for (flow in uxFlowUsed) {
+                    for (flow in snapshot.uxFlowUsed) {
                         flows.put(flow)
                     }
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)
@@ -313,4 +340,12 @@ class OnboardingTelemetryRecorder(
         private const val FIELD_TS = "ts"
         private const val FIELD_ID = "id"
     }
+
+    private data class RecorderSnapshot(
+        val steps: List<StepEntry>,
+        val blockingErrors: List<String>,
+        val lastLoadedDomain: String?,
+        val profile: String?,
+        val uxFlowUsed: List<String>
+    )
 }

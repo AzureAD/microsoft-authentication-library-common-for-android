@@ -4237,6 +4237,38 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
     }
 
+    @Test
+    public void testCreateAuthUxTelemetrySink_ForwardsEveryOccurrence() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                mWebViewClient.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
+                new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                        "correlation-id",
+                        "530003",
+                        null,
+                        null,
+                        null,
+                        null
+                );
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(2, errors.length());
+        assertEquals("530003", errors.getString(0));
+        assertEquals("530003", errors.getString(1));
+    }
+
     /**
      * Verifies that {@code onPageFinished} extracts the host from a real URL and stores it on
      * the recorder as {@code lastLoadedDomain}. Requires a blocking error to have been recorded

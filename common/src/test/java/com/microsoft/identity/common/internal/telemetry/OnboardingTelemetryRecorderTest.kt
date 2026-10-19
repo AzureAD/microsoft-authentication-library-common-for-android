@@ -32,6 +32,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingTelemetryRecorderTest {
@@ -254,6 +257,29 @@ class OnboardingTelemetryRecorderTest {
             "Cached data should contain the session correlation ID",
             cached.contains("test-uuid-123")
         )
+    }
+
+    @Test
+    fun testConcurrentMutationAndFinalizationProducesStableSnapshots() {
+        val executor = Executors.newFixedThreadPool(4)
+        val start = CountDownLatch(1)
+        val tasks = (1..50).map { index ->
+            executor.submit {
+                start.await()
+                recorder.addStep("Step$index")
+                recorder.addBlockingError("Error$index")
+                JSONObject(recorder.finalizeBlob())
+            }
+        }
+
+        start.countDown()
+        tasks.forEach { it.get(10, TimeUnit.SECONDS) }
+        executor.shutdown()
+        Assert.assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS))
+
+        val finalBlob = JSONObject(recorder.finalizeBlob())
+        Assert.assertEquals(50, finalBlob.getJSONArray("steps_list").length())
+        Assert.assertEquals(50, finalBlob.getJSONArray("blocking_errors").length())
     }
 
     companion object {

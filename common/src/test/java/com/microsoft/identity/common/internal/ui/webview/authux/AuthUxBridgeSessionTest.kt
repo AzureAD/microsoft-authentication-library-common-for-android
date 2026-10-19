@@ -28,6 +28,8 @@ package com.microsoft.identity.common.internal.ui.webview.authux
 import android.webkit.WebView
 import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,6 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -52,7 +55,7 @@ class AuthUxBridgeSessionTest {
             webView = webView,
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
-            hasOnboardingTelemetryRecorder = false,
+            telemetrySink = null,
             brokerMasterFlightEnabled = true,
             webKitAdapter = adapter
         )
@@ -73,7 +76,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -89,7 +92,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "https://login.microsoftonline.com:8443/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             FakeWebKitAdapter()
         )
@@ -104,7 +107,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "custom://login.microsoftonline.com/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             FakeWebKitAdapter()
         )
@@ -120,7 +123,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "http://login.microsoftonline.com/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -137,7 +140,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -158,7 +161,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -175,7 +178,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             false,
-            false,
+            null,
             true,
             adapter
         )
@@ -193,7 +196,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             false,
-            true,
+            RecordingTelemetrySink(),
             true,
             adapter
         )
@@ -209,7 +212,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -230,6 +233,45 @@ class AuthUxBridgeSessionTest {
         assertTrue(script.contains("broker.postMessageToBroker"))
         assertTrue(script.contains("window.__authUxNativeBridge.postMessage"))
         assertTrue(script.contains("JSON.stringify(message)"))
+    }
+
+    @Test
+    fun `JavaScript interface forwards every accepted telemetry occurrence to supplied sink`() {
+        val sink = RecordingTelemetrySink()
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            false,
+            sink,
+            true,
+            FakeWebKitAdapter(listenerSupported = false)
+        )
+        val processorCaptor = ArgumentCaptor.forClass(Any::class.java)
+        verify(webView).addJavascriptInterface(processorCaptor.capture(), eq("broker"))
+        val processor = processorCaptor.value as com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
+        val payload = """
+            {
+              "correlationID":"correlation-id",
+              "action_name":"log_telemetry",
+              "action_component":"host",
+              "params":{"errorCode":"530003"}
+            }
+        """.trimIndent()
+
+        processor.process(payload)
+        processor.process(payload)
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertEquals(listOf("530003", "530003"), sink.events.map { it.errorCode })
+    }
+
+    private class RecordingTelemetrySink : AuthUxTelemetrySink {
+        val events = mutableListOf<AuthUxTelemetryEvent>()
+
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            events.add(event)
+            return true
+        }
     }
 
     private class FakeWebKitAdapter(
