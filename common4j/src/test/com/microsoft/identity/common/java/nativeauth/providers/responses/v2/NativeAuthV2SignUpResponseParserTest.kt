@@ -129,6 +129,10 @@ class NativeAuthV2SignUpResponseParserTest {
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UserAlreadyExists)
+        assertEquals(
+            "userAlreadyExists",
+            (result as NativeAuthV2InteractionApiResult.UserAlreadyExists).attributeValidationDetails?.first()?.get("code")
+        )
     }
 
     @Test
@@ -249,6 +253,34 @@ class NativeAuthV2SignUpResponseParserTest {
             statusCode = 200,
             correlationId = CORRELATION_ID
         )
+
+    @Test
+    fun parseInteraction_preservesRuntimeValidatedPolicyAndRequiredDetails() {
+        val result = parser.parseInteraction(
+            responseFrom("""{"error":{"code":"invalidRequest","message":"validation","innerError":{
+                "code":"attributeValidationError","details":[null,42,
+                {"code":"passwordPolicyViolation","attributeIds":[42,"PASSWORD"]},
+                {"code":"attributeRequired","attributeIds":["city"]}]}}}"""),
+            signUpState()
+        ) as NativeAuthV2InteractionApiResult.InvalidAttributes
+        assertEquals("attributeValidationError", result.subError)
+        assertEquals(listOf("PASSWORD", "city"), result.invalidAttributes)
+        assertEquals(2, result.attributeValidationDetails?.size)
+        assertEquals("passwordPolicyViolation", result.attributeValidationDetails?.first()?.get("code"))
+    }
+
+    @Test
+    fun parseInteraction_unknownErrorRetainsSubErrorAndRejectsMalformedDetails() {
+        val result = parser.parseInteraction(
+            responseFrom("""{"error":{"code":"futureError","message":"diagnostic","innerError":{
+                "code":"futureSubError","details":"bad"}}}"""),
+            signUpState()
+        ) as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("futureError", result.error)
+        assertEquals("diagnostic", result.errorDescription)
+        assertEquals("futureSubError", result.subError)
+        assertTrue(result.attributeValidationDetails.orEmpty().isEmpty())
+    }
 
     private fun signUpState(): NativeAuthV2ContinuationState =
         NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
