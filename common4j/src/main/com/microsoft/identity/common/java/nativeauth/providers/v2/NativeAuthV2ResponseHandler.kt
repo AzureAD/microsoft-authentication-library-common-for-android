@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
@@ -175,19 +178,36 @@ class NativeAuthV2ResponseHandler {
                     errorCodes = null
                 )
             } else {
-                ObjectMapper.deserializeJsonStringToObject(
+                val body = ObjectMapper.deserializeJsonStringToObject(
                     response.body,
-                    SignInTokenApiResponse::class.java
+                    JsonObject::class.java
                 ) ?: return buildTokenErrorResult(
                     statusCode = response.statusCode,
                     correlationId = correlationId,
                     errorCode = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR,
                     errorMessage = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION
                 )
+                // Keep the original numeric representation; Double coercion can hide fractions.
+                val rawErrorCodes = (body["error_codes"] as? JsonArray)?.map {
+                    (it as? JsonPrimitive)?.takeIf { value -> value.isNumber }?.asNumber
+                }
+                SignInTokenApiResponse(
+                    statusCode = response.statusCode,
+                    correlationId = correlationId,
+                    continuationToken = body.string("continuation_token"),
+                    error = body.string("error"),
+                    errorDescription = body.string("error_description"),
+                    errorUri = body.string("error_uri"),
+                    subError = body.string("suberror"),
+                    errorCodes = NativeAuthV2ErrorDiagnostics.readErrorCodes(rawErrorCodes),
+                    traceId = body.string("trace_id"),
+                    timestamp = body.string("timestamp")
+                )
             }
-            apiResponse.statusCode = response.statusCode
-            apiResponse.correlationId = correlationId
-            apiResponse.toErrorResult()
+            apiResponse.toErrorResult(
+                diagnosticErrorCodes = apiResponse.errorCodes
+                    ?: NativeAuthV2ErrorDiagnostics.codesFromMessage(apiResponse.errorDescription)
+            )
         } else {
             val tokenResponse = ObjectMapper.deserializeJsonStringToObject(
                 response.body,
@@ -211,6 +231,9 @@ class NativeAuthV2ResponseHandler {
             }
         }
     }
+
+    private fun JsonObject.string(name: String): String? =
+        (get(name) as? JsonPrimitive)?.takeIf { it.isString }?.asString
 
     private fun buildTokenErrorResult(
         statusCode: Int,

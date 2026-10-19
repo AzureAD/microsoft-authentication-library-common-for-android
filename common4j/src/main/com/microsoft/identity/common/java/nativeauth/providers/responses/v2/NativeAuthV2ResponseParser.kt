@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthConstants
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ErrorDiagnostics
 import java.util.Locale
 
 /**
@@ -70,7 +71,10 @@ class NativeAuthV2ResponseParser {
             return AuthorizeChallengeApiResult.Redirect(
                 correlationId = response.serverError?.correlationId
                     ?.takeUnless { it.isBlank() } ?: response.correlationId,
-                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON
+                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON,
+                traceId = response.serverError?.traceId,
+                timestamp = response.serverError?.timestamp,
+                errorCodes = response.serverError?.errorCodes ?: extractAadstsCodes(response.serverError?.message)
             )
         }
 
@@ -84,7 +88,11 @@ class NativeAuthV2ResponseParser {
                     ?.takeUnless { it.isBlank() } ?: response.correlationId,
                 error = serverError.code ?: ApiErrorResult.INVALID_STATE,
                 errorDescription = serverError.message.orEmpty(),
-                errorCodes = extractAadstsCodes(serverError.message)
+                errorCodes = serverError.errorCodes ?: extractAadstsCodes(serverError.message),
+                subError = serverError.innerErrorCode,
+                attributeValidationDetails = validationDetails(serverError),
+                traceId = serverError.traceId,
+                timestamp = serverError.timestamp
             )
         }
 
@@ -173,7 +181,10 @@ class NativeAuthV2ResponseParser {
         if (response.isWebFallbackRequired) {
             return NativeAuthV2InteractionApiResult.Redirect(
                 correlationId = errorCorrelationId,
-                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON
+                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON,
+                traceId = response.serverError?.traceId,
+                timestamp = response.serverError?.timestamp,
+                errorCodes = response.serverError?.errorCodes ?: extractAadstsCodes(response.serverError?.message)
             )
         }
 
@@ -545,7 +556,7 @@ class NativeAuthV2ResponseParser {
         val code = serverError.code
         val innerErrorCode = serverError.innerErrorCode
         val message = serverError.message
-        val errorCodes = extractAadstsCodes(message)
+        val errorCodes = serverError.errorCodes ?: extractAadstsCodes(message)
 
         return when {
             code == ERROR_INVALID_GRANT && innerErrorCode == INNER_ERROR_INVALID_ONE_TIME_CODE ->
@@ -554,11 +565,13 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp
                 )
 
             innerErrorCode == INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
-                unknownInteractionError(correlationId, code, message, errorCodes)
+                unknownInteractionError(correlationId, serverError, errorCodes)
 
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
@@ -568,14 +581,18 @@ class NativeAuthV2ResponseParser {
                         .flatMap { it.attributeIds }
                         .distinct()
                     if (invalidAttributes.isEmpty()) {
-                        unknownInteractionError(correlationId, code, message, errorCodes)
+                        unknownInteractionError(correlationId, serverError, errorCodes)
                     } else {
                         NativeAuthV2InteractionApiResult.InvalidAttributes(
                             correlationId = correlationId,
                             invalidAttributes = invalidAttributes,
                             error = code.orEmpty(),
                             errorDescription = message.orEmpty(),
-                            errorCodes = errorCodes
+                            errorCodes = errorCodes,
+                            subError = innerErrorCode,
+                            attributeValidationDetails = validationDetails(serverError),
+                            traceId = serverError.traceId,
+                            timestamp = serverError.timestamp
                         )
                     }
                 }
@@ -587,7 +604,11 @@ class NativeAuthV2ResponseParser {
                     correlationId = correlationId,
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    subError = innerErrorCode,
+                    attributeValidationDetails = validationDetails(serverError),
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp
                 )
 
             code == ERROR_INVALID_REQUEST && innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
@@ -596,7 +617,9 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp
                 )
 
             code == ERROR_INVALID_GRANT &&
@@ -606,7 +629,9 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp
                 )
 
             // The account does not exist in the directory. This response carries no inner error
@@ -618,24 +643,35 @@ class NativeAuthV2ResponseParser {
                     correlationId = correlationId,
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
+                    errorCodes = errorCodes,
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp
                 )
 
-            else -> unknownInteractionError(correlationId, code, message, errorCodes)
+            else -> unknownInteractionError(correlationId, serverError, errorCodes)
         }
     }
 
     private fun unknownInteractionError(
         correlationId: String,
-        code: String?,
-        message: String?,
+        serverError: NativeAuthV2HalApiResponse.HalServerError,
         errorCodes: List<Int>?
     ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
         correlationId = correlationId,
-        error = code ?: ApiErrorResult.INVALID_STATE,
-        errorDescription = message.orEmpty(),
-        errorCodes = errorCodes
+        error = serverError.code ?: ApiErrorResult.INVALID_STATE,
+        errorDescription = serverError.message.orEmpty(),
+        errorCodes = errorCodes,
+        subError = serverError.innerErrorCode,
+        attributeValidationDetails = validationDetails(serverError),
+        traceId = serverError.traceId,
+        timestamp = serverError.timestamp
     )
+
+    private fun validationDetails(error: NativeAuthV2HalApiResponse.HalServerError): List<Map<String, Any?>> =
+        error.details.map { detail ->
+            val fields = mapOf("code" to detail.code, "attributeIds" to detail.attributeIds)
+            detail.message?.let { fields + ("message" to it) } ?: fields
+        }
 
     private fun missingLinkError(
         correlationId: String,
@@ -685,18 +721,11 @@ class NativeAuthV2ResponseParser {
      * surfacing service error codes via [ApiErrorResult.errorCodes]. Returns `null` (rather than
      * an empty list) when none are present, matching [ApiErrorResult.errorCodes]'s own default.
      */
-    private fun extractAadstsCodes(message: String?): List<Int>? {
-        if (message.isNullOrBlank()) {
-            return null
-        }
-        val codes = AADSTS_CODE_REGEX.findAll(message).mapNotNull { it.groupValues[1].toIntOrNull() }.toList()
-        return codes.ifEmpty { null }
-    }
+    private fun extractAadstsCodes(message: String?): List<Int>? =
+        NativeAuthV2ErrorDiagnostics.codesFromMessage(message)
 
     private companion object {
         private val TAG: String = NativeAuthV2ResponseParser::class.java.simpleName
-
-        private val AADSTS_CODE_REGEX = Regex("AADSTS(\\d+)")
 
         private const val STATE_CONTINUE = "continue"
         private const val WEB_FALLBACK_REDIRECT_REASON = "web_fallback_required"

@@ -163,9 +163,12 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * The server requires the flow to fall back to a web-based (interactive browser) experience.
      */
-    data class Redirect(
+    data class Redirect @JvmOverloads constructor(
         override val correlationId: String,
-        val redirectReason: String
+        val redirectReason: String,
+        val errorCodes: List<Int>? = null,
+        val traceId: String? = null,
+        val timestamp: String? = null
     ) : NativeAuthV2InteractionApiResult {
         override fun toUnsanitizedString(): String =
             "Redirect(correlationId=$correlationId, redirectReason=$redirectReason)"
@@ -175,11 +178,13 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * No account matches the identifier supplied to reset-password /start.
      */
-    data class UserNotFound(
+    data class UserNotFound @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -194,12 +199,14 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * The submitted verification code was invalid.
      */
-    data class InvalidCode(
+    data class InvalidCode @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -215,12 +222,14 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * The submitted password was invalid (for example, too weak).
      */
-    data class InvalidPassword(
+    data class InvalidPassword @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -236,12 +245,14 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * The submitted username/password combination was rejected by the service.
      */
-    data class InvalidCredentials(
+    data class InvalidCredentials @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -274,11 +285,15 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     /**
      * An account already exists for the identifier supplied to sign-up.
      */
-    data class UserAlreadyExists(
+    data class UserAlreadyExists @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val subError: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -295,12 +310,16 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
      * wire names of the attributes the server rejected (for example `password` when the value
      * violated password policy), in server order.
      */
-    data class InvalidAttributes(
+    data class InvalidAttributes @JvmOverloads constructor(
         override val correlationId: String,
         val invalidAttributes: List<String>,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val subError: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -338,11 +357,15 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
      * An error was returned (or the response shape was otherwise unusable) that this SDK version
      * does not map to a more specific case.
      */
-    data class UnknownError(
+    data class UnknownError @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>? = null
+        override val errorCodes: List<Int>? = null,
+        override val subError: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
