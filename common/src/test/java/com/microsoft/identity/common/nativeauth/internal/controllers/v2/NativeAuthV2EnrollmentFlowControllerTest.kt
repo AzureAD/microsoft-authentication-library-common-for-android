@@ -1,0 +1,217 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+package com.microsoft.identity.common.nativeauth.internal.controllers.v2
+
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.*
+import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.*
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import io.mockk.*
+import org.junit.Assert.*
+import org.junit.Test
+
+class NativeAuthV2EnrollmentFlowControllerTest {
+    private val strategy = mockk<NativeAuthV2OAuth2Strategy>(relaxed = true)
+    private val authority = mockk<NativeAuthCIAMAuthority>(relaxed = true).apply {
+        every { createOAuth2StrategyV2(any()) } returns strategy
+    }
+    private val controller = NativeAuthV2FlowController()
+    private fun state(scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.SIGN_IN) =
+        NativeAuthV2ContinuationStateTestFactory.create("cid", scenario = scenario)
+    private fun builder(state: NativeAuthV2ContinuationState) =
+        NativeAuthV2SignInAfterSignUpCommandParameters.builder()
+            .continuationState(state).authority(authority)
+            .platformComponents(mockk<IPlatformComponents>(relaxed = true))
+            .clientId("client").correlationId("cid").challengeType(listOf("oob"))
+            .build()
+
+    @Test
+    fun enrollFollowsSmsRiskOnlyOnceAndUsesLatestState() {
+        val registration = state()
+        val risk = state()
+        val activation = state()
+        every { strategy.performEnroll(registration, "phone:sms:0", "contact") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", risk)
+        every { strategy.performRiskVerification(risk) } returns
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6)
+        val result = controller.enroll(NativeAuthV2EnrollCommandParameters(
+            builder(registration), registration, "phone:sms:0", "contact"
+        ))
+        assertTrue(result is NativeAuthV2CommandResult.StrongAuthVerificationRequired)
+        assertSame(activation, (result as NativeAuthV2CommandResult.StrongAuthVerificationRequired).continuationState)
+        verify(exactly = 1) { strategy.performRiskVerification(risk) }
+    }
+
+    @Test
+    fun repeatedRiskIsRejectedWithoutAnotherHop() {
+        val registration = state()
+        val risk = state()
+        every { strategy.performEnroll(any(), any(), any()) } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", risk)
+        every { strategy.performRiskVerification(risk) } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
+        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
+            builder(registration), registration, "phone:sms:0", "contact"
+        )) is INativeAuthCommandResult.APIError)
+        verify(exactly = 1) { strategy.performRiskVerification(any()) }
+    }
+
+    @Test
+    fun activationReturnsAnotherRegistrationInEveryOriginalScenario() {
+        NativeAuthV2FlowScenario.values().forEach { scenario ->
+            val prior = state(scenario)
+            val next = state(scenario)
+            every { strategy.performActivate(prior, "arbitrary-code") } returns
+                NativeAuthV2InteractionApiResult.RegistrationRequired("cid", next, emptyList())
+            val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "arbitrary-code"))
+            assertTrue(result is NativeAuthV2CommandResult.StrongAuthRegistrationRequired)
+            assertSame(next, (result as NativeAuthV2CommandResult.StrongAuthRegistrationRequired).continuationState)
+        }
+    }
+
+    @Test
+    fun activationBeforePasswordUpdateCannotCompleteReset() {
+        val prior = state(NativeAuthV2FlowScenario.RESET_PASSWORD)
+        every { strategy.performActivate(prior, any()) } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", prior)
+        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+            is INativeAuthCommandResult.APIError)
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun activationAfterPasswordUpdateReturnsResetCompletionWithoutAutomaticSignIn() {
+        val prior = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
+            state(NativeAuthV2FlowScenario.RESET_PASSWORD))
+        every { strategy.performActivate(prior, any()) } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", prior)
+        val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+        assertTrue(result is NativeAuthV2CommandResult.SignInAfterResetPasswordRequired)
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun activationResumesResetPasswordCollectionAndSignUpCompletion() {
+        val reset = state(NativeAuthV2FlowScenario.RESET_PASSWORD)
+        every { strategy.performActivate(reset, any()) } returns
+            NativeAuthV2InteractionApiResult.UpdateRequired("cid", reset)
+        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(reset), reset, "otp"))
+            is NativeAuthV2CommandResult.NewPasswordRequired)
+        val signup = state(NativeAuthV2FlowScenario.SIGN_UP)
+        every { strategy.performActivate(signup, any()) } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", signup)
+        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(signup), signup, "otp"))
+            is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun originalInteractionCommandsSurfaceRegistrationInsteadOfUnexpectedResult() {
+        val prior = state()
+        val registration = NativeAuthV2InteractionApiResult.RegistrationRequired("cid", prior,
+            listOf(NativeAuthV2AuthMethod("email:email:0", "email", null)))
+        every { strategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.ContinuationRequired("cid", prior)
+        every { strategy.performSignInStart(any(), any()) } returns registration
+        every { strategy.performResetPasswordStart(any(), any()) } returns registration
+        every { strategy.performSignUpStart(any()) } returns registration
+        every { strategy.performVerify(any(), any()) } returns registration
+        every { strategy.performPasswordVerify(any(), any()) } returns registration
+        every { strategy.performSubmitAttributes(any(), any(), any()) } returns registration
+        every { strategy.performUpdatePassword(any(), any()) } returns registration
+        every { strategy.performMethodChallenge(any(), any()) } returns registration
+        every { strategy.performResend(any()) } returns registration
+        val code = configured(NativeAuthV2SubmitCodeCommandParameters.builder()
+            .continuationState(prior).code("otp")).build()
+        val results = listOf(
+            controller.signInStart(configured(SignInV2StartCommandParameters.builder().username("user")).build()),
+            controller.resetPasswordStart(configured(ResetPasswordV2StartCommandParameters.builder().username("user")).build()),
+            controller.signUpStart(configured(SignUpV2StartCommandParameters.builder()
+                .username("user").attributes(emptyMap())).build()),
+            controller.submitSignInCode(code),
+            controller.submitSignUpCode(code),
+            controller.submitResetPasswordCode(code),
+            controller.submitPassword(configured(NativeAuthV2SubmitPasswordCommandParameters.builder()
+                .continuationState(prior).password("password".toCharArray())).build()),
+            controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder()
+                .continuationState(prior).attributes(emptyMap())).build()),
+            controller.submitNewPassword(configured(NativeAuthV2SubmitNewPasswordCommandParameters.builder()
+                .continuationState(prior).newPassword("password".toCharArray())).build()),
+            controller.selectMFAMethod(configured(NativeAuthV2SelectMFAMethodCommandParameters.builder()
+                .continuationState(prior).methodId("email")).build()),
+            controller.selectResetPasswordMethod(configured(NativeAuthV2SelectResetPasswordMethodCommandParameters.builder()
+                .continuationState(prior).methodId("email")).build()),
+            controller.submitMFAChallenge(configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
+                .continuationState(prior).code("otp")).build()),
+            controller.resendCode(configured(NativeAuthV2ResendCodeCommandParameters.builder()
+                .continuationState(prior)).build())
+        )
+        results.forEach {
+            assertTrue(it.toString(), it is NativeAuthV2CommandResult.StrongAuthRegistrationRequired)
+            assertSame(prior, (it as NativeAuthV2CommandResult.StrongAuthRegistrationRequired).continuationState)
+        }
+    }
+
+    @Test
+    fun activationCompletesSignInUsingRetainedScopesAndClaims() {
+        val claims = """{"id_token":{"auth_time":null}}"""
+        val prior = NativeAuthV2ContinuationStateTestFactory.create(
+            "cid", scenario = NativeAuthV2FlowScenario.SIGN_IN, claimsRequestJson = claims)
+        every { strategy.performActivate(prior, "otp") } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", prior)
+        every { strategy.performAuthorizeChallengeContinue(prior) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode("cid", "authorization-code")
+        every { strategy.performTokenRequest(any(), any(), any(), any()) } returns
+            com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult.Redirect(
+                "cid", "stop-before-cache")
+        val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+        assertTrue(result is INativeAuthCommandResult.Redirect)
+        verify(exactly = 1) {
+            strategy.performTokenRequest("authorization-code", match { "scope" in it && "openid" in it },
+                "cid", claims)
+        }
+    }
+
+    @Test
+    fun registrationAfterFirstFactorChallengeAndResetPollingIsNotDropped() {
+        val prior = state()
+        val registration = NativeAuthV2InteractionApiResult.RegistrationRequired("cid", prior, emptyList())
+        every { strategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.ContinuationRequired("cid", prior)
+        every { strategy.performSignInStart(any(), any()) } returns
+            NativeAuthV2InteractionApiResult.ChallengeRequired("cid", prior, null,
+                listOf(NativeAuthV2AuthMethod("email", "email", null)))
+        every { strategy.performMethodChallenge(prior, "email") } returns registration
+        assertTrue(controller.signInStart(configured(SignInV2StartCommandParameters.builder()
+            .username("user")).build()) is NativeAuthV2CommandResult.StrongAuthRegistrationRequired)
+        every { strategy.performUpdatePassword(any(), any()) } returns
+            NativeAuthV2InteractionApiResult.PollInProgress("cid", prior, 0)
+        every { strategy.performPoll(prior) } returns registration
+        assertTrue(controller.submitNewPassword(configured(NativeAuthV2SubmitNewPasswordCommandParameters.builder()
+            .continuationState(prior).newPassword("password".toCharArray())).build())
+            is NativeAuthV2CommandResult.StrongAuthRegistrationRequired)
+    }
+
+    @Test
+    fun activationPreservesServiceOtpErrorsAndRejectsUnsupportedActions() {
+        val prior = state()
+        every { strategy.performActivate(prior, "") } returns
+            NativeAuthV2InteractionApiResult.InvalidCode("cid", "invalid_code", "Retry.", "invalid_oob_value")
+        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, ""))
+            is NativeAuthV2CommandResult.IncorrectCode)
+        every { strategy.performActivate(prior, "otp") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", prior)
+        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+            is INativeAuthCommandResult.APIError)
+        verify(exactly = 0) { strategy.performRiskVerification(any()) }
+    }
+
+    private fun <B : BaseSignInTokenCommandParameters.BaseSignInTokenCommandParametersBuilder<*, *>> configured(builder: B): B {
+        builder.authority(authority).platformComponents(mockk<IPlatformComponents>(relaxed = true)).correlationId("cid")
+        return builder
+    }
+}

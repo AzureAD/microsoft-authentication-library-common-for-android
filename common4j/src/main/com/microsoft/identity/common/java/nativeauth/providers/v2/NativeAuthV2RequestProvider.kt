@@ -38,6 +38,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.Nativ
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2TokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2UpdatePasswordRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2VerifyRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2EnrollRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.net.HttpConstants
@@ -51,6 +52,38 @@ class NativeAuthV2RequestProvider(
     private val config: NativeAuthOAuth2Configuration,
     private val hrefResolver: NativeAuthV2HrefResolver = NativeAuthV2HrefResolver(config)
 ) {
+    /** Builds enrollment for an offered method only; the caller must collect an explicit contact. */
+    fun createEnrollRequest(
+        state: NativeAuthV2ContinuationState,
+        methodId: String,
+        contact: String
+    ): NativeAuthV2EnrollRequest {
+        require(contact.isNotBlank()) { "A nonblank verification contact is required." }
+        val channel = state.enrollmentChannel(methodId)
+            ?: throw IllegalArgumentException("Select an offered enrollment method.")
+        val selected = state.withSelectedMethod(methodId)
+            ?: throw IllegalArgumentException("Select an offered enrollment method.")
+        val body = if (channel == "email") {
+            NativeAuthV2EnrollRequest.EnrollmentParameters(state.continuationToken, email = contact)
+        } else {
+            NativeAuthV2EnrollRequest.EnrollmentParameters(
+                state.continuationToken, phoneNumber = contact, channel = "sms"
+            )
+        }
+        return NativeAuthV2EnrollRequest(
+            resolveHref(selected, NativeAuthV2LinkRelation.ENROLL),
+            getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON), body
+        )
+    }
+
+    /** Reuses the OTP body but follows only the explicit activation relation, never verify/self. */
+    fun createActivateRequest(state: NativeAuthV2ContinuationState, otp: String): NativeAuthV2VerifyRequest =
+        NativeAuthV2VerifyRequest.create(
+            continuationToken = state.continuationToken,
+            otp = otp,
+            requestUrl = resolveHref(state, NativeAuthV2LinkRelation.ACTIVATE).toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
 
     /**
      * Creates the request object for the first call of a Native Auth V2 flow to

@@ -36,6 +36,26 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  * [ApiResult.toUnsanitizedString].
  */
 sealed interface NativeAuthV2InteractionApiResult : ApiResult {
+    /** The service requires registration of an offered email or SMS method. */
+    data class RegistrationRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val methods: List<NativeAuthV2AuthMethod>
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "RegistrationRequired(correlationId=$correlationId)"
+        override fun toString(): String = toUnsanitizedString()
+    }
+
+    /** A newly enrolled method awaits service-side OTP validation and activation. */
+    data class ActivationRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val challengeTargetLabel: String,
+        val codeLength: Int
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "ActivationRequired(correlationId=$correlationId, codeLength=$codeLength)"
+        override fun toString(): String = toUnsanitizedString()
+    }
 
     /**
      * The flow requires the user to complete a challenge (for example, verifying a contact

@@ -53,8 +53,15 @@ class NativeAuthV2HalApiResponse private constructor(
         val id: String?,
         val type: String?,
         val hint: String?,
-        val links: Map<String, String>
-    )
+        val links: Map<String, String>,
+        val channels: List<String>? = null
+    ) {
+        internal fun enrollmentChannel(): String? = when (type?.lowercase(java.util.Locale.ROOT)) {
+            "email" -> "email"
+            "phone" -> if (channels?.contains("sms") == true) "sms" else null
+            else -> null
+        }
+    }
 
     /**
      * A single entry of a sign-up `collectAttributes` response's top-level `attributes` array.
@@ -258,6 +265,9 @@ class NativeAuthV2HalApiResponse private constructor(
             id = resource.string("id"),
             type = resource.string(TYPE_KEY),
             hint = resource.string(HINT_KEY),
+            channels = (resource.properties["channels"] as? List<*>)?.let { values ->
+                if (values.all { it is String }) values.filterIsInstance<String>() else null
+            },
             links = flattenFirstHref(resource.links)
         )
 
