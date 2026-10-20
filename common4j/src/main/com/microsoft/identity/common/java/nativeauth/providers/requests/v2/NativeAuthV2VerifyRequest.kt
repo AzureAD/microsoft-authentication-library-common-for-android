@@ -43,7 +43,6 @@ data class NativeAuthV2VerifyRequest private constructor(
             headers: Map<String, String?>
         ): NativeAuthV2VerifyRequest {
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
-            ArgUtils.validateNonNullArg(otp, "otp")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 

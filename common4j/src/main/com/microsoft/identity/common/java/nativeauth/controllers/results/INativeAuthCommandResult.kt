@@ -31,10 +31,17 @@ import com.microsoft.identity.common.java.nativeauth.util.ILoggable
  */
 interface INativeAuthCommandResult : ILoggable {
     val correlationId: String
-    data class Redirect(
+    /** Service diagnostics are absent on locally generated results. */
+    val traceId: String? get() = null
+    val timestamp: String? get() = null
+
+    data class Redirect @JvmOverloads constructor(
         override val correlationId: String,
-        val redirectReason: String
-    ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = redirectReason.ifEmpty { BROWSER_REQUIRED_ERROR_DESCRIPTION }, correlationId = correlationId),
+        val redirectReason: String,
+        override val errorCodes: List<Int>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
+    ) : Error(error = BROWSER_REQUIRED_ERROR, errorDescription = redirectReason.ifEmpty { BROWSER_REQUIRED_ERROR_DESCRIPTION }, correlationId = correlationId, errorCodes = errorCodes),
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult, SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,
         SignUpStartCommandResult, SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult, SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
@@ -60,13 +67,17 @@ interface INativeAuthCommandResult : ILoggable {
     /**
      * UnknownError is base class to represent various kinds of errors in NativeAuth.
      */
-    data class APIError(
+    data class APIError @JvmOverloads constructor(
         override val error: String?,
         override val errorDescription: String?,
         override val details: List<Map<String, String>>? = null,
         override val correlationId: String,
         override val errorCodes: List<Int>? = null,
-        val exception: Exception? = null
+        val exception: Exception? = null,
+        val subError: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ): Error(error, errorDescription, details, correlationId, errorCodes), INativeAuthCommandResult,
         SignInStartCommandResult, SignInWithContinuationTokenCommandResult, SignInSubmitCodeCommandResult,
         SignInResendCodeCommandResult, SignInSubmitPasswordCommandResult,

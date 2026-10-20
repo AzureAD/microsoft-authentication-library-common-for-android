@@ -43,7 +43,9 @@ import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
@@ -397,6 +399,8 @@ class NativeAuthV2SignInFlowControllerTest {
     fun testSignInStartCarriesScopesAndClaimsIntoAuthorizeChallengeAndToken() {
         val passwordState = mockContinuationState()
         val readyState = mockContinuationState()
+        val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
+        val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
         val claims = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         val tokenScopes = slot<List<String>>()
         stubStartThroughPasswordChallenge(passwordState)
@@ -416,7 +420,7 @@ class NativeAuthV2SignInFlowControllerTest {
         )
 
         controller.signInStart(
-            signInStartParameters(scopes = listOf("User.Read"), claimsRequestJson = claims)
+            signInStartParameters(scopes = requestedScopes, claimsRequestJson = claims)
         )
 
         verify(exactly = 1) {
@@ -424,7 +428,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = "signIn",
                 scenario = any(),
-                scopes = listOf("User.Read"),
+                scopes = expectedScopes,
                 claimsRequestJson = claims
             )
         }
@@ -436,7 +440,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 claimsRequestJson = claims
             )
         }
-        assertTrue(tokenScopes.captured.containsAll(listOf("User.Read", "openid", "offline_access", "profile")))
+        assertEquals(expectedScopes, tokenScopes.captured)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -814,6 +818,138 @@ class NativeAuthV2SignInFlowControllerTest {
                 correlationId = correlationId,
                 claimsRequestJson = retainedClaims
             )
+        }
+    }
+
+    @Test
+    fun testSignInSubmissionsPreserveUnknownErrorDiagnostics() {
+        val state = mockContinuationState()
+        val apiError = NativeAuthV2InteractionApiResult.UnknownError(
+            correlationId = correlationId,
+            error = "service_error",
+            errorDescription = "The service could not verify the request.",
+            errorCodes = listOf(50126),
+            subError = "verification_failed",
+            attributeValidationDetails = listOf(mapOf("name" to "email", "reason" to "invalid")),
+            traceId = "service-trace",
+            timestamp = "service-time"
+        )
+        every { mockStrategy.performPasswordVerify(state, any()) } returns apiError
+        every { mockStrategy.performVerify(state, any()) } returns apiError
+        every { mockStrategy.performMethodChallenge(state, "email-1") } returns apiError
+
+        val results = listOf(
+            controller.submitPassword(submitPasswordParameters(state)),
+            controller.submitSignInCode(submitCodeParameters(state, "123456")),
+            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1")),
+            controller.submitMFAChallenge(submitMFAChallengeParameters(state, "123456"))
+        )
+
+        results.forEach { result ->
+            assertTrue(result is INativeAuthCommandResult.APIError)
+            result as INativeAuthCommandResult.APIError
+            assertEquals(apiError.correlationId, result.correlationId)
+            assertEquals(apiError.error, result.error)
+            assertEquals(apiError.errorDescription, result.errorDescription)
+            assertEquals(apiError.errorCodes, result.errorCodes)
+            assertEquals(apiError.subError, result.subError)
+            assertEquals(apiError.attributeValidationDetails, result.attributeValidationDetails)
+            assertEquals(apiError.traceId, result.traceId)
+            assertEquals(apiError.timestamp, result.timestamp)
+        }
+    }
+
+    @Test
+    fun testSignInSubmissionsPreserveBrowserRedirectDiagnostics() {
+        val state = mockContinuationState()
+        val redirect = NativeAuthV2InteractionApiResult.Redirect(
+            correlationId = correlationId,
+            redirectReason = "browser_required",
+            traceId = "redirect-trace",
+            timestamp = "redirect-time",
+            errorCodes = listOf(50076)
+        )
+        every { mockStrategy.performPasswordVerify(state, any()) } returns redirect
+        every { mockStrategy.performVerify(state, any()) } returns redirect
+        every { mockStrategy.performMethodChallenge(state, "email-1") } returns redirect
+
+        val results = listOf(
+            controller.submitPassword(submitPasswordParameters(state)),
+            controller.submitSignInCode(submitCodeParameters(state, "123456")),
+            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1")),
+            controller.submitMFAChallenge(submitMFAChallengeParameters(state, "123456"))
+        )
+
+        results.forEach { result ->
+            assertTrue(result is INativeAuthCommandResult.Redirect)
+            result as INativeAuthCommandResult.Redirect
+            assertEquals(redirect.correlationId, result.correlationId)
+            assertEquals(redirect.redirectReason, result.redirectReason)
+            assertEquals(redirect.traceId, result.traceId)
+            assertEquals(redirect.timestamp, result.timestamp)
+            assertEquals(redirect.errorCodes, result.errorCodes)
+        }
+    }
+
+    @Test
+    fun testSelectMFAMethodPreservesRiskVerificationErrors() {
+        val state = mockContinuationState()
+        val riskState = mockContinuationState()
+        every { mockStrategy.performMethodChallenge(state, "sms-1") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired(correlationId, riskState)
+        every { mockStrategy.performRiskVerification(riskState) } returns
+            NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId,
+                "risk_failed",
+                "Risk verification failed.",
+                traceId = "risk-trace"
+            )
+
+        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "sms-1"))
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("risk_failed", result.error)
+        assertEquals("risk-trace", result.traceId)
+        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+        verify(exactly = 0) { mockStrategy.performVerify(any(), any()) }
+    }
+
+    @Test
+    fun testSubmitPasswordRethrowsStrategyFailureAndClearsPassword() {
+        val state = mockContinuationState()
+        val password = "Password123!".toCharArray()
+        val failure = IllegalStateException("verification failed")
+        every { mockStrategy.performPasswordVerify(state, any()) } throws failure
+
+        try {
+            controller.submitPassword(submitPasswordParameters(state, password))
+            fail("Expected the strategy exception")
+        } catch (exception: IllegalStateException) {
+            assertSame(failure, exception)
+        }
+
+        assertArrayEquals(CharArray(password.size), password)
+    }
+
+    @Test
+    fun testMfaCommandsRethrowStrategyFailures() {
+        val state = mockContinuationState()
+        val failure = IllegalStateException("verification failed")
+        every { mockStrategy.performMethodChallenge(state, "email-1") } throws failure
+        every { mockStrategy.performVerify(state, any()) } throws failure
+
+        try {
+            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1"))
+            fail("Expected the method-selection exception")
+        } catch (exception: IllegalStateException) {
+            assertSame(failure, exception)
+        }
+        try {
+            controller.submitMFAChallenge(submitMFAChallengeParameters(state, "123456"))
+            fail("Expected the challenge-verification exception")
+        } catch (exception: IllegalStateException) {
+            assertSame(failure, exception)
         }
     }
 

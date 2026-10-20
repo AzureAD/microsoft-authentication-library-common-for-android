@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.INative
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
@@ -44,6 +45,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -146,28 +148,44 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun testSignUpStartSurfacesUserAlreadyExists() {
         val entryState = mockContinuationState()
+        val details = listOf(mapOf(
+            "code" to "userAlreadyExists",
+            "attributeIds" to listOf("email"),
+            "message" to "An account already exists for this email."
+        ))
         stubAuthorizeChallengeStart(entryState)
         every { mockStrategy.performSignUpStart(entryState) } returns
             NativeAuthV2InteractionApiResult.UserAlreadyExists(
                 correlationId = correlationId,
                 error = "user_already_exists",
                 errorDescription = "AADSTS1003037: account already exists.",
-                errorCodes = listOf(1003037)
+                errorCodes = listOf(1003037),
+                subError = "attributeValidationError",
+                traceId = "service-trace",
+                timestamp = "service-time",
+                attributeValidationDetails = details
             )
 
         val result = controller.signUpStart(signUpStartParameters())
 
         assertTrue(result is NativeAuthV2CommandResult.UserAlreadyExists)
-        assertEquals(
-            listOf(1003037),
-            (result as NativeAuthV2CommandResult.UserAlreadyExists).errorCodes
-        )
+        result as NativeAuthV2CommandResult.UserAlreadyExists
+        assertEquals(listOf(1003037), result.errorCodes)
+        assertEquals("attributeValidationError", result.subError)
+        assertEquals("service-trace", result.traceId)
+        assertEquals("service-time", result.timestamp)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test
     fun testSignUpStartMapsInvalidAttributesToRetryableAttributesInvalid() {
         val entryState = mockContinuationState()
         val submittedState = mockContinuationState()
+        val details = listOf(mapOf(
+            "code" to "attributeRequired",
+            "attributeIds" to listOf("city"),
+            "message" to "Enter a city."
+        ))
         every {
             entryState.withAdditionalSubmittedAttributes(
                 match {
@@ -190,7 +208,11 @@ class NativeAuthV2SignUpFlowControllerTest {
                 invalidAttributes = listOf("city"),
                 error = "attribute_validation_failed",
                 errorDescription = "AADSTS1002027: attribute validation failed.",
-                errorCodes = listOf(1002027)
+                errorCodes = listOf(1002027),
+                subError = "attributeValidationError",
+                traceId = "service-trace",
+                timestamp = "service-time",
+                attributeValidationDetails = details
             )
 
         val result = controller.signUpStart(signUpStartParameters())
@@ -198,9 +220,48 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertTrue(result is NativeAuthV2CommandResult.AttributesInvalid)
         result as NativeAuthV2CommandResult.AttributesInvalid
         assertEquals(listOf("city"), result.invalidAttributes)
+        assertEquals("service-trace", result.traceId)
+        assertEquals("service-time", result.timestamp)
+        assertEquals("attributeValidationError", result.subError)
+        assertEquals(details, result.attributeValidationDetails)
         // The validation-error body carries no fresh continuation token, so retry with a state
         // that remembers the email and password submitted by the rejected request.
         assertSame(submittedState, result.continuationState)
+    }
+
+    @Test
+    fun testSignUpStartPreservesUnknownErrorDiagnostics() {
+        val entryState = mockContinuationState()
+        val details = listOf(mapOf(
+            "code" to "futureValidationCode",
+            "attributeIds" to listOf("city"),
+            "message" to "Unrecognized attribute diagnostic."
+        ))
+        stubAuthorizeChallengeStart(entryState)
+        every { mockStrategy.performSignUpStart(entryState) } returns
+            NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = correlationId,
+                error = "future_error",
+                errorDescription = "Unrecognized service error.",
+                errorCodes = listOf(90000),
+                subError = "future_suberror",
+                traceId = "service-trace",
+                timestamp = "service-time",
+                attributeValidationDetails = details
+            )
+
+        val result = controller.signUpStart(signUpStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("future_error", result.error)
+        assertEquals("Unrecognized service error.", result.errorDescription)
+        assertEquals(listOf(90000), result.errorCodes)
+        assertEquals(correlationId, result.correlationId)
+        assertEquals("future_suberror", result.subError)
+        assertEquals("service-trace", result.traceId)
+        assertEquals("service-time", result.timestamp)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test
@@ -238,12 +299,19 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { mockStrategy.performSignUpStart(entryState) } returns
             NativeAuthV2InteractionApiResult.Redirect(
                 correlationId = correlationId,
-                redirectReason = "fallback_required"
+                redirectReason = "fallback_required",
+                errorCodes = listOf(123),
+                traceId = "redirect-trace",
+                timestamp = "redirect-time"
             )
 
         val result = controller.signUpStart(signUpStartParameters())
 
         assertTrue(result is INativeAuthCommandResult.Redirect)
+        result as INativeAuthCommandResult.Redirect
+        assertEquals(listOf(123), result.errorCodes)
+        assertEquals("redirect-trace", result.traceId)
+        assertEquals("redirect-time", result.timestamp)
     }
 
     @Test
@@ -470,7 +538,9 @@ class NativeAuthV2SignUpFlowControllerTest {
             AuthorizeChallengeApiResult.UnknownError(
                 correlationId = correlationId,
                 error = "expected_test_error",
-                errorDescription = "Expected test error."
+                errorDescription = "Expected test error.",
+                traceId = "authorize-trace",
+                timestamp = "authorize-time"
             )
 
         val result = controller.signInAfterSignUp(signInAfterSignUpParameters(state))
@@ -480,6 +550,8 @@ class NativeAuthV2SignUpFlowControllerTest {
             "expected_test_error",
             (result as INativeAuthCommandResult.APIError).error
         )
+        assertEquals("authorize-trace", result.traceId)
+        assertEquals("authorize-time", result.timestamp)
     }
 
     @Test
@@ -536,17 +608,27 @@ class NativeAuthV2SignUpFlowControllerTest {
                 correlationId = correlationId,
                 claimsRequestJson = any()
             )
-        } returns SignInTokenApiResult.UnknownError(
+        } returns SignInTokenApiResponse(
+            statusCode = 400,
             correlationId = correlationId,
+            continuationToken = null,
             error = "invalid_grant",
             errorDescription = "The authorization code is no longer valid.",
-            errorCodes = emptyList()
-        )
+            errorCodes = emptyList(),
+            errorUri = null,
+            traceId = "token-trace",
+            timestamp = "token-time",
+            subError = "future_suberror"
+        ).toErrorResult()
 
         val result = controller.signInAfterSignUp(signInAfterSignUpParameters(state))
 
         assertTrue(result is INativeAuthCommandResult.APIError)
-        assertEquals("invalid_grant", (result as INativeAuthCommandResult.APIError).error)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("invalid_grant", result.error)
+        assertEquals("token-trace", result.traceId)
+        assertEquals("token-time", result.timestamp)
+        assertEquals("future_suberror", result.subError)
     }
 
     @Test
@@ -603,12 +685,21 @@ class NativeAuthV2SignUpFlowControllerTest {
             errorCodes = emptyList()
         )
 
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state))
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
 
         verify(exactly = 1) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
                 scopes = match { it.toSet() == expectedScopes },
+                correlationId = correlationId,
+                claimsRequestJson = any()
+            )
+        }
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = emptyList()))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest(
+                code = "auth-code",
+                scopes = match { it.toSet() == setOf("openid", "profile", "offline_access") },
                 correlationId = correlationId,
                 claimsRequestJson = any()
             )
@@ -701,6 +792,49 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals(ClientException.TOKEN_CACHE_SAVE_FAILED, thrown.errorCode)
     }
 
+    @Test
+    fun testSignUpEntryAndTokenCanonicalizeOidcDefaultsWithoutChangingResourceScopes() {
+        val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
+        val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
+        controller.signUpStart(signUpStartParameters().toBuilder().scopes(requestedScopes).build())
+        verify(exactly = 1) {
+            mockStrategy.performAuthorizeChallengeStart(correlationId, any(), any(), expectedScopes, null)
+        }
+        val state = mockContinuationState()
+        every { state.scopesForTokenRequest() } returns requestedScopes
+        every { state.claimsRequestJsonForTokenRequest() } returns null
+        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
+            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
+        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest("auth-code", expectedScopes, correlationId, null)
+        }
+    }
+
+    @Test
+    fun testSignUpEntrySendsDefaultScopesAndClaimsForNullEmptyAndExplicitScopes() {
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.UnknownError(correlationId, "test_stop", "test stop")
+        for (scopes in listOf(null, emptyList(), listOf("User.Read"))) {
+            controller.signUpStart(
+                signUpStartParameters().toBuilder().scopes(scopes)
+                    .claimsRequestJson("{\"id_token\":{}}").build()
+            )
+            verify(exactly = 1) {
+                mockStrategy.performAuthorizeChallengeStart(
+                    correlationId, any(), any(),
+                    match { it.toSet() == (scopes.orEmpty() + listOf("openid", "profile", "offline_access")).toSet() },
+                    "{\"id_token\":{}}"
+                )
+            }
+            clearMocks(mockStrategy, answers = false)
+        }
+    }
+
     // -----------------------------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------------------------
@@ -776,7 +910,7 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     private fun signInAfterSignUpParameters(
         state: NativeAuthV2ContinuationState,
-        scopes: List<String> = emptyList(),
+        scopes: List<String>? = null,
         claimsRequestJson: String? = null,
         tokenCache: OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>? = null
     ): NativeAuthV2SignInAfterSignUpCommandParameters =

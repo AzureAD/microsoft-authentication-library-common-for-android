@@ -25,14 +25,21 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses
 /**
  * Base class to encapsulate various error response from the Native Auth API.
  */
-abstract class ApiErrorResult(
+abstract class ApiErrorResult @JvmOverloads constructor(
     open val error: String?,
     open val subError: String? = null,
     open val errorDescription: String?,
     open val errorCodes: List<Int>? = null,
-    override val correlationId: String
+    override val correlationId: String,
+    open val attributeValidationDetails: List<Map<String, Any?>>? = null
 ): ApiResult
 {
+    /** Unmodified service trace identifier, when supplied by the endpoint. */
+    open val traceId: String? get() = null
+
+    /** Unmodified service timestamp; no client-side date conversion is applied. */
+    open val timestamp: String? get() = null
+
     companion object {
         val INVALID_STATE = "invalid_state"
     }
