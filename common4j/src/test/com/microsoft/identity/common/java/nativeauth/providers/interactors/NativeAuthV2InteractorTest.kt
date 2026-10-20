@@ -90,8 +90,11 @@ class NativeAuthV2InteractorTest {
     @Test
     fun performAuthorizeChallengeStart_postsFormBodyAndParsesAuthorizeChallengeResult() {
         val scopes = listOf("openid", "profile")
+        val claims = """{"id_token":{"auth_time":null}}"""
         val request = AuthorizeChallengeStartRequest.create(
             clientId = CLIENT_ID,
+            scopes = scopes,
+            claimsRequestJson = claims,
             requestUrl = authorizeChallengeUrl.toString(),
             headers = formHeaders()
         )
@@ -100,14 +103,15 @@ class NativeAuthV2InteractorTest {
         val expected = AuthorizeChallengeApiResult.AuthorizationCode(CORRELATION_ID, "auth-code")
         val captured = capturePost(httpResponse)
 
-        every { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID) } returns request
+        every { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID, scopes, claims) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
             responseParser.parseAuthorizeChallenge(
                 response = halResponse,
                 entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
                 scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
-                scopes = scopes
+                scopes = scopes,
+                claimsRequestJson = claims
             )
         } returns expected
 
@@ -115,7 +119,8 @@ class NativeAuthV2InteractorTest {
             correlationId = CORRELATION_ID,
             entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
             scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
-            scopes = scopes
+            scopes = scopes,
+            claimsRequestJson = claims
         )
 
         assertSame(expected, actual)
@@ -124,17 +129,20 @@ class NativeAuthV2InteractorTest {
         assertFormBody(
             captured.body.captured,
             mapOf(
-                "client_id" to CLIENT_ID
+                "client_id" to CLIENT_ID,
+                "scope" to "openid profile",
+                "claims" to claims
             )
         )
-        verify(exactly = 1) { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID) }
+        verify(exactly = 1) { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID, scopes, claims) }
         verify(exactly = 1) { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) }
         verify(exactly = 1) {
             responseParser.parseAuthorizeChallenge(
                 response = halResponse,
                 entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
                 scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
-                scopes = scopes
+                scopes = scopes,
+                claimsRequestJson = claims
             )
         }
     }
@@ -554,7 +562,6 @@ class NativeAuthV2InteractorTest {
                 "grant_type" to "authorization_code",
                 "code" to AUTHORIZATION_CODE,
                 "scope" to "User.Read offline_access",
-                "claims" to claimsRequestJson,
                 "client_info" to "true"
             )
         )
@@ -623,7 +630,7 @@ class NativeAuthV2InteractorTest {
         val expectedFailure = IllegalStateException("parser failure")
         capturePost(httpResponse)
 
-        every { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID) } returns request
+        every { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID, listOf("openid", "profile"), null) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
             responseParser.parseAuthorizeChallenge(
