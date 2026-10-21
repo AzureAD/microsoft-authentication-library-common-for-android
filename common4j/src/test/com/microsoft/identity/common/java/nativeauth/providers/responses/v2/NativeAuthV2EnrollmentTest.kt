@@ -34,6 +34,10 @@ class NativeAuthV2EnrollmentTest {
         result as NativeAuthV2InteractionApiResult.RegistrationRequired
         assertEquals(listOf("email:email:1", "phone:sms:2"), result.methods.map { it.id })
         assertEquals(listOf("email", "sms"), result.methods.map { it.type })
+        assertTrue(result.continuationState.isSmsEnrollmentMethod("phone:sms:2"))
+        assertFalse(result.continuationState.isSmsEnrollmentMethod("email:email:1"))
+        assertFalse(result.continuationState.isSmsEnrollmentMethod("phone:sms:99"))
+        assertFalse(initial().isSmsEnrollmentMethod("phone:sms:2"))
         assertEquals("/phone/enroll?dc=2", result.continuationState.withSelectedMethod("phone:sms:2")
             ?.href(NativeAuthV2LinkRelation.ENROLL))
         assertEquals("ct", result.continuationState.continuationToken)

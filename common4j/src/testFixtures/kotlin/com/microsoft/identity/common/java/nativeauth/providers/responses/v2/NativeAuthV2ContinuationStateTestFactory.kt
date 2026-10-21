@@ -30,6 +30,19 @@ import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2Fl
  */
 object NativeAuthV2ContinuationStateTestFactory {
 
+    /** Models an enrollment offer containing SMS and email methods in server order. */
+    @JvmStatic
+    fun registration(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState {
+        val response = NativeAuthV2HalApiResponse.from(HalResource.from("""
+            {"action":"enroll","continuationToken":"registration","_embedded":{"methods":[
+              {"type":"phone","channels":["sms"],"_links":{"enroll":{"href":"/phone/enroll"}}},
+              {"type":"email","_links":{"enroll":{"href":"/email/enroll"}}}
+            ]}}
+        """.trimIndent()), 200, state.correlationId)
+        return (NativeAuthV2ResponseParser().parseInteraction(response, state)
+            as NativeAuthV2InteractionApiResult.RegistrationRequired).continuationState
+    }
+
     /** Models the completion-stage marker set by the real update-password interactor. */
     @JvmStatic
     fun afterPasswordUpdate(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =

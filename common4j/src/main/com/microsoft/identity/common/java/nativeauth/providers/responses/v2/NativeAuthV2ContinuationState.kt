@@ -185,6 +185,9 @@ class NativeAuthV2ContinuationState private constructor(
 
     internal fun enrollmentChannel(methodId: String): String? = enrollmentChannels?.get(methodId)
 
+    /** Whether [methodId] identifies an offered SMS enrollment method eligible for risk verification. */
+    fun isSmsEnrollmentMethod(methodId: String): Boolean = enrollmentChannel(methodId) == "sms"
+
     /**
      * Returns a successor state in which the links of the server method identified by [methodId]
      * have been promoted into the state's own relation map, so the next request follows exactly

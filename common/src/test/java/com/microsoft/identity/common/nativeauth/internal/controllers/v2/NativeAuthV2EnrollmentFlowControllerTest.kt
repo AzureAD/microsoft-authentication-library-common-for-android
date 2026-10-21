@@ -22,6 +22,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     private val controller = NativeAuthV2FlowController()
     private fun state(scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.SIGN_IN) =
         NativeAuthV2ContinuationStateTestFactory.create("cid", scenario = scenario)
+    private fun registrationState() = NativeAuthV2ContinuationStateTestFactory.registration(state())
     private fun builder(state: NativeAuthV2ContinuationState) =
         NativeAuthV2SignInAfterSignUpCommandParameters.builder()
             .continuationState(state).authority(authority)
@@ -31,7 +32,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
 
     @Test
     fun enrollFollowsSmsRiskOnlyOnceAndUsesLatestState() {
-        val registration = state()
+        val registration = registrationState()
         val risk = state()
         val activation = state()
         every { strategy.performEnroll(registration, "phone:sms:0", "contact") } returns
@@ -48,7 +49,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
 
     @Test
     fun repeatedRiskIsRejectedWithoutAnotherHop() {
-        val registration = state()
+        val registration = registrationState()
         val risk = state()
         every { strategy.performEnroll(any(), any(), any()) } returns
             NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", risk)
@@ -58,6 +59,49 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             builder(registration), registration, "phone:sms:0", "contact"
         )) is INativeAuthCommandResult.APIError)
         verify(exactly = 1) { strategy.performRiskVerification(any()) }
+    }
+
+    @Test
+    fun emailEnrollmentRiskIsRejectedWithoutRiskRequest() {
+        val registration = registrationState()
+        every { strategy.performEnroll(registration, "email:email:1", "contact") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
+        every { strategy.performRiskVerification(any()) } returns
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", state(), "masked", 6)
+
+        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
+            builder(registration), registration, "email:email:1", "contact"
+        )) is INativeAuthCommandResult.APIError)
+        verify(exactly = 0) { strategy.performRiskVerification(any()) }
+    }
+
+    @Test
+    fun emailEnrollmentReturnsActivationWithoutRiskRequest() {
+        val registration = registrationState()
+        val activation = state()
+        every { strategy.performEnroll(registration, "email:email:1", "contact") } returns
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6)
+
+        val result = controller.enroll(NativeAuthV2EnrollCommandParameters(
+            builder(registration), registration, "email:email:1", "contact"
+        ))
+        assertTrue(result is NativeAuthV2CommandResult.StrongAuthVerificationRequired)
+        assertSame(activation, (result as NativeAuthV2CommandResult.StrongAuthVerificationRequired).continuationState)
+        verify(exactly = 0) { strategy.performRiskVerification(any()) }
+    }
+
+    @Test
+    fun unofferedSmsMethodCannotTriggerRiskRequest() {
+        val registration = registrationState()
+        every { strategy.performEnroll(registration, "phone:sms:99", "contact") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
+        every { strategy.performRiskVerification(any()) } returns
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", state(), "masked", 6)
+
+        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
+            builder(registration), registration, "phone:sms:99", "contact"
+        )) is INativeAuthCommandResult.APIError)
+        verify(exactly = 0) { strategy.performRiskVerification(any()) }
     }
 
     @Test

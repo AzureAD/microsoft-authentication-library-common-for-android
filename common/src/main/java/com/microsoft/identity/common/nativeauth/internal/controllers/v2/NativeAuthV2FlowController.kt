@@ -81,13 +81,16 @@ import lombok.EqualsAndHashCode
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 class NativeAuthV2FlowController : BaseNativeAuthController() {
 
-    /** Enrolls an offered method, performing at most one automatic SMS risk-verification hop. */
+    /** Enrolls an offered method, permitting at most one risk-verification hop for SMS only. */
     fun enroll(parameters: NativeAuthV2EnrollCommandParameters): NativeAuthV2StrongAuthCommandResult {
         val strategy = createNativeAuthV2Strategy(parameters.tokenParameters)
         val enrollment = strategy.performEnroll(
             parameters.continuationState, parameters.methodId, parameters.contact
         )
         val result = if (enrollment is NativeAuthV2InteractionApiResult.RiskVerificationRequired) {
+            if (!parameters.continuationState.isSmsEnrollmentMethod(parameters.methodId)) {
+                return mapInteractionError(enrollment)
+            }
             strategy.performRiskVerification(enrollment.continuationState)
         } else enrollment
         return when (result) {
