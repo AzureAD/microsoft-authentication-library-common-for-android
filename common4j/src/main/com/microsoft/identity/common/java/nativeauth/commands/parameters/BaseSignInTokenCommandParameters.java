@@ -47,7 +47,8 @@ public abstract class BaseSignInTokenCommandParameters extends BaseNativeAuthCom
    public final List<String> scopes;
 
    /**
-    * Claims to send to the token endpoint.
+    * Claims for the requested token. V1 sends these to the token endpoint; V2 retains them
+    * for local cache/result handling and sends claims only on the initial authorize-challenge.
     */
    @Nullable
    public final String claimsRequestJson;

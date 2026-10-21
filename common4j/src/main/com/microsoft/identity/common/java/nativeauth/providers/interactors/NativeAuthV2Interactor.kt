@@ -86,7 +86,11 @@ class NativeAuthV2Interactor(
             methodName = "$TAG.performAuthorizeChallengeStart"
         )
 
-        val request = requestProvider.createAuthorizeChallengeStartRequest(correlationId = correlationId)
+        val request = requestProvider.createAuthorizeChallengeStartRequest(
+            correlationId = correlationId,
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson
+        )
 
         Logger.infoWithObject(
             "$TAG.performAuthorizeChallengeStart",
