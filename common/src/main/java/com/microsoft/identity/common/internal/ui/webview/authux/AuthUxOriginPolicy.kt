@@ -105,8 +105,7 @@ open class AuthUxOriginPolicy {
             return false
         }
 
-        val isTrustedHost =
-            AuthUxJavaScriptInterface.isValidUriForInterface(origin.toString())
+        val isTrustedHost = AuthUxJavaScriptInterface.isValidHostForInterface(origin.host)
         if (!isTrustedHost) {
             Logger.info(TAG, "Origin host is not trusted for Auth UX.")
         }

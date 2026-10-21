@@ -372,6 +372,38 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testPageStarted_withoutManagedSession_doesNotInstallLegacyBridge() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+        Mockito.verify(webView, never()).removeJavascriptInterface(anyString());
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+    }
+
+    @Test
+    public void testSetAuthUxBridgeSession_replacementClosesExistingSession() {
+        final AuthUxBridgeSession existingSession = Mockito.mock(AuthUxBridgeSession.class);
+        final AuthUxBridgeSession replacementSession = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.setAuthUxBridgeSession(existingSession);
+
+        mWebViewClient.setAuthUxBridgeSession(replacementSession);
+
+        Mockito.verify(existingSession).close();
+        Mockito.verify(replacementSession, never()).close();
+    }
+
+    @Test
+    public void testSetAuthUxBridgeSession_sameSessionDoesNotCloseSession() {
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.setAuthUxBridgeSession(session);
+
+        mWebViewClient.setAuthUxBridgeSession(session);
+
+        Mockito.verify(session, never()).close();
+    }
+
+    @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testCloseAuthUxBridgeSession_lateApprovedNavigationDoesNotRecreateBridge() {
         final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
@@ -387,7 +419,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
 
         Mockito.verify(session).close();
-        Mockito.verify(session).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        Mockito.verify(session, never()).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
         Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
     }
 
