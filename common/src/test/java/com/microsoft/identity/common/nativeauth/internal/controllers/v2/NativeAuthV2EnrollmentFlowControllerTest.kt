@@ -251,14 +251,40 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     fun activationPreservesServiceOtpErrorsAndRejectsUnsupportedActions() {
         val prior = state()
         every { strategy.performActivate(prior, "") } returns
-            NativeAuthV2InteractionApiResult.InvalidCode("cid", "invalid_code", "Retry.", "invalid_oob_value")
-        assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, ""))
-            is NativeAuthV2CommandResult.IncorrectCode)
+            NativeAuthV2InteractionApiResult.InvalidCode(
+                "cid", "invalid_code", "Retry.", "invalid_oob_value",
+                traceId = "activation-trace", timestamp = "activation-time"
+            )
+        val invalidCode = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, ""))
+        assertTrue(invalidCode is NativeAuthV2CommandResult.IncorrectCode)
+        assertEquals("activation-trace", invalidCode.traceId)
+        assertEquals("activation-time", invalidCode.timestamp)
         every { strategy.performActivate(prior, "otp") } returns
             NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", prior)
         assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
             is INativeAuthCommandResult.APIError)
         verify(exactly = 0) { strategy.performRiskVerification(any()) }
+    }
+
+    @Test
+    fun enrollmentAndActivationPreserveBrowserRedirectDiagnostics() {
+        val prior = registrationState()
+        val redirect = NativeAuthV2InteractionApiResult.Redirect(
+            "cid", "Use browser", errorCodes = listOf(42),
+            traceId = "redirect-trace", timestamp = "redirect-time"
+        )
+        every { strategy.performEnroll(prior, "phone:sms:0", "contact") } returns redirect
+        every { strategy.performActivate(prior, "otp") } returns redirect
+        val results = listOf(
+            controller.enroll(NativeAuthV2EnrollCommandParameters(builder(prior), prior, "phone:sms:0", "contact")),
+            controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+        )
+        results.forEach { result ->
+            assertTrue(result is INativeAuthCommandResult.Redirect)
+            assertEquals("redirect-trace", result.traceId)
+            assertEquals("redirect-time", result.timestamp)
+            assertEquals(listOf(42), (result as INativeAuthCommandResult.Redirect).errorCodes)
+        }
     }
 
     private fun <B : BaseSignInTokenCommandParameters.BaseSignInTokenCommandParametersBuilder<*, *>> configured(builder: B): B {

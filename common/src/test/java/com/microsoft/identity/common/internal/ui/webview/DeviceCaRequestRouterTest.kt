@@ -248,6 +248,17 @@ class DeviceCaRequestRouterTest {
     }
 
     @Test
+    fun loadInWebViewOrBrowser_authorizeOnlyDisabledByDefault_loadsWithRequestHeaders() {
+        host.webCpInWebViewEnabled = true
+
+        val result = router.loadInWebViewOrBrowser(DEVICE_CA_URL, webView)
+
+        assertSame(DeviceCaRequestRouter.RoutingResult.Completed, result)
+        assertEquals(HTTPS_DEVICE_CA_URL, host.loadedUrl)
+        verify(webView, never()).loadUrl(anyString())
+    }
+
+    @Test
     fun loadInWebViewOrBrowser_replacesOnlyLeadingBrowserScheme() {
         host.webCpInWebViewEnabled = true
         val url = "$DEVICE_CA_URL&redirect_uri=browser://callback"

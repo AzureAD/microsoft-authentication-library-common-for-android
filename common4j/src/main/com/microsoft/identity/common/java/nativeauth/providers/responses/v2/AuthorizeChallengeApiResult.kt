@@ -59,9 +59,12 @@ sealed interface AuthorizeChallengeApiResult : ApiResult {
     /**
      * The server requires the flow to fall back to a web-based (interactive browser) experience.
      */
-    data class Redirect(
+    data class Redirect @JvmOverloads constructor(
         override val correlationId: String,
-        val redirectReason: String
+        val redirectReason: String,
+        val errorCodes: List<Int>? = null,
+        val traceId: String? = null,
+        val timestamp: String? = null
     ) : AuthorizeChallengeApiResult {
         override fun toUnsanitizedString(): String =
             "Redirect(correlationId=$correlationId, redirectReason=$redirectReason)"
@@ -72,13 +75,15 @@ sealed interface AuthorizeChallengeApiResult : ApiResult {
      * An error was returned (or the response shape was otherwise unusable) that this SDK version
      * does not map to a more specific case.
      */
-    data class UnknownError(
+    data class UnknownError @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>? = null,
         override val subError: String? = null,
-        override val attributeValidationDetails: List<Map<String, Any?>>? = null
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ErrorDiagnostics
 
 /**
  * Single wire model for every V2 HAL Native Auth API response body. There are no response
@@ -82,16 +83,21 @@ class NativeAuthV2HalApiResponse private constructor(
         // Per-attribute error details from `error.innerError.details`. Empty when the server sent
         // no such array. Used to attribute a sign-up failure (for example `userAlreadyExists` or
         // `passwordPolicyViolation`) to the specific attribute(s) it concerns.
-        val details: List<HalErrorDetail>
+        val details: List<HalErrorDetail>,
+        val traceId: String? = null,
+        val timestamp: String? = null,
+        val errorCodes: List<Int>? = null
     )
 
     /**
      * A single entry of `error.innerError.details`, pairing an error [code] (for example
-     * `userAlreadyExists` or `passwordPolicyViolation`) with the [attributeIds] it applies to.
+     * `userAlreadyExists` or `passwordPolicyViolation`) with the [attributeIds] it applies to
+     * and the optional, unmodified service [message].
      */
     data class HalErrorDetail(
         val code: String?,
-        val attributeIds: List<String>
+        val attributeIds: List<String>,
+        val message: String? = null
     )
 
     val isWebFallbackRequired: Boolean
@@ -338,7 +344,10 @@ class NativeAuthV2HalApiResponse private constructor(
                         message = errorValue[ERROR_MESSAGE_KEY] as? String,
                         innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
                         correlationId = errorValue[ERROR_CORRELATION_ID_KEY] as? String,
-                        details = extractErrorDetails(innerErrorMap)
+                        details = extractErrorDetails(innerErrorMap),
+                        traceId = errorValue["traceId"] as? String,
+                        timestamp = errorValue["timestamp"] as? String,
+                        errorCodes = NativeAuthV2ErrorDiagnostics.readErrorCodes(errorValue["error_codes"])
                     )
                 }
 
@@ -348,7 +357,10 @@ class NativeAuthV2HalApiResponse private constructor(
                     innerErrorCode = null,
                     correlationId = halResource.string(ERROR_CORRELATION_ID_SNAKE_KEY)
                         ?: halResource.string(ERROR_CORRELATION_ID_KEY),
-                    details = emptyList()
+                    details = emptyList(),
+                    traceId = halResource.string("trace_id"),
+                    timestamp = halResource.string("timestamp"),
+                    errorCodes = NativeAuthV2ErrorDiagnostics.readErrorCodes(halResource.properties["error_codes"])
                 )
 
                 else -> null
@@ -370,7 +382,8 @@ class NativeAuthV2HalApiResponse private constructor(
                     .orEmpty()
                 HalErrorDetail(
                     code = detailMap[ERROR_CODE_KEY] as? String,
-                    attributeIds = attributeIds
+                    attributeIds = attributeIds,
+                    message = detailMap[ERROR_MESSAGE_KEY] as? String
                 )
             }
         }
