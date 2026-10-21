@@ -35,6 +35,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingRecorderRegistryTest {
@@ -101,6 +104,56 @@ class OnboardingRecorderRegistryTest {
 
         assertSame(active, OnboardingRecorderRegistry.get("correlation"))
         assertEquals(1, OnboardingRecorderRegistry.size())
+    }
+
+    @Test
+    fun `competing registrations preserve a single winner and its cleanup ownership`() {
+        val recorders = listOf(recorder("first"), recorder("second"))
+        val ready = CountDownLatch(recorders.size)
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(recorders.size)
+
+        try {
+            val registrations = recorders.map { recorder ->
+                executor.submit<Boolean> {
+                    ready.countDown()
+                    assertTrue(
+                        "Registration start was not released.",
+                        start.await(10, TimeUnit.SECONDS)
+                    )
+                    OnboardingRecorderRegistry.register("correlation", recorder)
+                }
+            }
+
+            assertTrue(
+                "Registration workers did not become ready.",
+                ready.await(10, TimeUnit.SECONDS)
+            )
+            start.countDown()
+            val results = registrations.map { it.get(10, TimeUnit.SECONDS) }
+
+            assertEquals(1, results.count { it })
+            val winnerIndex = results.indexOf(true)
+            val winner = recorders[winnerIndex]
+            val loser = recorders[1 - winnerIndex]
+            assertSame(winner, OnboardingRecorderRegistry.get("correlation"))
+            assertEquals(1, OnboardingRecorderRegistry.size())
+
+            assertFalse(OnboardingRecorderRegistry.unregister("correlation", loser))
+            assertSame(winner, OnboardingRecorderRegistry.get("correlation"))
+            assertEquals(1, OnboardingRecorderRegistry.size())
+
+            assertTrue(OnboardingRecorderRegistry.unregister("correlation", winner))
+            assertNull(OnboardingRecorderRegistry.get("correlation"))
+            assertEquals(0, OnboardingRecorderRegistry.size())
+        } finally {
+            start.countDown()
+            executor.shutdownNow()
+            assertTrue(
+                "Registration workers did not terminate.",
+                executor.awaitTermination(10, TimeUnit.SECONDS)
+            )
+        }
     }
 
     @Test
