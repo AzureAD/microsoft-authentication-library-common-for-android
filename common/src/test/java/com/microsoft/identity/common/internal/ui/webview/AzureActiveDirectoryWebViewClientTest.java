@@ -4393,7 +4393,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
                 new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
                         "correlation-id",
-                        "530003",
+                        "53003",
                         null,
                         null,
                         null,
@@ -4406,8 +4406,59 @@ public class AzureActiveDirectoryWebViewClientTest {
         final org.json.JSONArray errors =
                 new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
         assertEquals(2, errors.length());
-        assertEquals("530003", errors.getString(0));
-        assertEquals("530003", errors.getString(1));
+        assertEquals("53003", errors.getString(0));
+        assertEquals("53003", errors.getString(1));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ExcludesNonOnboardingErrors() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"excluded-session\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(
+                        seedJson,
+                        "excluded-client",
+                        "excluded-scope",
+                        mContext
+                );
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                mWebViewClient.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        for (final String errorCode : Arrays.asList("0", "50058", "50097", "50126")) {
+            assertTrue(
+                    sink.tryConsumeAuthUxTelemetry(
+                            new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                                    "correlation-id",
+                                    errorCode,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                            )
+                    )
+            );
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(0, blob.getJSONArray("blocking_errors").length());
+
+        final android.content.SharedPreferences preferences =
+                mContext.getSharedPreferences(
+                        "com.microsoft.oneauth.session_correlation_cache",
+                        Context.MODE_PRIVATE
+                );
+        final String persistedCache =
+                preferences.getString("com.microsoft.oneauth.session_correlation_cache", "");
+        if (persistedCache != null && !persistedCache.isEmpty()) {
+            assertFalse(
+                    new org.json.JSONObject(persistedCache)
+                            .has("excluded-client|excluded-scope")
+            );
+        }
     }
 
     /**

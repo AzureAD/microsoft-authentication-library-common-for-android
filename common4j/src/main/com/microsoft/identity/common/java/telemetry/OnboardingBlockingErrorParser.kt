@@ -65,6 +65,22 @@ object OnboardingBlockingErrorParser {
     private fun isExcluded(candidate: String): Boolean = candidate in NON_ONBOARDING_AADSTS_CODES
 
     /**
+     * Qualifies one candidate for inclusion in onboarding telemetry.
+     *
+     * Returns null for absent values, the eSTS `"0"` no-error sentinel, and error codes that
+     * do not represent onboarding-remediation signals. Otherwise returns the candidate unchanged.
+     *
+     * @return error identifier suitable for `addBlockingError(...)`, or null when excluded
+     */
+    @JvmStatic
+    fun qualifyBlockingError(errorCode: String?): String? {
+        if (errorCode.isNullOrBlank() || errorCode == "0" || isExcluded(errorCode)) {
+            return null
+        }
+        return errorCode
+    }
+
+    /**
      * Extract a blocking-error attribution string from a [MicrosoftTokenResponse].
      *
      * Returns the most specific available identifier:
@@ -84,17 +100,11 @@ object OnboardingBlockingErrorParser {
     fun extractBlockingError(tokenResponse: MicrosoftTokenResponse?): String? {
         if (tokenResponse == null) return null
 
-        val subError = tokenResponse.cliTelemSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
-            return subError
+        qualifyBlockingError(tokenResponse.cliTelemSubErrorCode)?.let {
+            return it
         }
 
-        val error = tokenResponse.cliTelemErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
-            return error
-        }
-
-        return null
+        return qualifyBlockingError(tokenResponse.cliTelemErrorCode)
     }
 
     /**
@@ -114,17 +124,11 @@ object OnboardingBlockingErrorParser {
         @Suppress("DEPRECATION")
         val cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(xMsCliTelemHeader) ?: return null
 
-        val subError = cliTelemInfo.serverSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
-            return subError
+        qualifyBlockingError(cliTelemInfo.serverSubErrorCode)?.let {
+            return it
         }
 
-        val error = cliTelemInfo.serverErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
-            return error
-        }
-
-        return null
+        return qualifyBlockingError(cliTelemInfo.serverErrorCode)
     }
 
     /**
@@ -152,7 +156,7 @@ object OnboardingBlockingErrorParser {
         if (errorCodes.isNullOrBlank()) return emptyList()
         return errorCodes.split(",")
             .map { it.trim() }
-            .filter { it.isNotEmpty() && it != "0" && !isExcluded(it) }
+            .mapNotNull(::qualifyBlockingError)
             .distinct()
     }
 }

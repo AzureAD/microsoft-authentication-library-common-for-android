@@ -67,6 +67,13 @@ class OnboardingTelemetryRecorder(
     private val target: String, // sorted, space-joined scopes
     context: Context
 ) : IOnboardingTelemetryRecorder {
+    /**
+     * Protects this recorder instance's mutable in-memory telemetry state.
+     *
+     * Each request owns a separate recorder and therefore a separate lock. This lock must not
+     * be used for the SharedPreferences cache, which is shared by all recorder instances in
+     * the process.
+     */
     private val stateLock = Any()
 
     // Use applicationContext so this recorder, which may outlive the originating
@@ -145,11 +152,11 @@ class OnboardingTelemetryRecorder(
      *                  not a numeric service auth error code.
      */
     override fun addBlockingError(errorCode: String) {
-        // Persist session correlation to SharedPreferences immediately on block
-        persistSessionCorrelation()
         synchronized(stateLock) {
             blockingErrors.add(errorCode)
         }
+        // Persist session correlation to SharedPreferences immediately on block
+        persistSessionCorrelation()
     }
 
     /**
@@ -302,19 +309,21 @@ class OnboardingTelemetryRecorder(
             return
         }
 
+        val key = "$clientId|$target" // target = sorted, space-joined scopes
         try {
-            val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
-            val existing = prefs.getString(PREFS_FILE, "")
-            val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
+            synchronized(SESSION_CACHE_LOCK) {
+                val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+                val existing = prefs.getString(PREFS_FILE, "")
+                val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
 
-            val key = "$clientId|$target" // target = sorted, space-joined scopes
-            val entry = JSONObject().apply {
-                put(FIELD_ID, sessionCorrelationId)
-                put(FIELD_TS, System.currentTimeMillis())
+                val entry = JSONObject().apply {
+                    put(FIELD_ID, sessionCorrelationId)
+                    put(FIELD_TS, System.currentTimeMillis())
+                }
+                cache.put(key, entry)
+
+                prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
             }
-            cache.put(key, entry)
-
-            prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
             Logger.verbose(
                 TAG,
                 sessionCorrelationId,
@@ -327,6 +336,15 @@ class OnboardingTelemetryRecorder(
 
     companion object {
         private val TAG = OnboardingTelemetryRecorder::class.java.simpleName
+
+        /**
+         * Protects the process-wide session-correlation cache read-modify-write transaction.
+         *
+         * SharedPreferences makes individual operations thread-safe, but multiple recorder
+         * instances must share this lock so one recorder cannot overwrite entries persisted
+         * concurrently by another recorder.
+         */
+        private val SESSION_CACHE_LOCK = Any()
         private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
         private const val ISO_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 

@@ -43,6 +43,11 @@ class OnboardingTelemetryRecorderTest {
 
     @Before
     fun setup() {
+        ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .commit()
         recorder = OnboardingTelemetryRecorder(
             SEED_JSON, CLIENT_ID, TARGET,
             ApplicationProvider.getApplicationContext()
@@ -247,11 +252,8 @@ class OnboardingTelemetryRecorderTest {
         recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
 
         val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(
-                "com.microsoft.oneauth.session_correlation_cache",
-                Context.MODE_PRIVATE
-            )
-        val cached = prefs.getString("com.microsoft.oneauth.session_correlation_cache", "") ?: ""
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        val cached = prefs.getString(PREFS_FILE, "") ?: ""
         Assert.assertFalse("SharedPreferences should contain cached session data", cached.isEmpty())
         Assert.assertTrue(
             "Cached data should contain the session correlation ID",
@@ -282,6 +284,40 @@ class OnboardingTelemetryRecorderTest {
         Assert.assertEquals(50, finalBlob.getJSONArray("blocking_errors").length())
     }
 
+    @Test
+    fun testConcurrentRecordersPreserveAllSessionCorrelationEntries() {
+        val recorderCount = 50
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val executor = Executors.newFixedThreadPool(8)
+        val start = CountDownLatch(1)
+        val tasks = (1..recorderCount).map { index ->
+            executor.submit {
+                start.await()
+                OnboardingTelemetryRecorder(
+                    seedJson("session-$index"),
+                    "client-$index",
+                    "scope-$index",
+                    context
+                ).addBlockingError("Error$index")
+            }
+        }
+
+        start.countDown()
+        tasks.forEach { it.get(10, TimeUnit.SECONDS) }
+        executor.shutdown()
+        Assert.assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS))
+
+        val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        val cache = JSONObject(prefs.getString(PREFS_FILE, "") ?: "")
+        Assert.assertEquals(recorderCount, cache.length())
+        (1..recorderCount).forEach { index ->
+            Assert.assertEquals(
+                "session-$index",
+                cache.getJSONObject("client-$index|scope-$index").getString("id")
+            )
+        }
+    }
+
     companion object {
         private const val SEED_JSON =
             "{\"schema_version\":\"1.0.0\"," +
@@ -289,5 +325,11 @@ class OnboardingTelemetryRecorderTest {
                 "\"onboarding_mode\":\"non-brokered\"}"
         private const val CLIENT_ID = "test-client-id"
         private const val TARGET = "scope1 scope2"
+        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
+
+        private fun seedJson(sessionCorrelationId: String) =
+            "{\"schema_version\":\"1.0.0\"," +
+                "\"session_correlation_id\":\"$sessionCorrelationId\"," +
+                "\"onboarding_mode\":\"non-brokered\"}"
     }
 }

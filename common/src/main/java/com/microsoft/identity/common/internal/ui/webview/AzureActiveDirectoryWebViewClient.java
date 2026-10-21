@@ -50,7 +50,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
@@ -82,6 +81,7 @@ import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -379,12 +379,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
         );
         return event -> {
+            final String blockingError =
+                    OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
+            if (blockingError == null) {
+                Logger.info(
+                        methodTag,
+                        event.getCorrelationId(),
+                        "Auth UX telemetry occurrence was excluded by onboarding policy."
+                );
+                return true;
+            }
             Logger.info(
                     methodTag,
                     event.getCorrelationId(),
-                    "Forwarding a validated Auth UX telemetry occurrence to the onboarding recorder."
+                    "Forwarding a qualified Auth UX telemetry occurrence to the onboarding recorder."
             );
-            recorder.addBlockingError(event.getErrorCode());
+            recorder.addBlockingError(blockingError);
             return true;
         };
     }
