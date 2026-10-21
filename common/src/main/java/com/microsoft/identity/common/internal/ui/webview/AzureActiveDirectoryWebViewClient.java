@@ -334,6 +334,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * If both conditions are met, it adds the JavaScript interface to the WebView.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
+        closeAuthUxBridgeSession();
         final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
         final boolean isBrokerAuthProcess =
                 ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
@@ -2245,10 +2246,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Closes only the request-owned Auth UX bridge resources.
      */
     public void closeAuthUxBridgeSession() {
-        if (mAuthUxBridgeSession != null) {
-            mAuthUxBridgeSession.close();
-            // Retain the closed session as a terminal sentinel so late navigation callbacks cannot
-            // re-enter OAuth2WebViewClient's legacy no-session bridge path after request teardown.
+        final AuthUxBridgeSession session = mAuthUxBridgeSession;
+        if (session != null) {
+            try {
+                session.close();
+            } finally {
+                if (mAuthUxBridgeSession == session) {
+                    mAuthUxBridgeSession = null;
+                }
+            }
         }
     }
 

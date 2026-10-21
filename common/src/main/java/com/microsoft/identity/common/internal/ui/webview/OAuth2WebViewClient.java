@@ -43,7 +43,6 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
@@ -80,7 +79,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 
-    protected boolean mAuthUxJavaScriptInterfaceAdded = false;
     protected AuthUxBridgeSession mAuthUxBridgeSession;
 
     /**
@@ -253,17 +251,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         if (mAuthUxBridgeSession != null) {
             mAuthUxBridgeSession.onPageStarted(view, url);
-        } else if (shouldExposeJavaScriptInterface(url)) {
-            // Re-evaluate adding AuthUx JavaScript Interface
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
-        } else if (mAuthUxJavaScriptInterfaceAdded) {
-            // Remove AuthUx JavaScript Interface
-            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
-            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = false;
         }
 
         Logger.info(methodTag,"WebView starts loading.");
@@ -271,8 +258,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     protected void setAuthUxBridgeSession(final AuthUxBridgeSession authUxBridgeSession) {
+        if (mAuthUxBridgeSession != null && mAuthUxBridgeSession != authUxBridgeSession) {
+            mAuthUxBridgeSession.close();
+        }
         mAuthUxBridgeSession = authUxBridgeSession;
-        mAuthUxJavaScriptInterfaceAdded = false;
     }
 
     private void checkStartUrl(final String url) {
@@ -298,9 +287,4 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
     }
 
-    protected boolean shouldExposeJavaScriptInterface(final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
-    }
 }

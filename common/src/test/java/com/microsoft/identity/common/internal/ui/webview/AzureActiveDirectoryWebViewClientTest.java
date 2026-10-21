@@ -38,6 +38,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -65,6 +66,9 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -74,6 +78,7 @@ import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecor
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
@@ -111,11 +116,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -372,6 +379,119 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testPageStarted_withoutManagedSession_doesNotInstallLegacyBridge() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+        Mockito.verify(webView, never()).removeJavascriptInterface(anyString());
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+    }
+
+    @Test
+    public void testSetAuthUxBridgeSession_replacementClosesExistingSession() {
+        final AuthUxBridgeSession existingSession = Mockito.mock(AuthUxBridgeSession.class);
+        final AuthUxBridgeSession replacementSession = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.setAuthUxBridgeSession(existingSession);
+
+        mWebViewClient.setAuthUxBridgeSession(replacementSession);
+
+        Mockito.verify(existingSession).close();
+        Mockito.verify(replacementSession, never()).close();
+    }
+
+    @Test
+    public void testSetAuthUxBridgeSession_sameSessionDoesNotCloseSession() {
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.setAuthUxBridgeSession(session);
+
+        mWebViewClient.setAuthUxBridgeSession(session);
+
+        Mockito.verify(session, never()).close();
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_twiceReleasesResourcesBeforeRegistration() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+        final Set<String> activeListeners = new HashSet<>();
+        final List<ScriptHandler> activeScripts = new ArrayList<>();
+        final List<String> operations = new ArrayList<>();
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(webView), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()))
+                    .thenAnswer(invocation -> {
+                        if (!activeListeners.add(AuthUxBridgeSession.PRIVATE_OBJECT_NAME)) {
+                            throw new IllegalStateException("Duplicate Auth UX listener registration.");
+                        }
+                        operations.add("addListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.removeWebMessageListener(
+                    webView, AuthUxBridgeSession.PRIVATE_OBJECT_NAME))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeListeners.remove(AuthUxBridgeSession.PRIVATE_OBJECT_NAME));
+                        operations.add("removeListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(webView), anyString(), any()))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeScripts.isEmpty());
+                        final ScriptHandler handler = Mockito.mock(ScriptHandler.class);
+                        activeScripts.add(handler);
+                        operations.add("addScript");
+                        Mockito.doAnswer(removal -> {
+                            assertTrue(activeScripts.remove(handler));
+                            operations.add("removeScript");
+                            return null;
+                        }).when(handler).remove();
+                        return handler;
+                    });
+
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final AuthUxBridgeSession firstSession = mWebViewClient.mAuthUxBridgeSession;
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, firstSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+                assertNotSame(firstSession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+                assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                        "removeListener", "addListener", "addScript"), operations);
+                Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+
+            mWebViewClient.closeAuthUxBridgeSession();
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            assertTrue(activeListeners.isEmpty());
+            assertTrue(activeScripts.isEmpty());
+            assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                    "removeListener", "addListener", "addScript", "removeScript",
+                    "removeListener"), operations);
+        }
+    }
+
+    @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testCloseAuthUxBridgeSession_lateApprovedNavigationDoesNotRecreateBridge() {
         final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
@@ -387,7 +507,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
 
         Mockito.verify(session).close();
-        Mockito.verify(session).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        Mockito.verify(session, never()).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
         Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
     }
 

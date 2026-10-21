@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.ObjectMapper
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -63,7 +64,7 @@ class NativeAuthV2TokenRequestTest {
     }
 
     @Test
-    fun create_whenClaimsAreProvided_serializesClaimsInFinalFormBody() {
+    fun create_whenClaimsAreProvided_retainsLocalClaimsButOmitsThemFromTokenForm() {
         val request = createRequest(
             scopes = listOf("openid"),
             claimsRequestJson = CLAIMS_REQUEST_JSON
@@ -71,7 +72,9 @@ class NativeAuthV2TokenRequestTest {
 
         val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
 
-        assertEquals(CLAIMS_REQUEST_JSON, parseFormBody(formBody)["claims"])
+        assertEquals(CLAIMS_REQUEST_JSON, request.parameters.claimsRequestJson)
+        assertFalse(parseFormBody(formBody).containsKey("claims"))
+        assertEquals("openid", parseFormBody(formBody)["scope"])
     }
 
     private fun createRequest(

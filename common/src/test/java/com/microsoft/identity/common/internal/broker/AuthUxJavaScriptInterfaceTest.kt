@@ -908,6 +908,12 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test isValidUrlForInterface with mixed-case AAD Global host`() {
+        val validUrl = "https://LOGIN.MICROSOFTONLINE.COM/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
     fun `test isValidUrlForInterface with valid AAD US URL`() {
         val validUrl = "https://login.microsoftonline.us/common/oauth2/authorize"
         Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))

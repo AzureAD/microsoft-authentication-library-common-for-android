@@ -79,6 +79,15 @@ class AuthUxOriginPolicyTest {
     }
 
     @Test
+    fun `initial origin validation ignores query syntax and host casing`() {
+        assertTrue(
+            policy.isInitialUrlSupportedByRegistrationRules(
+                "https://LOGIN.MICROSOFTONLINE.COM/oauth2/authorize?claims={\"access_token\":{}}"
+            )
+        )
+    }
+
+    @Test
     fun `callback requires registration-rule origin and main frame`() {
         assertTrue(
             policy.isAllowedCallback(

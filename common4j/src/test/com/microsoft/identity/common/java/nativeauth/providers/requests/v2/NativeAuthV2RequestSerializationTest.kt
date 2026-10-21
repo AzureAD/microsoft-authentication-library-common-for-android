@@ -32,6 +32,50 @@ import org.junit.Test
 class NativeAuthV2RequestSerializationTest {
 
     @Test
+    fun authorizeChallenge_serializesEntryScopesAndClaimsWithoutLoggingClaims() {
+        listOf(null, "", """{"id_token":{"test":null}}""").forEach { claims ->
+            val request = AuthorizeChallengeStartRequest.create(
+                clientId = CLIENT_ID,
+                scopes = listOf("openid", "profile", "offline_access", "User.Read"),
+                requestUrl = "https://contoso.com/oauth2/v2.0/authorize-challenge",
+                headers = mapOf("Content-Type" to "application/x-www-form-urlencoded"),
+                claimsRequestJson = claims
+            )
+            val form = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+            assertTrue(form.contains("scope=openid+profile+offline_access+User.Read"))
+            assertEquals(!claims.isNullOrEmpty(), form.contains("claims="))
+            assertFalse(request.toString().contains("id_token"))
+            assertFalse(request.parameters.toString().contains("id_token"))
+        }
+    }
+
+    @Test
+    fun verifyRequest_sendsEmptyAndShortOtpWithoutLocalRejection() {
+        listOf("", "1").forEach { otp ->
+            val request = NativeAuthV2VerifyRequest.create(
+                CONTINUATION_TOKEN, otp, "https://contoso.com/verify",
+                mapOf("Content-Type" to "application/json")
+            )
+            val serialized = JSONObject(ObjectMapper.serializeObjectToJsonString(request.parameters))
+            assertEquals(otp, serialized.getString("otp"))
+            assertFalse(serialized.has("scope"))
+            assertFalse(serialized.has("claims"))
+        }
+    }
+
+    @Test
+    fun authorizeChallenge_emptyScopes_omitsScope() {
+        val request = AuthorizeChallengeStartRequest.create(
+            clientId = CLIENT_ID,
+            scopes = emptyList(),
+            requestUrl = "https://contoso.com/oauth2/v2.0/authorize-challenge",
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
+        )
+        val form = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+        assertFalse(form.contains("scope="))
+    }
+
+    @Test
     fun jsonRequestParameters_serializeExpectedWireFieldsWithoutClientId() {
         val cases = listOf(
             NativeAuthV2EntryRequest.NativeAuthV2EntryRequestParameters(
@@ -61,6 +105,8 @@ class NativeAuthV2RequestSerializationTest {
             assertEquals(expected.toString(), serialized.toString())
             assertFalse(serialized.has("clientId"))
             assertFalse(serialized.has("client_id"))
+            assertFalse(serialized.has("scope"))
+            assertFalse(serialized.has("claims"))
         }
     }
 

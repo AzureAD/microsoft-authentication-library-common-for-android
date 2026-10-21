@@ -56,10 +56,14 @@ data class AuthUxTelemetryEvent(
 )
 
 /**
- * Receives validated Auth UX telemetry events from the JavaScript bridge.
+ * Host-provided destination for validated Auth UX telemetry events from the JavaScript bridge.
  *
- * Called on the WebView JavaBridge thread. Implementations must be non-blocking and make shared
- * telemetry state thread-safe.
+ * A sink is the terminal callback that consumes an event and applies the host-owned telemetry side
+ * effect. The bridge remains responsible only for parsing, validation, and delivery.
+ *
+ * Called synchronously on the active transport's callback thread: the WebView JavaBridge thread
+ * for `addJavascriptInterface`, or the UI thread for WebMessageListener. Implementations must be
+ * non-blocking and make shared telemetry state thread-safe.
  */
 fun interface AuthUxTelemetrySink {
     /**
@@ -74,8 +78,9 @@ fun interface AuthUxTelemetrySink {
 /**
  * JavaScript bridge for Auth UX messages handled by the broker.
  *
- * @property telemetrySink Optional sink for validated [ActionNames.LOG_TELEMETRY] events. When
- *  absent, telemetry messages are parsed and validated without producing a side effect.
+ * @property telemetrySink Optional host callback that consumes validated
+ *  [ActionNames.LOG_TELEMETRY] events. When absent, telemetry messages are parsed and validated
+ *  without producing a side effect.
  */
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
     private val telemetrySink: AuthUxTelemetrySink? = null,
@@ -122,24 +127,37 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             try {
                 uri = URI(uriString)
             } catch (e: URISyntaxException) {
-                Logger.warn(TAG, "URISyntaxException received. uri: $uriString, Message: ${e.message}")
+                Logger.warn(TAG, "URI syntax validation failed for the Auth UX JavaScript interface.")
                 return false
             }
 
-            val host = uri.host
+            return isValidHostForInterface(uri.host)
+        }
 
-            // A scheme-only URI (e.g. "openid-vc://?request_uri=...") has a null host. Such URIs
-            // are not AAD interface URIs, so reject them instead of throwing on a null host.
-            if (host == null) {
+        /**
+         * Returns whether [host] is a trusted Auth UX host.
+         *
+         * Host names are case-insensitive. The leading dot in each suffix intentionally requires a
+         * subdomain and rejects both the suffix apex and lookalike domains.
+         */
+        fun isValidHostForInterface(host: String?): Boolean {
+            if (host.isNullOrEmpty()) {
                 return false
             }
 
-            // Otherwise, make sure uri is a valid uri
-            // We only want to allow URIs that have the AAD uri hosts
-            return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX)
+            return host.endsWith(
+                AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX,
+                ignoreCase = true
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX,
+                ignoreCase = true
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX,
+                ignoreCase = true
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX,
+                ignoreCase = true
+            )
         }
     }
 
