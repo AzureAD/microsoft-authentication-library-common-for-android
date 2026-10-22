@@ -136,10 +136,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         }
 
         /**
-         * Returns whether [host] is a trusted Auth UX host.
+         * Checks [host] using the legacy case-sensitive Auth UX host suffix comparison.
          *
-         * Host names are case-insensitive. The leading dot in each suffix intentionally requires a
-         * subdomain and rejects both the suffix apex and lookalike domains.
+         * Callers must obtain [host] from strict [URI] parsing. This suffix comparison alone does
+         * not validate hostname syntax.
          */
         fun isValidHostForInterface(host: String?): Boolean {
             if (host.isNullOrEmpty()) {
@@ -147,17 +147,13 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             }
 
             return host.endsWith(
-                AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX,
-                ignoreCase = true
+                AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX
             ) || host.endsWith(
-                AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX,
-                ignoreCase = true
+                AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX
             ) || host.endsWith(
-                AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX,
-                ignoreCase = true
+                AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX
             ) || host.endsWith(
-                AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX,
-                ignoreCase = true
+                AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX
             )
         }
     }

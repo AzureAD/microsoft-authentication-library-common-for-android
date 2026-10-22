@@ -82,6 +82,39 @@ class AuthUxWebMessageListenerTest {
     }
 
     @Test
+    fun `malformed origins and uppercase suffixes never reach the processor`() {
+        val processor = RecordingProcessor()
+        val listener = AuthUxWebMessageListener(processor, AuthUxOriginPolicy())
+
+        listOf(
+            "https://.microsoftonline.com",
+            "https://login.microsoftonline.com:invalid",
+            "https://evil.example\\@login.microsoftonline.com",
+            "https://LOGIN.MICROSOFTONLINE.COM",
+            "https://login.MicrosoftOnline.com"
+        ).forEach { origin ->
+            listener.onPostMessage(
+                webView,
+                message("rejected"),
+                Uri.parse(origin),
+                true,
+                replyProxy
+            )
+        }
+
+        assertEquals(emptyList<String>(), processor.payloads)
+
+        listener.onPostMessage(
+            webView,
+            message("allowed"),
+            Uri.parse("https://login.microsoftonline.com"),
+            true,
+            replyProxy
+        )
+        assertEquals(listOf("allowed"), processor.payloads)
+    }
+
+    @Test
     fun `http default port message is allowed`() {
         val processor = RecordingProcessor()
         val listener = AuthUxWebMessageListener(processor, AuthUxOriginPolicy())

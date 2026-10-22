@@ -71,6 +71,7 @@ import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
@@ -379,8 +380,22 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testPageStarted_withoutManagedSession_doesNotInstallLegacyBridge() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
         final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(ProcessUtil.isRunningOnAuthService(mContext));
+        assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX));
+        assertTrue(AuthUxJavaScriptInterface.Companion
+                .isValidUriForInterface(TEST_PUBLIC_CLOUD_REDIRECT_URL));
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+
         mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
 
         Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
