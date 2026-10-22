@@ -270,7 +270,7 @@ class AuthUxBridgeSession private constructor(
                 )
                 return javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
             }
-            val allowedOrigins = originPolicy.getRegistrationOriginRules()
+            val allowedOrigins = originPolicy.getAllowedOriginRules()
 
             var listenerMayBeRegistered = false
             var scriptRegistrationAttempted = false

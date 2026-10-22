@@ -39,6 +39,7 @@ class AuthUxWebMessageListener(
     private val processor: AuthUxMessageProcessor,
     private val originPolicy: AuthUxOriginPolicy
 ) : WebViewCompat.WebMessageListener {
+
     @UiThread
     override fun onPostMessage(
         view: WebView,

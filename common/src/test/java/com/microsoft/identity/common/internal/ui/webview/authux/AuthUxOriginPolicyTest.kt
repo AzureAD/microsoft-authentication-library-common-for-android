@@ -49,7 +49,7 @@ class AuthUxOriginPolicyTest {
             "https://*.microsoft.com",
             "http://*.microsoft.com"
         )
-        assertEquals(expectedRules, policy.getRegistrationOriginRules())
+        assertEquals(expectedRules, policy.getAllowedOriginRules())
 
         listOf(
             "https://login.microsoftonline.com/path",
