@@ -161,7 +161,9 @@ interface NativeAuthV2CommandResult {
     data class NewPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
+        NativeAuthV2SubmitMFAChallengeCommandResult,
+        NativeAuthV2StrongAuthCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NewPasswordRequired(correlationId=$correlationId)"
 
@@ -173,15 +175,16 @@ interface NativeAuthV2CommandResult {
      * sign-in-after-reset command with [continuationState] to exchange it for tokens and persist
      * them to cache; no token exchange or cache write happens until then.
      *
-     * Applies only to the submit-new-password step, including its fast-forward and poll-completion
-     * paths. It is deliberately not reachable from the start, challenge, or submit-code steps: no
-     * new password has been supplied at those points, so the flow rejects a server-side completion
-     * signal there rather than returning a state that is exchangeable for tokens.
+     * Applies to the submit-new-password step, including its fast-forward and poll-completion
+     * paths, and to enrollment or MFA verification after that submission. It is deliberately not
+     * reachable before a new password has been supplied.
      */
     data class SignInAfterResetPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SubmitNewPasswordCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2SubmitNewPasswordCommandResult,
+        NativeAuthV2SubmitMFAChallengeCommandResult,
+        NativeAuthV2StrongAuthCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(correlationId=$correlationId)"
 
@@ -259,7 +262,8 @@ interface NativeAuthV2CommandResult {
      * The first factor succeeded and the server requires a second factor. [authMethods] are the
      * methods the server offered, in server order; the app must select one explicitly before any
      * challenge is sent.
-     * Applies to the sign-in start, submit-password, and first-factor submit-code steps.
+     * Applies to the sign-in start, submit-password, and first-factor submit-code steps,
+     * and to password-update completion when the reset flow requires a second factor.
      */
     data class MFARequired(
         override val correlationId: String,
@@ -268,6 +272,7 @@ interface NativeAuthV2CommandResult {
     ) : NativeAuthV2SignInStartCommandResult,
         NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2SubmitPasswordCommandResult,
+        NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2StrongAuthCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.MFARequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"

@@ -248,6 +248,97 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     }
 
     @Test
+    fun resetPasswordPollingCanRequireMfaBeforeExplicitSignIn() {
+        val updated = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
+            state(NativeAuthV2FlowScenario.RESET_PASSWORD))
+        val methods = listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00"))
+        val mfa = NativeAuthV2InteractionApiResult.MFARequired("cid", updated, methods)
+        every { strategy.performUpdatePassword(any(), any()) } returns
+            NativeAuthV2InteractionApiResult.PollInProgress("cid", updated, 0)
+        every { strategy.performPoll(updated) } returns mfa
+        val result = controller.submitNewPassword(configured(
+            NativeAuthV2SubmitNewPasswordCommandParameters.builder()
+                .continuationState(updated).newPassword("password".toCharArray())).build())
+        assertEquals(NativeAuthV2CommandResult.MFARequired("cid", updated, methods), result)
+        every { strategy.performMethodChallenge(updated, "sms-id") } returns
+            NativeAuthV2InteractionApiResult.CodeRequired("cid", updated, "***00", "sms", 6)
+        assertTrue(controller.selectMFAMethod(configured(
+            NativeAuthV2SelectMFAMethodCommandParameters.builder()
+                .continuationState(updated).methodId("sms-id")).build())
+            is NativeAuthV2CommandResult.MFAVerificationRequired)
+        every { strategy.performVerify(updated, "123456") } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", updated)
+        assertEquals(NativeAuthV2CommandResult.SignInAfterResetPasswordRequired("cid", updated),
+            controller.submitMFAChallenge(configured(
+                NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
+                    .continuationState(updated).code("123456")).build()))
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun resetPasswordUpdateAndActivationCanRequireMfa() {
+        val updated = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
+            state(NativeAuthV2FlowScenario.RESET_PASSWORD))
+        val methods = listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00"))
+        val mfa = NativeAuthV2InteractionApiResult.MFARequired("cid", updated, methods)
+        every { strategy.performUpdatePassword(any(), any()) } returns mfa
+        every { strategy.performActivate(updated, "123456") } returns mfa
+        val expected = NativeAuthV2CommandResult.MFARequired("cid", updated, methods)
+        assertEquals(expected, controller.submitNewPassword(configured(
+            NativeAuthV2SubmitNewPasswordCommandParameters.builder()
+                .continuationState(updated).newPassword("password".toCharArray())).build()))
+        assertEquals(expected, controller.activate(
+            NativeAuthV2ActivateCommandParameters(builder(updated), updated, "123456")))
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun resetMfaBeforePasswordUpdateReturnsPasswordCollectionButCannotComplete() {
+        val prior = state(NativeAuthV2FlowScenario.RESET_PASSWORD)
+        val parameters = configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
+            .continuationState(prior).code("123456")).build()
+        every { strategy.performVerify(prior, "123456") } returns
+            NativeAuthV2InteractionApiResult.UpdateRequired("cid", prior)
+        assertEquals(NativeAuthV2CommandResult.NewPasswordRequired("cid", prior),
+            controller.submitMFAChallenge(parameters))
+        every { strategy.performVerify(prior, "123456") } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete("cid", prior)
+        assertTrue(controller.submitMFAChallenge(parameters) is INativeAuthCommandResult.APIError)
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun resetPasswordPollingCanEnrollSmsOrEmailAndResumeAfterActivation() {
+        val updated = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
+            state(NativeAuthV2FlowScenario.RESET_PASSWORD))
+        listOf("sms", "email").forEach { channel ->
+            val method = NativeAuthV2AuthMethod("method-$channel", channel, null)
+            every { strategy.performUpdatePassword(any(), any()) } returns
+                NativeAuthV2InteractionApiResult.PollInProgress("cid", updated, 0)
+            every { strategy.performPoll(updated) } returns
+                NativeAuthV2InteractionApiResult.RegistrationRequired("cid", updated, listOf(method))
+            val registration = controller.submitNewPassword(configured(
+                NativeAuthV2SubmitNewPasswordCommandParameters.builder()
+                    .continuationState(updated).newPassword("password".toCharArray())).build())
+                as NativeAuthV2CommandResult.StrongAuthRegistrationRequired
+            assertEquals(listOf(method), registration.authMethods)
+            assertSame(updated, registration.continuationState)
+            every { strategy.performEnroll(updated, method.id, "contact") } returns
+                NativeAuthV2InteractionApiResult.ActivationRequired("cid", updated, "masked", 6)
+            val verification = controller.enroll(NativeAuthV2EnrollCommandParameters(
+                builder(updated), registration.continuationState, method.id, "contact"))
+                as NativeAuthV2CommandResult.StrongAuthVerificationRequired
+            every { strategy.performActivate(updated, "123456") } returns
+                NativeAuthV2InteractionApiResult.ReadyToComplete("cid", updated)
+            assertEquals(NativeAuthV2CommandResult.SignInAfterResetPasswordRequired("cid", updated),
+                controller.activate(NativeAuthV2ActivateCommandParameters(
+                    builder(updated), verification.continuationState, "123456")))
+        }
+        verify(exactly = 2) { strategy.performPoll(updated) }
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
     fun activationPreservesServiceOtpErrorsAndRejectsUnsupportedActions() {
         val prior = state()
         every { strategy.performActivate(prior, "") } returns

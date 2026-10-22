@@ -141,6 +141,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> mapInteractionError(result)
             }
             NativeAuthV2FlowScenario.RESET_PASSWORD -> when (result) {
+                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                    result.correlationId, result.continuationState, result.methods
+                )
                 is NativeAuthV2InteractionApiResult.UpdateRequired -> NativeAuthV2CommandResult.NewPasswordRequired(
                     result.correlationId, result.continuationState
                 )
@@ -677,6 +680,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             return when (updateResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(updateResult)
+                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                    updateResult.correlationId, updateResult.continuationState, updateResult.methods
+                )
                 is NativeAuthV2InteractionApiResult.PollInProgress -> pollUntilComplete(
                     oAuth2Strategy = oAuth2Strategy,
                     pollState = updateResult.continuationState,
@@ -744,6 +750,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             when (pollResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> return registrationRequired(pollResult)
+                is NativeAuthV2InteractionApiResult.MFARequired -> return NativeAuthV2CommandResult.MFARequired(
+                    pollResult.correlationId, pollResult.continuationState, pollResult.methods
+                )
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> return NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
                     correlationId = pollResult.correlationId,
                     continuationState = pollResult.continuationState
@@ -1124,6 +1133,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Submits the multi-factor one-time code and, on success, completes the flow through
      * authorize-challenge continue, the authorization-code token exchange, and cache persistence.
+     * Password reset instead resumes password collection or, after a new password was submitted,
+     * returns [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] for explicit sign-in.
      * A wrong code becomes [NativeAuthV2CommandResult.IncorrectCode], which the app can retry from
      * the state it already holds.
      */
@@ -1144,13 +1155,26 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(verifyResult)
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parametersBuilder = parameters.toBuilder(),
-                    scopes = verifyResult.continuationState.scopesForTokenRequest(),
-                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
-                    state = verifyResult.continuationState
-                )
+                is NativeAuthV2InteractionApiResult.UpdateRequired ->
+                    if (parameters.continuationState.flowScenario() == NativeAuthV2FlowScenario.RESET_PASSWORD) {
+                        NativeAuthV2CommandResult.NewPasswordRequired(
+                            verifyResult.correlationId, verifyResult.continuationState
+                        )
+                    } else mapInteractionError(verifyResult)
+                is NativeAuthV2InteractionApiResult.ReadyToComplete ->
+                    if (parameters.continuationState.flowScenario() == NativeAuthV2FlowScenario.RESET_PASSWORD) {
+                        if (verifyResult.continuationState.isResetPasswordUpdateSubmitted()) {
+                            NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
+                                verifyResult.correlationId, verifyResult.continuationState
+                            )
+                        } else mapInteractionError(verifyResult)
+                    } else completeSignIn(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parametersBuilder = parameters.toBuilder(),
+                        scopes = verifyResult.continuationState.scopesForTokenRequest(),
+                        claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
+                        state = verifyResult.continuationState
+                    )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
                     correlationId = verifyResult.correlationId,
                     error = verifyResult.error,
