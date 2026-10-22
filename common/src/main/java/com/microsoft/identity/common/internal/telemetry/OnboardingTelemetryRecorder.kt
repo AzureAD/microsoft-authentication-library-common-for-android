@@ -39,8 +39,7 @@ import java.util.Locale
  * Records onboarding telemetry events during interactive auth flows.
  * Called by WebView navigation fragments to track steps, blocking errors,
  * and domain navigation. Operates on an in-memory model, converts
- * to JSON at flow end. On block detection, persists sessionCorrelationId
- * to SharedPreferences for app-kill resilience (best-effort, async).
+ * to JSON at flow end. Session correlation persistence is owned by OneAuth's native cache.
  *
  * Lives in Android common core so both OneAuth (non-brokered) and broker apps
  * (brokered) use the same class.
@@ -54,31 +53,22 @@ import java.util.Locale
  *                  If null/blank/malformed, the recorder still functions but with empty
  *                  seed fields; a warning is logged and `finalizeBlob()` will refuse to
  *                  emit a blob with an empty `sessionCorrelationId`.
- * @param clientId  Client (application) ID, used as part of the SharedPreferences
- *                  cache key for session correlation persistence.
- * @param target    Target scopes (space-joined, sorted) for the same cache key.
- * @param context   Any Android context; the application context is captured internally
- *                  so the recorder can outlive the originating Activity/Fragment without
- *                  leaking it.
+ * @param clientId  Unused; retained for compatibility with existing callers.
+ * @param target    Unused; retained for compatibility with existing callers.
+ * @param context   Unused and not retained; kept for compatibility with existing callers.
  */
+@Suppress("UNUSED_PARAMETER")
 class OnboardingTelemetryRecorder(
     seedJson: String,
-    private val clientId: String,
-    private val target: String, // sorted, space-joined scopes
+    clientId: String,
+    target: String,
     context: Context
 ) : IOnboardingTelemetryRecorder {
     /**
      * Protects this recorder instance's mutable in-memory telemetry state.
-     *
-     * Each request owns a separate recorder and therefore a separate lock. This lock must not
-     * be used for the SharedPreferences cache, which is shared by all recorder instances in
-     * the process.
+     * Each request owns a separate recorder and therefore a separate lock.
      */
     private val stateLock = Any()
-
-    // Use applicationContext so this recorder, which may outlive the originating
-    // Activity/Fragment, never holds a reference that would leak that context.
-    private val appContext: Context = context.applicationContext
 
     // Seed fields (from C++ common core)
     private val schemaVersion: String
@@ -143,8 +133,6 @@ class OnboardingTelemetryRecorder(
 
     /**
      * Record a blocking error detected during the flow.
-     * Also persists the session correlation entry to SharedPreferences
-     * (best-effort, async) for app-kill resilience.
      *
      * @param errorCode The onboarding blocking-error identifier to record
      *                  (e.g., [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL]
@@ -155,8 +143,6 @@ class OnboardingTelemetryRecorder(
         synchronized(stateLock) {
             blockingErrors.add(errorCode)
         }
-        // Persist session correlation to SharedPreferences immediately on block
-        persistSessionCorrelation()
     }
 
     /**
@@ -294,58 +280,9 @@ class OnboardingTelemetryRecorder(
         }
     }
 
-    /**
-     * Persist session correlation entry to SharedPreferences.
-     * Uses async [SharedPreferences.Editor.apply] — the in-memory write is
-     * effective immediately, and the disk flush happens shortly after. Acceptable
-     * for this use case: blocking errors leave the app alive for seconds-to-minutes
-     * of user remediation, so the flush window is far longer than typical loss.
-     * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
-     * Called on block detection.
-     */
-    private fun persistSessionCorrelation() {
-        if (sessionCorrelationId.isEmpty()) {
-            Logger.verbose(TAG, "persistSessionCorrelation: skipped — no sessionCorrelationId")
-            return
-        }
-
-        val key = "$clientId|$target" // target = sorted, space-joined scopes
-        try {
-            synchronized(SESSION_CACHE_LOCK) {
-                val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
-                val existing = prefs.getString(PREFS_FILE, "")
-                val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
-
-                val entry = JSONObject().apply {
-                    put(FIELD_ID, sessionCorrelationId)
-                    put(FIELD_TS, System.currentTimeMillis())
-                }
-                cache.put(key, entry)
-
-                prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
-            }
-            Logger.verbose(
-                TAG,
-                sessionCorrelationId,
-                "Persisted session correlation entry for key=$key"
-            )
-        } catch (e: JSONException) {
-            Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
-        }
-    }
-
     companion object {
         private val TAG = OnboardingTelemetryRecorder::class.java.simpleName
 
-        /**
-         * Protects the process-wide session-correlation cache read-modify-write transaction.
-         *
-         * SharedPreferences makes individual operations thread-safe, but multiple recorder
-         * instances must share this lock so one recorder cannot overwrite entries persisted
-         * concurrently by another recorder.
-         */
-        private val SESSION_CACHE_LOCK = Any()
-        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
         private const val ISO_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
         // Seed field key constants — must match OnboardingBlobConstants (Djinni-generated).
@@ -356,7 +293,6 @@ class OnboardingTelemetryRecorder(
         private const val FIELD_STEPS_LIST = "steps_list"
         private const val FIELD_STEP_ID = "step_id"
         private const val FIELD_TS = "ts"
-        private const val FIELD_ID = "id"
     }
 
     private data class RecorderSnapshot(
