@@ -54,6 +54,7 @@ class AuthUxOriginPolicyTest {
         listOf(
             "https://login.microsoftonline.com/path",
             "https://login.microsoftonline.com:443/path",
+            "HTTPS://login.microsoftonline.com/path",
             "http://login.microsoftonline.us/path",
             "http://login.microsoftonline.us:80/path",
             "https://login.microsoftonline.cn/path",
@@ -76,25 +77,87 @@ class AuthUxOriginPolicyTest {
         )
         assertFalse(policy.isInitialUrlSupportedByRegistrationRules("about:blank"))
         assertFalse(policy.isInitialUrlSupportedByRegistrationRules(null))
+        assertFalse(policy.isInitialUrlSupportedByRegistrationRules(""))
     }
 
     @Test
-    fun `initial origin validation ignores query syntax and host casing`() {
+    fun `initial URL validation retains full Java URI syntax checks`() {
+        listOf(
+            "https://login.microsoftonline.com/oauth2/authorize?claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/oauth2/authorize#claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/%"
+        ).forEach { url ->
+            assertFalse(url, policy.isInitialUrlSupportedByRegistrationRules(url))
+        }
+    }
+
+    @Test
+    fun `encoded claims are supported by registration policy`() {
         assertTrue(
             policy.isInitialUrlSupportedByRegistrationRules(
-                "https://LOGIN.MICROSOFTONLINE.COM/oauth2/authorize?claims={\"access_token\":{}}"
+                "https://login.microsoftonline.com/oauth2/authorize" +
+                    "?claims=%7B%22access_token%22%3A%7B%7D%7D"
             )
         )
+    }
+
+    @Test
+    fun `initial and callback validation retain case-sensitive matching for every suffix`() {
+        listOf(
+            "microsoftonline.com" to "MicrosoftOnline.com",
+            "microsoft.com" to "Microsoft.com",
+            "microsoftonline.us" to "MicrosoftOnline.us",
+            "microsoftonline.cn" to "MicrosoftOnline.cn"
+        ).forEach { (suffix, mixedCaseSuffix) ->
+            listOf(
+                "https://LOGIN.${suffix.uppercase()}",
+                "https://login.$mixedCaseSuffix"
+            ).forEach { origin ->
+                assertFalse(
+                    origin,
+                    policy.isInitialUrlSupportedByRegistrationRules("$origin/path")
+                )
+                assertFalse(origin, policy.isAllowedCallback(Uri.parse(origin), isMainFrame = true))
+            }
+            listOf("login", "LOGIN").forEach { subdomain ->
+                val origin = "https://$subdomain.$suffix"
+                assertTrue(
+                    origin,
+                    policy.isInitialUrlSupportedByRegistrationRules("$origin/path")
+                )
+                assertTrue(origin, policy.isAllowedCallback(Uri.parse(origin), isMainFrame = true))
+            }
+        }
+    }
+
+    @Test
+    fun `initial and callback validation reject malformed authorities`() {
+        listOf(
+            "https://.microsoftonline.com",
+            "https://login.microsoftonline.com:invalid",
+            "https://evil.example\\@login.microsoftonline.com"
+        ).forEach { origin ->
+            assertFalse(
+                origin,
+                policy.isInitialUrlSupportedByRegistrationRules("$origin/path")
+            )
+            assertFalse(origin, policy.isAllowedCallback(Uri.parse(origin), isMainFrame = true))
+        }
     }
 
     @Test
     fun `callback requires registration-rule origin and main frame`() {
-        assertTrue(
-            policy.isAllowedCallback(
-                Uri.parse("https://login.microsoftonline.com"),
-                isMainFrame = true
+        listOf(
+            "https://login.microsoftonline.com",
+            "https://login.microsoftonline.com:443",
+            "http://login.microsoftonline.com",
+            "http://login.microsoftonline.com:80"
+        ).forEach { origin ->
+            assertTrue(
+                origin,
+                policy.isAllowedCallback(Uri.parse(origin), isMainFrame = true)
             )
-        )
+        }
         assertFalse(
             policy.isAllowedCallback(
                 Uri.parse("https://login.microsoftonline.com"),

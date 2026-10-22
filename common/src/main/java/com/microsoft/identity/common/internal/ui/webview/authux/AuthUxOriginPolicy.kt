@@ -26,6 +26,8 @@ package com.microsoft.identity.common.internal.ui.webview.authux
 import android.net.Uri
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.logging.Logger
+import java.net.URI
+import java.net.URISyntaxException
 
 /**
  * Defines the security boundary for exposing the WebMessageListener-based Auth UX bridge.
@@ -39,10 +41,14 @@ import com.microsoft.identity.common.logging.Logger
  * HTTPS port 443. An initial URL outside that representable contract uses the
  * `addJavascriptInterface` bridge. An omitted port is interpreted as the scheme's default; an
  * explicit non-default port is a distinct origin and is not authorized by the registration rules.
+ *
+ * Initial URLs are parsed in full with [URI], retaining legacy URL-syntax and case-sensitive host
+ * suffix checks. Callbacks supply only a source origin; validating that representation does not
+ * validate the sending document's path, query, or fragment.
  */
 open class AuthUxOriginPolicy {
     /**
-     * Returns whether [initialUrl] is covered by the fixed registration origin rules.
+     * Returns whether [initialUrl] passes legacy syntax checks and the registration origin policy.
      */
     open fun isInitialUrlSupportedByRegistrationRules(initialUrl: String?): Boolean {
         if (initialUrl.isNullOrEmpty()) {
@@ -50,7 +56,7 @@ open class AuthUxOriginPolicy {
             return false
         }
 
-        val isSupported = isOriginSupportedByRegistrationRules(Uri.parse(initialUrl))
+        val isSupported = isOriginSupportedByRegistrationRules(initialUrl)
         if (!isSupported) {
             Logger.info(
                 TAG,
@@ -68,7 +74,8 @@ open class AuthUxOriginPolicy {
     open fun getRegistrationOriginRules(): Set<String> = REGISTRATION_ORIGIN_RULES
 
     /**
-     * Allows callbacks only from a main frame whose origin matches the registration policy.
+     * Allows callbacks only from a main frame whose source-origin string passes Java URI parsing
+     * and the registration policy. The callback origin does not include the document's full URL.
      */
     open fun isAllowedCallback(sourceOrigin: Uri, isMainFrame: Boolean): Boolean {
         if (!isMainFrame) {
@@ -76,17 +83,24 @@ open class AuthUxOriginPolicy {
             return false
         }
 
-        return isOriginSupportedByRegistrationRules(sourceOrigin)
+        return isOriginSupportedByRegistrationRules(sourceOrigin.toString())
     }
 
     /**
-     * Applies the same scheme, host, and port contract used by AndroidX registration rules.
+     * Applies strict Java URI parsing and legacy host checks before registration-rule constraints.
      *
-     * Android [Uri] uses `-1` when no port is written, so omitted ports and explicit defaults
-     * (`:80` for HTTP and `:443` for HTTPS) are accepted. Other ports are rejected because they
-     * identify distinct origins that the registration rules do not authorize.
+     * A nonempty Java URI host is required before interpreting the port. [URI] uses `-1` when no
+     * port is written, so omitted ports and explicit defaults (`:80` for HTTP and `:443` for HTTPS)
+     * are accepted. Other ports identify origins that the registration rules do not authorize.
      */
-    private fun isOriginSupportedByRegistrationRules(origin: Uri): Boolean {
+    private fun isOriginSupportedByRegistrationRules(uriString: String): Boolean {
+        val origin = try {
+            URI(uriString)
+        } catch (_: URISyntaxException) {
+            Logger.warn(TAG, "URI syntax validation failed for the Auth UX origin policy.")
+            return false
+        }
+
         if (origin.isOpaque || origin.host.isNullOrEmpty()) {
             Logger.info(TAG, "Origin is opaque or has no host.")
             return false
