@@ -383,6 +383,14 @@ Instrumentation:
 - Add or reuse meaningful spans (do not proliferate trivial micro-spans).
 - Numeric attributes for duration rather than new spans for small code blocks.
 
+### 5.1 Memory and Storage Performance Across Every PR
+
+Apply the [general memory and storage performance screen](skills/code-review/references/performance-resources-dependencies.md#general-memory-and-storage-performance-screen) to every production-code PR, including new features outside authentication/cache code. Check unnecessary whole-data work, repeated reads/decryption/parsing, allocation/copy amplification, collection complexity, cache reuse, retention bounds/invalidation, and work on request/UI paths or under locks. Trace affected callers and callees, including unchanged helpers newly invoked or called more often; do not audit unrelated legacy code.
+
+ATS illustrates this general rule: preserve reusable in-memory account/credential caching and avoid full token-cache decryption during routine saves, including cleanup, metadata, logging, and telemetry helpers. Apply the [ATS examples](skills/code-review/references/performance-resources-dependencies.md#acquiretokensilent-ats-regression-checks) where relevant, but do not restrict checks to ATS or previously optimized classes. Require concrete frequency/scaling/memory-impact evidence, not speculative micro-optimizations; preserve encryption, persistence, synchronization, isolation, freshness, and defensive-copy semantics.
+
+For attribution, append the standalone line `Review rule: memory-storage/v1` once to each actionable finding supported by this guidance. After applying the screen, include `Review screen: memory-storage/v1` and `Guidance revision: unknown` as standalone review-summary lines, including zero-finding reviews; replace `unknown` only with a verified guidance commit SHA or `local-uncommitted` for local guidance edits. See the [attribution contract](skills/code-review/references/performance-resources-dependencies.md#attribution-memory-storagev1); do not tag unrelated findings or claim the marker proves incremental benefit.
+
 --------------------------------------------------------------------------------
 
 ## 6. Telemetry & Observability

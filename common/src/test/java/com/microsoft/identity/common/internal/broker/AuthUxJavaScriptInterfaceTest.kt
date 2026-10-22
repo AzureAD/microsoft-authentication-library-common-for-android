@@ -908,9 +908,65 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test isValidUrlForInterface with mixed-case AAD Global host`() {
-        val validUrl = "https://LOGIN.MICROSOFTONLINE.COM/common/oauth2/authorize"
+    fun `test isValidUriForInterface rejects uppercase and mixed-case trusted suffixes`() {
+        listOf(
+            "microsoftonline.com" to "MicrosoftOnline.com",
+            "microsoft.com" to "Microsoft.com",
+            "microsoftonline.us" to "MicrosoftOnline.us",
+            "microsoftonline.cn" to "MicrosoftOnline.cn"
+        ).forEach { (suffix, mixedCaseSuffix) ->
+            listOf(
+                "LOGIN.${suffix.uppercase()}",
+                "login.$mixedCaseSuffix"
+            ).forEach { host ->
+                val url = "https://$host/common/oauth2/authorize"
+                Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts lowercase suffixes with either subdomain casing`() {
+        listOf(
+            "microsoftonline.com",
+            "microsoft.com",
+            "microsoftonline.us",
+            "microsoftonline.cn"
+        ).forEach { suffix ->
+            listOf("login", "LOGIN").forEach { subdomain ->
+                val url = "https://$subdomain.$suffix/common/oauth2/authorize"
+                Assert.assertTrue(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects raw claims in query and fragment`() {
+        listOf(
+            "https://login.microsoftonline.com/oauth2/authorize?claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/oauth2/authorize#claims={\"access_token\":{}}"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts encoded claims`() {
+        val validUrl = "https://login.microsoftonline.com/oauth2/authorize" +
+            "?claims=%7B%22access_token%22%3A%7B%7D%7D"
+
         Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects malformed authorities`() {
+        listOf(
+            "https://.microsoftonline.com/path",
+            "https://login.microsoftonline.com:invalid/path",
+            "https://evil.example\\@login.microsoftonline.com/path"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
     }
 
     @Test

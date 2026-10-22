@@ -98,6 +98,104 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
+    fun `rejected URLs expose neither transport until approved legacy navigation`() {
+        listOf(
+            "$LOGIN_URL?claims={\"access_token\":{}}",
+            "$LOGIN_URL#claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/%",
+            "https://LOGIN.MICROSOFTONLINE.COM/path",
+            "https://login.MicrosoftOnline.com/path",
+            "https://.microsoftonline.com/path",
+            "https://login.microsoftonline.com:invalid/path",
+            "https://evil.example\\@login.microsoftonline.com/path"
+        ).forEach { url ->
+            val view = mock(WebView::class.java)
+            val adapter = FakeWebKitAdapter()
+            val session = AuthUxBridgeSession.create(
+                view,
+                url,
+                true,
+                null,
+                true,
+                adapter
+            )
+
+            assertEquals(url, AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+            assertFalse(url, adapter.listenerAdded)
+            assertFalse(url, adapter.scriptAdded)
+            session.onPageStarted(view, url)
+            session.onPageFinished(view)
+            verify(view, never()).addJavascriptInterface(any(), eq("broker"))
+            verify(view, never()).evaluateJavascript(any(), any())
+
+            session.onPageStarted(view, LOGIN_URL)
+            session.onPageFinished(view)
+            verify(view).addJavascriptInterface(any(), eq("broker"))
+            verify(view).evaluateJavascript(any(), any())
+
+            session.onPageStarted(view, url)
+            session.onPageFinished(view)
+            verify(view).removeJavascriptInterface("broker")
+            verify(view, times(1)).evaluateJavascript(any(), any())
+
+            session.onPageStarted(view, ENCODED_CLAIMS_URL)
+            session.onPageFinished(view)
+            verify(view, times(2)).addJavascriptInterface(any(), eq("broker"))
+            verify(view, times(2)).evaluateJavascript(any(), any())
+
+            session.close()
+            verify(view, times(2)).removeJavascriptInterface("broker")
+        }
+    }
+
+    @Test
+    fun `encoded claims select WebMessageListener when both features are supported`() {
+        val adapter = FakeWebKitAdapter()
+        val session = AuthUxBridgeSession.create(
+            webView,
+            ENCODED_CLAIMS_URL,
+            true,
+            null,
+            true,
+            adapter
+        )
+
+        assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, session.mode)
+        assertTrue(adapter.listenerAdded)
+        assertTrue(adapter.scriptAdded)
+        assertEquals(adapter.listenerAllowedOrigins, adapter.scriptAllowedOrigins)
+        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+        session.close()
+    }
+
+    @Test
+    fun `encoded claims use legacy when either required feature is unavailable`() {
+        listOf(
+            FakeWebKitAdapter(listenerSupported = false),
+            FakeWebKitAdapter(documentStartSupported = false)
+        ).forEach { adapter ->
+            val view = mock(WebView::class.java)
+            val session = AuthUxBridgeSession.create(
+                view,
+                ENCODED_CLAIMS_URL,
+                true,
+                null,
+                true,
+                adapter
+            )
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+            assertFalse(adapter.listenerAdded)
+            assertFalse(adapter.scriptAdded)
+            verify(view).addJavascriptInterface(any(), eq("broker"))
+            session.onPageFinished(view)
+            verify(view).evaluateJavascript(any(), any())
+            session.close()
+            verify(view).removeJavascriptInterface("broker")
+        }
+    }
+
+    @Test
     fun `non-default port selects JavaScript interface`() {
         val session = AuthUxBridgeSession.create(
             webView,
@@ -522,6 +620,8 @@ class AuthUxBridgeSessionTest {
 
     companion object {
         private const val LOGIN_URL = "https://login.microsoftonline.com/common/oauth2/authorize"
+        private const val ENCODED_CLAIMS_URL =
+            "$LOGIN_URL?claims=%7B%22access_token%22%3A%7B%7D%7D"
         private const val FEDERATED_URL = "https://federation.example.com/login"
     }
 }
