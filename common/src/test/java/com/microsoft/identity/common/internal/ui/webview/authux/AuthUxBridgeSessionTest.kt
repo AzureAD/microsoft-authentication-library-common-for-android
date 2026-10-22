@@ -115,7 +115,7 @@ class AuthUxBridgeSessionTest {
                 view,
                 url,
                 true,
-                false,
+                null,
                 true,
                 adapter
             )
@@ -155,7 +155,7 @@ class AuthUxBridgeSessionTest {
             webView,
             ENCODED_CLAIMS_URL,
             true,
-            false,
+            null,
             true,
             adapter
         )
@@ -179,7 +179,7 @@ class AuthUxBridgeSessionTest {
                 view,
                 ENCODED_CLAIMS_URL,
                 true,
-                false,
+                null,
                 true,
                 adapter
             )

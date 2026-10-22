@@ -90,7 +90,7 @@ class AuthUxJsonPayloadTest {
             }
         """.trimIndent()
 
-        // This should throw an exception because "action_component" and "params" is missing
+        // Missing action_component must throw; params is optional.
         gson.fromJson(json, AuthUxJsonPayload::class.java)
 
     }

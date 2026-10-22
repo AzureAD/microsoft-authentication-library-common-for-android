@@ -379,6 +379,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
         );
         return event -> {
+            // Bind page-reported errors to this host request before mutating its onboarding blob.
+            // Use the captured ID, not mutable thread-local context or the recorder's seed ID,
+            // so an unrelated request's error cannot be attributed to this request.
+            if (StringUtil.isNullOrEmpty(mCorrelationId)
+                    || DiagnosticContext.UNSET_CORRELATION_ID.equals(mCorrelationId)) {
+                Logger.info(
+                        methodTag,
+                        "Auth UX telemetry occurrence was excluded because the host request "
+                                + "correlation ID is unavailable."
+                );
+                return true;
+            }
+            if (!mCorrelationId.equals(event.getCorrelationId())) {
+                Logger.info(
+                        methodTag,
+                        "Auth UX telemetry occurrence was excluded because its correlation ID "
+                                + "does not match the host request."
+                );
+                return true;
+            }
             final String blockingError =
                     OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
             if (blockingError == null) {
