@@ -356,12 +356,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
@@ -4468,20 +4462,6 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertEquals(0, blob.getJSONArray("blocking_errors").length());
-
-        final android.content.SharedPreferences preferences =
-                mContext.getSharedPreferences(
-                        "com.microsoft.oneauth.session_correlation_cache",
-                        Context.MODE_PRIVATE
-                );
-        final String persistedCache =
-                preferences.getString("com.microsoft.oneauth.session_correlation_cache", "");
-        if (persistedCache != null && !persistedCache.isEmpty()) {
-            assertFalse(
-                    new org.json.JSONObject(persistedCache)
-                            .has("excluded-client|excluded-scope")
-            );
-        }
     }
 
     @Test

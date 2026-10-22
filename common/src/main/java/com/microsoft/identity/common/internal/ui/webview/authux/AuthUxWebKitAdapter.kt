@@ -33,10 +33,16 @@ import com.microsoft.identity.common.logging.Logger
  * Injectable boundary around AndroidX WebKit APIs used by the Auth UX transport.
  */
 interface AuthUxWebKitAdapter {
+    /** Returns whether the active WebView provider supports WebMessageListener. */
     fun isWebMessageListenerSupported(): Boolean
 
+    /** Returns whether the active WebView provider supports document-start scripts. */
     fun isDocumentStartScriptSupported(): Boolean
 
+    /**
+     * Installs [listener] as [objectName] in documents matching [allowedOriginRules] on [webView].
+     * Callers must first verify [isWebMessageListenerSupported].
+     */
     fun addWebMessageListener(
         webView: WebView,
         objectName: String,
@@ -44,8 +50,15 @@ interface AuthUxWebKitAdapter {
         listener: WebViewCompat.WebMessageListener
     )
 
+    /** Removes the listener installed as [objectName] on [webView]. */
     fun removeWebMessageListener(webView: WebView, objectName: String)
 
+    /**
+     * Installs [script] to run at document start for origins matching [allowedOriginRules] on
+     * [webView]. Callers must first verify [isDocumentStartScriptSupported].
+     *
+     * @return A handle used to remove the script during teardown.
+     */
     fun addDocumentStartScript(
         webView: WebView,
         script: String,
@@ -53,6 +66,13 @@ interface AuthUxWebKitAdapter {
     ): ScriptHandler
 }
 
+/**
+ * Production implementation of [AuthUxWebKitAdapter] that delegates feature checks, listener
+ * installation and removal, and document-start script installation to AndroidX WebKit.
+ *
+ * Callers must verify the corresponding feature is supported before installing a listener or
+ * document-start script.
+ */
 object DefaultAuthUxWebKitAdapter : AuthUxWebKitAdapter {
     override fun isWebMessageListenerSupported(): Boolean {
         val isSupported =

@@ -68,10 +68,10 @@ open class AuthUxOriginPolicy {
     }
 
     /**
-     * Returns the registration-time access-control rules shared by the native listener and
+     * Returns the allowed origins for documents receiving the native WebMessageListener object and
      * document-start facade.
      */
-    open fun getRegistrationOriginRules(): Set<String> = REGISTRATION_ORIGIN_RULES
+    open fun getAllowedOriginRules(): Set<String> = ALLOWED_ORIGIN_RULES
 
     /**
      * Allows callbacks only from a main frame whose source-origin string passes Java URI parsing
@@ -135,12 +135,13 @@ open class AuthUxOriginPolicy {
         private const val HTTPS_DEFAULT_PORT = 443
 
         /**
-         * Registration-time security boundary for the WebMessageListener-based Auth UX bridge.
+         * Allowed origins for documents receiving the native WebMessageListener object and
+         * document-start facade.
          *
          * Do not replace with `"*"` or broaden independently of callback validation. Doing so would
          * expose the native object or facade to documents outside the approved Auth UX origins.
          */
-        private val REGISTRATION_ORIGIN_RULES = setOf(
+        private val ALLOWED_ORIGIN_RULES = setOf(
             "https://*.microsoftonline.com",
             "http://*.microsoftonline.com",
             "https://*.microsoftonline.us",

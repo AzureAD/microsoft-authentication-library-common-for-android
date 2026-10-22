@@ -24,10 +24,19 @@
 package com.microsoft.identity.common.internal.ui.webview.authux
 
 /**
- * Immutable Auth UX messaging transport selected for one authorization request.
+ * Defines how Auth UX page JavaScript sends messages to native code for an authorization request.
+ *
+ * The mode is selected before navigation and retained for the request lifetime. A request uses
+ * either the legacy JavaScript interface or the WebMessageListener transport, never both.
+ * Both enabled modes delegate messages to the same request-owned message processor.
  */
 enum class AuthUxTransportMode {
+    /** No Auth UX messaging bridge is exposed. */
     DISABLED,
+
+    /** Uses Android's legacy addJavascriptInterface bridge with a page-facing compatibility facade. */
     JAVASCRIPT_INTERFACE,
+
+    /** Uses an origin-scoped AndroidX WebMessageListener with a document-start compatibility facade. */
     WEB_MESSAGE_LISTENER
 }
