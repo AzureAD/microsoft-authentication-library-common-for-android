@@ -101,13 +101,13 @@ interface NativeAuthV2CommandResult {
         override fun toUnsanitizedString(): String = toString()
     }
 
-    /** The service sent an activation code to the newly enrolled method. No resend is exposed. */
+    /** The service sent or resent an activation code; the successor retains its current links. */
     data class StrongAuthVerificationRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val codeLength: Int,
         val challengeTargetLabel: String
-    ) : NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2StrongAuthCommandResult, NativeAuthV2ResendCodeCommandResult {
         override fun toString(): String = "StrongAuthVerificationRequired(correlationId=$correlationId, codeLength=$codeLength)"
         override fun toUnsanitizedString(): String = toString()
     }

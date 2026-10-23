@@ -112,18 +112,37 @@ class NativeAuthV2EnrollmentTest {
     }
 
     @Test
-    fun activationRequiresExplicitLinkAndCodeMetadata() {
+    fun activationRequiresExplicitLinkAndPositiveIntegerCodeLength() {
         val valid = """{"action":"activate","continuationToken":"new","hint":"masked","codeLength":6,
             "_links":{"activate":{"href":"/activate?dc=1"}}}"""
         val result = parser.parseInteraction(response(valid), initial())
         assertTrue(result is NativeAuthV2InteractionApiResult.ActivationRequired)
         result as NativeAuthV2InteractionApiResult.ActivationRequired
         assertEquals("/activate?dc=1", result.continuationState.href(NativeAuthV2LinkRelation.ACTIVATE))
-        listOf(valid.replace("activate\":{\"href", "verify\":{\"href"),
-            valid.replace("\"codeLength\":6", "\"codeLength\":0"),
-            valid.replace("\"hint\":\"masked\",", "")
-        ).forEach {
-            assertTrue(parser.parseInteraction(response(it), initial()) is NativeAuthV2InteractionApiResult.UnknownError)
+        val invalid = listOf(
+            valid.replace("activate\":{\"href", "verify\":{\"href"),
+            valid.replace("\"codeLength\":6,", ""),
+            valid.replace("\"continuationToken\":\"new\",", "")
+        ) + listOf("0", "-1", "6.5", "2147483648", "\"6\"", "true", "null").map {
+            valid.replace("\"codeLength\":6", "\"codeLength\":$it")
+        }
+        invalid.forEach {
+            assertTrue(it, parser.parseInteraction(response(it), initial()) is NativeAuthV2InteractionApiResult.UnknownError)
+        }
+    }
+
+    @Test
+    fun activationDefaultsAbsentHintToEmptyWithoutRequiringResend() {
+        listOf("", """"hint":null,""", """"hint":"",""").forEach { hint ->
+            val result = parser.parseInteraction(response("""
+                {"action":"activate","continuationToken":"new",${hint}"codeLength":6,
+                 "_links":{"activate":{"href":"/activate"}}}
+            """), initial())
+            assertTrue(result.toString(), result is NativeAuthV2InteractionApiResult.ActivationRequired)
+            result as NativeAuthV2InteractionApiResult.ActivationRequired
+            assertEquals("", result.challengeTargetLabel)
+            assertEquals(6, result.codeLength)
+            assertNull(result.continuationState.href(NativeAuthV2LinkRelation.RESEND))
         }
     }
 

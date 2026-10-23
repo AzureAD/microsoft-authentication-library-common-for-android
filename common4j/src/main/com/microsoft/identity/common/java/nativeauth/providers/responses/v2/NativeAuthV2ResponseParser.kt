@@ -262,8 +262,7 @@ class NativeAuthV2ResponseParser {
         val codeLength = response.codeLength
             ?: return missingFieldError(response.correlationId, CODE_LENGTH_FIELD)
         if (codeLength <= 0) return invalidFieldError(response.correlationId, CODE_LENGTH_FIELD)
-        val hint = response.challengeTargetLabel?.takeUnless { it.isBlank() }
-            ?: return missingFieldError(response.correlationId, CHALLENGE_TARGET_LABEL_FIELD)
+        val hint = response.challengeTargetLabel.orEmpty()
         val successor = NativeAuthV2ContinuationState.next(previousState, response)
             ?: return missingContinuationTokenError(response.correlationId)
         return NativeAuthV2InteractionApiResult.ActivationRequired(

@@ -613,7 +613,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Resends the one-time code by calling the resend relation on the continuation state.
-     * Returns [NativeAuthV2CommandResult.CodeRequired] with the successor state.
+     * Returns [NativeAuthV2CommandResult.CodeRequired] or
+     * [NativeAuthV2CommandResult.StrongAuthVerificationRequired] with the successor state.
      */
     fun resendCode(parameters: NativeAuthV2ResendCodeCommandParameters): NativeAuthV2ResendCodeCommandResult {
         LogSession.logMethodCall(
@@ -629,6 +630,12 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             return when (resendResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(resendResult)
+                is NativeAuthV2InteractionApiResult.ActivationRequired -> NativeAuthV2CommandResult.StrongAuthVerificationRequired(
+                    correlationId = resendResult.correlationId,
+                    continuationState = resendResult.continuationState,
+                    codeLength = resendResult.codeLength,
+                    challengeTargetLabel = resendResult.challengeTargetLabel
+                )
                 is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.CodeRequired(
                     correlationId = resendResult.correlationId,
                     continuationState = resendResult.continuationState,

@@ -35,8 +35,8 @@ object NativeAuthV2ContinuationStateTestFactory {
     fun registration(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState {
         val response = NativeAuthV2HalApiResponse.from(HalResource.from("""
             {"action":"enroll","continuationToken":"registration","_embedded":{"methods":[
-              {"type":"phone","channels":["sms"],"_links":{"enroll":{"href":"/phone/enroll"}}},
-              {"type":"email","_links":{"enroll":{"href":"/email/enroll"}}}
+              {"type":"phone","channels":["sms"],"_links":{"enroll":{"href":"/tenant/api/v2.0/auth/phone/enroll"}}},
+              {"type":"email","_links":{"enroll":{"href":"/tenant/api/v2.0/auth/email/enroll"}}}
             ]}}
         """.trimIndent()), 200, state.correlationId)
         return (NativeAuthV2ResponseParser().parseInteraction(response, state)
