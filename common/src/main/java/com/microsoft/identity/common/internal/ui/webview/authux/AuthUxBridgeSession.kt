@@ -205,8 +205,9 @@ class AuthUxBridgeSession private constructor(
          * Creates the request-owned Auth UX bridge and selects exactly one transport.
          *
          * Requests without an allowed Auth UX capability are disabled. WebMessageListener is used
-         * only when the initial URL fits the fixed registration rules and both required AndroidX
-         * features are available; otherwise the request uses `addJavascriptInterface`. Listener
+         * only when [preferWebMessageListener] is true, the initial URL fits the fixed registration
+         * rules, and both required AndroidX features are available; otherwise the request uses
+         * `addJavascriptInterface`. The caller captures flight policy once before creation. Listener
          * setup is transactional, and fallback is allowed only after complete rollback so two
          * native bridges cannot remain exposed at the same time.
          */
@@ -218,6 +219,7 @@ class AuthUxBridgeSession private constructor(
             isBrokerAuthProcess: Boolean,
             telemetrySink: AuthUxTelemetrySink?,
             brokerMasterFlightEnabled: Boolean,
+            preferWebMessageListener: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
         ): AuthUxBridgeSession {
@@ -255,6 +257,14 @@ class AuthUxBridgeSession private constructor(
                 telemetrySink = telemetrySink,
                 capabilities = capabilities
             )
+
+            if (!preferWebMessageListener) {
+                Logger.info(
+                    TAG,
+                    "WebMessageListener preference disabled; selecting addJavascriptInterface."
+                )
+                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
+            }
 
             // WebMessageListener and its document-start facade form one transport. Select it only
             // when the initial document can receive both under the same registration rules and the
