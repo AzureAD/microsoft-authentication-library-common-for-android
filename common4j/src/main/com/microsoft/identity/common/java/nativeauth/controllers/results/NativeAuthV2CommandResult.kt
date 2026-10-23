@@ -422,7 +422,7 @@ interface NativeAuthV2CommandResult {
      * One or more submitted attributes failed server-side validation. [invalidAttributes] are the
      * wire names of the rejected attributes, in server order; the app can retry through
      * [continuationState] with corrected values. Applies to the sign-up start and submit-attributes
-     * steps.
+     * steps, including initial attribute submission resumed after sign-up code verification.
      */
     data class AttributesInvalid @JvmOverloads constructor(
         override val correlationId: String,
@@ -436,7 +436,7 @@ interface NativeAuthV2CommandResult {
         override val traceId: String? = null,
         override val timestamp: String? = null
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+        NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription)"
 
@@ -446,7 +446,8 @@ interface NativeAuthV2CommandResult {
 
     /**
      * An account already exists for the identifier supplied to sign-up.
-     * Applies to the sign-up start and submit-attributes steps.
+     * Applies to the sign-up start and submit-attributes steps, including initial attribute
+     * submission resumed after sign-up code verification.
      */
     data class UserAlreadyExists @JvmOverloads constructor(
         override val correlationId: String,
@@ -458,7 +459,7 @@ interface NativeAuthV2CommandResult {
         override val traceId: String? = null,
         override val timestamp: String? = null
     ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+        NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 

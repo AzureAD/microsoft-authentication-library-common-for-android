@@ -6,6 +6,7 @@ import com.google.gson.JsonParser
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.*
+import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
@@ -57,6 +58,84 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         val completedState = (result as NativeAuthV2CommandResult.SignInAfterSignUpRequired).continuationState
         assertTrue(completedState.hasSubmittedAttribute("email"))
         assertNull(completedState.pendingSignUpAttributesForSubmission())
+    }
+
+    @Test
+    fun retainedAttributesRejectedAfterEmailVerificationKeepDiagnosticsAndRetryState() {
+        val details = listOf(mapOf(
+            "code" to "attributeValidationFailed", "attributeIds" to listOf("displayName"),
+            "message" to "Choose a different display name"
+        ))
+        stubFlow(
+            requestsPassword = false,
+            verifyEmailAfterActivation = true,
+            submitResponse = """{"error":{"code":"invalidRequest","message":"Attribute rejected",
+                "traceId":"attribute-trace","timestamp":"attribute-time","error_codes":[1002027],
+                "innerError":{"code":"attributeValidationError","details":[{
+                    "code":"attributeValidationFailed","attributeIds":["displayName"],
+                    "message":"Choose a different display name"}]}}}"""
+        )
+        val activation = startAndEnroll(password = null)
+        val verification = controller.activate(NativeAuthV2ActivateCommandParameters(
+            parameters(activation), activation, "activation-otp")) as NativeAuthV2CommandResult.CodeRequired
+        val result: INativeAuthCommandResult = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+            .continuationState(roundTrip(verification.continuationState)).code("email-otp").build())
+        assertTrue(result.toString(), result is NativeAuthV2CommandResult.AttributesInvalid)
+        result as NativeAuthV2CommandResult.AttributesInvalid
+        assertEquals(listOf("displayName"), result.invalidAttributes)
+        assertEquals("invalidRequest", result.error)
+        assertEquals("Attribute rejected", result.errorDescription)
+        assertEquals("attributeValidationError", result.subError)
+        assertEquals("attribute-trace", result.traceId)
+        assertEquals("attribute-time", result.timestamp)
+        assertEquals(listOf(1002027), result.errorCodes)
+        assertEquals(details, result.attributeValidationDetails)
+        val automatic = JsonParser.parseString(String(requests.last(), Charsets.UTF_8)).asJsonObject
+        assertEquals("attributes", automatic["continuationToken"].asString)
+        assertEquals("original@contoso.com", automatic["attributes"].asJsonObject["email"].asString)
+        assertEquals("Original Name", automatic["attributes"].asJsonObject["displayName"].asString)
+        val retryState = roundTrip(result.continuationState)
+        assertTrue(retryState.hasSubmittedAttribute("email"))
+        assertNull(retryState.pendingSignUpAttributesForSubmission())
+        val retryUrl = slot<URL>()
+        every { http.method(HttpClient.HttpMethod.POST, capture(retryUrl), any(), capture(requests)) } returns
+            response("""{"state":"continue","continuationToken":"done"}""")
+        val completed = controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder())
+            .continuationState(retryState).attributes(mapOf("displayName" to "Corrected")).build())
+        assertTrue(completed is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
+        assertEquals("https://login.contoso.com/tenant/api/v2.0/auth/signup/attributes", retryUrl.captured.toString())
+        val retry = JsonParser.parseString(String(requests.last(), Charsets.UTF_8)).asJsonObject
+        assertEquals("attributes", retry["continuationToken"].asString)
+        assertEquals("Corrected", retry["attributes"].asJsonObject["displayName"].asString)
+        assertFalse(retry["attributes"].asJsonObject.has("email"))
+    }
+
+    @Test
+    fun existingUserAfterEmailVerificationKeepsTypedErrorAndDiagnostics() {
+        stubFlow(
+            requestsPassword = false,
+            verifyEmailAfterActivation = true,
+            submitResponse = """{"error":{"code":"invalidRequest","message":"Account exists",
+                "traceId":"exists-trace","timestamp":"exists-time","error_codes":[1002029],
+                "innerError":{"code":"accountConflict","details":[{
+                    "code":"userAlreadyExists","attributeIds":["email"]}]}}}"""
+        )
+        val activation = startAndEnroll(password = null)
+        val verification = controller.activate(NativeAuthV2ActivateCommandParameters(
+            parameters(activation), activation, "activation-otp")) as NativeAuthV2CommandResult.CodeRequired
+        val result: INativeAuthCommandResult = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+            .continuationState(verification.continuationState).code("email-otp").build())
+        assertTrue(result.toString(), result is NativeAuthV2CommandResult.UserAlreadyExists)
+        result as NativeAuthV2CommandResult.UserAlreadyExists
+        assertEquals("invalidRequest", result.error)
+        assertEquals("Account exists", result.errorDescription)
+        assertEquals("accountConflict", result.subError)
+        assertEquals("exists-trace", result.traceId)
+        assertEquals("exists-time", result.timestamp)
+        assertEquals(listOf(1002029), result.errorCodes)
+        assertEquals(listOf("email"), result.attributeValidationDetails?.single()?.get("attributeIds"))
+        assertEquals("userAlreadyExists", result.attributeValidationDetails?.single()?.get("code"))
+        assertEquals(5, requests.size)
     }
 
     @Test
@@ -112,21 +191,32 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         return roundTrip(enrolled.continuationState)
     }
 
-    private fun stubFlow(requestsPassword: Boolean) {
+    private fun stubFlow(
+        requestsPassword: Boolean,
+        verifyEmailAfterActivation: Boolean = false,
+        submitResponse: String = """{"state":"continue","continuationToken":"done"}"""
+    ) {
         every { http.post(any(), any(), any()) } returns response("""
             {"continuationToken":"entry","_links":{"signUp":{"href":"/tenant/api/v2.0/auth/signup/start"}}}
         """)
         val passwordAttribute = if (requestsPassword) """,{"attributeId":"password","inputType":"password","required":true}""" else ""
-        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returnsMany listOf(
+        val emailVerification = if (verifyEmailAfterActivation) listOf(response("""
+            {"action":"verify","continuationToken":"email-verification","hint":"original-mask",
+             "type":"email","codeLength":6,"_links":{
+               "verify":{"href":"/tenant/api/v2.0/auth/email/verify"},
+               "resend":{"href":"/tenant/api/v2.0/auth/email/resend"}}}
+        """)) else emptyList()
+        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returnsMany (listOf(
             response("""{"action":"enroll","continuationToken":"enroll","_embedded":{"methods":[
                 {"type":"email","_links":{"enroll":{"href":"/tenant/api/v2.0/auth/email/enroll"}}}]}}"""),
             response("""{"action":"activate","continuationToken":"activate","hint":"masked","codeLength":6,
-                "_links":{"activate":{"href":"/tenant/api/v2.0/auth/email/activate"}}}"""),
+                "_links":{"activate":{"href":"/tenant/api/v2.0/auth/email/activate"}}}""")
+        ) + emailVerification + listOf(
             response("""{"action":"collectAttributes","continuationToken":"attributes",
                 "attributes":[{"attributeId":"email","inputType":"text","required":true}$passwordAttribute],
                 "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}"""),
-            response("""{"state":"continue","continuationToken":"done"}""")
-        )
+            response(submitResponse)
+        ))
     }
 
     private fun response(body: String) = HttpResponse(200, body, emptyMap())
