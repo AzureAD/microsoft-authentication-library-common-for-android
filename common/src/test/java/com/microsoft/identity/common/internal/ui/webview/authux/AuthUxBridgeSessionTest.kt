@@ -55,6 +55,7 @@ class AuthUxBridgeSessionTest {
             isBrokerAuthProcess = true,
             hasOnboardingTelemetryRecorder = false,
             brokerMasterFlightEnabled = true,
+            preferWebMessageListener = true,
             webKitAdapter = adapter
         )
 
@@ -64,6 +65,39 @@ class AuthUxBridgeSessionTest {
         assertEquals(adapter.listenerAllowedOrigins, adapter.scriptAllowedOrigins)
         assertEquals(8, adapter.listenerAllowedOrigins?.size)
         verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+    }
+
+    @Test
+    fun `broker preference off selects managed legacy without consulting modern prerequisites`() {
+        val adapter = FakeWebKitAdapter()
+        val originPolicy = mock(AuthUxOriginPolicy::class.java)
+        val session = AuthUxBridgeSession.create(
+            webView = webView,
+            initialUrl = LOGIN_URL,
+            isBrokerAuthProcess = true,
+            hasOnboardingTelemetryRecorder = false,
+            brokerMasterFlightEnabled = true,
+            preferWebMessageListener = false,
+            webKitAdapter = adapter,
+            originPolicy = originPolicy
+        )
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertEquals(0, adapter.listenerSupportCheckCount)
+        assertEquals(0, adapter.scriptSupportCheckCount)
+        assertFalse(adapter.listenerAdded)
+        assertFalse(adapter.scriptAdded)
+        org.mockito.Mockito.verifyNoInteractions(originPolicy)
+        verify(webView).addJavascriptInterface(any(), eq("broker"))
+
+        session.onPageFinished(webView)
+        verify(webView).evaluateJavascript(any(), any())
+        session.onPageStarted(webView, FEDERATED_URL)
+        verify(webView).removeJavascriptInterface("broker")
+        session.onPageStarted(webView, LOGIN_URL)
+        verify(webView, times(2)).addJavascriptInterface(any(), eq("broker"))
+        session.close()
+        verify(webView, times(2)).removeJavascriptInterface("broker")
     }
 
     @Test
@@ -85,6 +119,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             adapter
         )
@@ -113,6 +148,7 @@ class AuthUxBridgeSessionTest {
                 url,
                 true,
                 false,
+                true,
                 true,
                 adapter
             )
@@ -154,6 +190,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             adapter
         )
 
@@ -178,6 +215,7 @@ class AuthUxBridgeSessionTest {
                 true,
                 false,
                 true,
+                true,
                 adapter
             )
 
@@ -200,6 +238,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             FakeWebKitAdapter()
         )
 
@@ -215,6 +254,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             FakeWebKitAdapter()
         )
 
@@ -229,6 +269,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             FakeWebKitAdapter(documentStartSupported = false)
         )
@@ -269,6 +310,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             adapter
         )
 
@@ -285,6 +327,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             adapter
         )
@@ -303,6 +346,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             adapter
         )
@@ -330,6 +374,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             adapter
         )
@@ -366,6 +411,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             adapter
         )
 
@@ -398,6 +444,7 @@ class AuthUxBridgeSessionTest {
             true,
             false,
             true,
+            true,
             adapter
         )
 
@@ -409,20 +456,29 @@ class AuthUxBridgeSessionTest {
 
     @Test
     fun `non-broker request without recorder is disabled`() {
-        val adapter = FakeWebKitAdapter()
+        listOf(false, true).forEach { preferWebMessageListener ->
+            val adapter = FakeWebKitAdapter()
+            val session = AuthUxBridgeSession.create(
+                webView = webView,
+                initialUrl = LOGIN_URL,
+                isBrokerAuthProcess = false,
+                hasOnboardingTelemetryRecorder = false,
+                brokerMasterFlightEnabled = true,
+                preferWebMessageListener = preferWebMessageListener,
+                webKitAdapter = adapter
+            )
 
-        val session = AuthUxBridgeSession.create(
-            webView,
-            LOGIN_URL,
-            false,
-            false,
-            true,
-            adapter
-        )
-
-        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
-        assertFalse(adapter.listenerAdded)
-        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+            assertEquals(0, adapter.listenerSupportCheckCount)
+            assertEquals(0, adapter.scriptSupportCheckCount)
+            assertFalse(adapter.listenerAdded)
+            assertFalse(adapter.scriptAdded)
+            session.onPageStarted(webView, LOGIN_URL)
+            session.onPageFinished(webView)
+            verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            verify(webView, never()).evaluateJavascript(any(), any())
+            session.close()
+        }
     }
 
     @Test
@@ -433,6 +489,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             false,
+            true,
             true,
             true,
             adapter
@@ -450,6 +507,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             false,
+            true,
             true,
             adapter
         )
@@ -475,26 +533,32 @@ class AuthUxBridgeSessionTest {
     private fun assertBrokerMasterFlightDisabled(
         hasOnboardingTelemetryRecorder: Boolean
     ) {
-        val adapter = FakeWebKitAdapter()
-        val session = AuthUxBridgeSession.create(
-            webView = webView,
-            initialUrl = LOGIN_URL,
-            isBrokerAuthProcess = true,
-            hasOnboardingTelemetryRecorder = hasOnboardingTelemetryRecorder,
-            brokerMasterFlightEnabled = false,
-            webKitAdapter = adapter
-        )
+        listOf(false, true).forEach { preferWebMessageListener ->
+            val adapter = FakeWebKitAdapter()
+            val session = AuthUxBridgeSession.create(
+                webView = webView,
+                initialUrl = LOGIN_URL,
+                isBrokerAuthProcess = true,
+                hasOnboardingTelemetryRecorder = hasOnboardingTelemetryRecorder,
+                brokerMasterFlightEnabled = false,
+                preferWebMessageListener = preferWebMessageListener,
+                webKitAdapter = adapter
+            )
 
-        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
-        assertFalse(adapter.listenerAdded)
-        assertFalse(adapter.scriptAdded)
+            assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+            assertEquals(0, adapter.listenerSupportCheckCount)
+            assertEquals(0, adapter.scriptSupportCheckCount)
+            assertFalse(adapter.listenerAdded)
+            assertFalse(adapter.scriptAdded)
 
-        session.onPageStarted(webView, LOGIN_URL)
-        session.onPageFinished(webView)
+            session.onPageStarted(webView, LOGIN_URL)
+            session.onPageFinished(webView)
 
-        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
-        verify(webView, never()).evaluateJavascript(any(), any())
-        verify(webView, never()).removeJavascriptInterface("broker")
+            verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            verify(webView, never()).evaluateJavascript(any(), any())
+            verify(webView, never()).removeJavascriptInterface("broker")
+            session.close()
+        }
     }
 
     private class FakeWebKitAdapter(
@@ -513,6 +577,8 @@ class AuthUxBridgeSessionTest {
         var listenerRemoved = false
         var listenerRemoveCount = 0
         var scriptRemoveCount = 0
+        var listenerSupportCheckCount = 0
+        var scriptSupportCheckCount = 0
         var listenerAllowedOrigins: Set<String>? = null
         var scriptAllowedOrigins: Set<String>? = null
 
@@ -523,9 +589,15 @@ class AuthUxBridgeSessionTest {
             }.`when`(scriptHandler).remove()
         }
 
-        override fun isWebMessageListenerSupported(): Boolean = listenerSupported
+        override fun isWebMessageListenerSupported(): Boolean {
+            listenerSupportCheckCount++
+            return listenerSupported
+        }
 
-        override fun isDocumentStartScriptSupported(): Boolean = documentStartSupported
+        override fun isDocumentStartScriptSupported(): Boolean {
+            scriptSupportCheckCount++
+            return documentStartSupported
+        }
 
         override fun addWebMessageListener(
             webView: WebView,

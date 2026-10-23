@@ -74,6 +74,7 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
@@ -327,20 +328,48 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
-     * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
-     * If both conditions are met, it adds the JavaScript interface to the WebView.
+     * Selects and initializes one request-owned Auth UX messaging transport before navigation.
+     * Broker requests capture the bridge master gate and default-off WebMessageListener flight.
+     * Non-Broker requests use recorder presence without consulting either Broker flight.
+     * The selected mode is retained until the session is closed or replaced.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
+        // Release the previous transport before selecting a replacement so bridges cannot overlap.
         closeAuthUxBridgeSession();
+        final boolean isBrokerAuthProcess =
+                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+        final boolean hasOnboardingTelemetryRecorder = mOnboardingTelemetryRecorder != null;
+        // Broker flights do not govern non-Broker requests; recorder presence controls eligibility.
+        boolean brokerMasterFlightEnabled = true;
+        boolean preferWebMessageListener = hasOnboardingTelemetryRecorder;
+        if (isBrokerAuthProcess) {
+            final IFlightsProvider flightsProvider =
+                    CommonFlightsManager.INSTANCE.getFlightsProvider();
+            brokerMasterFlightEnabled =
+                    flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+            // A disabled master gate must not depend on the transport flight lookup succeeding.
+            preferWebMessageListener = brokerMasterFlightEnabled
+                    && safelyResolveAuthUxTransportFlight(flightsProvider);
+        }
         setAuthUxBridgeSession(AuthUxBridgeSession.create(
                 view,
                 url,
-                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext()),
-                mOnboardingTelemetryRecorder != null,
-                CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)
+                isBrokerAuthProcess,
+                hasOnboardingTelemetryRecorder,
+                brokerMasterFlightEnabled,
+                preferWebMessageListener
         ));
+    }
+
+    private static boolean safelyResolveAuthUxTransportFlight(
+            @NonNull final IFlightsProvider flightsProvider) {
+        try {
+            return flightsProvider.isFlightEnabled(
+                    CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG, "Auth UX transport flight lookup failed; selecting addJavascriptInterface.");
+            return false;
+        }
     }
 
     /**
