@@ -350,12 +350,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
@@ -440,6 +434,49 @@ public class AzureActiveDirectoryWebViewClientTest {
             Mockito.verify(webView).addJavascriptInterface(any(), eq("broker"));
             features.verifyNoInteractions();
             webKit.verifyNoInteractions();
+            mWebViewClient.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_transportFlightOffPreservesRecorderTelemetry()
+            throws Exception {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenReturn(false);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                    mWebViewClient.mAuthUxBridgeSession.getMode());
+            final ArgumentCaptor<AuthUxJavaScriptInterface> processor =
+                    ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+            Mockito.verify(webView).addJavascriptInterface(processor.capture(), eq("broker"));
+            final String payload = "{\"correlationID\":\"correlation-id\","
+                    + "\"action_name\":\"log_telemetry\",\"action_component\":\"host\","
+                    + "\"params\":{\"errorCode\":\"53003\"}}";
+            processor.getValue().process(payload);
+            processor.getValue().process(payload);
+            processor.getValue().process(payload.replace("53003", "50058"));
+
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("53003", errors.getString(1));
+            features.verifyNoInteractions();
+            webKit.verifyNoInteractions();
+        } finally {
             mWebViewClient.closeAuthUxBridgeSession();
         }
     }
@@ -4596,6 +4633,75 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testProcessInstallRequest_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ForwardsEveryOccurrence() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                mWebViewClient.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
+                new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                        "correlation-id",
+                        "53003",
+                        null,
+                        null,
+                        null,
+                        null
+                );
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(2, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertEquals("53003", errors.getString(1));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ExcludesNonOnboardingErrors() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"excluded-session\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(
+                        seedJson,
+                        "excluded-client",
+                        "excluded-scope",
+                        mContext
+                );
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                mWebViewClient.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        for (final String errorCode : Arrays.asList("0", "50058", "50097", "50126")) {
+            assertTrue(
+                    sink.tryConsumeAuthUxTelemetry(
+                            new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                                    "correlation-id",
+                                    errorCode,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                            )
+                    )
+            );
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(0, blob.getJSONArray("blocking_errors").length());
     }
 
     /**

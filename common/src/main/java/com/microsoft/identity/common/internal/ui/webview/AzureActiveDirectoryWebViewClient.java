@@ -50,6 +50,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -81,6 +82,7 @@ import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -336,12 +338,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         // Release the previous transport before selecting a replacement so bridges cannot overlap.
         closeAuthUxBridgeSession();
+        final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
         final boolean isBrokerAuthProcess =
                 ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
-        final boolean hasOnboardingTelemetryRecorder = mOnboardingTelemetryRecorder != null;
+        final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
         // Broker flights do not govern non-Broker requests; recorder presence controls eligibility.
         boolean brokerMasterFlightEnabled = true;
-        boolean preferWebMessageListener = hasOnboardingTelemetryRecorder;
+        boolean preferWebMessageListener = telemetrySink != null;
         if (isBrokerAuthProcess) {
             final IFlightsProvider flightsProvider =
                     CommonFlightsManager.INSTANCE.getFlightsProvider();
@@ -351,11 +354,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             preferWebMessageListener = brokerMasterFlightEnabled
                     && safelyResolveAuthUxTransportFlight(flightsProvider);
         }
+        Logger.info(
+                methodTag,
+                "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
+                        + isBrokerAuthProcess
+                        + "], hasTelemetrySink=["
+                        + (telemetrySink != null)
+                        + "], brokerMasterFlightEnabled=["
+                        + brokerMasterFlightEnabled
+                        + "], preferWebMessageListener=["
+                        + preferWebMessageListener
+                        + "]."
+        );
         setAuthUxBridgeSession(AuthUxBridgeSession.create(
                 view,
                 url,
                 isBrokerAuthProcess,
-                hasOnboardingTelemetryRecorder,
+                telemetrySink,
                 brokerMasterFlightEnabled,
                 preferWebMessageListener
         ));
@@ -370,6 +385,44 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.warn(TAG, "Auth UX transport flight lookup failed; selecting addJavascriptInterface.");
             return false;
         }
+    }
+
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    AuthUxTelemetrySink createAuthUxTelemetrySink() {
+        final String methodTag = TAG + ":createAuthUxTelemetrySink";
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            Logger.info(
+                    methodTag,
+                    "No onboarding telemetry recorder is attached; the Auth UX telemetry sink "
+                            + "will not be created."
+            );
+            return null;
+        }
+        Logger.info(
+                methodTag,
+                "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
+        );
+        return event -> {
+            final String blockingError =
+                    OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
+            if (blockingError == null) {
+                Logger.info(
+                        methodTag,
+                        event.getCorrelationId(),
+                        "Auth UX telemetry occurrence was excluded by onboarding policy."
+                );
+                return true;
+            }
+            Logger.info(
+                    methodTag,
+                    event.getCorrelationId(),
+                    "Forwarding a qualified Auth UX telemetry occurrence to the onboarding recorder."
+            );
+            recorder.addBlockingError(blockingError);
+            return true;
+        };
     }
 
     /**
