@@ -912,6 +912,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onDestroyView() {
         destroyInterceptorWebViews();
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.closeAuthUxBridgeSession();
+        }
         if (mPasskeyWebListenerHooked && mWebView != null) {
             PasskeyWebListener.unhook(mWebView);
             mPasskeyWebListenerHooked = false;
