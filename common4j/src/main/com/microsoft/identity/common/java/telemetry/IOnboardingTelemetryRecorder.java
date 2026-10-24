@@ -70,10 +70,10 @@ public interface IOnboardingTelemetryRecorder {
     /**
      * Record a blocking onboarding error detected during the flow.
      *
-     * @param errorCode Blocking-error constant from
+     * @param errorCode Symbolic onboarding error identifier from
      *                  {@link com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants}
-     *                  (e.g. {@code BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED}). Not a numeric
-     *                  service auth error code.
+     *                  (e.g. {@code BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED}), or a numeric
+     *                  server error code.
      */
     void addBlockingError(@NonNull String errorCode);
 
