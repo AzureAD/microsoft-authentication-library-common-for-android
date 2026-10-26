@@ -350,6 +350,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
+        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
+        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
+        if (mContext != null) {
+            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
+                    .save("");
+        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
