@@ -57,7 +57,8 @@ class AuthUxBridgeSessionTest {
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
             telemetrySink = null,
-            brokerMasterFlightEnabled = true,
+            brokerAuthUxBridgeEnabled = true,
+            preferWebMessageListener = true,
             webKitAdapter = adapter
         )
 
@@ -70,13 +71,46 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
-    fun `broker request is disabled when master flight is off`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = false)
+    fun `broker preference off selects managed legacy without consulting modern prerequisites`() {
+        val adapter = FakeWebKitAdapter()
+        val originPolicy = mock(AuthUxOriginPolicy::class.java)
+        val session = AuthUxBridgeSession.create(
+            webView = webView,
+            initialUrl = LOGIN_URL,
+            isBrokerAuthProcess = true,
+            telemetrySink = null,
+            brokerAuthUxBridgeEnabled = true,
+            preferWebMessageListener = false,
+            webKitAdapter = adapter,
+            originPolicy = originPolicy
+        )
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertEquals(0, adapter.listenerSupportCheckCount)
+        assertEquals(0, adapter.scriptSupportCheckCount)
+        assertFalse(adapter.listenerAdded)
+        assertFalse(adapter.scriptAdded)
+        org.mockito.Mockito.verifyNoInteractions(originPolicy)
+        verify(webView).addJavascriptInterface(any(), eq("broker"))
+
+        session.onPageFinished(webView)
+        verify(webView).evaluateJavascript(any(), any())
+        session.onPageStarted(webView, FEDERATED_URL)
+        verify(webView).removeJavascriptInterface("broker")
+        session.onPageStarted(webView, LOGIN_URL)
+        verify(webView, times(2)).addJavascriptInterface(any(), eq("broker"))
+        session.close()
+        verify(webView, times(2)).removeJavascriptInterface("broker")
     }
 
     @Test
-    fun `broker recorder does not bypass disabled master flight`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = true)
+    fun `broker request is disabled when bridge enablement is off`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = false)
+    }
+
+    @Test
+    fun `broker recorder does not bypass disabled bridge`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = true)
     }
 
     @Test
@@ -88,6 +122,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             adapter
         )
@@ -116,6 +151,7 @@ class AuthUxBridgeSessionTest {
                 url,
                 true,
                 null,
+                true,
                 true,
                 adapter
             )
@@ -157,6 +193,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             adapter
         )
 
@@ -181,6 +218,7 @@ class AuthUxBridgeSessionTest {
                 true,
                 null,
                 true,
+                true,
                 adapter
             )
 
@@ -203,6 +241,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             FakeWebKitAdapter()
         )
 
@@ -218,6 +257,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             FakeWebKitAdapter()
         )
 
@@ -232,6 +272,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             FakeWebKitAdapter(documentStartSupported = false)
         )
@@ -272,6 +313,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             adapter
         )
 
@@ -288,6 +330,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             adapter
         )
@@ -306,6 +349,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             adapter
         )
@@ -333,6 +377,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             adapter
         )
@@ -369,6 +414,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             adapter
         )
 
@@ -401,6 +447,7 @@ class AuthUxBridgeSessionTest {
             true,
             null,
             true,
+            true,
             adapter
         )
 
@@ -412,20 +459,29 @@ class AuthUxBridgeSessionTest {
 
     @Test
     fun `non-broker request without recorder is disabled`() {
-        val adapter = FakeWebKitAdapter()
+        listOf(false, true).forEach { preferWebMessageListener ->
+            val adapter = FakeWebKitAdapter()
+            val session = AuthUxBridgeSession.create(
+                webView = webView,
+                initialUrl = LOGIN_URL,
+                isBrokerAuthProcess = false,
+                telemetrySink = null,
+                brokerAuthUxBridgeEnabled = true,
+                preferWebMessageListener = preferWebMessageListener,
+                webKitAdapter = adapter
+            )
 
-        val session = AuthUxBridgeSession.create(
-            webView,
-            LOGIN_URL,
-            false,
-            null,
-            true,
-            adapter
-        )
-
-        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
-        assertFalse(adapter.listenerAdded)
-        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+            assertEquals(0, adapter.listenerSupportCheckCount)
+            assertEquals(0, adapter.scriptSupportCheckCount)
+            assertFalse(adapter.listenerAdded)
+            assertFalse(adapter.scriptAdded)
+            session.onPageStarted(webView, LOGIN_URL)
+            session.onPageFinished(webView)
+            verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            verify(webView, never()).evaluateJavascript(any(), any())
+            session.close()
+        }
     }
 
     @Test
@@ -437,6 +493,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             false,
             RecordingTelemetrySink(),
+            true,
             true,
             adapter
         )
@@ -453,6 +510,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             true,
             null,
+            true,
             true,
             adapter
         )
@@ -475,33 +533,39 @@ class AuthUxBridgeSessionTest {
         assertTrue(script.contains("JSON.stringify(message)"))
     }
 
-    private fun assertBrokerMasterFlightDisabled(
+    private fun assertBrokerAuthUxBridgeDisabled(
         hasOnboardingTelemetryRecorder: Boolean
     ) {
-        val adapter = FakeWebKitAdapter()
-        val session = AuthUxBridgeSession.create(
-            webView = webView,
-            initialUrl = LOGIN_URL,
-            isBrokerAuthProcess = true,
-            telemetrySink = if (hasOnboardingTelemetryRecorder) {
-                RecordingTelemetrySink()
-            } else {
-                null
-            },
-            brokerMasterFlightEnabled = false,
-            webKitAdapter = adapter
-        )
+        listOf(false, true).forEach { preferWebMessageListener ->
+            val adapter = FakeWebKitAdapter()
+            val session = AuthUxBridgeSession.create(
+                webView = webView,
+                initialUrl = LOGIN_URL,
+                isBrokerAuthProcess = true,
+                telemetrySink = if (hasOnboardingTelemetryRecorder) {
+                    RecordingTelemetrySink()
+                } else {
+                    null
+                },
+                brokerAuthUxBridgeEnabled = false,
+                preferWebMessageListener = preferWebMessageListener,
+                webKitAdapter = adapter
+            )
 
-        assertEquals(AuthUxTransportMode.DISABLED, session.mode)
-        assertFalse(adapter.listenerAdded)
-        assertFalse(adapter.scriptAdded)
+            assertEquals(AuthUxTransportMode.DISABLED, session.mode)
+            assertEquals(0, adapter.listenerSupportCheckCount)
+            assertEquals(0, adapter.scriptSupportCheckCount)
+            assertFalse(adapter.listenerAdded)
+            assertFalse(adapter.scriptAdded)
 
-        session.onPageStarted(webView, LOGIN_URL)
-        session.onPageFinished(webView)
+            session.onPageStarted(webView, LOGIN_URL)
+            session.onPageFinished(webView)
 
-        verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
-        verify(webView, never()).evaluateJavascript(any(), any())
-        verify(webView, never()).removeJavascriptInterface("broker")
+            verify(webView, never()).addJavascriptInterface(any(), eq("broker"))
+            verify(webView, never()).evaluateJavascript(any(), any())
+            verify(webView, never()).removeJavascriptInterface("broker")
+            session.close()
+        }
     }
 
     @Test
@@ -512,6 +576,7 @@ class AuthUxBridgeSessionTest {
             LOGIN_URL,
             false,
             sink,
+            true,
             true,
             FakeWebKitAdapter(listenerSupported = false)
         )
@@ -559,6 +624,8 @@ class AuthUxBridgeSessionTest {
         var listenerRemoved = false
         var listenerRemoveCount = 0
         var scriptRemoveCount = 0
+        var listenerSupportCheckCount = 0
+        var scriptSupportCheckCount = 0
         var listenerAllowedOrigins: Set<String>? = null
         var scriptAllowedOrigins: Set<String>? = null
 
@@ -569,9 +636,15 @@ class AuthUxBridgeSessionTest {
             }.`when`(scriptHandler).remove()
         }
 
-        override fun isWebMessageListenerSupported(): Boolean = listenerSupported
+        override fun isWebMessageListenerSupported(): Boolean {
+            listenerSupportCheckCount++
+            return listenerSupported
+        }
 
-        override fun isDocumentStartScriptSupported(): Boolean = documentStartSupported
+        override fun isDocumentStartScriptSupported(): Boolean {
+            scriptSupportCheckCount++
+            return documentStartSupported
+        }
 
         override fun addWebMessageListener(
             webView: WebView,

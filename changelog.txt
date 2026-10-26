@@ -1,6 +1,7 @@
 vNext
 ----------
-- [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation and legacy JavaScript-interface fallback (AB#3688632) (#3316)
+- [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)
+- [MINOR] Add a process-local, correlation-ID-keyed onboarding recorder handoff for Common WebView authorization, including identity-safe registry lifecycle, fragment correlation restoration, and recorder-backed Auth UX telemetry forwarding across brokered and non-brokered flows
 
 Version 25.0.0
 ----------
@@ -9,8 +10,6 @@ Version 25.0.0
 - [PATCH] Default authorize-only Device-CA credential forwarding to off for gradual ECS rollout
 - [PATCH] Enforce authorize-only Device-CA credential forwarding by withholding original request headers from Device-CA WebView loads by default, with explicit ECS disablement as the rollback path (AB#3766458)
 - [PATCH] Preserve every valid Auth UX `log_telemetry` occurrence in arrival order by removing per-page attempt limits, distinct-code limits, and duplicate suppression from the JavaScript bridge while keeping Number Matching behavior unchanged (#3294)
-- [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation and legacy JavaScript-interface fallback (AB#3688632) (#3316)
-- [MINOR] Add a process-local, correlation-ID-keyed onboarding recorder handoff for Common WebView authorization, including identity-safe registry lifecycle, fragment correlation restoration, and recorder-backed Auth UX telemetry forwarding across brokered and non-brokered flows
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
 - [MINOR] Move native ATS caller validation to Broker ingress, AB#3751475, Fixes AB#3751475 (#3311)
 - [MINOR] Add broker external browser redirect premortem, Fixes AB#3781149 (#3313)

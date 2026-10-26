@@ -75,6 +75,7 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
@@ -111,6 +112,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import android.webkit.WebResourceError;
 
@@ -329,36 +331,66 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
-     * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
-     * If both conditions are met, it adds the JavaScript interface to the WebView.
+     * Selects and initializes one request-owned Auth UX messaging transport before navigation.
+     * Broker requests capture bridge enablement and the default-off WebMessageListener flight.
+     * Non-Broker requests use recorder presence without consulting either Broker flight.
+     * The selected mode is retained until the session is closed or replaced.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
-        closeAuthUxBridgeSession();
-        final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
-        final boolean isBrokerAuthProcess =
-                ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
-        final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
-        final boolean brokerMasterFlightEnabled =
-                CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
-        Logger.info(
-                methodTag,
-                "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
-                        + isBrokerAuthProcess
-                        + "], hasTelemetrySink=["
-                        + (telemetrySink != null)
-                        + "], brokerMasterFlightEnabled=["
-                        + brokerMasterFlightEnabled
-                        + "]."
-        );
-        setAuthUxBridgeSession(AuthUxBridgeSession.create(
-                view,
-                url,
-                isBrokerAuthProcess,
-                telemetrySink,
-                brokerMasterFlightEnabled
-        ));
+        replaceAuthUxBridgeSession(() -> {
+            final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
+            final boolean isBrokerAuthProcess =
+                    ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+            final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
+            final boolean brokerAuthUxBridgeEnabled;
+            final boolean preferWebMessageListener;
+            if (isBrokerAuthProcess) {
+                final IFlightsProvider flightsProvider =
+                        CommonFlightsManager.INSTANCE.getFlightsProvider();
+                brokerAuthUxBridgeEnabled =
+                        flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                // A disabled bridge must not depend on the transport flight lookup succeeding.
+                preferWebMessageListener = brokerAuthUxBridgeEnabled
+                        && safelyResolveAuthUxTransportFlight(flightsProvider);
+            } else {
+                // Broker gate is not applied; recorder presence controls non-Broker eligibility.
+                brokerAuthUxBridgeEnabled = true;
+                preferWebMessageListener = telemetrySink != null;
+            }
+            Logger.info(
+                    methodTag,
+                    "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
+                            + isBrokerAuthProcess
+                            + "], hasTelemetrySink=["
+                            + (telemetrySink != null)
+                            + "], brokerAuthUxBridgeEnabled=["
+                            + brokerAuthUxBridgeEnabled
+                            + "], brokerAuthUxBridgeGateApplied=["
+                            + isBrokerAuthProcess
+                            + "], preferWebMessageListener=["
+                            + preferWebMessageListener
+                            + "]."
+            );
+            return AuthUxBridgeSession.create(
+                    view,
+                    url,
+                    isBrokerAuthProcess,
+                    telemetrySink,
+                    brokerAuthUxBridgeEnabled,
+                    preferWebMessageListener
+            );
+        });
+    }
+
+    private static boolean safelyResolveAuthUxTransportFlight(
+            @NonNull final IFlightsProvider flightsProvider) {
+        try {
+            return flightsProvider.isFlightEnabled(
+                    CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG, "Auth UX transport flight lookup failed; selecting addJavascriptInterface.");
+            return false;
+        }
     }
 
     @Nullable
@@ -2270,6 +2302,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
         mCertBasedAuthFactory.onDestroy();
+    }
+
+    /**
+     * Closes the current bridge before creating and storing its replacement.
+     * The factory must create a fresh session, not return a pre-created or closed session.
+     */
+    protected final void replaceAuthUxBridgeSession(
+            @NonNull final Supplier<AuthUxBridgeSession> sessionFactory) {
+        closeAuthUxBridgeSession();
+        mAuthUxBridgeSession = sessionFactory.get();
     }
 
     /**

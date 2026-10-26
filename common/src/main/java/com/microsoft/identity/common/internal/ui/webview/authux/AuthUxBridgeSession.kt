@@ -205,8 +205,9 @@ class AuthUxBridgeSession private constructor(
          * Creates the request-owned Auth UX bridge and selects exactly one transport.
          *
          * Requests without an allowed Auth UX capability are disabled. WebMessageListener is used
-         * only when the initial URL fits the fixed registration rules and both required AndroidX
-         * features are available; otherwise the request uses `addJavascriptInterface`. Listener
+         * only when [preferWebMessageListener] is true, the initial URL fits the fixed registration
+         * rules, and both required AndroidX features are available; otherwise the request uses
+         * `addJavascriptInterface`. The caller captures flight policy once before creation. Listener
          * setup is transactional, and fallback is allowed only after complete rollback so two
          * native bridges cannot remain exposed at the same time.
          */
@@ -217,14 +218,15 @@ class AuthUxBridgeSession private constructor(
             initialUrl: String?,
             isBrokerAuthProcess: Boolean,
             telemetrySink: AuthUxTelemetrySink?,
-            brokerMasterFlightEnabled: Boolean,
+            brokerAuthUxBridgeEnabled: Boolean,
+            preferWebMessageListener: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
         ): AuthUxBridgeSession {
-            // Capabilities are request-scoped. Broker behavior requires its master flight, while a
+            // Capabilities are request-scoped. Broker behavior requires bridge enablement, while a
             // non-broker request can receive only onboarding telemetry when a recorder is present.
             val capabilities = when {
-                isBrokerAuthProcess && !brokerMasterFlightEnabled -> null
+                isBrokerAuthProcess && !brokerAuthUxBridgeEnabled -> null
                 isBrokerAuthProcess -> AuthUxRequestCapabilities.BROKER
                 telemetrySink != null -> AuthUxRequestCapabilities(
                     telemetryAllowed = true,
@@ -240,7 +242,8 @@ class AuthUxBridgeSession private constructor(
                 if (isBrokerAuthProcess) {
                     Logger.info(
                         TAG,
-                        "Auth UX bridge disabled because the broker master flight is not enabled."
+                        "Auth UX bridge disabled for this Broker request because " +
+                            "brokerAuthUxBridgeEnabled is false."
                     )
                 } else {
                     Logger.info(
@@ -255,6 +258,14 @@ class AuthUxBridgeSession private constructor(
                 telemetrySink = telemetrySink,
                 capabilities = capabilities
             )
+
+            if (!preferWebMessageListener) {
+                Logger.info(
+                    TAG,
+                    "WebMessageListener preference disabled; selecting addJavascriptInterface."
+                )
+                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
+            }
 
             // WebMessageListener and its document-start facade form one transport. Select it only
             // when the initial document can receive both under the same registration rules and the
