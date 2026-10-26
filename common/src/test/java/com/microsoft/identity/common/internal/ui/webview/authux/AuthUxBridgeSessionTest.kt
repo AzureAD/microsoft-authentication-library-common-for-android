@@ -57,7 +57,7 @@ class AuthUxBridgeSessionTest {
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
             telemetrySink = null,
-            brokerMasterFlightEnabled = true,
+            brokerAuthUxBridgeEnabled = true,
             preferWebMessageListener = true,
             webKitAdapter = adapter
         )
@@ -79,7 +79,7 @@ class AuthUxBridgeSessionTest {
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
             telemetrySink = null,
-            brokerMasterFlightEnabled = true,
+            brokerAuthUxBridgeEnabled = true,
             preferWebMessageListener = false,
             webKitAdapter = adapter,
             originPolicy = originPolicy
@@ -104,13 +104,13 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
-    fun `broker request is disabled when master flight is off`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = false)
+    fun `broker request is disabled when bridge enablement is off`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = false)
     }
 
     @Test
-    fun `broker recorder does not bypass disabled master flight`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = true)
+    fun `broker recorder does not bypass disabled bridge`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = true)
     }
 
     @Test
@@ -466,7 +466,7 @@ class AuthUxBridgeSessionTest {
                 initialUrl = LOGIN_URL,
                 isBrokerAuthProcess = false,
                 telemetrySink = null,
-                brokerMasterFlightEnabled = true,
+                brokerAuthUxBridgeEnabled = true,
                 preferWebMessageListener = preferWebMessageListener,
                 webKitAdapter = adapter
             )
@@ -533,7 +533,7 @@ class AuthUxBridgeSessionTest {
         assertTrue(script.contains("JSON.stringify(message)"))
     }
 
-    private fun assertBrokerMasterFlightDisabled(
+    private fun assertBrokerAuthUxBridgeDisabled(
         hasOnboardingTelemetryRecorder: Boolean
     ) {
         listOf(false, true).forEach { preferWebMessageListener ->
@@ -547,7 +547,7 @@ class AuthUxBridgeSessionTest {
                 } else {
                     null
                 },
-                brokerMasterFlightEnabled = false,
+                brokerAuthUxBridgeEnabled = false,
                 preferWebMessageListener = preferWebMessageListener,
                 webKitAdapter = adapter
             )

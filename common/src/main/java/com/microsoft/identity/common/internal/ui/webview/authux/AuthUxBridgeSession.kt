@@ -218,15 +218,15 @@ class AuthUxBridgeSession private constructor(
             initialUrl: String?,
             isBrokerAuthProcess: Boolean,
             telemetrySink: AuthUxTelemetrySink?,
-            brokerMasterFlightEnabled: Boolean,
+            brokerAuthUxBridgeEnabled: Boolean,
             preferWebMessageListener: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
         ): AuthUxBridgeSession {
-            // Capabilities are request-scoped. Broker behavior requires its master flight, while a
+            // Capabilities are request-scoped. Broker behavior requires bridge enablement, while a
             // non-broker request can receive only onboarding telemetry when a recorder is present.
             val capabilities = when {
-                isBrokerAuthProcess && !brokerMasterFlightEnabled -> null
+                isBrokerAuthProcess && !brokerAuthUxBridgeEnabled -> null
                 isBrokerAuthProcess -> AuthUxRequestCapabilities.BROKER
                 telemetrySink != null -> AuthUxRequestCapabilities(
                     telemetryAllowed = true,
@@ -242,7 +242,8 @@ class AuthUxBridgeSession private constructor(
                 if (isBrokerAuthProcess) {
                     Logger.info(
                         TAG,
-                        "Auth UX bridge disabled because the broker master flight is not enabled."
+                        "Auth UX bridge disabled for this Broker request because " +
+                            "brokerAuthUxBridgeEnabled is false."
                     )
                 } else {
                     Logger.info(
