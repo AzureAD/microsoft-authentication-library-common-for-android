@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)
 - [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)
 - [MINOR] Add a process-local, correlation-ID-keyed onboarding recorder handoff for Common WebView authorization, including identity-safe registry lifecycle, fragment correlation restoration, and recorder-backed Auth UX telemetry forwarding across brokered and non-brokered flows
 

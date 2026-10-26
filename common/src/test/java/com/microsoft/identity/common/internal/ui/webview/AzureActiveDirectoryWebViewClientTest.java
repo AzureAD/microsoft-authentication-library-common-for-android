@@ -357,8 +357,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
+        // Clear onboarding session-correlation SharedPreferences seeded by tests.
         if (mContext != null) {
             new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
                     .save("");
@@ -548,6 +547,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         flightsManager.setMockCommonFlightsProvider(flightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
         final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient = newClientWithCorrelationId("correlation-id");
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
         final WebView webView = Mockito.mock(WebView.class);
 
@@ -4871,6 +4871,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
         assertEquals(1, errors.length());
         assertEquals("53003", errors.getString(0));
+        assertNoAuthUxCorrelationCacheEntry();
     }
 
     @Test
@@ -4883,19 +4884,22 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertNotNull(sink);
         final android.content.SharedPreferences preferences = mContext.getSharedPreferences(
                 "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE);
+        final String initialCache = new org.json.JSONObject().put(
+                "correlation-test-client\u0001correlation-test-scope",
+                new org.json.JSONObject().put("id", "native-session").put("ts", 123456789L))
+                .toString();
+        assertTrue(preferences.edit().putString(
+                "com.microsoft.oneauth.session_correlation_cache", initialCache).commit());
 
         assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
         final String initialBlob = recorder.finalizeBlob();
-        final String initialCache = preferences.getString(
-                "com.microsoft.oneauth.session_correlation_cache", "");
-        assertNotNull(initialCache);
-        assertTrue(new org.json.JSONObject(initialCache)
-                .has("correlation-test-client|correlation-test-scope"));
+        assertEquals(initialCache, preferences.getString(
+                "com.microsoft.oneauth.session_correlation_cache", null));
 
         assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
         assertEquals(initialBlob, recorder.finalizeBlob());
         assertEquals(initialCache, preferences.getString(
-                "com.microsoft.oneauth.session_correlation_cache", ""));
+                "com.microsoft.oneauth.session_correlation_cache", null));
 
         assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
         final org.json.JSONArray errors =
@@ -4903,6 +4907,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(2, errors.length());
         assertEquals("53003", errors.getString(0));
         assertEquals("abc", errors.getString(1));
+        assertEquals(initialCache, preferences.getString(
+                "com.microsoft.oneauth.session_correlation_cache", null));
     }
 
     @Test
@@ -5027,14 +5033,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         return new AuthUxTelemetryEvent(correlationId, errorCode, null, null, null, null);
     }
 
-    private void assertNoAuthUxCorrelationCacheEntry() throws Exception {
+    private void assertNoAuthUxCorrelationCacheEntry() {
         final String cache = mContext.getSharedPreferences(
                 "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
                 .getString("com.microsoft.oneauth.session_correlation_cache", "");
-        if (cache != null && !cache.isEmpty()) {
-            assertFalse(new org.json.JSONObject(cache)
-                    .has("correlation-test-client|correlation-test-scope"));
-        }
+        assertTrue("Auth UX telemetry must not create a session-correlation cache document.",
+                cache == null || cache.isEmpty());
     }
 
     /**
