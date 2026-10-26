@@ -31,6 +31,9 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mockStatic
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class AuthUxJavaScriptInterfaceTest {
 
@@ -252,6 +255,77 @@ class AuthUxJavaScriptInterfaceTest {
         Assert.assertEquals(mockNumberMatchValue, NumberMatchHelper.numberMatchMap[mockSessionId])
         // ...and the telemetry sink is never invoked for a non-telemetry action.
         Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test telemetry-only capabilities reject number matching`() {
+        val bridge = AuthUxJavaScriptInterface(
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = true,
+                numberMatchingAllowed = false
+            )
+        )
+
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test closed processor ignores queued callbacks`() {
+        val sink = RecordingTelemetrySink()
+        val bridge = AuthUxJavaScriptInterface(sink)
+        bridge.close()
+
+        bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(bridge.isClosed)
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test close waits for admitted callback before returning`() {
+        val sinkEntered = CountDownLatch(1)
+        val releaseSink = CountDownLatch(1)
+        val closeStarted = CountDownLatch(1)
+        val closeCompleted = CountDownLatch(1)
+        val sink = AuthUxTelemetrySink {
+            sinkEntered.countDown()
+            check(releaseSink.await(5, TimeUnit.SECONDS)) {
+                "Timed out waiting to release the telemetry sink."
+            }
+            true
+        }
+        val bridge = AuthUxJavaScriptInterface(sink)
+        val executor = Executors.newFixedThreadPool(2)
+
+        try {
+            val processingFuture = executor.submit {
+                bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+            }
+            Assert.assertTrue(sinkEntered.await(5, TimeUnit.SECONDS))
+
+            val closeFuture = executor.submit {
+                closeStarted.countDown()
+                bridge.close()
+                closeCompleted.countDown()
+            }
+            Assert.assertTrue(closeStarted.await(5, TimeUnit.SECONDS))
+
+            Assert.assertFalse(closeCompleted.await(100, TimeUnit.MILLISECONDS))
+            releaseSink.countDown()
+
+            processingFuture.get(5, TimeUnit.SECONDS)
+            closeFuture.get(5, TimeUnit.SECONDS)
+
+            Assert.assertTrue(closeCompleted.await(1, TimeUnit.SECONDS))
+            Assert.assertTrue(bridge.isClosed)
+        } finally {
+            releaseSink.countDown()
+            executor.shutdownNow()
+        }
     }
 
     /** Test double that records every telemetry event routed to the sink. */
@@ -558,6 +632,37 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test disabled telemetry cannot fall through to number matching`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(
+            telemetrySink = sink,
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = false,
+                numberMatchingAllowed = true
+            )
+        )
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "operation": "number_matching",
+                    "sessionID": "$mockSessionId",
+                    "code_match": "$mockNumberMatchValue",
+                    "errorCode": $mockErrorCode
+                }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
     fun `test unknown action_name carrying an errorCode does not invoke the sink`() {
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
@@ -800,6 +905,68 @@ class AuthUxJavaScriptInterfaceTest {
     fun `test isValidUrlForInterface with valid AAD Global URL`() {
         val validUrl = "https://login.microsoftonline.com/common/oauth2/authorize"
         Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects uppercase and mixed-case trusted suffixes`() {
+        listOf(
+            "microsoftonline.com" to "MicrosoftOnline.com",
+            "microsoft.com" to "Microsoft.com",
+            "microsoftonline.us" to "MicrosoftOnline.us",
+            "microsoftonline.cn" to "MicrosoftOnline.cn"
+        ).forEach { (suffix, mixedCaseSuffix) ->
+            listOf(
+                "LOGIN.${suffix.uppercase()}",
+                "login.$mixedCaseSuffix"
+            ).forEach { host ->
+                val url = "https://$host/common/oauth2/authorize"
+                Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts lowercase suffixes with either subdomain casing`() {
+        listOf(
+            "microsoftonline.com",
+            "microsoft.com",
+            "microsoftonline.us",
+            "microsoftonline.cn"
+        ).forEach { suffix ->
+            listOf("login", "LOGIN").forEach { subdomain ->
+                val url = "https://$subdomain.$suffix/common/oauth2/authorize"
+                Assert.assertTrue(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects raw claims in query and fragment`() {
+        listOf(
+            "https://login.microsoftonline.com/oauth2/authorize?claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/oauth2/authorize#claims={\"access_token\":{}}"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts encoded claims`() {
+        val validUrl = "https://login.microsoftonline.com/oauth2/authorize" +
+            "?claims=%7B%22access_token%22%3A%7B%7D%7D"
+
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects malformed authorities`() {
+        listOf(
+            "https://.microsoftonline.com/path",
+            "https://login.microsoftonline.com:invalid/path",
+            "https://evil.example\\@login.microsoftonline.com/path"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
     }
 
     @Test
