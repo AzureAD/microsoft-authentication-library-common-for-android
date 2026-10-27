@@ -277,5 +277,10 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
         if (mAccessTokenRecord != null) {
             mAccessTokenRecord.clearSensitiveData();
         }
+        // Release the cache record list reference to make contained tokens GC-eligible.
+        // We null the reference rather than iterating and clearing each record's secrets,
+        // to avoid destructively modifying records that may be shared with other consumers
+        // (e.g., deduplicated silent requests via CommandDispatcher).
+        mCompleteResultFromCache = null;
     }
 }

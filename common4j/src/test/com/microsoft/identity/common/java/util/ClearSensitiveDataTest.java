@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
@@ -51,6 +52,7 @@ public class ClearSensitiveDataTest {
     private static final String FAKE_CLIENT_ID = "00000000-0000-0000-0000-000000000001";
     private static final String FAKE_CLIENT_INFO = "eyJ1aWQiOiIxMjM0NSIsInV0aWQiOiI2Nzg5MCJ9";
     private static final String FAKE_SESSION_KEY_JWE = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.fake";
+    private static final String FAKE_SESSION_KEY = "encrypted_session_key_value_67890";
 
     // ==================== Credential Tests ====================
 
@@ -282,6 +284,42 @@ public class ClearSensitiveDataTest {
 
         // Error response is not sensitive — verify it's still accessible
         assertFalse(result.getSuccess());
+    }
+
+    // ==================== PrimaryRefreshTokenRecord Tests ====================
+
+    @Test
+    public void testPrimaryRefreshTokenRecord_clearSensitiveData_nullsSessionKey() {
+        final PrimaryRefreshTokenRecord record = new PrimaryRefreshTokenRecord();
+        record.setSecret(FAKE_SECRET);
+        record.setHomeAccountId(FAKE_HOME_ACCOUNT_ID);
+        record.setSessionKey(FAKE_SESSION_KEY);
+        record.setSessionKeyRollingDate("1700000000");
+        record.setFamilyId("1");
+
+        record.clearSensitiveData();
+
+        assertNull("Secret should be null after clearSensitiveData()",
+                record.getSecret());
+        assertNull("HomeAccountId should be null after clearSensitiveData()",
+                record.getHomeAccountId());
+        assertNull("SessionKey should be null after clearSensitiveData()",
+                record.getSessionKey());
+        assertNull("SessionKeyRollingDate should be null after clearSensitiveData()",
+                record.getSessionKeyRollingDate());
+        // Non-sensitive metadata should be preserved
+        assertEquals("FamilyId should be preserved", "1", record.getFamilyId());
+    }
+
+    @Test
+    public void testPrimaryRefreshTokenRecord_toString_redactsSessionKey() {
+        final PrimaryRefreshTokenRecord record = new PrimaryRefreshTokenRecord();
+        record.setSessionKey(FAKE_SESSION_KEY);
+
+        final String str = record.toString();
+        assertFalse("toString() should not contain the session key value",
+                str.contains(FAKE_SESSION_KEY));
+        assert str.contains("[REDACTED:");
     }
 }
 

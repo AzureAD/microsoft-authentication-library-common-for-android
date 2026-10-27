@@ -328,7 +328,7 @@ public class BrokerResult implements ISensitiveData {
 
     @Nullable
     @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
-    private final List<ICacheRecord> mTenantProfileData;
+    private List<ICacheRecord> mTenantProfileData;
 
     @Nullable
     @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
@@ -787,6 +787,10 @@ public class BrokerResult implements ISensitiveData {
         mRefreshToken = null;
         mHttpResponseBody = null;
         mClientInfo = null;
+        // Release tenant profile cache records which may contain token secrets
+        // Note: we null the reference rather than iterating and clearing each record,
+        // to avoid destructively modifying records that may be shared with other consumers.
+        mTenantProfileData = null;
     }
 
 }
