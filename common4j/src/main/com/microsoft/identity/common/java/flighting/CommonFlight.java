@@ -287,9 +287,9 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Enables validated cloud metadata checks when selecting a cloud-specific token endpoint.
-     * Disabled by default for staged rollout.
+     * Enabled by default on this branch for instance-aware testing.
      */
-    VALIDATE_CLOUD_TOKEN_ENDPOINT("ValidateCloudTokenEndpoint", false),
+    VALIDATE_CLOUD_TOKEN_ENDPOINT("ValidateCloudTokenEndpoint", true),
 
     /**
      * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
