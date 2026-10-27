@@ -286,6 +286,12 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY("EnableSovereignCloudInstanceDiscovery", true),
 
     /**
+     * Enables validated cloud metadata checks when selecting a cloud-specific token endpoint.
+     * Disabled by default for staged rollout.
+     */
+    VALIDATE_CLOUD_TOKEN_ENDPOINT("ValidateCloudTokenEndpoint", false),
+
+    /**
      * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
      * in PackageHelper.isPackageInstalledAndEnabled().
      * This provides a more granular enabled check that distinguishes

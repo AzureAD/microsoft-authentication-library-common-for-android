@@ -55,6 +55,34 @@ public class CommonFlightsManagerTest {
     }
 
     @Test
+    public void testCloudTokenEndpointValidation_defaultsOffAndSupportsOverrides() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        Assert.assertEquals("ValidateCloudTokenEndpoint",
+                CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT.getKey());
+        Assert.assertEquals(Boolean.FALSE,
+                CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT.getDefaultValue());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT));
+
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        provider.addFlight(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT.getKey(), "true");
+        Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT));
+
+        provider.addFlight(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT.getKey(), "false");
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT));
+
+        provider.removeFlight(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT.getKey());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT));
+    }
+
+    @Test
     public void testSilentCallerValidationDefaultsOffButCanBeEnabled() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         Assert.assertEquals(Boolean.FALSE, CommonFlight.VALIDATE_SILENT_CALLER.getDefaultValue());

@@ -45,6 +45,8 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.LibraryInfoHelper;
@@ -677,11 +679,23 @@ public class MicrosoftStsOAuth2Strategy
             @NonNull final MicrosoftStsAuthorizationResponse response) throws ClientException {
         if (!StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             try {
-                return new CommonURIBuilder(mTokenEndpoint)
+                final String tokenEndpoint = new CommonURIBuilder(mTokenEndpoint)
                         .setHost(response.getCloudInstanceHostName())
                         .build()
                         .toString();
-            } catch (final URISyntaxException e) {
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.VALIDATE_CLOUD_TOKEN_ENDPOINT)) {
+                    final URL tokenEndpointUrl = new URL(tokenEndpoint);
+                    AzureActiveDirectory.ensureCloudDiscoveryForAuthority(tokenEndpointUrl);
+                    if (!AzureActiveDirectory.isValidCloudHost(tokenEndpointUrl)) {
+                        Logger.warn(TAG + ":buildCloudSpecificTokenEndpoint",
+                                "Token endpoint host is not a validated cloud host.");
+                        throw new ClientException(ClientException.UNKNOWN_AUTHORITY,
+                                "Token endpoint host is not a validated cloud host.");
+                    }
+                }
+                return tokenEndpoint;
+            } catch (final URISyntaxException | MalformedURLException e) {
                 throw new ClientException(ClientException.MALFORMED_URL,
                         "Failed to construct token endpoint from getCloudInstanceHostName()", e);
             }
