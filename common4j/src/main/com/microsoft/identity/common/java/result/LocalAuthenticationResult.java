@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ import lombok.NonNull;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public class LocalAuthenticationResult implements ILocalAuthenticationResult, ITelemetryAccessor {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult, ITelemetryAccessor, ISensitiveData {
 
     private String mRawIdToken;
     private final AccessTokenRecord mAccessTokenRecord;
@@ -260,5 +261,21 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     @Override
     public List<Map<String, String>> getTelemetry() {
         return mTelemetry;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Nulls out the raw ID token, refresh token, and clears the access token record's secret
+     * so they become eligible for garbage collection. After this call, this result should not
+     * be used to retrieve token values.
+     */
+    @Override
+    public void clearSensitiveData() {
+        mRawIdToken = null;
+        mRefreshToken = null;
+        if (mAccessTokenRecord != null) {
+            mAccessTokenRecord.clearSensitiveData();
+        }
     }
 }

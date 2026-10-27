@@ -29,6 +29,7 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult {
+public class BrokerResult implements ISensitiveData {
 
     private static class SerializedNames {
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
@@ -771,6 +772,21 @@ public class BrokerResult {
             this.mPowerOptimizationSettings = powerOptimizationSettings;
             return this;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Nulls out all token fields (access token, ID token, refresh token) and the raw HTTP
+     * response body (which may contain token data) from this broker result.
+     */
+    @Override
+    public void clearSensitiveData() {
+        mAccessToken = null;
+        mIdToken = null;
+        mRefreshToken = null;
+        mHttpResponseBody = null;
+        mClientInfo = null;
     }
 
 }
