@@ -73,11 +73,16 @@ public class MicrosoftStsOAuth2StrategyTest {
     private static final String VALIDATED_CLOUD_HOST = "login.microsoftonline.us";
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         AzureActiveDirectory.setEnvironment(Environment.PreProduction);
         AzureActiveDirectory.setEnvironment(Environment.Production);
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
+        final HttpsURLConnection discovery = enqueueCloudDiscoveryResponse();
+        AzureActiveDirectory.performCloudDiscovery();
+        Assert.assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+        Mockito.verify(discovery).setRequestMethod("GET");
+        Mockito.verify(discovery, Mockito.never()).getOutputStream();
         registerValidatedCloud("login.microsoftonline.com");
         registerValidatedCloud(VALIDATED_CLOUD_HOST);
     }
@@ -198,6 +203,19 @@ public class MicrosoftStsOAuth2StrategyTest {
         final TestMicrosoftStsOAuth2Strategy strategy = createStrategy(true);
         assertCloudEndpointRejected(strategy, createAuthorizationRequest(false),
                 UNRECOGNIZED_CLOUD_HOST);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCloudEndpoint_flightOn_unknownHostUsesCompletedDiscovery() {
+        setCloudEndpointValidationEnabled(true);
+        final HttpsURLConnection unusedDiscovery = enqueueCloudDiscoveryResponse();
+        assertCloudEndpointRejected(createStrategy(true), createAuthorizationRequest(false),
+                UNRECOGNIZED_CLOUD_HOST);
+        assertCloudEndpointRejected(createStrategy(false), createAuthorizationRequest(true),
+                UNRECOGNIZED_CLOUD_HOST);
+        Assert.assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+        Mockito.verifyNoInteractions(unusedDiscovery);
     }
 
     @Test
