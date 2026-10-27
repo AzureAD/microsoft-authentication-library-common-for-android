@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.webkit.ScriptHandler
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import com.microsoft.identity.common.logging.Logger
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -216,18 +217,18 @@ class AuthUxBridgeSession private constructor(
             webView: WebView,
             initialUrl: String?,
             isBrokerAuthProcess: Boolean,
-            hasOnboardingTelemetryRecorder: Boolean,
-            brokerMasterFlightEnabled: Boolean,
+            telemetrySink: AuthUxTelemetrySink?,
+            brokerAuthUxBridgeEnabled: Boolean,
             preferWebMessageListener: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
         ): AuthUxBridgeSession {
-            // Capabilities are request-scoped. Broker behavior requires its master flight, while a
+            // Capabilities are request-scoped. Broker behavior requires bridge enablement, while a
             // non-broker request can receive only onboarding telemetry when a recorder is present.
             val capabilities = when {
-                isBrokerAuthProcess && !brokerMasterFlightEnabled -> null
+                isBrokerAuthProcess && !brokerAuthUxBridgeEnabled -> null
                 isBrokerAuthProcess -> AuthUxRequestCapabilities.BROKER
-                hasOnboardingTelemetryRecorder -> AuthUxRequestCapabilities(
+                telemetrySink != null -> AuthUxRequestCapabilities(
                     telemetryAllowed = true,
                     numberMatchingAllowed = false
                 )
@@ -241,7 +242,8 @@ class AuthUxBridgeSession private constructor(
                 if (isBrokerAuthProcess) {
                     Logger.info(
                         TAG,
-                        "Auth UX bridge disabled because the broker master flight is not enabled."
+                        "Auth UX bridge disabled for this Broker request because " +
+                            "brokerAuthUxBridgeEnabled is false."
                     )
                 } else {
                     Logger.info(
@@ -252,9 +254,8 @@ class AuthUxBridgeSession private constructor(
                 return disabled(webKitAdapter)
             }
 
-            // TODO(WP2 follow-up PR): Replace null with the request-owned onboarding telemetry sink.
             val processor = AuthUxJavaScriptInterface(
-                telemetrySink = null,
+                telemetrySink = telemetrySink,
                 capabilities = capabilities
             )
 

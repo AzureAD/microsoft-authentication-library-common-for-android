@@ -35,7 +35,8 @@ import java.io.Serializable
  * target label (for example a partially-masked email address) and is therefore excluded from
  * [toString].
  *
- * @property id Opaque server identifier for this method, used to select it.
+ * @property id Opaque identifier used to select the method. Enrollment methods use a synthetic
+ * `type:channel:responseIndex` ID because the service does not issue an enrollment method ID.
  * @property type Normalized (lower-case) method type, for example `password` or `email`.
  * @property hint Optional server-supplied target label; may be `null`.
  */

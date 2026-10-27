@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import androidx.annotation.GuardedBy
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
 import com.microsoft.identity.common.logging.Logger
@@ -38,8 +39,7 @@ import java.util.Locale
  * Records onboarding telemetry events during interactive auth flows.
  * Called by WebView navigation fragments to track steps, blocking errors,
  * and domain navigation. Operates on an in-memory model, converts
- * to JSON at flow end. On block detection, persists sessionCorrelationId
- * to SharedPreferences for app-kill resilience (best-effort, async).
+ * to JSON at flow end. Session correlation persistence is owned by OneAuth's native cache.
  *
  * Lives in Android common core so both OneAuth (non-brokered) and broker apps
  * (brokered) use the same class.
@@ -53,23 +53,22 @@ import java.util.Locale
  *                  If null/blank/malformed, the recorder still functions but with empty
  *                  seed fields; a warning is logged and `finalizeBlob()` will refuse to
  *                  emit a blob with an empty `sessionCorrelationId`.
- * @param clientId  Client (application) ID, used as part of the SharedPreferences
- *                  cache key for session correlation persistence.
- * @param target    Target scopes (space-joined, sorted) for the same cache key.
- * @param context   Any Android context; the application context is captured internally
- *                  so the recorder can outlive the originating Activity/Fragment without
- *                  leaking it.
+ * @param clientId  Unused; retained for compatibility with existing callers.
+ * @param target    Unused; retained for compatibility with existing callers.
+ * @param context   Unused and not retained; kept for compatibility with existing callers.
  */
+@Suppress("UNUSED_PARAMETER")
 class OnboardingTelemetryRecorder(
     seedJson: String,
-    private val clientId: String,
-    private val target: String, // sorted, space-joined scopes
+    clientId: String,
+    target: String,
     context: Context
 ) : IOnboardingTelemetryRecorder {
-
-    // Use applicationContext so this recorder, which may outlive the originating
-    // Activity/Fragment, never holds a reference that would leak that context.
-    private val appContext: Context = context.applicationContext
+    /**
+     * Protects this recorder instance's mutable in-memory telemetry state.
+     * Each request owns a separate recorder and therefore a separate lock.
+     */
+    private val stateLock = Any()
 
     // Seed fields (from C++ common core)
     private val schemaVersion: String
@@ -77,10 +76,15 @@ class OnboardingTelemetryRecorder(
     private val onboardingMode: String
 
     // Populated fields
+    @GuardedBy("stateLock")
     private val stepsList: MutableList<StepEntry> = mutableListOf()
+    @GuardedBy("stateLock")
     private val blockingErrors: MutableList<String> = mutableListOf()
+    @GuardedBy("stateLock")
     private var lastLoadedDomain: String? = null
+    @GuardedBy("stateLock")
     private var profile: String? = null
+    @GuardedBy("stateLock")
     private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
@@ -122,13 +126,13 @@ class OnboardingTelemetryRecorder(
      */
     override fun addStep(stepId: String) {
         val isoTimestamp = SimpleDateFormat(ISO_TIMESTAMP_FORMAT, Locale.US).format(Date())
-        stepsList.add(StepEntry(stepId, isoTimestamp))
+        synchronized(stateLock) {
+            stepsList.add(StepEntry(stepId, isoTimestamp))
+        }
     }
 
     /**
      * Record a blocking error detected during the flow.
-     * Also persists the session correlation entry to SharedPreferences
-     * (best-effort, async) for app-kill resilience.
      *
      * @param errorCode The onboarding blocking-error identifier to record
      *                  (e.g., [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL]
@@ -136,10 +140,9 @@ class OnboardingTelemetryRecorder(
      *                  not a numeric service auth error code.
      */
     override fun addBlockingError(errorCode: String) {
-        blockingErrors.add(errorCode)
-
-        // Persist session correlation to SharedPreferences immediately on block
-        persistSessionCorrelation()
+        synchronized(stateLock) {
+            blockingErrors.add(errorCode)
+        }
     }
 
     /**
@@ -148,7 +151,9 @@ class OnboardingTelemetryRecorder(
      * @param domain The domain URL (e.g., "login.microsoftonline.com")
      */
     fun setLastLoadedDomain(domain: String) {
-        lastLoadedDomain = domain
+        synchronized(stateLock) {
+            lastLoadedDomain = domain
+        }
     }
 
     /**
@@ -158,7 +163,9 @@ class OnboardingTelemetryRecorder(
      *                [OnboardingTelemetryConstants.PROFILE_WORK]
      */
     fun setProfile(profile: String) {
-        this.profile = profile
+        synchronized(stateLock) {
+            this.profile = profile
+        }
     }
 
     /**
@@ -174,7 +181,9 @@ class OnboardingTelemetryRecorder(
      * @param flowTag Caller-defined experiment/variant identifier.
      */
     fun addUxFlowUsed(flowTag: String) {
-        uxFlowUsed.add(flowTag)
+        synchronized(stateLock) {
+            uxFlowUsed.add(flowTag)
+        }
     }
 
     /**
@@ -188,6 +197,7 @@ class OnboardingTelemetryRecorder(
      * @return Populated blob JSON string, or empty string if [sessionCorrelationId] is empty
      */
     override fun finalizeBlob(): String {
+        Logger.info(TAG, "Finalizing onboarding telemetry blob for session $sessionCorrelationId")
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,
@@ -195,6 +205,16 @@ class OnboardingTelemetryRecorder(
                     "to avoid emitting telemetry that cannot be joined with the broker side or with retries"
             )
             return IOnboardingTelemetryRecorder.EMPTY_BLOB
+        }
+
+        val snapshot = synchronized(stateLock) {
+            RecorderSnapshot(
+                steps = stepsList.toList(),
+                blockingErrors = blockingErrors.toList(),
+                lastLoadedDomain = lastLoadedDomain,
+                profile = profile,
+                uxFlowUsed = uxFlowUsed.toList()
+            )
         }
 
         return try {
@@ -206,7 +226,7 @@ class OnboardingTelemetryRecorder(
 
                 // StepsList
                 val steps = JSONArray()
-                for (entry in stepsList) {
+                for (entry in snapshot.steps) {
                     steps.put(JSONObject().apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
@@ -216,37 +236,37 @@ class OnboardingTelemetryRecorder(
 
                 // Platform builder fields
                 val errorsArray = JSONArray()
-                for (error in blockingErrors) {
+                for (error in snapshot.blockingErrors) {
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
                 // last_blocking_error is only meaningful when at least one was recorded;
                 // omit the field on smooth-success flows rather than serializing a sentinel.
-                if (blockingErrors.isNotEmpty()) {
+                if (snapshot.blockingErrors.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                        blockingErrors.last()
+                        snapshot.blockingErrors.last()
                     )
                 }
 
-                lastLoadedDomain?.let {
+                snapshot.lastLoadedDomain?.let {
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
 
-                if (stepsList.isNotEmpty()) {
+                if (snapshot.steps.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
-                        stepsList.last().stepId
+                        snapshot.steps.last().stepId
                     )
                 }
 
-                profile?.let {
+                snapshot.profile?.let {
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowUsed.isNotEmpty()) {
+                if (snapshot.uxFlowUsed.isNotEmpty()) {
                     val flows = JSONArray()
-                    for (flow in uxFlowUsed) {
+                    for (flow in snapshot.uxFlowUsed) {
                         flows.put(flow)
                     }
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)
@@ -260,47 +280,9 @@ class OnboardingTelemetryRecorder(
         }
     }
 
-    /**
-     * Persist session correlation entry to SharedPreferences.
-     * Uses async [SharedPreferences.Editor.apply] — the in-memory write is
-     * effective immediately, and the disk flush happens shortly after. Acceptable
-     * for this use case: blocking errors leave the app alive for seconds-to-minutes
-     * of user remediation, so the flush window is far longer than typical loss.
-     * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
-     * Called on block detection.
-     */
-    private fun persistSessionCorrelation() {
-        if (sessionCorrelationId.isEmpty()) {
-            Logger.verbose(TAG, "persistSessionCorrelation: skipped — no sessionCorrelationId")
-            return
-        }
-
-        try {
-            val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
-            val existing = prefs.getString(PREFS_FILE, "")
-            val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
-
-            val key = "$clientId|$target" // target = sorted, space-joined scopes
-            val entry = JSONObject().apply {
-                put(FIELD_ID, sessionCorrelationId)
-                put(FIELD_TS, System.currentTimeMillis())
-            }
-            cache.put(key, entry)
-
-            prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
-            Logger.verbose(
-                TAG,
-                sessionCorrelationId,
-                "Persisted session correlation entry for key=$key"
-            )
-        } catch (e: JSONException) {
-            Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
-        }
-    }
-
     companion object {
         private val TAG = OnboardingTelemetryRecorder::class.java.simpleName
-        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
+
         private const val ISO_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
         // Seed field key constants — must match OnboardingBlobConstants (Djinni-generated).
@@ -311,6 +293,13 @@ class OnboardingTelemetryRecorder(
         private const val FIELD_STEPS_LIST = "steps_list"
         private const val FIELD_STEP_ID = "step_id"
         private const val FIELD_TS = "ts"
-        private const val FIELD_ID = "id"
     }
+
+    private data class RecorderSnapshot(
+        val steps: List<StepEntry>,
+        val blockingErrors: List<String>,
+        val lastLoadedDomain: String?,
+        val profile: String?,
+        val uxFlowUsed: List<String>
+    )
 }

@@ -104,7 +104,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * Accepted shape for a `log_telemetry` error code.
          *
          * Supports numeric STS codes and symbolic recorder constants while rejecting whitespace,
-         * control characters, and unbounded values.
+         * control characters, and unbounded values. This validates only the wire shape; semantic
+         * qualification for a specific telemetry consumer belongs to its [AuthUxTelemetrySink].
          */
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
 
