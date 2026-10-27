@@ -58,14 +58,20 @@ object OnboardingTelemetryConstants {
 
     // Broker Installation
     const val STEP_BROKER_INSTALL_PROMPTED = "BrokerInstallPrompted"
+    /** Error-derived MAM broker-install prompt marker; does not confirm prompt display. */
+    const val STEP_BROKER_INSTALL_PROMPTED_FOR_MAM = "BrokerInstallPromptedForMAM"
     const val STEP_BROKER_INSTALL_PROMPTED_FOR_MDM = "BrokerInstallPromptedForMDM"
 
     // Device Registration (WPJ)
+    /** Error-derived device-registration requirement marker. */
+    const val STEP_DEVICE_REGISTRATION_REQUIRED = "DeviceRegistrationRequired"
     const val STEP_DEVICE_REGISTRATION_STARTED = "DeviceRegistrationStarted"
     const val STEP_DEVICE_REGISTRATION_COMPLETED = "DeviceRegistrationCompleted"
     const val STEP_DEVICE_REGISTRATION_UPGRADE_STARTED = "DeviceRegistrationUpgradeStarted"
 
     // MDM Enrollment (PP → WP transition)
+    /** Error-derived MDM enrollment requirement marker; not an enrollment-start event. */
+    const val STEP_MDM_ENROLLMENT_REQUIRED = "MDMEnrollmentRequired"
     const val STEP_MDM_ENROLLMENT_STARTED = "MDMEnrollmentStarted"
     const val STEP_COMPANY_PORTAL_LAUNCHED = "CompanyPortalLaunched"
     const val STEP_WEB_CP_ENROLLMENT_STARTED = "WebCpEnrollmentStarted"
@@ -75,6 +81,8 @@ object OnboardingTelemetryConstants {
     const val STEP_INTUNE_APP_PROTECTION_REQUIRED = "IntuneAppProtectionRequired"
 
     // Compliance Remediation
+    /** Error-derived device noncompliance marker; not a completed remediation. */
+    const val STEP_DEVICE_NOT_COMPLIANT = "DeviceNotCompliant"
     const val STEP_COMPLIANCE_REMEDIATION_STARTED = "ComplianceRemediationStarted"
     const val STEP_COMPLIANCE_REMEDIATION_COMPLETED = "ComplianceRemediationCompleted"
 

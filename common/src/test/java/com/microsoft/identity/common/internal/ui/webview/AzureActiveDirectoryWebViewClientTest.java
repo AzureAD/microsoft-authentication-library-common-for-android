@@ -67,11 +67,16 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.webkit.ScriptHandler;
+import androidx.webkit.JavaScriptReplyProxy;
+import androidx.webkit.WebMessageCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
@@ -79,6 +84,8 @@ import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecor
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxOriginPolicy;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxWebMessageListener;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
@@ -542,15 +549,16 @@ public class AzureActiveDirectoryWebViewClientTest {
         flightsManager.setMockCommonFlightsProvider(flightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
         final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
         final WebView webView = Mockito.mock(WebView.class);
 
         try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
              final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
-            mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+            client.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
 
             assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
-                    mWebViewClient.mAuthUxBridgeSession.getMode());
+                    client.mAuthUxBridgeSession.getMode());
             final ArgumentCaptor<AuthUxJavaScriptInterface> processor =
                     ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
             Mockito.verify(webView).addJavascriptInterface(processor.capture(), eq("broker"));
@@ -569,7 +577,7 @@ public class AzureActiveDirectoryWebViewClientTest {
             features.verifyNoInteractions();
             webKit.verifyNoInteractions();
         } finally {
-            mWebViewClient.closeAuthUxBridgeSession();
+            client.closeAuthUxBridgeSession();
         }
     }
 
@@ -4783,10 +4791,11 @@ public class AzureActiveDirectoryWebViewClientTest {
                 + "\"onboarding_mode\":\"non-brokered\"}";
         final OnboardingTelemetryRecorder recorder =
                 new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
 
         final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
-                mWebViewClient.createAuthUxTelemetrySink();
+                client.createAuthUxTelemetrySink();
         assertNotNull(sink);
         final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
                 new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
@@ -4820,10 +4829,11 @@ public class AzureActiveDirectoryWebViewClientTest {
                         "excluded-scope",
                         mContext
                 );
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
 
         final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
-                mWebViewClient.createAuthUxTelemetrySink();
+                client.createAuthUxTelemetrySink();
         assertNotNull(sink);
 
         for (final String errorCode : Arrays.asList("0", "50058", "50097", "50126")) {
@@ -4843,6 +4853,419 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertEquals(0, blob.getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    public void testAuthUxOnboarding_AllMappingsThroughBothTransports() throws Exception {
+        final String[][] mappings = {
+                {"50127", "BrokerInstallPromptedForMAM"},
+                {"501271", "BrokerInstallPrompted"},
+                {"50129", "DeviceRegistrationRequired"},
+                {"501291", "DeviceRegistrationRequired"},
+                {"50079", "StrongAuthSetupStarted"},
+                {"53000", "MDMEnrollmentRequired"},
+                {"530003", "MDMEnrollmentRequired"},
+                {"530001", "DeviceNotCompliant"},
+                {"530002", "DeviceNotCompliant"}
+        };
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean quoted : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                try {
+                    for (int i = 0; i < mappings.length; i++) {
+                        final String code = mappings[i][0];
+                        deliverAuthUxPayload(processor, useListener,
+                                authUxPayload("request-id", quoted ? "\"" + code + "\"" : code));
+                        order.verify(recorder).addBlockingError(code);
+                        order.verify(recorder).addStep(mappings[i][1]);
+                        final org.json.JSONObject blob =
+                                new org.json.JSONObject(recorder.finalizeBlob());
+                        assertEquals(i + 1, blob.getJSONArray("blocking_errors").length());
+                        assertEquals(code, blob.getJSONArray("blocking_errors").getString(i));
+                        assertEquals(i + 1, blob.getJSONArray("steps_list").length());
+                        final org.json.JSONObject step =
+                                blob.getJSONArray("steps_list").getJSONObject(i);
+                        assertEquals(mappings[i][1], step.getString("step_id"));
+                        assertTrue(step.getString("ts").matches(
+                                "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z"));
+                        assertEquals(mappings[i][1], blob.getString("last_completed_step"));
+                        assertEquals(code, blob.getString("last_blocking_error"));
+                        assertEquals("seed-session", blob.getString("session_correlation_id"));
+                        assertEquals("1.0.0", blob.getString("schema_version"));
+                        assertEquals("non-brokered", blob.getString("onboarding_mode"));
+                    }
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UnmappedErrorsRemainBlockingErrors() throws Exception {
+        final List<String> codes = Arrays.asList(
+                "53003", "abc", "AADSTS50127", "501270", "5012710", "050127", "true");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                for (final String code : codes) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"" + code + "\""));
+                }
+                // Existing Gson boolean-to-string coercion is not changed by the mapping.
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "true"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+                assertFalse(blob.has("last_completed_step"));
+                assertEquals(codes.size() + 1, blob.getJSONArray("blocking_errors").length());
+                for (int i = 0; i < codes.size(); i++) {
+                    assertEquals(codes.get(i), blob.getJSONArray("blocking_errors").getString(i));
+                }
+                assertEquals("true", blob.getString("last_blocking_error"));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RejectedPayloadsDoNotSuppressLaterMappedOccurrence()
+            throws Exception {
+        final List<String> rejected = Arrays.asList(
+                "0", "50058", "50097", "50126", "null", "\"\"", "\" 50127\"",
+                "\"50127\\n\"", "\"123456789012345678901234567890123\"",
+                "{}", "[]", "50127.0");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                int accepted = 0;
+                for (final String errorJson : rejected) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", errorJson));
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"50127\""));
+                    accepted++;
+                    final org.json.JSONObject blob =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(accepted, blob.getJSONArray("blocking_errors").length());
+                    assertEquals(accepted, blob.getJSONArray("steps_list").length());
+                }
+                for (final String payload : Arrays.asList(
+                        "{", "{\"correlationID\":\"request-id\",\"action_name\":\"log_telemetry\","
+                                + "\"action_component\":\"page\",\"params\":{}}",
+                        authUxPayload("request-id", "50127").replace("log_telemetry", "unknown"),
+                        authUxPayload("request-id", "50127").replace(
+                                "\"action_component\":\"page\",", ""))) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener, payload);
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    accepted++;
+                    assertEquals(accepted, new org.json.JSONObject(recorder.finalizeBlob())
+                            .getJSONArray("steps_list").length());
+                }
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_MappedCorrelationRejectionPreservesStateAndHandledAttribute()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            final RecordingSpan span = new RecordingSpan();
+            try (final Scope ignored = span.makeCurrent()) {
+                final String before = recorder.finalizeBlob();
+                for (final String correlationId : Arrays.asList("other-request", "seed-session")) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload(correlationId, "50127"));
+                    assertEquals(before, recorder.finalizeBlob());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                }
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50127"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(1, blob.getJSONArray("blocking_errors").length());
+                assertEquals("BrokerInstallPromptedForMAM",
+                        blob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+                final String accepted = recorder.finalizeBlob();
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50058"));
+                assertEquals(accepted, recorder.finalizeBlob());
+                assertEquals("50058", span.attribute(AttributeName.authux_js_error_code.name()));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UsesCapturedRecorderAfterReplacementAndDetach() throws Exception {
+        final OnboardingTelemetryRecorder original = newAuthUxOnboardingRecorder();
+        final OnboardingTelemetryRecorder replacement = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(original);
+        final AuthUxTelemetrySink originalSink = client.createAuthUxTelemetrySink();
+        assertNotNull(originalSink);
+        client.setOnboardingTelemetryRecorder(replacement);
+        final AuthUxTelemetrySink replacementSink = client.createAuthUxTelemetrySink();
+        assertNotNull(replacementSink);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        client.setOnboardingTelemetryRecorder(null);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "530001")));
+        assertTrue(replacementSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50129")));
+        final org.json.JSONObject originalBlob = new org.json.JSONObject(original.finalizeBlob());
+        assertEquals(2, originalBlob.getJSONArray("blocking_errors").length());
+        assertEquals(2, originalBlob.getJSONArray("steps_list").length());
+        assertEquals("BrokerInstallPromptedForMAM",
+                originalBlob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+        assertEquals("DeviceNotCompliant", originalBlob.getString("last_completed_step"));
+        final org.json.JSONObject replacementBlob =
+                new org.json.JSONObject(replacement.finalizeBlob());
+        assertEquals(1, replacementBlob.getJSONArray("blocking_errors").length());
+        assertEquals(1, replacementBlob.getJSONArray("steps_list").length());
+        assertEquals("DeviceRegistrationRequired", replacementBlob.getString("last_completed_step"));
+        assertNull(client.createAuthUxTelemetrySink());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testAuthUxOnboarding_MappedErrorsRequireCapturedUsableHostId() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID, "request-id")) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            DiagnosticContext.INSTANCE.getRequestContext().put(
+                    DiagnosticContext.CORRELATION_ID, "other-request");
+            final String before = recorder.finalizeBlob();
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "50127")));
+            assertEquals(before, recorder.finalizeBlob());
+            if (hostId != null && !"request-id".equals(hostId)) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "50127")));
+                assertEquals(before, recorder.finalizeBlob());
+            }
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+            final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+            final int expected = "request-id".equals(hostId) ? 1 : 0;
+            assertEquals(expected, blob.getJSONArray("blocking_errors").length());
+            assertEquals(expected, blob.getJSONArray("steps_list").length());
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_ListenerRejectsUntrustedCallbacksBeforeMapping() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxJavaScriptInterface processor =
+                new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+        final AuthUxWebMessageListener listener =
+                new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+        final JavaScriptReplyProxy reply = Mockito.mock(JavaScriptReplyProxy.class);
+        final String payload = authUxPayload("request-id", "50127");
+        final String before = recorder.finalizeBlob();
+        try {
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://untrusted.example"), true, reply);
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"), false, reply);
+            final WebMessageCompat binary = Mockito.mock(WebMessageCompat.class);
+            when(binary.getType()).thenReturn(WebMessageCompat.TYPE_ARRAY_BUFFER);
+            listener.onPostMessage(mMockWebView, binary,
+                    Uri.parse("https://login.microsoftonline.com"), true, reply);
+            assertEquals(before, recorder.finalizeBlob());
+            deliverAuthUxPayload(processor, true, payload);
+            assertEquals(1, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("steps_list").length());
+        } finally {
+            processor.close();
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DuplicatesAndNavigationRemainIndependent() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        for (final String code : Arrays.asList("501271", "501271", "530002")) {
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", code)));
+        }
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        assertEquals(4, steps.length());
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(0).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(1).getString("step_id"));
+        assertEquals("DeviceNotCompliant", steps.getJSONObject(2).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(3).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", blob.getString("last_completed_step"));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(0));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(1));
+        assertEquals("530002", blob.getJSONArray("blocking_errors").getString(2));
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RecorderFailuresPreserveErrorFirstAndLaterEligibility()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean failStep : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                if (failStep) {
+                    Mockito.doThrow(new IllegalStateException("step failure"))
+                            .when(recorder).addStep("BrokerInstallPromptedForMAM");
+                } else {
+                    Mockito.doThrow(new IllegalStateException("error failure"))
+                            .when(recorder).addBlockingError("50127");
+                }
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final RecordingSpan span = new RecordingSpan();
+                try (final Scope ignored = span.makeCurrent()) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject failed =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 1 : 0,
+                            failed.getJSONArray("blocking_errors").length());
+                    assertEquals(0, failed.getJSONArray("steps_list").length());
+                    assertNull(span.attribute(AttributeName.authux_js_error_code.name()));
+                    if (!failStep) {
+                        Mockito.verify(recorder, never()).addStep(anyString());
+                    }
+                    span.setAttribute(AttributeKey.stringKey(
+                            AttributeName.authux_js_error_code.name()), "previous");
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    assertEquals("previous", span.attribute(
+                            AttributeName.authux_js_error_code.name()));
+                    Mockito.doCallRealMethod().when(recorder).addBlockingError("50127");
+                    Mockito.doCallRealMethod().when(recorder)
+                            .addStep("BrokerInstallPromptedForMAM");
+                    Mockito.clearInvocations(recorder);
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject recovered =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 3 : 1,
+                            recovered.getJSONArray("blocking_errors").length());
+                    assertEquals(1, recovered.getJSONArray("steps_list").length());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                    final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                    order.verify(recorder).addBlockingError("50127");
+                    order.verify(recorder).addStep("BrokerInstallPromptedForMAM");
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DisabledClosedAndMissingRecorderDoNotRecord() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            final AuthUxJavaScriptInterface disabled = new AuthUxJavaScriptInterface(
+                    sink, new AuthUxRequestCapabilities(false, true));
+            final AuthUxJavaScriptInterface closed = new AuthUxJavaScriptInterface(sink);
+            final AuthUxJavaScriptInterface missing = new AuthUxJavaScriptInterface(
+                    newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+            closed.close();
+            try {
+                for (final AuthUxJavaScriptInterface processor : Arrays.asList(
+                        disabled, closed, missing)) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                }
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("blocking_errors").length());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+            } finally {
+                disabled.close();
+                closed.close();
+                missing.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_EmptySeedStillSuppressesFinalizedBlob() {
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder("{}", "client", "scope", mContext);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        assertEquals("", recorder.finalizeBlob());
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxOnboardingRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "onboarding-test-client",
+                "onboarding-test-scope",
+                mContext
+        );
+    }
+
+    private AuthUxTelemetryEvent authUxEvent(final String correlationId, final String errorCode) {
+        return new AuthUxTelemetryEvent(correlationId, errorCode, null, null, null, null);
+    }
+
+    private String authUxPayload(final String correlationId, final String errorJson) {
+        return "{\"correlationID\":\"" + correlationId
+                + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                + "\"params\":{\"errorCode\":" + errorJson + "}}";
+    }
+
+    private void deliverAuthUxPayload(final AuthUxJavaScriptInterface processor,
+                                     final boolean useListener,
+                                     final String payload) {
+        if (useListener) {
+            new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy()).onPostMessage(
+                    mMockWebView,
+                    new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"),
+                    true,
+                    Mockito.mock(JavaScriptReplyProxy.class));
+        } else {
+            processor.receiveAuthUxMessage(payload);
+        }
     }
 
     /**
