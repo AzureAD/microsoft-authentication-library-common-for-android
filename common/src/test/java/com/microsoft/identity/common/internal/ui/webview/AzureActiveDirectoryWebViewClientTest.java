@@ -357,11 +357,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences seeded by tests.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
@@ -4882,33 +4877,36 @@ public class AzureActiveDirectoryWebViewClientTest {
         client.setOnboardingTelemetryRecorder(recorder);
         final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
         assertNotNull(sink);
-        final android.content.SharedPreferences preferences = mContext.getSharedPreferences(
-                "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE);
-        final String initialCache = new org.json.JSONObject().put(
+        final String cacheKey = "com.microsoft.oneauth.session_correlation_cache";
+        final android.content.SharedPreferences preferences =
+                mContext.getSharedPreferences(cacheKey, Context.MODE_PRIVATE);
+        final String originalCache = preferences.getString(cacheKey, null);
+        final String seededCache = new org.json.JSONObject().put(
                 "correlation-test-client\u0001correlation-test-scope",
                 new org.json.JSONObject().put("id", "native-session").put("ts", 123456789L))
                 .toString();
-        assertTrue(preferences.edit().putString(
-                "com.microsoft.oneauth.session_correlation_cache", initialCache).commit());
 
-        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
-        final String initialBlob = recorder.finalizeBlob();
-        assertEquals(initialCache, preferences.getString(
-                "com.microsoft.oneauth.session_correlation_cache", null));
+        try {
+            assertTrue(preferences.edit().putString(cacheKey, seededCache).commit());
 
-        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
-        assertEquals(initialBlob, recorder.finalizeBlob());
-        assertEquals(initialCache, preferences.getString(
-                "com.microsoft.oneauth.session_correlation_cache", null));
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            final String initialBlob = recorder.finalizeBlob();
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
 
-        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
-        final org.json.JSONArray errors =
-                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
-        assertEquals(2, errors.length());
-        assertEquals("53003", errors.getString(0));
-        assertEquals("abc", errors.getString(1));
-        assertEquals(initialCache, preferences.getString(
-                "com.microsoft.oneauth.session_correlation_cache", null));
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
+            assertEquals(initialBlob, recorder.finalizeBlob());
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("abc", errors.getString(1));
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+        } finally {
+            assertTrue(preferences.edit().putString(cacheKey, originalCache).commit());
+        }
     }
 
     @Test
