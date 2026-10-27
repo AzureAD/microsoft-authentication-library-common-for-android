@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -243,6 +244,28 @@ class BoundedNetworkRetryContextTest {
     }
 
     @Test
+    fun recoveryStatus_requiresValidSuccessOrRedirectRange() {
+        for (statusCode in listOf(-1, 0, 100, 199, 200, 299, 300, 399, 400, 503)) {
+            val retrySpan = mock(Span::class.java, CALLS_REAL_METHODS)
+            val scope = BoundedNetworkRetryContext(true, retrySpan, 30_000, waitForRetry = {})
+            val response = HttpResponse(statusCode, "{}", emptyMap())
+            var calls = 0
+            scope.use {
+                assertSame(response, it.attempt(NoRetryPolicy(), Callable {
+                    if (++calls == 1) throw dnsFailure
+                    response
+                }))
+            }
+
+            assertEquals(2, calls)
+            verify(retrySpan).setAttribute(
+                AttributeName.network_retry_succeeded.name,
+                statusCode >= 200 && statusCode < 400
+            )
+        }
+    }
+
+    @Test
     fun ineligibleFailures_doNotReceiveNewRetries() {
         val failures = listOf(
             ConnectionError.getClientException(SSLHandshakeException("certificate validation")),
@@ -344,6 +367,67 @@ class BoundedNetworkRetryContextTest {
         scope.close()
 
         assertEquals(1, calls)
+        verifyRetryTelemetry(false)
+    }
+
+    @Test
+    fun cancellationDuringWorkerBackoff_withoutThreadSignal_doesNotStartAnotherAttempt() {
+        val signal = CancellationSignal()
+        CancellationSignal.setForCurrentThread(signal)
+        val scope = context(wait = { signal.cancel() })
+        val executor = Executors.newSingleThreadExecutor()
+        try {
+            val calls = executor.submit(Callable {
+                assertNull(CancellationSignal.getCurrentThreadSignal())
+                var attempts = 0
+                assertSame(dnsFailure, assertThrows(ClientException::class.java) {
+                    scope.attempt(NoRetryPolicy(), Callable {
+                        if (++attempts == 1) throw dnsFailure
+                        success
+                    })
+                })
+                attempts
+            }).get(5, TimeUnit.SECONDS)
+
+            assertEquals(1, calls)
+        } finally {
+            executor.shutdownNow()
+            scope.close()
+        }
+        verifyRetryTelemetry(false)
+    }
+
+    @Test
+    fun lateBoundCancellation_propagatesToWorkerWithoutThreadSignal() {
+        val signal = CancellationSignal()
+        val executor = Executors.newSingleThreadExecutor()
+        val policy = BoundedNetworkRetryContext.wrap(NoRetryPolicy())
+        var calls = 0
+        try {
+            BoundedNetworkRetryContext.open(true, span, 30_000).use {
+                CancellationSignal.setForCurrentThread(signal)
+                try {
+                    BoundedNetworkRetryContext.attachCancellationSignal(signal)
+                    // A descendant command must not replace the originating signal.
+                    BoundedNetworkRetryContext.attachCancellationSignal(CancellationSignal())
+                } finally {
+                    CancellationSignal.clearCurrentThread()
+                }
+                signal.cancel()
+                val task = requireNotNull(OtelContextExtension.current()).wrap(Callable {
+                    assertNull(CancellationSignal.getCurrentThreadSignal())
+                    assertThrows(ClientException::class.java) {
+                        policy.attempt(Callable { calls++; success })
+                    }
+                })
+                val failure = executor.submit(task).get(5, TimeUnit.SECONDS)
+                assertEquals(ClientException.TIMED_OUT, failure.errorCode)
+            }
+        } finally {
+            executor.shutdownNow()
+        }
+
+        assertEquals(0, calls)
         verifyRetryTelemetry(false)
     }
 

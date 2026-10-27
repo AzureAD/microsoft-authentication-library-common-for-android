@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * The existing retry policy runs first. An extra attempt is allowed only if that policy made
  * exactly one attempt, so a single HTTP request still makes at most two transport attempts.
- * Context propagation shares the additional-attempt budget across the command's worker threads.
+ * Context propagation shares the additional-attempt budget and cancellation signal across workers.
  */
 class BoundedNetworkRetryContext internal constructor(
     private val enabled: Boolean,
@@ -39,13 +39,15 @@ class BoundedNetworkRetryContext internal constructor(
     private val retryReserved = AtomicBoolean(false)
     private val retried = AtomicBoolean(false)
     private val retrySucceeded = AtomicReference<Boolean?>(null)
+    private val cancellationSignal = AtomicReference(CancellationSignal.getCurrentThreadSignal())
     private var scope: Scope? = null
 
     private fun remainingMs(): Long =
         TimeUnit.NANOSECONDS.toMillis(budgetNanos - (nanoTime() - startedAt))
 
     private fun isStopped(): Boolean =
-        closed.get() || CancellationSignal.getCurrentThreadSignal()?.isCancelled == true ||
+        closed.get() || cancellationSignal.get()?.isCancelled == true ||
+            CancellationSignal.getCurrentThreadSignal()?.isCancelled == true ||
             Thread.currentThread().isInterrupted || remainingMs() <= 0
 
     private fun isEligible(exception: ClientException): Boolean =
@@ -104,7 +106,7 @@ class BoundedNetworkRetryContext internal constructor(
                 }
                 throw retryException
             }
-            retrySucceeded.set(response.statusCode < 400)
+            retrySucceeded.set(response.statusCode in 200..399)
             return response
         }
     }
@@ -149,6 +151,15 @@ class BoundedNetworkRetryContext internal constructor(
                 Logger.error(TAG, "Unable to install bounded network retry context", error)
             }
             return SpanExtension.makeCurrentSpan(span)
+        }
+
+        /**
+         * Binds the first command's cancellation signal to the current retry scope before fan-out.
+         * The dispatcher creates this signal after the caller has opened the scope.
+         */
+        @JvmStatic
+        fun attachCancellationSignal(signal: CancellationSignal) {
+            OtelContextExtension.current()?.get(KEY)?.cancellationSignal?.compareAndSet(null, signal)
         }
 
         /** Decorates only the default client's policy, looking up the scope at execution time. */
