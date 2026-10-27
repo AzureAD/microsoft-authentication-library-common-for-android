@@ -266,27 +266,14 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     /**
      * {@inheritDoc}
      * <p>
-     * Nulls out the raw ID token and refresh token String references held directly by this
-     * result so they become eligible for garbage collection. Also releases the cache record
-     * list reference. After this call, this result should not be used to retrieve token values.
-     * <p>
-     * <strong>Note:</strong> The {@code mAccessTokenRecord} is not mutated because it is a
-     * shared reference borrowed from the token cache. Clearing its fields would corrupt
-     * other consumers (e.g., {@code BrokerResult} tenant profile records) that hold the
-     * same credential instance.
+     * Nulls out the raw ID token, refresh token, and releases the cache record list reference
+     * so they become eligible for garbage collection. After this call, this result should not
+     * be used to retrieve token values.
      */
     @Override
     public void clearSensitiveData() {
         mRawIdToken = null;
         mRefreshToken = null;
-        // Do NOT call mAccessTokenRecord.clearSensitiveData() — the record is shared
-        // with the token cache and other result objects (BrokerResult tenant profiles).
-        // Mutating it here would corrupt data still needed by other consumers.
-        //
-        // Release the cache record list reference to make contained tokens GC-eligible.
-        // We null the reference rather than iterating and clearing each record's secrets,
-        // to avoid destructively modifying records that may be shared with other consumers
-        // (e.g., deduplicated silent requests via CommandDispatcher).
         mCompleteResultFromCache = null;
     }
 }

@@ -777,8 +777,8 @@ public class BrokerResult implements ISensitiveData {
     /**
      * {@inheritDoc}
      * <p>
-     * Nulls out all token fields (access token, ID token, refresh token) and the raw HTTP
-     * response body (which may contain token data) from this broker result.
+     * Nulls out all token fields, raw HTTP response body, client info, and releases
+     * the tenant profile cache records reference.
      */
     @Override
     public void clearSensitiveData() {
@@ -787,9 +787,6 @@ public class BrokerResult implements ISensitiveData {
         mRefreshToken = null;
         mHttpResponseBody = null;
         mClientInfo = null;
-        // Release tenant profile cache records which may contain token secrets
-        // Note: we null the reference rather than iterating and clearing each record,
-        // to avoid destructively modifying records that may be shared with other consumers.
         mTenantProfileData = null;
     }
 

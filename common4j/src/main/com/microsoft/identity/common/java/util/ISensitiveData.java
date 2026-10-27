@@ -45,12 +45,6 @@ public interface ISensitiveData {
      * After this method is called, the object should be considered unusable for any operation
      * that requires the cleared fields. Callers should invoke this as soon as the sensitive data
      * is no longer needed.
-     * <p>
-     * <strong>Thread-safety and shared ownership:</strong> This method is not synchronized.
-     * Callers must ensure that the object is not shared with other consumers who may still need
-     * the sensitive data. In particular, when result objects are shared across deduplicated
-     * requests (e.g., via {@code CommandDispatcher}), callers should extract the data they need
-     * before clearing, and should not clear a result that is still in use by another consumer.
      */
     void clearSensitiveData();
 }
