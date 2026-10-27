@@ -416,7 +416,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
         );
         return event -> {
-            // Bind page-reported errors to this host request, not the seed ID or thread-local context.
+            // Bind page-reported errors to this host request before mutating its onboarding blob.
+            // Use the captured ID, not mutable thread-local context or the recorder's seed ID,
+            // so an unrelated request's error cannot be attributed to this request.
             if (StringUtil.isNullOrEmpty(mCorrelationId)
                     || DiagnosticContext.UNSET_CORRELATION_ID.equals(mCorrelationId)) {
                 Logger.info(

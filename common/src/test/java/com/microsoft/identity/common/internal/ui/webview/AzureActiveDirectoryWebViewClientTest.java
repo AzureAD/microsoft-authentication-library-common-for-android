@@ -358,12 +358,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
@@ -5233,6 +5227,185 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("", recorder.finalizeBlob());
     }
 
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchDoesNotPersistAndMatchingEventStillAppends()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("seed-session", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertNoAuthUxCorrelationCacheEntry();
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchPreservesExistingBlobAndCache()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final String cacheKey = "com.microsoft.oneauth.session_correlation_cache";
+        final android.content.SharedPreferences preferences =
+                mContext.getSharedPreferences(cacheKey, Context.MODE_PRIVATE);
+        final String originalCache = preferences.getString(cacheKey, null);
+        final String seededCache = new org.json.JSONObject().put(
+                "correlation-test-client\u0001correlation-test-scope",
+                new org.json.JSONObject().put("id", "native-session").put("ts", 123456789L))
+                .toString();
+
+        try {
+            assertTrue(preferences.edit().putString(cacheKey, seededCache).commit());
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            final String initialBlob = recorder.finalizeBlob();
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
+            assertEquals(initialBlob, recorder.finalizeBlob());
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("abc", errors.getString(1));
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+        } finally {
+            assertTrue(preferences.edit().putString(cacheKey, originalCache).commit());
+        }
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_UnusableHostCorrelationRejectsEvents() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            if (hostId != null) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "53003")));
+            }
+            assertNoAuthUxCorrelationCacheEntry();
+            assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("blocking_errors").length());
+        }
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_DoesNotFallBackToDiagnosticContext() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(null);
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "thread-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("thread-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                .getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_KeepsCapturedRequestWhenDiagnosticContextChanges()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "other-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("abc", errors.getString(0));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_NoRecorderReturnsNull() {
+        assertNull(newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+    }
+
+    @Test
+    public void testAuthUxCorrelation_RawEnvelopesThroughLegacyAndListenerCallbacks() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            final AuthUxJavaScriptInterface processor = new AuthUxJavaScriptInterface(sink);
+            final AuthUxWebMessageListener listener =
+                    new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+            final JavaScriptReplyProxy replyProxy = Mockito.mock(JavaScriptReplyProxy.class);
+            try {
+                for (final String correlationId : Arrays.asList("other-request", "request-id")) {
+                    final String payload = "{\"correlationID\":\"" + correlationId
+                            + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                            + "\"params\":{\"errorCode\":\"abc\"}}";
+                    if (useListener) {
+                        listener.onPostMessage(
+                                mMockWebView,
+                                new WebMessageCompat(payload),
+                                Uri.parse("https://login.microsoftonline.com"),
+                                true,
+                                replyProxy
+                        );
+                    } else {
+                        processor.receiveAuthUxMessage(payload);
+                    }
+                    if ("other-request".equals(correlationId)) {
+                        assertNoAuthUxCorrelationCacheEntry();
+                    }
+                }
+                final org.json.JSONArray errors = new org.json.JSONObject(recorder.finalizeBlob())
+                        .getJSONArray("blocking_errors");
+                assertEquals(1, errors.length());
+                assertEquals("abc", errors.getString(0));
+            } finally {
+                processor.close();
+                mContext.getSharedPreferences(
+                        "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                        .edit().clear().commit();
+            }
+        }
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxCorrelationRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "correlation-test-client",
+                "correlation-test-scope",
+                mContext
+        );
+    }
+
     private OnboardingTelemetryRecorder newAuthUxOnboardingRecorder() {
         return new OnboardingTelemetryRecorder(
                 "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
@@ -5245,6 +5418,14 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private AuthUxTelemetryEvent authUxEvent(final String correlationId, final String errorCode) {
         return new AuthUxTelemetryEvent(correlationId, errorCode, null, null, null, null);
+    }
+
+    private void assertNoAuthUxCorrelationCacheEntry() {
+        final String cache = mContext.getSharedPreferences(
+                "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                .getString("com.microsoft.oneauth.session_correlation_cache", "");
+        assertTrue("Auth UX telemetry must not create a session-correlation cache document.",
+                cache == null || cache.isEmpty());
     }
 
     private String authUxPayload(final String correlationId, final String errorJson) {
