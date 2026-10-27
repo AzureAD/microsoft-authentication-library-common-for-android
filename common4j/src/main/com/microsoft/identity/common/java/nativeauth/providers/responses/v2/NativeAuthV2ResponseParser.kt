@@ -213,12 +213,61 @@ class NativeAuthV2ResponseParser {
             null -> missingActionError(response.correlationId)
             NativeAuthV2HalAction.CHALLENGE -> parseChallenge(response, previousState)
             NativeAuthV2HalAction.VERIFY -> parseVerify(response, previousState)
+            NativeAuthV2HalAction.ENROLL -> parseEnroll(response, previousState)
+            NativeAuthV2HalAction.ACTIVATE -> parseActivate(response, previousState)
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
             NativeAuthV2HalAction.RISK_VERIFY -> parseRiskVerify(response, previousState)
             NativeAuthV2HalAction.COLLECT_ATTRIBUTES -> parseCollectAttributes(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
+    }
+
+    private fun parseEnroll(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        val methods = mutableListOf<NativeAuthV2AuthMethod>()
+        response.methods.forEachIndexed { index, method ->
+            val type = method.type?.lowercase(Locale.ROOT)?.takeUnless { it.isBlank() }
+                ?: return malformedMethodError(response.correlationId, METHOD_TYPE_FIELD)
+            val channel = when (type) {
+                "email" -> "email"
+                "phone" -> {
+                    val channels = method.channels
+                        ?: return malformedMethodError(response.correlationId, "channels")
+                    if ("sms" !in channels) return@forEachIndexed
+                    "sms"
+                }
+                else -> return@forEachIndexed
+            }
+            if (method.links[NativeAuthV2LinkRelation.ENROLL.value].isNullOrBlank()) {
+                return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.ENROLL)
+            }
+            methods.add(NativeAuthV2AuthMethod("$type:$channel:$index", channel, null))
+        }
+        if (methods.isEmpty()) return unsupportedChallengeMethodError(response)
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+        return NativeAuthV2InteractionApiResult.RegistrationRequired(response.correlationId, successor, methods)
+    }
+
+    private fun parseActivate(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        if (response.links[NativeAuthV2LinkRelation.ACTIVATE.value].isNullOrBlank()) {
+            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.ACTIVATE)
+        }
+        val codeLength = response.codeLength
+            ?: return missingFieldError(response.correlationId, CODE_LENGTH_FIELD)
+        if (codeLength <= 0) return invalidFieldError(response.correlationId, CODE_LENGTH_FIELD)
+        val hint = response.challengeTargetLabel.orEmpty()
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+        return NativeAuthV2InteractionApiResult.ActivationRequired(
+            response.correlationId, successor, hint, codeLength
+        )
     }
 
     private fun parseChallenge(
@@ -229,7 +278,6 @@ class NativeAuthV2ResponseParser {
             is ParsedMethods.Failure -> return parsed.error
             is ParsedMethods.Success -> parsed.methods
         }
-
         val successor = NativeAuthV2ContinuationState.next(
             previous = previousState,
             response = response,
