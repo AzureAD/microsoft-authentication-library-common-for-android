@@ -557,6 +557,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             val (oAuth2Strategy, verifyResult) = performSubmitCodeVerification(parameters)
 
             return when (verifyResult) {
+                is NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired -> {
+                    val result = challengeExistingAccount(oAuth2Strategy, verifyResult)
+                    result as? NativeAuthV2SignUpSubmitCodeCommandResult
+                        ?: unexpectedSignUpApiError(result, verifyResult.correlationId)
+                }
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(verifyResult)
                 is NativeAuthV2InteractionApiResult.AttributesRequired -> {
                     val signUpResult = handleSignUpAttributesRequired(
@@ -1565,6 +1570,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         upfront: SignUpV2StartCommandParameters?
     ): INativeAuthCommandResult {
         return when (result) {
+            is NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired ->
+                challengeExistingAccount(oAuth2Strategy, result)
             is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(
                 if (upfront == null) result else result.copy(
                     continuationState = result.continuationState.withPendingSignUpAttributes(
@@ -1629,6 +1636,39 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 timestamp = result.timestamp,
                 errorCodes = result.errorCodes,
                 redirectReason = result.redirectReason
+            )
+            else -> mapInteractionError(result)
+        }
+    }
+
+    private fun challengeExistingAccount(
+        strategy: NativeAuthV2OAuth2Strategy,
+        challenge: NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired
+    ): INativeAuthCommandResult {
+        val method = challenge.methods.firstOrNull {
+            it.type == METHOD_TYPE_EMAIL || it.type == METHOD_TYPE_PASSWORD
+        } ?: return mapInteractionError(challenge)
+        val result = strategy.performMethodChallenge(challenge.continuationState, method.id)
+        return when (result) {
+            is NativeAuthV2InteractionApiResult.CodeRequired ->
+                if (method.type == METHOD_TYPE_EMAIL && result.challengeChannel == METHOD_TYPE_EMAIL) {
+                    NativeAuthV2CommandResult.ExistingAccountCodeRequired(
+                        result.correlationId, result.continuationState, result.codeLength,
+                        result.challengeTargetLabel, result.challengeChannel
+                    )
+                } else mapInteractionError(result)
+            is NativeAuthV2InteractionApiResult.PasswordRequired ->
+                if (method.type == METHOD_TYPE_PASSWORD) {
+                    NativeAuthV2CommandResult.ExistingAccountPasswordRequired(
+                        result.correlationId, result.continuationState
+                    )
+                } else mapInteractionError(result)
+            is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                correlationId = result.correlationId,
+                redirectReason = result.redirectReason,
+                traceId = result.traceId,
+                timestamp = result.timestamp,
+                errorCodes = result.errorCodes
             )
             else -> mapInteractionError(result)
         }

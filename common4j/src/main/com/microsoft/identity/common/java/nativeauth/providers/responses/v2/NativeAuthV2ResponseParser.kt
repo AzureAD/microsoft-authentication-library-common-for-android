@@ -285,6 +285,13 @@ class NativeAuthV2ResponseParser {
         ) ?: return missingContinuationTokenError(response.correlationId)
 
         return when {
+            response.state == "interactionRequired" &&
+                previousState.scenario == NativeAuthV2FlowScenario.SIGN_UP &&
+                response.isSingleFactorChallenge &&
+                methods.any { it.type == "email" || it.type == "password" } ->
+                NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
+                    response.correlationId, successor.forExistingAccountSignIn(), methods
+                )
             response.isSingleFactorChallenge -> NativeAuthV2InteractionApiResult.ChallengeRequired(
                 correlationId = response.correlationId,
                 continuationState = successor,
