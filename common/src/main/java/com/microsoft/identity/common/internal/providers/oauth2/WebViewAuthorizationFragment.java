@@ -67,6 +67,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
+import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.IUrlLoadTracker;
@@ -307,9 +309,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         mAADWebViewClient = createAADWebViewClient(activity);
         setUpWebView(view, mAADWebViewClient);
-        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
+        initializeAuthUxJavaScriptApi(mAADWebViewClient, mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
+    }
+    /**
+     * Resolves and attaches the request-owned recorder before immutable Auth UX capability
+     * selection and transport initialization.
+     */
+    @VisibleForTesting
+    void initializeAuthUxJavaScriptApi(
+            @NonNull final AzureActiveDirectoryWebViewClient webViewClient,
+            @NonNull final WebView webView,
+            @Nullable final String authorizationRequestUrl) {
+        final OnboardingTelemetryRecorder recorder =
+                OnboardingRecorderRegistry.get(getCorrelationId());
+        webViewClient.setOnboardingTelemetryRecorder(recorder);
+        webViewClient.initializeAuthUxJavaScriptApi(webView, authorizationRequestUrl);
     }
 
     /**
