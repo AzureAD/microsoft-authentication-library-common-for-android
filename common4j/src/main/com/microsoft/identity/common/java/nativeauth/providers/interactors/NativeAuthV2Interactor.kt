@@ -66,6 +66,31 @@ class NativeAuthV2Interactor(
 ) {
     private val TAG: String = NativeAuthV2Interactor::class.java.simpleName
 
+    /** Enrolls only a currently offered method and rejects blank contact before any network I/O. */
+    fun performEnroll(
+        state: NativeAuthV2ContinuationState,
+        methodId: String,
+        contact: String
+    ): NativeAuthV2InteractionApiResult {
+        if (contact.isBlank() || state.enrollmentChannel(methodId) == null) {
+            return NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = state.correlationId,
+                error = "invalid_input",
+                errorDescription = "Select an offered enrollment method and supply a nonblank verification contact."
+            )
+        }
+        return executeJsonInteraction(
+            requestProvider.createEnrollRequest(state, methodId, contact),
+            state, "$TAG.performEnroll"
+        )
+    }
+
+    /** Activates a newly enrolled method at the exact service-provided activation link. */
+    fun performActivate(state: NativeAuthV2ContinuationState, otp: String): NativeAuthV2InteractionApiResult =
+        executeJsonInteraction(
+            requestProvider.createActivateRequest(state, otp), state, "$TAG.performActivate"
+        )
+
     //region /oauth2/v2.0/authorize-challenge (start)
     /**
      * Starts a V2 Native Auth flow at the authorize-challenge endpoint.
@@ -286,7 +311,7 @@ class NativeAuthV2Interactor(
 
             return executeJsonInteraction(
                 request = request,
-                state = state,
+                state = state.withResetPasswordUpdateSubmitted(),
                 methodName = "$TAG.performUpdatePassword",
                 httpMethod = HttpClient.HttpMethod.PUT
             )

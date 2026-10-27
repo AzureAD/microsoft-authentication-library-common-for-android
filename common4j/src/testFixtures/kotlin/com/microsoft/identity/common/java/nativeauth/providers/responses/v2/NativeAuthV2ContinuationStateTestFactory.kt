@@ -30,12 +30,31 @@ import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2Fl
  */
 object NativeAuthV2ContinuationStateTestFactory {
 
+    /** Models an enrollment offer containing SMS and email methods in server order. */
+    @JvmStatic
+    fun registration(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState {
+        val response = NativeAuthV2HalApiResponse.from(HalResource.from("""
+            {"action":"enroll","continuationToken":"registration","_embedded":{"methods":[
+              {"type":"phone","channels":["sms"],"_links":{"enroll":{"href":"/tenant/api/v2.0/auth/phone/enroll"}}},
+              {"type":"email","_links":{"enroll":{"href":"/tenant/api/v2.0/auth/email/enroll"}}}
+            ]}}
+        """.trimIndent()), 200, state.correlationId)
+        return (NativeAuthV2ResponseParser().parseInteraction(response, state)
+            as NativeAuthV2InteractionApiResult.RegistrationRequired).continuationState
+    }
+
+    /** Models the completion-stage marker set by the real update-password interactor. */
+    @JvmStatic
+    fun afterPasswordUpdate(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        state.withResetPasswordUpdateSubmitted()
+
     @JvmStatic
     fun create(
         correlationId: String,
         scopes: List<String> = listOf("scope"),
         entryRelation: NativeAuthV2LinkRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
-        scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.RESET_PASSWORD
+        scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+        claimsRequestJson: String? = null
     ): NativeAuthV2ContinuationState {
         val response = NativeAuthV2HalApiResponse.from(
             halResource = HalResource.from(
@@ -57,7 +76,8 @@ object NativeAuthV2ContinuationStateTestFactory {
             response = response,
             entryRelation = entryRelation,
             scenario = scenario,
-            scopes = scopes
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson
         )
 
         return (result as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
