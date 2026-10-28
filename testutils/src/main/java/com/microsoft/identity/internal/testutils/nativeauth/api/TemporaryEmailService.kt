@@ -35,10 +35,12 @@ import com.squareup.okhttp.Protocol
 import com.squareup.okhttp.Request
 import com.squareup.okhttp.ResponseBody
 import java.io.IOException
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
+import kotlin.random.Random
 
 private const val EMAIL_PROVIDER_PASSWORD_ENVIRONMENT_VARIABLE = "EMAIL_PROVIDER_PASSWORD"
 
@@ -48,6 +50,9 @@ internal fun resolveEmailProviderPassword(environment: Map<String, String>): Str
 
 /**
  * Mail.tm inbox helper for Native Auth end-to-end tests.
+ *
+ * Default instances share domain discovery for the test JVM/classloader lifetime,
+ * but keep mailbox credentials and checkpoints isolated per instance.
  */
 class TemporaryEmailService internal constructor(
     private val password: String,
@@ -58,7 +63,7 @@ class TemporaryEmailService internal constructor(
 ) {
     constructor(password: String) : this(
         password = password,
-        api = MailTmApi(),
+        api = sharedApi,
         clock = { System.currentTimeMillis() },
         sleeper = { Thread.sleep(it) },
         pollingDelaysMs = DEFAULT_POLLING_DELAYS_MS
@@ -215,6 +220,8 @@ class TemporaryEmailService internal constructor(
     )
 
     companion object {
+        // Share only the stateless HTTP API and domain cache; inbox tokens stay service-local.
+        private val sharedApi by lazy { MailTmApi() }
         private val DEFAULT_POLLING_DELAYS_MS = listOf(10_000L, 20_000L, 30_000L, 40_000L)
         private val TIMESTAMP_PATTERNS = listOf(
             "yyyy-MM-dd'T'HH:mm:ss.SSSX",
@@ -244,7 +251,7 @@ internal interface MailTmTransport {
 internal class MailTmApi(
     private val transport: MailTmTransport = OkHttpMailTmTransport()
 ) {
-    fun getDomains(): List<String> {
+    private val cachedDomains by lazy {
         val type = TypeToken.getParameterized(
             MailTmCollection::class.java,
             MailTmDomain::class.java
@@ -254,10 +261,14 @@ internal class MailTmApi(
             type,
             "/domains"
         )
-        return response.members.orEmpty()
+        val availableDomains = response.members.orEmpty()
             .filter { it.isActive == true && it.isPrivate == false && !it.domain.isNullOrBlank() }
             .map { it.domain!! }
+        check(availableDomains.isNotEmpty()) { "Mail.tm did not return an available domain" }
+        availableDomains
     }
+
+    fun getDomains(): List<String> = cachedDomains
 
     fun createAccount(address: String, password: String) {
         transport.execute(
@@ -339,14 +350,52 @@ internal class MailTmApi(
     }
 }
 
-private class OkHttpMailTmTransport(
-    private val apiClient: ApiClient = ApiClient(ApiConstants.TemporaryMailService.BASE_URL)
+/**
+ * Retries only explicit 429 responses, at most three times and with at most 60 seconds of sleep.
+ * Exhaustion fails the test with an assertion so outer flow/polling retries cannot reset the budget.
+ */
+internal class OkHttpMailTmTransport(
+    private val apiClient: ApiClient = ApiClient(ApiConstants.TemporaryMailService.BASE_URL),
+    private val clock: () -> Long = { System.currentTimeMillis() },
+    private val sleeper: (Long) -> Unit = { Thread.sleep(it) },
+    private val jitter: (Long) -> Long = { Random.nextLong(it / 2, it + 1) }
 ) : MailTmTransport {
     init {
         apiClient.getHttpClient().protocols = listOf(Protocol.HTTP_1_1)
     }
 
     override fun execute(request: MailTmRequest): String {
+        var retries = 0
+        var remainingDelayMillis = MAX_TOTAL_RETRY_DELAY_MS
+        while (true) {
+            try {
+                return executeOnce(request)
+            } catch (exception: ApiException) {
+                if (exception.code != 429) {
+                    throw exception
+                }
+                val retryAfter = exception.responseHeaders?.entries
+                    ?.firstOrNull { it.key.equals("Retry-After", ignoreCase = true) }
+                    ?.value?.firstOrNull()
+                val delayMillis = retryAfterDelayMillis(retryAfter)
+                    ?: jitter(minOf(BASE_RETRY_DELAY_MS * (1L shl retries), MAX_RETRY_DELAY_MS))
+                // Never shorten the provider's requested wait just to fit our retry budget.
+                if (retries >= MAX_THROTTLE_RETRIES || delayMillis > remainingDelayMillis) {
+                    throw AssertionError(exception.message).apply { initCause(exception) }
+                }
+                try {
+                    sleeper(delayMillis)
+                } catch (interrupted: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw interrupted
+                }
+                remainingDelayMillis -= delayMillis
+                retries++
+            }
+        }
+    }
+
+    private fun executeOnce(request: MailTmRequest): String {
         var responseBody: ResponseBody? = null
         return try {
             val response = apiClient.getHttpClient().newCall(buildRequest(request)).execute()
@@ -355,7 +404,9 @@ private class OkHttpMailTmTransport(
             if (!response.isSuccessful) {
                 throw ApiException(
                     response.code(),
-                    "Mail.tm request to ${request.endpoint} failed with status ${response.code()}"
+                    "Mail.tm request to ${request.endpoint} failed with status ${response.code()}",
+                    response.headers().toMultimap(),
+                    null
                 )
             }
             body
@@ -364,6 +415,25 @@ private class OkHttpMailTmTransport(
         } finally {
             responseBody?.close()
         }
+    }
+
+    private fun retryAfterDelayMillis(header: String?): Long? {
+        val value = header?.trim()?.takeIf(String::isNotEmpty) ?: return null
+        if (value.all { it in '0'..'9' }) {
+            val seconds = value.toLongOrNull() ?: return Long.MAX_VALUE
+            return if (seconds > Long.MAX_VALUE / 1_000) Long.MAX_VALUE else seconds * 1_000
+        }
+        for (pattern in HTTP_DATE_PATTERNS) {
+            val position = ParsePosition(0)
+            val date = SimpleDateFormat(pattern, Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("GMT")
+                isLenient = false
+            }.parse(value, position)
+            if (date != null && position.index == value.length) {
+                return (date.time - clock()).coerceAtLeast(0L)
+            }
+        }
+        return null
     }
 
     private fun buildRequest(request: MailTmRequest): Request {
@@ -381,6 +451,18 @@ private class OkHttpMailTmTransport(
             apiClient.serialize(request.body, APPLICATION_JSON)
         }
         return builder.method(request.method, body).build()
+    }
+
+    companion object {
+        private const val MAX_THROTTLE_RETRIES = 3
+        private const val BASE_RETRY_DELAY_MS = 5_000L
+        private const val MAX_RETRY_DELAY_MS = 20_000L
+        private const val MAX_TOTAL_RETRY_DELAY_MS = 60_000L
+        private val HTTP_DATE_PATTERNS = listOf(
+            "EEE, dd MMM yyyy HH:mm:ss 'GMT'",
+            "EEEE, dd-MMM-yy HH:mm:ss 'GMT'",
+            "EEE MMM d HH:mm:ss yyyy"
+        )
     }
 }
 

@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Immutable context for a single Auth UX `log_telemetry` message.
@@ -55,10 +56,14 @@ data class AuthUxTelemetryEvent(
 )
 
 /**
- * Receives validated Auth UX telemetry events from the JavaScript bridge.
+ * Host-provided destination for validated Auth UX telemetry events from the JavaScript bridge.
  *
- * Called on the WebView JavaBridge thread. Implementations must be non-blocking and make shared
- * telemetry state thread-safe.
+ * A sink is the terminal callback that consumes an event and applies the host-owned telemetry side
+ * effect. The bridge remains responsible only for parsing, validation, and delivery.
+ *
+ * Called synchronously on the active transport's callback thread: the WebView JavaBridge thread
+ * for `addJavascriptInterface`, or the UI thread for WebMessageListener. Implementations must be
+ * non-blocking and make shared telemetry state thread-safe.
  */
 fun interface AuthUxTelemetrySink {
     /**
@@ -73,12 +78,20 @@ fun interface AuthUxTelemetrySink {
 /**
  * JavaScript bridge for Auth UX messages handled by the broker.
  *
- * @property telemetrySink Optional sink for validated [ActionNames.LOG_TELEMETRY] events. When
- *  absent, telemetry messages are parsed and validated without producing a side effect.
+ * @property telemetrySink Optional host callback that consumes validated
+ *  [ActionNames.LOG_TELEMETRY] events. When absent, telemetry messages are parsed and validated
+ *  without producing a side effect.
  */
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
-    private val telemetrySink: AuthUxTelemetrySink? = null
-) {
+    private val telemetrySink: AuthUxTelemetrySink? = null,
+    private val capabilities: AuthUxRequestCapabilities = AuthUxRequestCapabilities.BROKER
+) : AuthUxMessageProcessor {
+    // Serializes callbacks with close() so teardown waits for in-flight side effects and rejects queued work.
+    private val lifecycleLock = Any()
+    private val closed = AtomicBoolean(false)
+
+    override val isClosed: Boolean
+        get() = closed.get()
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -91,7 +104,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * Accepted shape for a `log_telemetry` error code.
          *
          * Supports numeric STS codes and symbolic recorder constants while rejecting whitespace,
-         * control characters, and unbounded values.
+         * control characters, and unbounded values. This validates only the wire shape; semantic
+         * qualification for a specific telemetry consumer belongs to its [AuthUxTelemetrySink].
          */
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
 
@@ -114,24 +128,33 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             try {
                 uri = URI(uriString)
             } catch (e: URISyntaxException) {
-                Logger.warn(TAG, "URISyntaxException received. uri: $uriString, Message: ${e.message}")
+                Logger.warn(TAG, "URI syntax validation failed for the Auth UX JavaScript interface.")
                 return false
             }
 
-            val host = uri.host
+            return isValidHostForInterface(uri.host)
+        }
 
-            // A scheme-only URI (e.g. "openid-vc://?request_uri=...") has a null host. Such URIs
-            // are not AAD interface URIs, so reject them instead of throwing on a null host.
-            if (host == null) {
+        /**
+         * Checks [host] using the legacy case-sensitive Auth UX host suffix comparison.
+         *
+         * Callers must obtain [host] from strict [URI] parsing. This suffix comparison alone does
+         * not validate hostname syntax.
+         */
+        fun isValidHostForInterface(host: String?): Boolean {
+            if (host.isNullOrEmpty()) {
                 return false
             }
 
-            // Otherwise, make sure uri is a valid uri
-            // We only want to allow URIs that have the AAD uri hosts
-            return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX)
+            return host.endsWith(
+                AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX
+            ) || host.endsWith(
+                AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX
+            )
         }
     }
 
@@ -155,7 +178,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      *         }
      *
      * Telemetry (`log_telemetry`) — non-mutating; forwards an opaque server error code to the
-     * onboarding telemetry sink (AB#3688631 / AB#3688632):
+     * onboarding telemetry sink:
      *         {
      *             "correlationID": "SOME_CORRELATION_ID",
      *             "action_name":"log_telemetry",
@@ -179,7 +202,21 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      */
     @JavascriptInterface
     fun receiveAuthUxMessage(jsonPayload: String) {
+        process(jsonPayload)
+    }
+
+    override fun process(jsonPayload: String) {
+        synchronized(lifecycleLock) {
+            processWhileOpen(jsonPayload)
+        }
+    }
+
+    private fun processWhileOpen(jsonPayload: String) {
         val methodTag = "$TAG:receiveAuthUxMessage"
+        if (closed.get()) {
+            Logger.info(methodTag, "Ignoring Auth UX payload after request closure.")
+            return
+        }
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
 
         try {
@@ -222,10 +259,19 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             when {
                 // Match telemetry first so params.operation cannot route it to Number Matching.
-                actionName == ActionNames.LOG_TELEMETRY ->
-                    handleLogTelemetry(correlationId, parameters, methodTag)
+                actionName == ActionNames.LOG_TELEMETRY -> {
+                    if (capabilities.telemetryAllowed) {
+                        handleLogTelemetry(correlationId, parameters, methodTag)
+                    } else {
+                        Logger.warn(
+                            methodTag,
+                            correlationId,
+                            "Auth UX telemetry is not allowed for this request."
+                        )
+                    }
+                }
 
-                operation == OperationNames.NUMBER_MATCHING ->
+                operation == OperationNames.NUMBER_MATCHING && capabilities.numberMatchingAllowed ->
                     NumberMatchHelper.storeNumberMatch(
                         parameters.sessionId,
                         parameters.codeMatch
@@ -264,6 +310,13 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                     )
                 }
             }
+
+        }
+    }
+
+    override fun close() {
+        synchronized(lifecycleLock) {
+            closed.set(true)
         }
     }
 

@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ResendCodeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2EnrollCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ActivateCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2StrongAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
@@ -48,6 +51,25 @@ import org.junit.Test
 
 class NativeAuthV2CommandsTest {
     private val controller = mockk<NativeAuthV2FlowController>(relaxed = true)
+
+    @Test
+    fun enrollmentCommandsUseExistingTokenParametersAndDelegate() {
+        val base = parameters<NativeAuthV2SignInAfterResetPasswordCommandParameters>()
+        val state = mockk<com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState>()
+        val enroll = NativeAuthV2EnrollCommandParameters(base, state, "email:email:0", "contact")
+        val activate = NativeAuthV2ActivateCommandParameters(base, state, "otp")
+        val result = mockk<NativeAuthV2StrongAuthCommandResult>()
+        every { controller.enroll(enroll) } returns result
+        every { controller.activate(activate) } returns result
+        assertSame(result, NativeAuthV2EnrollCommand(enroll, controller, API_ID).execute())
+        assertSame(result, NativeAuthV2ActivateCommand(activate, controller, API_ID).execute())
+        assertSame(base, enroll.tokenParameters)
+        assertSame(base, activate.tokenParameters)
+        assertFalse(enroll.toString().contains("contact"))
+        assertFalse(activate.toString().contains("otp"))
+        verify(exactly = 1) { controller.enroll(enroll) }
+        verify(exactly = 1) { controller.activate(activate) }
+    }
 
     @Test
     fun resetPasswordStart_executeDelegatesAndReturnsResult() {
