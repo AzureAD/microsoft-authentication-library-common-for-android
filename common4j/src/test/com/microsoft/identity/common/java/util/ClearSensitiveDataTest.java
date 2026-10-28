@@ -29,7 +29,10 @@ import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -44,6 +47,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link ISensitiveData#clearSensitiveData()} implementations across
@@ -54,7 +58,11 @@ public class ClearSensitiveDataTest {
 
     private static final String FAKE_ACCESS_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.fake_access_token_payload";
     private static final String FAKE_REFRESH_TOKEN = "0.ARgA.fake_refresh_token_value";
-    private static final String FAKE_ID_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.fake_id_token_payload";
+    // A minimal valid JWT (header.payload.signature) for IDToken parsing tests
+    private static final String FAKE_ID_TOKEN =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0" +
+            ".eyJzdWIiOiJ0ZXN0dXNlciIsIm5hbWUiOiJUZXN0IFVzZXIifQ" +
+            ".";
     private static final String FAKE_SECRET = "super_secret_credential_value_12345";
     private static final String FAKE_HOME_ACCOUNT_ID = "uid.utid";
     private static final String FAKE_CLIENT_ID = "00000000-0000-0000-0000-000000000001";
@@ -195,7 +203,7 @@ public class ClearSensitiveDataTest {
                 toStringOutput.contains(FAKE_ID_TOKEN));
 
         // Assert: redaction markers ARE present
-        assert toStringOutput.contains("[REDACTED:");
+        assertTrue("toString() must contain redaction marker", toStringOutput.contains("[REDACTED:"));
     }
 
     @Test
@@ -207,7 +215,7 @@ public class ClearSensitiveDataTest {
 
         // Should not throw and should contain "null"
         assertNotNull(toStringOutput);
-        assert toStringOutput.contains("null");
+        assertTrue("toString() must contain 'null' for unset tokens", toStringOutput.contains("null"));
     }
 
     // ==================== MicrosoftTokenResponse Tests ====================
@@ -331,7 +339,7 @@ public class ClearSensitiveDataTest {
         final String str = record.toString();
         assertFalse("toString() should not contain the session key value",
                 str.contains(FAKE_SESSION_KEY));
-        assert str.contains("[REDACTED:");
+        assertTrue("toString() must contain redaction marker", str.contains("[REDACTED:"));
     }
 
     // ==================== LocalAuthenticationResult Tests ====================
@@ -397,6 +405,55 @@ public class ClearSensitiveDataTest {
                 FAKE_REFRESH_TOKEN, refreshTokenRecord.getSecret());
         assertEquals("External IdTokenRecord should not be mutated",
                 FAKE_ID_TOKEN, idTokenRecord.getSecret());
+    }
+
+    // ==================== AccessToken (provider) Tests ====================
+
+    @Test
+    public void testAccessToken_clearSensitiveData_nullsRawToken() {
+        final TokenResponse response = new TokenResponse();
+        response.setAccessToken(FAKE_ACCESS_TOKEN);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(3600L);
+
+        final AccessToken token = new AccessToken(response);
+        assertEquals(FAKE_ACCESS_TOKEN, token.getRawAccessToken());
+
+        token.clearSensitiveData();
+
+        assertNull("RawAccessToken should be null after clearSensitiveData()", token.getRawAccessToken());
+        assertEquals("Bearer", token.getTokenType());
+    }
+
+    // ==================== RefreshToken (provider) Tests ====================
+
+    @Test
+    public void testMicrosoftRefreshToken_clearSensitiveData_nullsRawToken() {
+        final MicrosoftTokenResponse tokenResponse = new MicrosoftTokenResponse();
+        tokenResponse.setRefreshToken(FAKE_REFRESH_TOKEN);
+        tokenResponse.setClientInfo(FAKE_CLIENT_INFO);
+        tokenResponse.setScope("user.read");
+        tokenResponse.setClientId(FAKE_CLIENT_ID);
+
+        final MicrosoftRefreshToken rt = new MicrosoftRefreshToken(tokenResponse);
+        assertEquals(FAKE_REFRESH_TOKEN, rt.getRefreshToken());
+
+        rt.clearSensitiveData();
+
+        assertNull("RawRefreshToken should be null after clearSensitiveData()", rt.getRefreshToken());
+    }
+
+    // ==================== IDToken (provider) Tests ====================
+
+    @Test
+    public void testIDToken_clearSensitiveData_nullsRawToken() throws Exception {
+        final IDToken idToken = new IDToken(FAKE_ID_TOKEN);
+        assertEquals(FAKE_ID_TOKEN, idToken.getRawIDToken());
+
+        idToken.clearSensitiveData();
+
+        assertNull("RawIdToken should be null after clearSensitiveData()", idToken.getRawIDToken());
+        assertNull("TokenClaims should be null after clearSensitiveData()", idToken.getStringClaim("sub"));
     }
 }
 
