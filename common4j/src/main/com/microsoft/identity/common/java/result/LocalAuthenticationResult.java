@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
-import com.microsoft.identity.common.java.util.ISensitiveData;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -47,10 +46,10 @@ import lombok.NonNull;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public class LocalAuthenticationResult implements ILocalAuthenticationResult, ITelemetryAccessor, ISensitiveData {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult, ITelemetryAccessor {
 
     private String mRawIdToken;
-    private AccessTokenRecord mAccessTokenRecord;
+    private final AccessTokenRecord mAccessTokenRecord;
     private final IAccountRecord mAccountRecord;
     private String mRefreshToken;
     private String mFamilyId;
@@ -109,34 +108,37 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     }
 
     @Override
+    @NonNull
     public String getAccessToken() {
-        return mAccessTokenRecord == null ? null : mAccessTokenRecord.getSecret();
+        return mAccessTokenRecord.getSecret();
     }
 
     @Override
+    @NonNull
     public Date getExpiresOn() {
-        if (mAccessTokenRecord == null) {
-            return null;
-        }
+        final Date expiresOn;
 
-        return new Date(
+        expiresOn = new Date(
                 TimeUnit.SECONDS.toMillis(
                         Long.parseLong(
                                 mAccessTokenRecord.getExpiresOn()
                         )
                 )
         );
+
+        return expiresOn;
     }
 
     @Override
     @Nullable
     public String getTenantId() {
-        return mAccessTokenRecord == null ? null : mAccessTokenRecord.getRealm();
+        return mAccessTokenRecord.getRealm();
     }
 
     @Override
+    @NonNull
     public String getUniqueId() {
-        return mAccessTokenRecord == null ? null : mAccessTokenRecord.getHomeAccountId();
+        return mAccessTokenRecord.getHomeAccountId();
     }
 
     @NonNull
@@ -158,8 +160,9 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     }
 
     @Override
+    @NonNull
     public String[] getScope() {
-        return mAccessTokenRecord == null ? new String[0] : mAccessTokenRecord.getTarget().split("\\s");
+        return mAccessTokenRecord.getTarget().split("\\s");
     }
 
     @Nullable
@@ -224,6 +227,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     }
 
     @Override
+    @NonNull
     public AccessTokenRecord getAccessTokenRecord() {
         return mAccessTokenRecord;
     }
@@ -256,20 +260,5 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     @Override
     public List<Map<String, String>> getTelemetry() {
         return mTelemetry;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Nulls out the access token record, raw ID token, refresh token, and releases the cache record list reference
-     * so they become eligible for garbage collection. After this call, this result should not
-     * be used to retrieve token values.
-     */
-    @Override
-    public void clearSensitiveData() {
-        mRawIdToken = null;
-        mRefreshToken = null;
-        mAccessTokenRecord = null;
-        mCompleteResultFromCache = null;
     }
 }
