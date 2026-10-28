@@ -95,8 +95,13 @@ import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_DEVICE_NOT_COMPLIANT;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_DEVICE_REGISTRATION_REQUIRED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_STRONG_AUTH_SETUP_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -447,14 +452,45 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     "Forwarding a qualified Auth UX telemetry occurrence to the onboarding recorder."
             );
             recorder.addBlockingError(blockingError);
+            final String onboardingStep = getAuthUxOnboardingStep(blockingError);
+            if (onboardingStep != null) {
+                recorder.addStep(onboardingStep);
+            }
             return true;
         };
     }
 
     /**
+     * Maps Auth UX errors to occurrence labels, not confirmed UI actions or completed remediation.
+     */
+    @Nullable
+    private static String getAuthUxOnboardingStep(@NonNull final String errorCode) {
+        switch (errorCode) {
+            case "50127":
+                return STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
+            case "501271":
+                return STEP_BROKER_INSTALL_PROMPTED;
+            case "50129":
+            case "501291":
+                return STEP_DEVICE_REGISTRATION_REQUIRED;
+            case "50079":
+                return STEP_STRONG_AUTH_SETUP_STARTED;
+            case "53000":
+            case "530003":
+                return STEP_MDM_ENROLLMENT_REQUIRED;
+            case "530001":
+            case "530002":
+                return STEP_DEVICE_NOT_COMPLIANT;
+            default:
+                return null;
+        }
+    }
+
+    /**
      * Attach an onboarding telemetry recorder so subsequent WebView page transitions
      * (broker install prompts, MDM enrollment redirects, Company Portal launches, etc.)
-     * are recorded into the onboarding telemetry blob.
+     * and correlated Auth UX error-derived step occurrences are recorded into the onboarding
+     * telemetry blob.
      *
      * Recorder is owned by the host fragment / activity (e.g. OneAuthNavigationFragment
      * on the OneAuth side, AuthorizationActivity on the broker side). May be null when
