@@ -1650,8 +1650,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         } ?: return mapInteractionError(challenge)
         val result = strategy.performMethodChallenge(challenge.continuationState, method.id)
         return when (result) {
+            is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(result)
             is NativeAuthV2InteractionApiResult.CodeRequired ->
-                if (method.type == METHOD_TYPE_EMAIL && result.challengeChannel == METHOD_TYPE_EMAIL) {
+                if (method.type == METHOD_TYPE_EMAIL &&
+                    result.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
                     NativeAuthV2CommandResult.ExistingAccountCodeRequired(
                         result.correlationId, result.continuationState, result.codeLength,
                         result.challengeTargetLabel, result.challengeChannel
