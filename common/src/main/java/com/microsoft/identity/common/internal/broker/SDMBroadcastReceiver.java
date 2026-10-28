@@ -30,8 +30,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
@@ -52,6 +57,12 @@ import java.util.UUID;
  */
 public class SDMBroadcastReceiver {
     private static final String TAG = SDMBroadcastReceiver.class.getSimpleName();
+    @VisibleForTesting
+    static final long GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS = 5_000L;
+    private static final Object sThrottleLock = new Object();
+    private static final Handler sMainHandler = new Handler(Looper.getMainLooper());
+    @Nullable
+    private static BroadcastThrottleState sGlobalSignOutThrottleState;
     private static BroadcastReceiver sSDMBroadcastReceiver;
 
     /**
@@ -85,11 +96,25 @@ public class SDMBroadcastReceiver {
      * @param intent The receive intent for SDM broadcast.
      * @param sharedDeviceModeCallback Callback to be called.
      */
-    private static void handleSharedDeviceModeBroadCast(@NonNull final Context context,
-                                                        @NonNull final Intent intent,
-                                                        @NonNull SharedDeviceModeCallback sharedDeviceModeCallback) {
-        final String methodTag = TAG + ":handleSharedDeviceModeBroadCast";
+    @VisibleForTesting
+    static void handleSharedDeviceModeBroadCast(@NonNull final Context context,
+                                                @NonNull final Intent intent,
+                                                @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
         final String broadcastType = intent.getStringExtra(SharedDeviceModeConstants.BROADCAST_TYPE_KEY);
+        if (!SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT.equals(broadcastType)) {
+            handleSharedDeviceModeBroadcast(context, broadcastType, sharedDeviceModeCallback);
+            return;
+        }
+
+        runWithGlobalSignOutThrottle(
+                () -> handleSharedDeviceModeBroadcast(context, broadcastType, sharedDeviceModeCallback)
+        );
+    }
+
+    private static void handleSharedDeviceModeBroadcast(@NonNull final Context context,
+                                                        @Nullable final String broadcastType,
+                                                        @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
+        final String methodTag = TAG + ":handleSharedDeviceModeBroadCast";
         Logger.info(methodTag, "Received SDM broadcast with type: " + broadcastType);
         try {
             final IPlatformComponents platformComponents = AndroidPlatformComponentsFactory.createFromContext(context);
@@ -127,6 +152,76 @@ public class SDMBroadcastReceiver {
         }
     }
 
+    @VisibleForTesting
+    static void runWithGlobalSignOutThrottle(@NonNull final Runnable delivery) {
+        Runnable immediateDelivery = null;
+        synchronized (sThrottleLock) {
+            final long now = SystemClock.elapsedRealtime();
+            final BroadcastThrottleState currentState = sGlobalSignOutThrottleState;
+            if (currentState == null
+                    || now - currentState.mWindowStartElapsedRealtime >= GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS) {
+                if (currentState != null && currentState.mWindowEndRunnable != null) {
+                    sMainHandler.removeCallbacks(currentState.mWindowEndRunnable);
+                }
+
+                final BroadcastThrottleState newState = new BroadcastThrottleState(now);
+                sGlobalSignOutThrottleState = newState;
+                scheduleWindowEndLocked(newState);
+                immediateDelivery = delivery;
+            } else {
+                currentState.mPendingDelivery = delivery;
+            }
+        }
+
+        if (immediateDelivery != null) {
+            immediateDelivery.run();
+        }
+    }
+
+    private static void scheduleWindowEndLocked(@NonNull final BroadcastThrottleState state) {
+        final Runnable windowEndRunnable = () -> handleWindowEnd(state);
+        state.mWindowEndRunnable = windowEndRunnable;
+        final long elapsedInWindow = SystemClock.elapsedRealtime() - state.mWindowStartElapsedRealtime;
+        final long remainingDelay = Math.max(
+                0L,
+                GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS - elapsedInWindow
+        );
+        sMainHandler.postDelayed(windowEndRunnable, remainingDelay);
+    }
+
+    private static void handleWindowEnd(@NonNull final BroadcastThrottleState expectedState) {
+        final Runnable pendingDelivery;
+        synchronized (sThrottleLock) {
+            final BroadcastThrottleState currentState = sGlobalSignOutThrottleState;
+            if (currentState != expectedState) {
+                return;
+            }
+
+            pendingDelivery = currentState.mPendingDelivery;
+            if (pendingDelivery == null) {
+                sGlobalSignOutThrottleState = null;
+                return;
+            }
+
+            currentState.mPendingDelivery = null;
+            currentState.mWindowStartElapsedRealtime = SystemClock.elapsedRealtime();
+            scheduleWindowEndLocked(currentState);
+        }
+
+        pendingDelivery.run();
+    }
+
+    @VisibleForTesting
+    static void resetThrottleStateForTest() {
+        synchronized (sThrottleLock) {
+            if (sGlobalSignOutThrottleState != null
+                    && sGlobalSignOutThrottleState.mWindowEndRunnable != null) {
+                sMainHandler.removeCallbacks(sGlobalSignOutThrottleState.mWindowEndRunnable);
+            }
+            sGlobalSignOutThrottleState = null;
+        }
+    }
+
     private static boolean isDeviceInSharedMode(@NonNull final Context context,
                                                 @NonNull IPlatformComponents platformComponents) throws BaseException {
         final BrokerData activeBroker = BrokerDiscoveryClientFactory.getInstanceForBrokerSdk(context, platformComponents)
@@ -141,6 +236,18 @@ public class SDMBroadcastReceiver {
                 .correlationId(UUID.randomUUID().toString())
                 .build();
         return brokerMsalController.getDeviceMode(commandParameters);
+    }
+
+    private static final class BroadcastThrottleState {
+        private long mWindowStartElapsedRealtime;
+        @Nullable
+        private Runnable mPendingDelivery;
+        @Nullable
+        private Runnable mWindowEndRunnable;
+
+        private BroadcastThrottleState(final long windowStartElapsedRealtime) {
+            mWindowStartElapsedRealtime = windowStartElapsedRealtime;
+        }
     }
 
     /**
