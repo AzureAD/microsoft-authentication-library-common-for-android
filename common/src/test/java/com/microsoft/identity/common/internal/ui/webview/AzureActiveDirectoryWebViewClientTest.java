@@ -3069,7 +3069,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
-        Mockito.verify(onboardingTelemetryRecorder).addStep(STEP_MDM_ENROLLMENT_STARTED);
+        Mockito.verify(onboardingTelemetryRecorder, never()).addStep(STEP_MDM_ENROLLMENT_STARTED);
         Mockito.verify(routerFor(webViewClient), never()).resolveDeviceManagementAppPackage();
         Mockito.verify(routerFor(webViewClient), never()).launchReWpjManagementApp(anyString());
         Mockito.verify(routerFor(webViewClient)).loadInWebViewOrBrowser(

@@ -69,7 +69,9 @@ internal class DeviceCaRequestRouter(private val host: Host) {
     fun route(view: WebView, url: String): RoutingResult {
         val methodTag = "$TAG:route"
         Logger.info(methodTag, "This is a device CA request.")
-        host.recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED)
+        if (isMdmEnrollmentUrl(url)) {
+            host.recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED)
+        }
 
         if (shouldLaunchCompanyPortal()) {
             try {
@@ -335,6 +337,37 @@ internal class DeviceCaRequestRouter(private val host: Host) {
             IPPHONE_APP_SHA512_RELEASE_SIGNATURE ==
             packageHelper.getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME) &&
             packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME)
+    }
+
+    /**
+     * Identifies `browser://go.microsoft.com/fwlink/?LinkId=396941` for enrollment-start
+     * telemetry, allowing additional query parameters in any order. The scheme and host
+     * are case-insensitive; the path, query key, and LinkId value must match exactly.
+     * User information and explicit ports are not accepted.
+     *
+     * Classification failures log a non-PII warning and skip the telemetry step without
+     * interrupting Device-CA routing. This does not validate or authorize navigation.
+     *
+     * @param url The Device-CA URL to classify.
+     * @return Whether the URL matches the enrollment destination; false if classification fails.
+     */
+    private fun isMdmEnrollmentUrl(url: String): Boolean {
+        return try {
+            val uri = Uri.parse(url)
+            uri.isHierarchical &&
+                uri.scheme.equals("browser", ignoreCase = true) &&
+                uri.host.equals("go.microsoft.com", ignoreCase = true) &&
+                uri.port == -1 &&
+                uri.userInfo == null &&
+                uri.path == "/fwlink/" &&
+                uri.getQueryParameter("LinkId") == "396941"
+        } catch (exception: RuntimeException) {
+            Logger.warn(
+                "$TAG:isMdmEnrollmentUrl",
+                "Failed to evaluate the MDM enrollment URL; skipping enrollment telemetry step.",
+            )
+            false
+        }
     }
 
     private fun recordCompanyPortalLaunch(managementAppPackage: String) {
