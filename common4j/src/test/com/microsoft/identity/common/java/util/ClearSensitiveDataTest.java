@@ -22,15 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -262,6 +270,10 @@ public class ClearSensitiveDataTest {
         // Assert: response reference is nulled
         assertNull("TokenResponse should be null after clearSensitiveData()",
                 result.getTokenResponse());
+        // Assert: delegated cleanup on the response object
+        assertNull("Contained response accessToken should be null", response.getAccessToken());
+        assertNull("Contained response refreshToken should be null", response.getRefreshToken());
+        assertNull("Contained response idToken should be null", response.getIdToken());
     }
 
     @Test
@@ -320,6 +332,71 @@ public class ClearSensitiveDataTest {
         assertFalse("toString() should not contain the session key value",
                 str.contains(FAKE_SESSION_KEY));
         assert str.contains("[REDACTED:");
+    }
+
+    // ==================== LocalAuthenticationResult Tests ====================
+
+    @Test
+    public void testLocalAuthenticationResult_clearSensitiveData_releasesAllTokens() {
+        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
+        accessTokenRecord.setSecret(FAKE_ACCESS_TOKEN);
+        accessTokenRecord.setExpiresOn("1700000000");
+        accessTokenRecord.setRealm("tenant1");
+        accessTokenRecord.setTarget("user.read");
+        accessTokenRecord.setHomeAccountId(FAKE_HOME_ACCOUNT_ID);
+
+        final RefreshTokenRecord refreshTokenRecord = new RefreshTokenRecord();
+        refreshTokenRecord.setSecret(FAKE_REFRESH_TOKEN);
+
+        final IdTokenRecord idTokenRecord = new IdTokenRecord();
+        idTokenRecord.setSecret(FAKE_ID_TOKEN);
+
+        final AccountRecord accountRecord = new AccountRecord();
+        accountRecord.setHomeAccountId(FAKE_HOME_ACCOUNT_ID);
+
+        final ICacheRecord cacheRecord = CacheRecord.builder()
+                .account(accountRecord)
+                .accessToken(accessTokenRecord)
+                .refreshToken(refreshTokenRecord)
+                .idToken(idTokenRecord)
+                .build();
+
+        final List<ICacheRecord> cacheRecordList = Collections.singletonList(cacheRecord);
+
+        final LocalAuthenticationResult result = new LocalAuthenticationResult(
+                cacheRecord,
+                cacheRecordList,
+                SdkType.MSAL,
+                false
+        );
+
+        // Pre-conditions
+        assertEquals(FAKE_ACCESS_TOKEN, result.getAccessToken());
+        assertEquals(FAKE_ID_TOKEN, result.getIdToken());
+        assertEquals(FAKE_REFRESH_TOKEN, result.getRefreshToken());
+        assertNotNull(result.getAccessTokenRecord());
+        assertNotNull(result.getCacheRecordWithTenantProfileData());
+
+        // Act: clear sensitive data
+        result.clearSensitiveData();
+
+        // Assert: all token fields and references are released
+        assertNull("AccessToken should be null", result.getAccessToken());
+        assertNull("IdToken should be null", result.getIdToken());
+        assertNull("RefreshToken should be null", result.getRefreshToken());
+        assertNull("AccessTokenRecord reference should be null", result.getAccessTokenRecord());
+        assertNull("CacheRecord list reference should be null", result.getCacheRecordWithTenantProfileData());
+
+        // Assert: idempotent — second clear does not throw
+        result.clearSensitiveData();
+
+        // Assert: external shared credential was NOT mutated
+        assertEquals("External AccessTokenRecord should not be mutated",
+                FAKE_ACCESS_TOKEN, accessTokenRecord.getSecret());
+        assertEquals("External RefreshTokenRecord should not be mutated",
+                FAKE_REFRESH_TOKEN, refreshTokenRecord.getSecret());
+        assertEquals("External IdTokenRecord should not be mutated",
+                FAKE_ID_TOKEN, idTokenRecord.getSecret());
     }
 }
 
