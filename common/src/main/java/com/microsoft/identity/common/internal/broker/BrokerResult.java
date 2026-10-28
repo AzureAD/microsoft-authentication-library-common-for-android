@@ -778,7 +778,7 @@ public class BrokerResult implements ISensitiveData {
      * {@inheritDoc}
      * <p>
      * Nulls out all token fields, raw HTTP response body, client info, and releases
-     * the tenant profile cache records reference.
+     * the tenant profile cache records reference without mutating shared external cache records.
      */
     @Override
     public void clearSensitiveData() {

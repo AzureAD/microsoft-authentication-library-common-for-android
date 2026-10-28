@@ -436,11 +436,24 @@ public class ClearSensitiveDataTest {
         tokenResponse.setClientId(FAKE_CLIENT_ID);
 
         final MicrosoftRefreshToken rt = new MicrosoftRefreshToken(tokenResponse);
+        // Pre-conditions
         assertEquals(FAKE_REFRESH_TOKEN, rt.getRefreshToken());
+        assertEquals(FAKE_REFRESH_TOKEN, rt.getSecret());
+        assertNotNull(rt.getClientInfo());
+        assertEquals("12345.67890", rt.getHomeAccountId());
 
+        // Act
         rt.clearSensitiveData();
 
+        // Assert: sensitive fields nulled
         assertNull("RawRefreshToken should be null after clearSensitiveData()", rt.getRefreshToken());
+        assertNull("Secret should be null after clearSensitiveData()", rt.getSecret());
+        assertNull("ClientInfo should be null after clearSensitiveData()", rt.getClientInfo());
+        assertNull("HomeAccountId should be null after clearSensitiveData()", rt.getHomeAccountId());
+
+        // Assert: non-sensitive metadata preserved
+        assertEquals("user.read", rt.getTarget());
+        assertEquals(FAKE_CLIENT_ID, rt.getClientId());
     }
 
     // ==================== IDToken (provider) Tests ====================

@@ -33,6 +33,12 @@ package com.microsoft.identity.common.java.util;
  * reference held by the object, which allows the GC to reclaim the String sooner. This reduces the
  * time window during which an attacker with root/memory-dump access could extract the data, but
  * cannot guarantee immediate erasure from the process heap.
+ * <p>
+ * <strong>Ownership and Deduplication:</strong> Callers MUST only invoke {@link #clearSensitiveData()}
+ * on instances that are exclusively owned by that caller. If an authentication result is shared
+ * across callers (for example, through deduplicated silent requests in {@code CommandDispatcher}),
+ * clearing the result from one caller will invalidate the sensitive data for all other consumers
+ * sharing that instance.
  *
  * @see <a href="https://cwe.mitre.org/data/definitions/316.html">CWE-316: Cleartext Storage of
  * Sensitive Information in Memory</a>
@@ -43,8 +49,8 @@ public interface ISensitiveData {
      * Clears all sensitive data fields held by this object by nulling out references.
      * <p>
      * After this method is called, the object should be considered unusable for any operation
-     * that requires the cleared fields. Callers should invoke this as soon as the sensitive data
-     * is no longer needed.
+     * that requires the cleared fields. Callers should invoke this only when the sensitive data
+     * is no longer needed and they have exclusive ownership of this instance.
      */
     void clearSensitiveData();
 }

@@ -242,9 +242,9 @@ public abstract class Credential extends AccountCredentialBase implements ISensi
      * {@inheritDoc}
      * <p>
      * Nulls out the secret (token value) and other identity-related fields held by this
-     * credential so that they become eligible for garbage collection. Subclasses should
-     * override this method, call {@code super.clearSensitiveData()}, and clear any additional
-     * sensitive fields they introduce.
+     * credential so that they become eligible for garbage collection. Subclasses (such as
+     * {@link PrimaryRefreshTokenRecord}) override this method, invoke {@code super.clearSensitiveData()},
+     * and clear any additional sensitive fields (such as session keys).
      */
     @Override
     public void clearSensitiveData() {
