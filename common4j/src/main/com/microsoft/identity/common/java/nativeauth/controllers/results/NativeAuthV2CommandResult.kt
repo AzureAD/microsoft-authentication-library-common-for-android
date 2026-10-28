@@ -52,8 +52,7 @@ sealed interface NativeAuthV2StrongAuthCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ExistingAccountCommandResult :
     NativeAuthV2SignUpStartCommandResult,
     NativeAuthV2SubmitAttributesCommandResult,
-    NativeAuthV2SignUpSubmitCodeCommandResult,
-    NativeAuthV2StrongAuthCommandResult
+    NativeAuthV2SignUpSubmitCodeCommandResult
 
 /** Registration can interrupt any reachable V2 interaction before the final token exchange. */
 sealed interface NativeAuthV2RegistrationCommandResult :

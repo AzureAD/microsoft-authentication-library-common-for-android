@@ -126,8 +126,18 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         return when (parameters.continuationState.flowScenario()) {
             NativeAuthV2FlowScenario.SIGN_UP -> {
                 val mapped = handleSignUpInteractionResult(strategy, result, parameters.continuationState, null)
-                mapped as? NativeAuthV2StrongAuthCommandResult
-                    ?: unexpectedSignUpApiError(mapped, result.correlationId)
+                // Preserve the strong-auth result set for existing consumers; the continuation retains sign-in.
+                when (mapped) {
+                    is NativeAuthV2CommandResult.ExistingAccountCodeRequired ->
+                        NativeAuthV2CommandResult.CodeRequired(
+                            mapped.correlationId, mapped.continuationState, mapped.codeLength,
+                            mapped.challengeTargetLabel, mapped.challengeChannel
+                        )
+                    is NativeAuthV2CommandResult.ExistingAccountPasswordRequired ->
+                        NativeAuthV2CommandResult.PasswordRequired(mapped.correlationId, mapped.continuationState)
+                    else -> mapped as? NativeAuthV2StrongAuthCommandResult
+                        ?: unexpectedSignUpApiError(mapped, result.correlationId)
+                }
             }
             NativeAuthV2FlowScenario.SIGN_IN -> when (result) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(

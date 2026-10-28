@@ -174,6 +174,40 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     }
 
     @Test
+    fun activationResumesExistingAccountUsingCompatibleStrongAuthResults() {
+        val signup = state(NativeAuthV2FlowScenario.SIGN_UP)
+        val signin = state(NativeAuthV2FlowScenario.SIGN_IN)
+        for (type in listOf("email", "password")) {
+            every { strategy.performActivate(signup, "otp") } returns
+                NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
+                    "cid", signin, listOf(NativeAuthV2AuthMethod("$type-id", type, null)))
+            every { strategy.performMethodChallenge(signin, "$type-id") } returns
+                if (type == "email") {
+                    NativeAuthV2InteractionApiResult.CodeRequired("cid", signin, "masked", "Email", 6)
+                } else {
+                    NativeAuthV2InteractionApiResult.PasswordRequired("cid", signin)
+                }
+
+            val result = controller.activate(
+                NativeAuthV2ActivateCommandParameters(builder(signup), signup, "otp"))
+
+            if (type == "email") {
+                assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
+                result as NativeAuthV2CommandResult.CodeRequired
+                assertSame(signin, result.continuationState)
+                assertEquals(6, result.codeLength)
+                assertEquals("masked", result.challengeTargetLabel)
+                assertEquals("Email", result.challengeChannel)
+            } else {
+                assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+                assertSame(signin, (result as NativeAuthV2CommandResult.PasswordRequired).continuationState)
+            }
+        }
+        verify(exactly = 0) { strategy.performPasswordVerify(any(), any()) }
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
     fun originalInteractionCommandsSurfaceRegistrationInsteadOfUnexpectedResult() {
         val prior = state()
         val registration = NativeAuthV2InteractionApiResult.RegistrationRequired("cid", prior,
