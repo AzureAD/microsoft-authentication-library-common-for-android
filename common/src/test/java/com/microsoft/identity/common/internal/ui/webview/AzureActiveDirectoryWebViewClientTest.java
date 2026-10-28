@@ -3047,6 +3047,46 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testDeviceCaEnrollmentStepIsIsolatedBetweenWebViewClients()
+            throws org.json.JSONException {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final String enrollmentUrl =
+                "browser://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1";
+        final OnboardingTelemetryRecorder firstRecorder = newOnboardingRecorder();
+        final OnboardingTelemetryRecorder nextRecorder = newOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient firstClient = Mockito.spy(
+                createWebViewClient(mActivity));
+        firstClient.setOnboardingTelemetryRecorder(firstRecorder);
+        Mockito.doReturn(true).when(firstClient).isWebCpInWebviewFeatureEnabled(anyString());
+        final WebView firstView = Mockito.mock(WebView.class);
+
+        firstClient.processWebsiteRequest(firstView, enrollmentUrl);
+
+        assertTrue(onboardingHasStep(firstRecorder, STEP_MDM_ENROLLMENT_STARTED));
+        assertFalse(onboardingHasStep(nextRecorder, STEP_MDM_ENROLLMENT_STARTED));
+        Mockito.verify(firstView).loadUrl(
+                eq("https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1"), any());
+
+        final AzureActiveDirectoryWebViewClient nextClient = Mockito.spy(
+                createWebViewClient(mActivity));
+        nextClient.setOnboardingTelemetryRecorder(nextRecorder);
+        Mockito.doReturn(true).when(nextClient).isWebCpInWebviewFeatureEnabled(anyString());
+        final WebView nextView = Mockito.mock(WebView.class);
+
+        nextClient.processWebsiteRequest(nextView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final org.json.JSONArray firstSteps =
+                new org.json.JSONObject(firstRecorder.finalizeBlob()).getJSONArray("steps_list");
+        final org.json.JSONArray nextSteps =
+                new org.json.JSONObject(nextRecorder.finalizeBlob()).getJSONArray("steps_list");
+        assertEquals(1, firstSteps.length());
+        assertEquals(STEP_MDM_ENROLLMENT_STARTED,
+                firstSteps.getJSONObject(0).getString("step_id"));
+        assertEquals(0, nextSteps.length());
+        Mockito.verify(nextView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+    }
+
+    @Test
     public void testProcessDeviceCaRequest_FlightOff_UsesLegacyFlow() {
         setNativeDeviceCaManagementAppHandoffFlight(false);
         final CapturingSpanFactory spanFactory =
