@@ -6,6 +6,8 @@
 
 **Common PR:** [AzureAD/microsoft-authentication-library-common-for-android#3226](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/pull/3226)  |  **Broker telemetry PR:** [security/ad-accounts-for-android#288](https://msft.ghe.com/security/ad-accounts-for-android/pull/288)  |  **Work item:** [AB#3706623](https://identitydivision.visualstudio.com/Engineering/_workitems/edit/3706623)
 
+**Monitoring dashboard:** [PKeyAuth SubmitUrl Enforcement Rollout](https://dataexplorer.azure.com/dashboards/29fd2473-feec-4410-8d8a-4a54bf9e5708)  |  **Queries and gate definitions:** [Dashboard runbook](./ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Dashboard.md)
+
 `ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION` defaults to `false`. Set
 `EnforcePKeyAuthSubmitUrlOriginValidation` to `true` in ECS to block a WebView PKeyAuth
 challenge when its `SubmitUrl` is not an absolute HTTPS URL with the same host and
@@ -50,10 +52,10 @@ using a rolling 30-day window capped at query time. It includes only
 | All distinct observed Broker device IDs | approximately 744,877,641 |
 | Distinct observed device IDs on Broker 16.6 or newer | approximately 257,874,077 |
 | PKeyAuth challenge spans | 1,434,286 |
-| Devices exercising PKeyAuth | 735,019 (0.099% of all observed devices; 0.285% of Broker 16.6+ devices) |
+| Sampled devices exercising PKeyAuth | 735,019 (observed ratios: 0.099% of all observed device IDs; 0.285% of Broker 16.6+ device IDs) |
 | `ALLOWED` verdicts | 1,405,210 |
 | `REJECTED_ORIGIN_MISMATCH` verdicts | 29,076 (2.027%) |
-| Devices with an origin mismatch | 19,768 (2.689% of PKeyAuth devices; 0.0077% of Broker 16.6+ devices) |
+| Sampled devices with an origin mismatch | 19,768 (2.689% of sampled PKeyAuth devices; observed footprint of 0.0077% versus Broker 16.6+ device IDs) |
 | Enforcement enabled | 0 |
 | Non-main-frame challenges | 0 |
 
@@ -62,6 +64,9 @@ population. The overall and Broker-version denominators use merged daily HLL ske
 `BrokerAdoptionStats`; the PKeyAuth populations use sampled `ProcessPKeyAuthChallenge`
 spans. A device that exercised PKeyAuth only in a trace that was not sampled is therefore
 not represented in the PKeyAuth numerator.
+The 0.0077% ratio is an observed sampled footprint, not an upper bound or an estimate of
+true affected-device prevalence; the numerator and adoption denominator do not have
+equivalent sampling.
 
 Only `ALLOWED` and `REJECTED_ORIGIN_MISMATCH` were observed. There were no sampled
 `REJECTED_SUBMIT_NOT_HTTPS`, `REJECTED_ORIGIN_UNRESOLVABLE`, or
@@ -69,12 +74,12 @@ Only `ALLOWED` and `REJECTED_ORIGIN_MISMATCH` were observed. There were no sampl
 
 ### Origin-mismatch classification
 
-| Challenging host classification | Submit host classification | Observed mismatches |
+| Challenging host cloud-validation flag | Submit host cloud-validation flag | Observed mismatches |
 |---|---|---:|
-| AAD cloud | Non-AAD | 16,202 |
-| Non-AAD | AAD cloud | 12,012 |
-| AAD cloud | AAD cloud | 604 |
-| Non-AAD | Non-AAD | 258 |
+| Validated AAD | Not validated / unknown | 16,202 |
+| Not validated / unknown | Validated AAD | 12,012 |
+| Validated AAD | Validated AAD | 604 |
+| Not validated / unknown | Not validated / unknown | 258 |
 
 The
 [MS-PKAP response specification](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pkap/3eb27db4-5335-4e3e-acd4-2354e23be472)
@@ -88,13 +93,17 @@ flight is designed to prevent.
 The shadow rollout is working as intended:
 
 - 98% of sampled PKeyAuth challenges already satisfy strict same-origin validation.
-- 28,214 of the 29,076 mismatches (97.03%) cross the AAD/non-AAD trust boundary.
-- Mismatches affect only 0.0077% of observed Broker 16.6+ devices.
+- 28,214 of the 29,076 mismatches (97.03%) have different cloud-validation flags.
+- The observed sampled mismatch-device footprint is 0.0077% versus Broker 16.6+ device
+  IDs; this is not a bound on total impact.
 - No malformed, cleartext, unresolvable-origin, or backslash-authority verdict appeared in
   the sampled production population.
 
-Raw hosts are intentionally not emitted. The cloud classifications provide a privacy-safe
-view of the security boundary without exposing the challenge or submission URLs.
+Raw hosts are intentionally not emitted. These flags use
+`AzureActiveDirectory.isValidCloudHost()`: `false` also covers missing or unvalidated cloud
+metadata, not just a known non-AAD host. The flags do not establish host ownership,
+maliciousness, or a confirmed trust-boundary crossing. The independent origin-mismatch
+verdict is the cross-origin behavior this flight is designed to block.
 
 ### Caller concentration
 
@@ -126,9 +135,9 @@ segments because enforcement will affect a large share of their PKeyAuth traffic
      `REJECTED_ORIGIN_MISMATCH`.
    - **Impact:** Those challenges are abandoned before signing or submission, preventing
      the signed device assertion from being sent across origins.
-   - **Why it is bounded:** Approximately 98% of sampled PKeyAuth challenges are already
-     same-origin, and mismatch devices represent only 0.0077% of observed Broker 16.6+
-     devices.
+   - **Observed scope:** Approximately 98% of sampled PKeyAuth challenges are already
+     same-origin. Sampled mismatch-device IDs are a small observed footprint (0.0077%
+     versus observed Broker 16.6+ IDs), not a bound on device prevalence.
    - **Mitigation and response:** Roll out by percentage, verify that blocked volume tracks
      the shadow baseline, and monitor higher-rate caller segments separately.
 
@@ -151,9 +160,10 @@ segments because enforcement will affect a large share of their PKeyAuth traffic
    - **Why it is bounded:** The challenge span records the verdict and enforcement state
      before throwing, allowing affected traces to be identified.
    - **Mitigation and response:** Compare exposed and shadow-mode cohorts for parent
-     `AcquireTokenInteractive` and `ATIInteractively` outcomes, repeated requests per
-     device, cancellation, timeout, and support incidents. Do not rely only on the
-     PKeyAuth span's own status.
+     `AcquireTokenInteractive` and `ATIInteractively` outcomes, cancellation, and support
+     incidents. The quantitative compatibility gate uses allowed-only parents so expected
+     rejection failures are not mistaken for a regression. The sampled device-day repeat
+     share is a directional proxy, not proof of a retry loop.
 
 4. **Sampling obscures the downstream impact**
    - **Likelihood:** Medium.
@@ -196,9 +206,10 @@ stable while the intended security blocking is introduced.
 
 Production canary rollout can begin after these operational prerequisites are ready:
 
-1. A production monitor compares enforced and shadow cohorts by caller, app version,
+1. The dedicated dashboard compares enforced and shadow cohorts by caller, app version,
    broker version, Android version, OEM, verdict, origin source, parent outcome, and
-   repeated requests per device.
+   sampled repeat share. At 100%, it uses the frozen historical reference in the runbook,
+   not a nonexistent contemporaneous shadow cohort.
 2. High-rate callers are included as explicit monitoring segments rather than hidden by the
    aggregate.
 3. Available controlled validation and the existing automated validation suite are green.
@@ -209,22 +220,27 @@ Production canary rollout can begin after these operational prerequisites are re
 After the operational prerequisites are met, use a percentage-based rollout. Each stage
 requires an explicit review rather than automatic expansion.
 
-| Stage | Proposed exposure | Minimum observation |
-|---|---:|---|
-| Internal validation | Microsoft test accounts and devices only | 48 hours and successful controlled PKeyAuth completion |
-| Production canary | 1% | 48 hours and at least 500 enforced challenge spans |
-| Limited production | 5% | 48 hours |
-| Broad production | 25% | 72 hours |
-| Majority production | 50% | 72 hours |
-| Full enforcement | 100% | Expand after 72 healthy hours at 50%; continue daily monitoring for at least 72 hours |
+| Stage | Proposed exposure | Minimum observation | Challenge floor, each cohort | Allowed-only parent floor, each cohort |
+|---|---:|---|---:|---:|
+| Internal validation | Microsoft test accounts and devices only | 48 hours and available controlled validation | Not a production promotion gate | Not a production promotion gate |
+| Production canary | 1% | 48 hours | 500 | 200 |
+| Limited production | 5% | 48 hours | 2,000 | 1,000 |
+| Broad production | 25% | 72 hours | 5,000 | 2,000 |
+| Majority production | 50% | 72 hours | 5,000 | 2,000 |
+| Full enforcement | 100% | 72 hours after expansion | 5,000 | 2,000 |
+
+Both current and reference populations must meet these floors across the stage's review
+window. Require an evaluable outcome comparison before expansion; insufficient samples
+mean keep the same stage, not pass the gate. No one-hour/1,000-parent condition is required
+at the 1% stage. At 100%, "reference" means the frozen, matching historical shadow data.
 
 At the 1% stage, review every sampled blocked challenge. At later stages, review every new
 caller, verdict, origin-source, app-version, Android-version, or OEM concentration.
 
 ## Monitoring plan
 
-Review production telemetry at least twice daily through the 25% stage and daily through
-the first two weeks at 100%.
+Review the linked dashboard at least twice daily through the 25% stage and daily
+thereafter, including at least 72 hours after reaching 100%.
 
 1. **Flight exposure and telemetry completeness**
    - Filter `span_name == "ProcessPKeyAuthChallenge"`.
@@ -241,9 +257,13 @@ the first two weeks at 100%.
    - During canary stages, investigate every blocked challenge.
 3. **Exposed-versus-control authentication outcomes**
    - Join to direct parent spans by `trace_id` and `parent_span_id`.
-   - Compare `AcquireTokenInteractive`, `ATIInteractively`, and `WorkplaceJoin` errors,
-     cancellation, timeout, and clean `OK` outcomes between enforced and shadow cohorts.
-   - Track repeated interactive attempts per device as a retry-loop signal.
+   - Deduplicate `AcquireTokenInteractive`, `ATIInteractively`, and `WorkplaceJoin`
+     parents; keep unmatched and mixed-cohort parents visible.
+   - Compare error/code and cancellation rates for parents with only `ALLOWED` PKeyAuth
+     children; inspect intentional mismatch blocks separately.
+   - At 100%, compare with the frozen October 28 historical shadow baseline using matching
+     app-version / broker-host / caller keys and the same selected filters.
+   - Track sampled device-day repeat share as a directional repeated-request signal.
 4. **Caller-specific guardrails**
    - Monitor Company Portal, MSApps, Teams, Outlook, Authenticator, Intune, Word, Samsung
      Knox KAM, Microsoft Launcher Enterprise, and any newly observed caller separately.
@@ -257,18 +277,40 @@ the first two weeks at 100%.
 
 ## Stage gates and rollback thresholds
 
+The dashboard's gate tile implements the formulas and sample floors in the
+[query runbook](./ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Dashboard.md).
+Update the stage percentage and actual ECS stage-start UTC timestamp at every expansion.
+
+**Explicit rejection gate:** Define `R` as the enforced `REJECTED_*` percentage and `B` as
+the reference percentage over the same selected caller/app/host scope. Pause expansion
+when `R > max(B + 0.5 percentage points, 1.5 * B)` across the completed 48/72-hour review
+window, with both populations meeting the stage's challenge floor. At 1-50%, use
+contemporaneous shadow data. At 100%, use the frozen October 28 pre-enforcement snapshot;
+its aggregate source is 93,099 challenges and 1,715 rejections before matching/filtering.
+The historical 30-day 2.027% rate above is context, not a hard-coded live control rate.
+
+Expected blocking is not itself a reason to roll back. A rejection-rate breach means
+**pause and investigate**; rollback requires attributed authentication impact or unreliable
+exposure measurement.
+
 Pause expansion and investigate when any of the following occurs:
 
 - An exposed cohort shows a confirmed authentication regression attributable to
   enforcement.
 - A caller, origin-source, or platform segment shows an unexpected authentication-outcome
   regression relative to its shadow-mode baseline.
-- The exposed cohort's interactive authentication error or cancellation rate increases by
-  more than 0.1 percentage points or 1.25x relative to the comparable shadow cohort,
-  sustained for one hour with at least 1,000 exposed parent spans.
-- Repeated interactive attempts per device increase by more than 25% relative to control.
+- The exposed allowed-only parent error/code or cancellation percentage exceeds
+  `max(reference + 0.1 percentage points, 1.25 * reference)` across the stage review
+  window with both parent sample floors met.
+- Sampled allowed-only repeat share exceeds
+  `max(reference + 5 percentage points, 1.25 * reference)`, using the same parent floors.
 - Any high-priority customer impact or Sev 2-or-higher incident is attributed to
   enforcement.
+
+Every promotion row must be evaluable. Hold expansion for incomplete telemetry, mixed or
+unknown parent cohorts, less than 95% matched-parent coverage, or (at 100%) less than 95%
+challenge coverage by matching frozen-baseline keys. These operational thresholds trigger
+review; they are not claims of statistical equivalence or final authentication success.
 
 Roll back immediately rather than merely pausing when:
 
@@ -313,11 +355,10 @@ enforcement-only regression.
 - No confirmed authentication regression is attributed to enforcement.
 - No regression remains concentrated in a caller, origin-source, Android-version, OEM, or
   app-version segment.
-- Exposed-versus-control parent error, cancellation, and retry rates remain within the
-  stage gates.
+- Allowed-only parent error/code, cancellation, and sampled repeat rates remain within
+  the stage gates, using the frozen historical control at 100%.
 - Controlled interactive PKeyAuth validation remains successful for the supported broker,
   first-party app, federated, and device-management scenarios.
-- At least 100,000 enforced challenge spans have been observed across seven consecutive
-  days, including meaningful traffic from Company Portal, Teams, Outlook, Authenticator,
-  and Intune.
+- At least 72 hours at 100% and the final-stage sample/coverage floors are satisfied,
+  including review of Company Portal, Teams, Outlook, Authenticator, and Intune segments.
 - No Sev 2-or-higher incident is attributed to PKeyAuth `SubmitUrl` origin enforcement.
