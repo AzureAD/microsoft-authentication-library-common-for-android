@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference
  * The existing retry policy runs first. An extra attempt is allowed only if that policy made
  * exactly one attempt, so a single HTTP request still makes at most two transport attempts.
  * Context propagation shares the additional-attempt budget and cancellation signal across workers.
+ * The originating caller's lifetime does not restrict ordinary attempts on a shared command.
  */
 class BoundedNetworkRetryContext internal constructor(
     private val enabled: Boolean,
@@ -65,7 +66,7 @@ class BoundedNetworkRetryContext internal constructor(
         var callAttempts = 0
         var additionalAttempt = false
         val observed = Callable {
-            if (enabled && isStopped()) {
+            if (additionalAttempt && isStopped()) {
                 throw ClientException(ClientException.TIMED_OUT, "Network retry request is no longer active")
             }
             callAttempts++
@@ -98,6 +99,8 @@ class BoundedNetworkRetryContext internal constructor(
             }
             additionalAttempt = true
             // Do not nest the legacy policy: its own retry would multiply transport attempts.
+            val previous = additionalAttemptContext.get()
+            additionalAttemptContext.set(this)
             val response = try {
                 NoRetryPolicy().attempt(observed)
             } catch (retryException: ClientException) {
@@ -105,6 +108,12 @@ class BoundedNetworkRetryContext internal constructor(
                     retrySucceeded.set(false)
                 }
                 throw retryException
+            } finally {
+                if (previous == null) {
+                    additionalAttemptContext.remove()
+                } else {
+                    additionalAttemptContext.set(previous)
+                }
             }
             retrySucceeded.set(response.statusCode in 200..399)
             return response
@@ -130,6 +139,7 @@ class BoundedNetworkRetryContext internal constructor(
         private const val BACKOFF_MS = 1_000L
         private const val MIN_ATTEMPT_BUDGET_MS = 1_000L
         private val KEY by lazy { ContextKey.named<BoundedNetworkRetryContext>("bounded-network-retry") }
+        private val additionalAttemptContext = ThreadLocal<BoundedNetworkRetryContext>()
 
         /**
          * Makes the supplied span and a Broker ATS retry scope current until closed.
@@ -170,11 +180,11 @@ class BoundedNetworkRetryContext internal constructor(
                 if (current == null) legacyPolicy.attempt(supplier) else current.attempt(legacyPolicy, supplier)
             }
 
-        /** Caps configured socket timeouts to the treatment request's remaining budget. */
+        /** Caps socket timeouts only during the synchronous additional DNS retry. */
         @JvmStatic
         fun capTimeoutMs(configuredTimeoutMs: Int): Int {
-            val current = OtelContextExtension.current()?.get(KEY)
-            if (current == null || !current.enabled) {
+            val current = additionalAttemptContext.get()
+            if (current == null) {
                 return configuredTimeoutMs
             }
             val remaining = current.remainingMs().coerceIn(1, Int.MAX_VALUE.toLong()).toInt()

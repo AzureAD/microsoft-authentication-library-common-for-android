@@ -4,15 +4,28 @@
 
 package com.microsoft.identity.common.java.net
 
+import com.microsoft.identity.common.java.commands.EmptyCommandCallback
+import com.microsoft.identity.common.java.commands.SilentTokenCommand
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters
+import com.microsoft.identity.common.java.controllers.CommandDispatcher
+import com.microsoft.identity.common.java.controllers.IControllerFactory
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ConnectionError
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.MockFlightsManager
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension
+import com.microsoft.identity.common.java.result.AcquireTokenResult
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
@@ -20,9 +33,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.CALLS_REAL_METHODS
+import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import java.io.ByteArrayInputStream
@@ -34,6 +49,7 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
+import java.util.UUID
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -398,7 +414,7 @@ class BoundedNetworkRetryContextTest {
     }
 
     @Test
-    fun lateBoundCancellation_propagatesToWorkerWithoutThreadSignal() {
+    fun lateBoundCancellation_skipsOnlyAdditionalRetryOnWorkerWithoutThreadSignal() {
         val signal = CancellationSignal()
         val executor = Executors.newSingleThreadExecutor()
         val policy = BoundedNetworkRetryContext.wrap(NoRetryPolicy())
@@ -417,17 +433,17 @@ class BoundedNetworkRetryContextTest {
                 val task = requireNotNull(OtelContextExtension.current()).wrap(Callable {
                     assertNull(CancellationSignal.getCurrentThreadSignal())
                     assertThrows(ClientException::class.java) {
-                        policy.attempt(Callable { calls++; success })
+                        policy.attempt(Callable { calls++; throw dnsFailure })
                     }
                 })
                 val failure = executor.submit(task).get(5, TimeUnit.SECONDS)
-                assertEquals(ClientException.TIMED_OUT, failure.errorCode)
+                assertSame(dnsFailure, failure)
             }
         } finally {
             executor.shutdownNow()
         }
 
-        assertEquals(0, calls)
+        assertEquals(1, calls)
         verifyRetryTelemetry(false)
     }
 
@@ -495,18 +511,169 @@ class BoundedNetworkRetryContextTest {
     }
 
     @Test
-    fun socketTimeouts_areCappedOnlyWithinEnabledScope() {
+    fun socketTimeouts_ordinaryAttemptsRetainConfiguredTimeouts() {
         assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
         BoundedNetworkRetryContext.open(false, span, 5_000).use {
             assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
             assertEquals(0, BoundedNetworkRetryContext.capTimeoutMs(0))
         }
         BoundedNetworkRetryContext.open(true, span, 5_000).use {
-            assertTrue(BoundedNetworkRetryContext.capTimeoutMs(30_000) in 1..5_000)
-            assertTrue(BoundedNetworkRetryContext.capTimeoutMs(0) in 1..5_000)
+            assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+            assertEquals(0, BoundedNetworkRetryContext.capTimeoutMs(0))
             assertEquals(10, BoundedNetworkRetryContext.capTimeoutMs(10))
         }
         assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+    }
+
+    @Test
+    fun closedScope_preservesOrdinaryAttemptsAndSkipsAdditionalRetry() {
+        val executor = Executors.newSingleThreadExecutor()
+        val policy = BoundedNetworkRetryContext.wrap(NoRetryPolicy())
+        val scope = BoundedNetworkRetryContext.open(true, span, 30_000)
+        val task = requireNotNull(OtelContextExtension.current()).wrap(Callable {
+            assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+            assertEquals(0, BoundedNetworkRetryContext.capTimeoutMs(0))
+            assertSame(success, policy.attempt(Callable { success }))
+            var calls = 0
+            assertSame(dnsFailure, assertThrows(ClientException::class.java) {
+                policy.attempt(Callable { calls++; throw dnsFailure })
+            })
+            assertEquals(1, calls)
+        })
+        scope.close()
+        try {
+            executor.submit(task).get(5, TimeUnit.SECONDS)
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    @Test
+    fun expiredBudget_preservesLegacyRetriesAndSkipsAdditionalRetry() {
+        val scope = context(timeoutMs = 1_000)
+        var calls = 0
+        val legacyPolicy = IRetryPolicy<HttpResponse> { supplier ->
+            supplier.call()
+            nowMs = 1_000
+            supplier.call()
+        }
+        assertSame(success, scope.attempt(legacyPolicy, Callable { calls++; success }))
+        assertSame(dnsFailure, assertThrows(ClientException::class.java) {
+            scope.attempt(NoRetryPolicy(), Callable { calls++; throw dnsFailure })
+        })
+        scope.close()
+
+        assertEquals(3, calls)
+        assertEquals(0, waitedMs)
+        verifyRetryTelemetry(false)
+    }
+
+    @Test
+    fun socketTimeouts_areCappedOnlyDuringAdditionalAttemptAndRestoredAfterFailure() {
+        val scope = context(timeoutMs = 5_000)
+        var calls = 0
+        assertSame(dnsFailure, assertThrows(ClientException::class.java) {
+            scope.attempt(NoRetryPolicy(), Callable {
+                if (++calls == 1) {
+                    assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+                    assertEquals(0, BoundedNetworkRetryContext.capTimeoutMs(0))
+                } else {
+                    assertEquals(4_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+                    assertEquals(4_000, BoundedNetworkRetryContext.capTimeoutMs(0))
+                    assertEquals(10, BoundedNetworkRetryContext.capTimeoutMs(10))
+                }
+                throw dnsFailure
+            })
+        })
+        scope.close()
+
+        assertEquals(2, calls)
+        assertEquals(30_000, BoundedNetworkRetryContext.capTimeoutMs(30_000))
+        assertEquals(0, BoundedNetworkRetryContext.capTimeoutMs(0))
+    }
+
+    @Test
+    fun firstCallerTimesOut_deduplicatedSyncCallerStillCompletesHttp() {
+        val provider = spy(MockFlightsProvider())
+        provider.addFlight(CommonFlight.ENABLE_HTTP_CANCELLATION_ON_TIMEOUT.key, "false")
+        val firstWaiting = CountDownLatch(1)
+        val laterWaiting = CountDownLatch(1)
+        val timeoutReads = AtomicInteger()
+        `when`(provider.getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS))
+            .thenAnswer {
+                if (timeoutReads.incrementAndGet() == 1) {
+                    firstWaiting.countDown()
+                    1_000
+                } else {
+                    laterWaiting.countDown()
+                    10_000
+                }
+            }
+        val manager = MockFlightsManager()
+        manager.setMockBrokerFlightsProvider(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+
+        val callers = Executors.newFixedThreadPool(2)
+        val workerStarted = CountDownLatch(1)
+        val releaseHttp = CountDownLatch(1)
+        val components = mock(IPlatformComponents::class.java, RETURNS_DEEP_STUBS)
+        val factory = mock(IControllerFactory::class.java)
+        val expected = mock(ILocalAuthenticationResult::class.java)
+        val result = AcquireTokenResult().apply { localAuthenticationResult = expected }
+        val executions = AtomicInteger()
+        val clientId = UUID.randomUUID().toString()
+        fun command(): SilentTokenCommand {
+            val parameters = SilentTokenCommandParameters.builder()
+                .platformComponents(components)
+                .clientId(clientId)
+                .correlationId(UUID.randomUUID().toString())
+                .sdkVersion("test")
+                .build()
+            return object : SilentTokenCommand(
+                parameters, factory,
+                EmptyCommandCallback<ILocalAuthenticationResult, ClientException>(), "test"
+            ) {
+                override fun execute(): AcquireTokenResult {
+                    executions.incrementAndGet()
+                    workerStarted.countDown()
+                    assertTrue(releaseHttp.await(5, TimeUnit.SECONDS))
+                    assertEquals(200, UrlConnectionHttpClient.getDefaultInstance().post(
+                        URL("http://localhost.invalid/token"), emptyMap(), byteArrayOf(1)
+                    ).statusCode)
+                    return result
+                }
+            }
+        }
+        val firstCommand = command()
+        val laterCommand = command()
+        assertNotSame(firstCommand, laterCommand)
+        assertEquals(firstCommand, laterCommand)
+        queueConnection()
+        try {
+            val first = callers.submit(Callable {
+                BoundedNetworkRetryContext.open(true, span, 30_000).use {
+                    assertThrows(ClientException::class.java) {
+                        CommandDispatcher.submitAcquireTokenSilentSync(firstCommand)
+                    }
+                }
+            })
+            assertTrue(firstWaiting.await(5, TimeUnit.SECONDS))
+            assertTrue(workerStarted.await(5, TimeUnit.SECONDS))
+            val later = callers.submit(Callable {
+                CommandDispatcher.submitAcquireTokenSilentSync(laterCommand)
+            })
+            assertTrue(laterWaiting.await(5, TimeUnit.SECONDS))
+            assertEquals(ClientException.TIMED_OUT_EXECUTION, first.get(5, TimeUnit.SECONDS).errorCode)
+            releaseHttp.countDown()
+            assertSame(expected, later.get(5, TimeUnit.SECONDS))
+            assertEquals(1, executions.get())
+            assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue())
+        } finally {
+            releaseHttp.countDown()
+            callers.shutdownNow()
+            assertTrue(callers.awaitTermination(5, TimeUnit.SECONDS))
+            CommonFlightsManager.resetFlightsManager()
+        }
     }
 
     @Test
