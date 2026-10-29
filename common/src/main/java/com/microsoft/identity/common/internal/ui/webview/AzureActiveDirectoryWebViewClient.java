@@ -50,7 +50,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
@@ -74,12 +75,14 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -92,8 +95,13 @@ import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_DEVICE_NOT_COMPLIANT;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_DEVICE_REGISTRATION_REQUIRED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_STRONG_AUTH_SETUP_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -109,6 +117,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import android.webkit.WebResourceError;
 
@@ -198,7 +207,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     @Nullable
     private String mLastCommittedRequestUrl;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     // Whether the host opted in to MAM-CA install-referrer tagging for this request.
@@ -328,23 +336,161 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
-     * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
-     * If both conditions are met, it adds the JavaScript interface to the WebView.
+     * Selects and initializes one request-owned Auth UX messaging transport before navigation.
+     * Broker requests capture bridge enablement and the default-off WebMessageListener flight.
+     * Non-Broker requests use recorder presence without consulting either Broker flight.
+     * The selected mode is retained until the session is closed or replaced.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(TAG, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
+        replaceAuthUxBridgeSession(() -> {
+            final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
+            final boolean isBrokerAuthProcess =
+                    ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+            final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
+            final boolean brokerAuthUxBridgeEnabled;
+            final boolean preferWebMessageListener;
+            if (isBrokerAuthProcess) {
+                final IFlightsProvider flightsProvider =
+                        CommonFlightsManager.INSTANCE.getFlightsProvider();
+                brokerAuthUxBridgeEnabled =
+                        flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                // A disabled bridge must not depend on the transport flight lookup succeeding.
+                preferWebMessageListener = brokerAuthUxBridgeEnabled
+                        && safelyResolveAuthUxTransportFlight(flightsProvider);
+            } else {
+                // Broker gate is not applied; recorder presence controls non-Broker eligibility.
+                brokerAuthUxBridgeEnabled = true;
+                preferWebMessageListener = telemetrySink != null;
+            }
+            Logger.info(
+                    methodTag,
+                    "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
+                            + isBrokerAuthProcess
+                            + "], hasTelemetrySink=["
+                            + (telemetrySink != null)
+                            + "], brokerAuthUxBridgeEnabled=["
+                            + brokerAuthUxBridgeEnabled
+                            + "], brokerAuthUxBridgeGateApplied=["
+                            + isBrokerAuthProcess
+                            + "], preferWebMessageListener=["
+                            + preferWebMessageListener
+                            + "]."
+            );
+            return AuthUxBridgeSession.create(
+                    view,
+                    url,
+                    isBrokerAuthProcess,
+                    telemetrySink,
+                    brokerAuthUxBridgeEnabled,
+                    preferWebMessageListener
+            );
+        });
+    }
+
+    private static boolean safelyResolveAuthUxTransportFlight(
+            @NonNull final IFlightsProvider flightsProvider) {
+        try {
+            return flightsProvider.isFlightEnabled(
+                    CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG, "Auth UX transport flight lookup failed; selecting addJavascriptInterface.");
+            return false;
+        }
+    }
+
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    AuthUxTelemetrySink createAuthUxTelemetrySink() {
+        final String methodTag = TAG + ":createAuthUxTelemetrySink";
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            Logger.info(
+                    methodTag,
+                    "No onboarding telemetry recorder is attached; the Auth UX telemetry sink "
+                            + "will not be created."
+            );
+            return null;
+        }
+        Logger.info(
+                methodTag,
+                "Creating an Auth UX telemetry sink backed by the request onboarding recorder."
+        );
+        return event -> {
+            // Bind page-reported errors to this host request before mutating its onboarding blob.
+            // Use the captured ID, not mutable thread-local context or the recorder's seed ID,
+            // so an unrelated request's error cannot be attributed to this request.
+            if (StringUtil.isNullOrEmpty(mCorrelationId)
+                    || DiagnosticContext.UNSET_CORRELATION_ID.equals(mCorrelationId)) {
+                Logger.info(
+                        methodTag,
+                        "Auth UX telemetry occurrence was excluded because the host request "
+                                + "correlation ID is unavailable."
+                );
+                return true;
+            }
+            if (!mCorrelationId.equals(event.getCorrelationId())) {
+                Logger.info(
+                        methodTag,
+                        "Auth UX telemetry occurrence was excluded because its correlation ID "
+                                + "does not match the host request."
+                );
+                return true;
+            }
+            final String blockingError =
+                    OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
+            if (blockingError == null) {
+                Logger.info(
+                        methodTag,
+                        event.getCorrelationId(),
+                        "Auth UX telemetry occurrence was excluded by onboarding policy."
+                );
+                return true;
+            }
+            Logger.info(
+                    methodTag,
+                    event.getCorrelationId(),
+                    "Forwarding a qualified Auth UX telemetry occurrence to the onboarding recorder."
+            );
+            recorder.addBlockingError(blockingError);
+            final String onboardingStep = getAuthUxOnboardingStep(blockingError);
+            if (onboardingStep != null) {
+                recorder.addStep(onboardingStep);
+            }
+            return true;
+        };
+    }
+
+    /**
+     * Maps Auth UX errors to occurrence labels, not confirmed UI actions or completed remediation.
+     */
+    @Nullable
+    private static String getAuthUxOnboardingStep(@NonNull final String errorCode) {
+        switch (errorCode) {
+            case "50127":
+                return STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
+            case "501271":
+                return STEP_BROKER_INSTALL_PROMPTED;
+            case "50129":
+            case "501291":
+                return STEP_DEVICE_REGISTRATION_REQUIRED;
+            case "50079":
+                return STEP_STRONG_AUTH_SETUP_STARTED;
+            case "53000":
+            case "530003":
+                return STEP_MDM_ENROLLMENT_REQUIRED;
+            case "530001":
+            case "530002":
+                return STEP_DEVICE_NOT_COMPLIANT;
+            default:
+                return null;
         }
     }
 
     /**
      * Attach an onboarding telemetry recorder so subsequent WebView page transitions
      * (broker install prompts, MDM enrollment redirects, Company Portal launches, etc.)
-     * are recorded into the onboarding telemetry blob.
+     * and correlated Auth UX error-derived step occurrences are recorded into the onboarding
+     * telemetry blob.
      *
      * Recorder is owned by the host fragment / activity (e.g. OneAuthNavigationFragment
      * on the OneAuth side, AuthorizationActivity on the broker side). May be null when
@@ -363,15 +509,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: record domain navigation (best-effort, no-op if no recorder).
         recordLastLoadedDomain(url);
 
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
-        }
     }
 
     /**
@@ -2196,10 +2333,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Cleanup to be done when host activity is being destroyed.
      */
     public void onDestroy() {
+        closeAuthUxBridgeSession();
         if (mCertBasedAuthChallengeHandler != null) {
             mCertBasedAuthChallengeHandler.cleanUp();
         }
         mCertBasedAuthFactory.onDestroy();
+    }
+
+    /**
+     * Closes the current bridge before creating and storing its replacement.
+     * The factory must create a fresh session, not return a pre-created or closed session.
+     */
+    protected final void replaceAuthUxBridgeSession(
+            @NonNull final Supplier<AuthUxBridgeSession> sessionFactory) {
+        closeAuthUxBridgeSession();
+        mAuthUxBridgeSession = sessionFactory.get();
+    }
+
+    /**
+     * Closes only the request-owned Auth UX bridge resources.
+     */
+    public void closeAuthUxBridgeSession() {
+        final AuthUxBridgeSession session = mAuthUxBridgeSession;
+        if (session != null) {
+            try {
+                session.close();
+            } finally {
+                if (mAuthUxBridgeSession == session) {
+                    mAuthUxBridgeSession = null;
+                }
+            }
+        }
     }
 
     /**

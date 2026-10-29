@@ -181,6 +181,19 @@ class NativeAuthV2OAuth2Strategy(
         return nativeAuthV2Interactor.performRiskVerification(state = state)
     }
 
+    /** Enrolls the selected email/SMS method using an explicit verification contact. */
+    fun performEnroll(
+        state: NativeAuthV2ContinuationState,
+        methodId: String,
+        contact: String
+    ): NativeAuthV2InteractionApiResult = nativeAuthV2Interactor.performEnroll(state, methodId, contact)
+
+    /** Submits the activation OTP without imposing client-side format validation. */
+    fun performActivate(
+        state: NativeAuthV2ContinuationState,
+        otp: String
+    ): NativeAuthV2InteractionApiResult = nativeAuthV2Interactor.performActivate(state, otp)
+
     /**
      * Submits a password to the server-provided password `verify` href. The buffer is cleared by
      * the interactor on every exit path.

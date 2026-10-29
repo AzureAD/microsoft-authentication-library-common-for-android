@@ -61,7 +61,11 @@ class NativeAuthV2ContinuationState private constructor(
     // Canonical names of SDK-owned credentials already submitted during a sign-up flow. Only
     // `email` and `password` are retained; ordinary attributes remain retryable if the server asks
     // for them again or rejects their values. Empty for every other flow.
-    internal val submittedAttributes: Set<String> = emptySet()
+    internal val submittedAttributes: Set<String> = emptySet(),
+    private val enrollmentChannels: Map<String, String>? = emptyMap(),
+    private val resetPasswordUpdateSubmitted: Boolean = false,
+    private val pendingSignUpAttributes: Map<String, String>? = null,
+    private val pendingSignUpPasswordRecollection: Boolean = false
 ) : ILoggable, Serializable {
 
     /**
@@ -114,9 +118,39 @@ class NativeAuthV2ContinuationState private constructor(
             entryRelation = entryRelation,
             scenario = scenario,
             authenticationFactor = authenticationFactor,
-            submittedAttributes = Collections.unmodifiableSet(merged)
+            submittedAttributes = Collections.unmodifiableSet(merged),
+            enrollmentChannels = enrollmentChannels,
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = if (merged.isEmpty()) pendingSignUpAttributes else null,
+            pendingSignUpPasswordRecollection = merged.isEmpty() && pendingSignUpPasswordRecollection
         )
     }
+
+    /**
+     * Retains the non-password initial sign-up values when enrollment interrupts their submission.
+     * Only the need to recollect a password is retained, never its value or a password buffer.
+     * The context is discarded by [withAdditionalSubmittedAttributes] on credential submission.
+     */
+    fun withPendingSignUpAttributes(
+        attributes: Map<String, String>,
+        requiresPasswordRecollection: Boolean
+    ): NativeAuthV2ContinuationState {
+        require(scenario == NativeAuthV2FlowScenario.SIGN_UP && submittedAttributes.isEmpty())
+        require(attributes.keys.none { it.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) })
+        return NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
+            resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes)),
+            requiresPasswordRecollection
+        )
+    }
+
+    /** Returns a defensive copy of pending initial sign-up values for the controller's submission. */
+    fun pendingSignUpAttributesForSubmission(): Map<String, String>? =
+        pendingSignUpAttributes?.let { LinkedHashMap(it) }
+
+    /** Whether an interrupted initial password must be collected again before the initial submit. */
+    fun requiresSignUpPasswordRecollection(): Boolean = pendingSignUpPasswordRecollection
 
     /**
      * Returns the scopes retained for the
@@ -130,11 +164,43 @@ class NativeAuthV2ContinuationState private constructor(
      */
     fun claimsRequestJsonForTokenRequest(): String? = claimsRequestJson
 
+    /** Returns the originating scenario, never inferred from an enrollment response. */
+    fun flowScenario(): NativeAuthV2FlowScenario = scenario
+
+    /** Continues an existing-account challenge as sign-in, discarding sign-up-only input. */
+    internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState =
+        NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = links,
+            methodLinks = methodLinks,
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = NativeAuthV2FlowScenario.SIGN_IN,
+            authenticationFactor = authenticationFactor
+        )
+
+    /** Whether this reset flow has actually submitted a new password. */
+    fun isResetPasswordUpdateSubmitted(): Boolean = resetPasswordUpdateSubmitted
+
+    internal fun withResetPasswordUpdateSubmitted(): NativeAuthV2ContinuationState =
+        NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
+            pendingSignUpAttributes, pendingSignUpPasswordRecollection
+        )
+
     /**
      * Returns the href retained for [relation], or `null` if that relation was not present, or was
      * present but not one of the relations this state retains.
      */
     internal fun href(relation: NativeAuthV2LinkRelation): String? = links[relation.value]
+
+    internal fun enrollmentChannel(methodId: String): String? = enrollmentChannels?.get(methodId)
+
+    /** Whether [methodId] identifies an offered SMS enrollment method eligible for risk verification. */
+    fun isSmsEnrollmentMethod(methodId: String): Boolean = enrollmentChannel(methodId) == "sms"
 
     /**
      * Returns a successor state in which the links of the server method identified by [methodId]
@@ -157,7 +223,11 @@ class NativeAuthV2ContinuationState private constructor(
             entryRelation = entryRelation,
             scenario = scenario,
             authenticationFactor = authenticationFactor,
-            submittedAttributes = submittedAttributes
+            submittedAttributes = submittedAttributes,
+            enrollmentChannels = enrollmentChannels,
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = pendingSignUpAttributes,
+            pendingSignUpPasswordRecollection = pendingSignUpPasswordRecollection
         )
     }
 
@@ -178,6 +248,8 @@ class NativeAuthV2ContinuationState private constructor(
         private val SUPPORTED_RELATIONS: Set<String> = setOf(
             NativeAuthV2LinkRelation.CHALLENGE.value,
             NativeAuthV2LinkRelation.VERIFY.value,
+            NativeAuthV2LinkRelation.ENROLL.value,
+            NativeAuthV2LinkRelation.ACTIVATE.value,
             NativeAuthV2LinkRelation.RESEND.value,
             NativeAuthV2LinkRelation.UPDATE.value,
             NativeAuthV2LinkRelation.POLL.value,
@@ -248,7 +320,19 @@ class NativeAuthV2ContinuationState private constructor(
                 scenario = previous.scenario,
                 authenticationFactor = response.authenticationFactor
                     ?: previous.authenticationFactor,
-                submittedAttributes = previous.submittedAttributes
+                submittedAttributes = previous.submittedAttributes,
+                enrollmentChannels = if (response.action == NativeAuthV2HalAction.ENROLL) {
+                    Collections.unmodifiableMap(LinkedHashMap<String, String>().apply {
+                        response.methods.forEachIndexed { index, method ->
+                            method.enrollmentChannel()?.let { channel ->
+                                put("${method.type?.lowercase(java.util.Locale.ROOT)}:$channel:$index", channel)
+                            }
+                        }
+                    })
+                } else emptyMap(),
+                resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
+                pendingSignUpAttributes = previous.pendingSignUpAttributes,
+                pendingSignUpPasswordRecollection = previous.pendingSignUpPasswordRecollection
             )
         }
 
@@ -262,10 +346,13 @@ class NativeAuthV2ContinuationState private constructor(
             response: NativeAuthV2HalApiResponse
         ): Map<String, Map<String, String>> {
             val methodLinks = LinkedHashMap<String, Map<String, String>>()
-            response.methods.forEach { method ->
-                val id = method.id?.takeUnless { it.isBlank() } ?: return@forEach
+            response.methods.forEachIndexed { index, method ->
+                val id = if (response.action == NativeAuthV2HalAction.ENROLL) {
+                    val channel = method.enrollmentChannel() ?: return@forEachIndexed
+                    "${method.type?.lowercase(java.util.Locale.ROOT)}:$channel:$index"
+                } else method.id?.takeUnless { it.isBlank() } ?: return@forEachIndexed
                 if (methodLinks.containsKey(id)) {
-                    return@forEach
+                    return@forEachIndexed
                 }
                 methodLinks[id] = retainSupportedRelations(method.links)
             }

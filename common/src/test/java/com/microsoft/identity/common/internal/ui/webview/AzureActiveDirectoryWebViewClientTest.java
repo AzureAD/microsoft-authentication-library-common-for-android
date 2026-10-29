@@ -38,6 +38,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -65,14 +66,27 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.JavaScriptReplyProxy;
+import androidx.webkit.WebMessageCompat;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxOriginPolicy;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxWebMessageListener;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
@@ -90,6 +104,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.shadows.ShadowProcessUtil;
 
 import org.junit.After;
@@ -110,11 +125,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -341,12 +358,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
         // stay set for every later test running on this thread.
         DiagnosticContext.INSTANCE.clear();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
     }
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
@@ -368,6 +379,536 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEBSITE_REQUEST_URL));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testPageStarted_withoutManagedSession_doesNotInstallLegacyBridge() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(ProcessUtil.isRunningOnAuthService(mContext));
+        assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX));
+        assertTrue(AuthUxJavaScriptInterface.Companion
+                .isValidUriForInterface(TEST_PUBLIC_CLOUD_REDIRECT_URL));
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+        Mockito.verify(webView, never()).removeJavascriptInterface(anyString());
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_closesBeforeInstallingRealLegacyReplacement() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final Object[] activeProcessor = {null};
+        final List<String> operations = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            assertNull(activeProcessor[0]);
+            activeProcessor[0] = invocation.getArgument(0);
+            operations.add("add");
+            return null;
+        }).when(webView).addJavascriptInterface(any(), eq("broker"));
+        Mockito.doAnswer(invocation -> {
+            assertNotNull(activeProcessor[0]);
+            activeProcessor[0] = null;
+            operations.add("remove");
+            return null;
+        }).when(webView).removeJavascriptInterface("broker");
+
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession firstSession = mWebViewClient.mAuthUxBridgeSession;
+        final Object firstProcessor = activeProcessor[0];
+        assertNotNull(firstProcessor);
+        final int[] factoryCalls = {0};
+        mWebViewClient.replaceAuthUxBridgeSession(() -> {
+            factoryCalls[0]++;
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            assertNull(activeProcessor[0]);
+            return AuthUxBridgeSession.create(
+                    webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false);
+        });
+
+        final Object replacementProcessor = activeProcessor[0];
+        assertNotNull(replacementProcessor);
+        assertNotSame(firstProcessor, replacementProcessor);
+        assertEquals(1, factoryCalls[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        firstSession.onPageStarted(webView, "https://federated.example.com");
+        firstSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        firstSession.onPageFinished(webView);
+        firstSession.close();
+        assertSame(replacementProcessor, activeProcessor[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        mWebViewClient.mAuthUxBridgeSession.onPageFinished(webView);
+        assertSame(replacementProcessor, activeProcessor[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        Mockito.verify(webView).evaluateJavascript(anyString(), any());
+        mWebViewClient.closeAuthUxBridgeSession();
+        assertNull(activeProcessor[0]);
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        assertEquals(Arrays.asList("add", "remove", "add", "remove"), operations);
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_factoryFailureLeavesOldLegacyBridgeClosed() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession oldSession = mWebViewClient.mAuthUxBridgeSession;
+        final IllegalStateException failure = new IllegalStateException("Factory failed");
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.replaceAuthUxBridgeSession(() -> {
+                    assertNull(mWebViewClient.mAuthUxBridgeSession);
+                    Mockito.verify(webView).removeJavascriptInterface("broker");
+                    throw failure;
+                })));
+
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        oldSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        Mockito.verify(webView, Mockito.times(1)).addJavascriptInterface(any(), eq("broker"));
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_closeFailureDoesNotInvokeFactory() {
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> session);
+        final IllegalStateException failure = new IllegalStateException("Close failed");
+        Mockito.doThrow(failure).when(session).close();
+        final int[] factoryCalls = {0};
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.replaceAuthUxBridgeSession(() -> {
+                    factoryCalls[0]++;
+                    return Mockito.mock(AuthUxBridgeSession.class);
+                })));
+
+        assertEquals(0, factoryCalls[0]);
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        Mockito.verify(session).close();
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_defaultTransportFlightUsesLegacy() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[true], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[true], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(webView).addJavascriptInterface(any(), eq("broker"));
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_transportFlightOffPreservesRecorderTelemetry()
+            throws Exception {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenReturn(false);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            client.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                    client.mAuthUxBridgeSession.getMode());
+            final ArgumentCaptor<AuthUxJavaScriptInterface> processor =
+                    ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+            Mockito.verify(webView).addJavascriptInterface(processor.capture(), eq("broker"));
+            final String payload = "{\"correlationID\":\"correlation-id\","
+                    + "\"action_name\":\"log_telemetry\",\"action_component\":\"host\","
+                    + "\"params\":{\"errorCode\":\"53003\"}}";
+            processor.getValue().process(payload);
+            processor.getValue().process(payload);
+            processor.getValue().process(payload.replace("53003", "50058"));
+
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("53003", errors.getString(1));
+            features.verifyNoInteractions();
+            webKit.verifyNoInteractions();
+        } finally {
+            client.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_masterOffSkipsTransportFlight() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(false);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[true], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[false], "
+                                + "brokerAuthUxBridgeGateApplied=[true], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."),
+                        never());
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(flightsProvider, never()).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_transportLookupFailureUsesLegacy() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenThrow(new IllegalStateException("Flight provider unavailable"));
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                    mWebViewClient.mAuthUxBridgeSession.getMode());
+            Mockito.verify(webView).addJavascriptInterface(any(), eq("broker"));
+            features.verifyNoInteractions();
+            webKit.verifyNoInteractions();
+            mWebViewClient.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_masterLookupFailureDoesNotEnableBridge() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession oldSession = mWebViewClient.mAuthUxBridgeSession;
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                .thenAnswer(invocation -> {
+                    assertNull(mWebViewClient.mAuthUxBridgeSession);
+                    Mockito.verify(webView).removeJavascriptInterface("broker");
+                    throw new IllegalStateException("Master flight unavailable");
+                });
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL));
+
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        Mockito.verify(flightsProvider, never()).isFlightEnabled(
+                CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+        oldSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        Mockito.verify(webView, Mockito.times(1)).addJavascriptInterface(any(), eq("broker"));
+    }
+
+    @Test
+    public void testInitializeAuthUxJavaScriptApi_nonBrokerUsesRecorderWithoutBrokerFlights() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class);
+             final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            processUtil.when(() -> ProcessUtil.isRunningOnAuthService(any(Context.class)))
+                    .thenReturn(false);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(any(), anyString(), any()))
+                    .thenReturn(Mockito.mock(ScriptHandler.class));
+
+            try {
+                final WebView unseededWebView = Mockito.mock(WebView.class);
+                mWebViewClient.initializeAuthUxJavaScriptApi(unseededWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[false], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[false], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(unseededWebView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verify(unseededWebView, never()).evaluateJavascript(anyString(), any());
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+                logger.clearInvocations();
+
+                final WebView seededWebView = Mockito.mock(WebView.class);
+                mWebViewClient.setOnboardingTelemetryRecorder(Mockito.mock(OnboardingTelemetryRecorder.class));
+                mWebViewClient.initializeAuthUxJavaScriptApi(seededWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[false], "
+                                + "hasTelemetrySink=[true], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[false], preferWebMessageListener=[true]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."),
+                        never());
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                webKit.verify(() -> WebViewCompat.addWebMessageListener(
+                        eq(seededWebView), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()));
+                Mockito.verify(seededWebView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verifyNoInteractions(flightsProvider);
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_twiceReleasesResourcesBeforeRegistration() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+        final Set<String> activeListeners = new HashSet<>();
+        final List<ScriptHandler> activeScripts = new ArrayList<>();
+        final List<String> operations = new ArrayList<>();
+        final boolean[] legacyInterfaceAdded = {false};
+        Mockito.doAnswer(invocation -> {
+            assertFalse(legacyInterfaceAdded[0]);
+            assertTrue(activeListeners.isEmpty());
+            assertTrue(activeScripts.isEmpty());
+            legacyInterfaceAdded[0] = true;
+            operations.add("addLegacy");
+            return null;
+        }).when(webView).addJavascriptInterface(any(), eq("broker"));
+        Mockito.doAnswer(invocation -> {
+            assertTrue(legacyInterfaceAdded[0]);
+            legacyInterfaceAdded[0] = false;
+            operations.add("removeLegacy");
+            return null;
+        }).when(webView).removeJavascriptInterface("broker");
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(webView), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()))
+                    .thenAnswer(invocation -> {
+                        assertFalse(legacyInterfaceAdded[0]);
+                        if (!activeListeners.add(AuthUxBridgeSession.PRIVATE_OBJECT_NAME)) {
+                            throw new IllegalStateException("Duplicate Auth UX listener registration.");
+                        }
+                        operations.add("addListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.removeWebMessageListener(
+                    webView, AuthUxBridgeSession.PRIVATE_OBJECT_NAME))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeListeners.remove(AuthUxBridgeSession.PRIVATE_OBJECT_NAME));
+                        operations.add("removeListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(webView), anyString(), any()))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeScripts.isEmpty());
+                        final ScriptHandler handler = Mockito.mock(ScriptHandler.class);
+                        activeScripts.add(handler);
+                        operations.add("addScript");
+                        Mockito.doAnswer(removal -> {
+                            assertTrue(activeScripts.remove(handler));
+                            operations.add("removeScript");
+                            return null;
+                        }).when(handler).remove();
+                        return handler;
+                    });
+
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final AuthUxBridgeSession firstSession = mWebViewClient.mAuthUxBridgeSession;
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, firstSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+                assertNotSame(firstSession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+                assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                        "removeListener", "addListener", "addScript"), operations);
+                Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(false);
+                final AuthUxBridgeSession modernSession = mWebViewClient.mAuthUxBridgeSession;
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+                modernSession.onPageFinished(webView);
+                assertSame(modernSession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, modernSession.getMode());
+                Mockito.verify(flightsProvider, Mockito.times(2)).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final AuthUxBridgeSession legacySession = mWebViewClient.mAuthUxBridgeSession;
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, legacySession.getMode());
+                assertTrue(activeListeners.isEmpty());
+                assertTrue(activeScripts.isEmpty());
+                assertTrue(legacyInterfaceAdded[0]);
+
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(true);
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+                legacySession.onPageFinished(webView);
+                assertSame(legacySession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, legacySession.getMode());
+                Mockito.verify(flightsProvider, Mockito.times(3)).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertTrue(activeListeners.isEmpty());
+                assertTrue(activeScripts.isEmpty());
+                assertFalse(legacyInterfaceAdded[0]);
+
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(true);
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertTrue(legacyInterfaceAdded[0]);
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertFalse(legacyInterfaceAdded[0]);
+                Mockito.verify(flightsProvider, Mockito.times(7))
+                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                Mockito.verify(flightsProvider, Mockito.times(5))
+                        .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+
+            mWebViewClient.closeAuthUxBridgeSession();
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            assertTrue(activeListeners.isEmpty());
+            assertTrue(activeScripts.isEmpty());
+            assertFalse(legacyInterfaceAdded[0]);
+            assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                    "removeListener", "addListener", "addScript", "removeScript",
+                    "removeListener", "addLegacy", "removeLegacy", "addListener",
+                    "addScript", "removeScript", "removeListener", "addLegacy",
+                    "removeLegacy"), operations);
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testCloseAuthUxBridgeSession_lateApprovedNavigationDoesNotRecreateBridge() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> session);
+
+        mWebViewClient.closeAuthUxBridgeSession();
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(session).close();
+        Mockito.verify(session, never()).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
     }
 
     @Test
@@ -4235,6 +4776,677 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testProcessInstallRequest_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ForwardsEveryOccurrence() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
+                new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                        "correlation-id",
+                        "53003",
+                        null,
+                        null,
+                        null,
+                        null
+                );
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(2, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertEquals("53003", errors.getString(1));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ExcludesNonOnboardingErrors() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"excluded-session\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(
+                        seedJson,
+                        "excluded-client",
+                        "excluded-scope",
+                        mContext
+                );
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        for (final String errorCode : Arrays.asList("0", "50058", "50097", "50126")) {
+            assertTrue(
+                    sink.tryConsumeAuthUxTelemetry(
+                            new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                                    "correlation-id",
+                                    errorCode,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                            )
+                    )
+            );
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(0, blob.getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    public void testAuthUxOnboarding_AllMappingsThroughBothTransports() throws Exception {
+        final String[][] mappings = {
+                {"50127", "BrokerInstallPromptedForMAM"},
+                {"501271", "BrokerInstallPrompted"},
+                {"50129", "DeviceRegistrationRequired"},
+                {"501291", "DeviceRegistrationRequired"},
+                {"50079", "StrongAuthSetupStarted"},
+                {"53000", "MDMEnrollmentRequired"},
+                {"530003", "MDMEnrollmentRequired"},
+                {"530001", "DeviceNotCompliant"},
+                {"530002", "DeviceNotCompliant"}
+        };
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean quoted : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                try {
+                    for (int i = 0; i < mappings.length; i++) {
+                        final String code = mappings[i][0];
+                        deliverAuthUxPayload(processor, useListener,
+                                authUxPayload("request-id", quoted ? "\"" + code + "\"" : code));
+                        order.verify(recorder).addBlockingError(code);
+                        order.verify(recorder).addStep(mappings[i][1]);
+                        final org.json.JSONObject blob =
+                                new org.json.JSONObject(recorder.finalizeBlob());
+                        assertEquals(i + 1, blob.getJSONArray("blocking_errors").length());
+                        assertEquals(code, blob.getJSONArray("blocking_errors").getString(i));
+                        assertEquals(i + 1, blob.getJSONArray("steps_list").length());
+                        final org.json.JSONObject step =
+                                blob.getJSONArray("steps_list").getJSONObject(i);
+                        assertEquals(mappings[i][1], step.getString("step_id"));
+                        assertTrue(step.getString("ts").matches(
+                                "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z"));
+                        assertEquals(mappings[i][1], blob.getString("last_completed_step"));
+                        assertEquals(code, blob.getString("last_blocking_error"));
+                        assertEquals("seed-session", blob.getString("session_correlation_id"));
+                        assertEquals("1.0.0", blob.getString("schema_version"));
+                        assertEquals("non-brokered", blob.getString("onboarding_mode"));
+                    }
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UnmappedErrorsRemainBlockingErrors() throws Exception {
+        final List<String> codes = Arrays.asList(
+                "53003", "abc", "AADSTS50127", "501270", "5012710", "050127", "true");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                for (final String code : codes) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"" + code + "\""));
+                }
+                // Existing Gson boolean-to-string coercion is not changed by the mapping.
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "true"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+                assertFalse(blob.has("last_completed_step"));
+                assertEquals(codes.size() + 1, blob.getJSONArray("blocking_errors").length());
+                for (int i = 0; i < codes.size(); i++) {
+                    assertEquals(codes.get(i), blob.getJSONArray("blocking_errors").getString(i));
+                }
+                assertEquals("true", blob.getString("last_blocking_error"));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RejectedPayloadsDoNotSuppressLaterMappedOccurrence()
+            throws Exception {
+        final List<String> rejected = Arrays.asList(
+                "0", "50058", "50097", "50126", "null", "\"\"", "\" 50127\"",
+                "\"50127\\n\"", "\"123456789012345678901234567890123\"",
+                "{}", "[]", "50127.0");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                int accepted = 0;
+                for (final String errorJson : rejected) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", errorJson));
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"50127\""));
+                    accepted++;
+                    final org.json.JSONObject blob =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(accepted, blob.getJSONArray("blocking_errors").length());
+                    assertEquals(accepted, blob.getJSONArray("steps_list").length());
+                }
+                for (final String payload : Arrays.asList(
+                        "{", "{\"correlationID\":\"request-id\",\"action_name\":\"log_telemetry\","
+                                + "\"action_component\":\"page\",\"params\":{}}",
+                        authUxPayload("request-id", "50127").replace("log_telemetry", "unknown"),
+                        authUxPayload("request-id", "50127").replace(
+                                "\"action_component\":\"page\",", ""))) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener, payload);
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    accepted++;
+                    assertEquals(accepted, new org.json.JSONObject(recorder.finalizeBlob())
+                            .getJSONArray("steps_list").length());
+                }
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_MappedCorrelationRejectionPreservesStateAndHandledAttribute()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            final RecordingSpan span = new RecordingSpan();
+            try (final Scope ignored = span.makeCurrent()) {
+                final String before = recorder.finalizeBlob();
+                for (final String correlationId : Arrays.asList("other-request", "seed-session")) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload(correlationId, "50127"));
+                    assertEquals(before, recorder.finalizeBlob());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                }
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50127"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(1, blob.getJSONArray("blocking_errors").length());
+                assertEquals("BrokerInstallPromptedForMAM",
+                        blob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+                final String accepted = recorder.finalizeBlob();
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50058"));
+                assertEquals(accepted, recorder.finalizeBlob());
+                assertEquals("50058", span.attribute(AttributeName.authux_js_error_code.name()));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UsesCapturedRecorderAfterReplacementAndDetach() throws Exception {
+        final OnboardingTelemetryRecorder original = newAuthUxOnboardingRecorder();
+        final OnboardingTelemetryRecorder replacement = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(original);
+        final AuthUxTelemetrySink originalSink = client.createAuthUxTelemetrySink();
+        assertNotNull(originalSink);
+        client.setOnboardingTelemetryRecorder(replacement);
+        final AuthUxTelemetrySink replacementSink = client.createAuthUxTelemetrySink();
+        assertNotNull(replacementSink);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        client.setOnboardingTelemetryRecorder(null);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "530001")));
+        assertTrue(replacementSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50129")));
+        final org.json.JSONObject originalBlob = new org.json.JSONObject(original.finalizeBlob());
+        assertEquals(2, originalBlob.getJSONArray("blocking_errors").length());
+        assertEquals(2, originalBlob.getJSONArray("steps_list").length());
+        assertEquals("BrokerInstallPromptedForMAM",
+                originalBlob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+        assertEquals("DeviceNotCompliant", originalBlob.getString("last_completed_step"));
+        final org.json.JSONObject replacementBlob =
+                new org.json.JSONObject(replacement.finalizeBlob());
+        assertEquals(1, replacementBlob.getJSONArray("blocking_errors").length());
+        assertEquals(1, replacementBlob.getJSONArray("steps_list").length());
+        assertEquals("DeviceRegistrationRequired", replacementBlob.getString("last_completed_step"));
+        assertNull(client.createAuthUxTelemetrySink());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testAuthUxOnboarding_MappedErrorsRequireCapturedUsableHostId() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID, "request-id")) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            DiagnosticContext.INSTANCE.getRequestContext().put(
+                    DiagnosticContext.CORRELATION_ID, "other-request");
+            final String before = recorder.finalizeBlob();
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "50127")));
+            assertEquals(before, recorder.finalizeBlob());
+            if (hostId != null && !"request-id".equals(hostId)) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "50127")));
+                assertEquals(before, recorder.finalizeBlob());
+            }
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+            final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+            final int expected = "request-id".equals(hostId) ? 1 : 0;
+            assertEquals(expected, blob.getJSONArray("blocking_errors").length());
+            assertEquals(expected, blob.getJSONArray("steps_list").length());
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_ListenerRejectsUntrustedCallbacksBeforeMapping() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxJavaScriptInterface processor =
+                new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+        final AuthUxWebMessageListener listener =
+                new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+        final JavaScriptReplyProxy reply = Mockito.mock(JavaScriptReplyProxy.class);
+        final String payload = authUxPayload("request-id", "50127");
+        final String before = recorder.finalizeBlob();
+        try {
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://untrusted.example"), true, reply);
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"), false, reply);
+            final WebMessageCompat binary = Mockito.mock(WebMessageCompat.class);
+            when(binary.getType()).thenReturn(WebMessageCompat.TYPE_ARRAY_BUFFER);
+            listener.onPostMessage(mMockWebView, binary,
+                    Uri.parse("https://login.microsoftonline.com"), true, reply);
+            assertEquals(before, recorder.finalizeBlob());
+            deliverAuthUxPayload(processor, true, payload);
+            assertEquals(1, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("steps_list").length());
+        } finally {
+            processor.close();
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DuplicatesAndNavigationRemainIndependent() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        for (final String code : Arrays.asList("501271", "501271", "530002")) {
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", code)));
+        }
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        assertEquals(4, steps.length());
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(0).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(1).getString("step_id"));
+        assertEquals("DeviceNotCompliant", steps.getJSONObject(2).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(3).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", blob.getString("last_completed_step"));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(0));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(1));
+        assertEquals("530002", blob.getJSONArray("blocking_errors").getString(2));
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RecorderFailuresPreserveErrorFirstAndLaterEligibility()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean failStep : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                if (failStep) {
+                    Mockito.doThrow(new IllegalStateException("step failure"))
+                            .when(recorder).addStep("BrokerInstallPromptedForMAM");
+                } else {
+                    Mockito.doThrow(new IllegalStateException("error failure"))
+                            .when(recorder).addBlockingError("50127");
+                }
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final RecordingSpan span = new RecordingSpan();
+                try (final Scope ignored = span.makeCurrent()) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject failed =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 1 : 0,
+                            failed.getJSONArray("blocking_errors").length());
+                    assertEquals(0, failed.getJSONArray("steps_list").length());
+                    assertNull(span.attribute(AttributeName.authux_js_error_code.name()));
+                    if (!failStep) {
+                        Mockito.verify(recorder, never()).addStep(anyString());
+                    }
+                    span.setAttribute(AttributeKey.stringKey(
+                            AttributeName.authux_js_error_code.name()), "previous");
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    assertEquals("previous", span.attribute(
+                            AttributeName.authux_js_error_code.name()));
+                    Mockito.doCallRealMethod().when(recorder).addBlockingError("50127");
+                    Mockito.doCallRealMethod().when(recorder)
+                            .addStep("BrokerInstallPromptedForMAM");
+                    Mockito.clearInvocations(recorder);
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject recovered =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 3 : 1,
+                            recovered.getJSONArray("blocking_errors").length());
+                    assertEquals(1, recovered.getJSONArray("steps_list").length());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                    final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                    order.verify(recorder).addBlockingError("50127");
+                    order.verify(recorder).addStep("BrokerInstallPromptedForMAM");
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DisabledClosedAndMissingRecorderDoNotRecord() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            final AuthUxJavaScriptInterface disabled = new AuthUxJavaScriptInterface(
+                    sink, new AuthUxRequestCapabilities(false, true));
+            final AuthUxJavaScriptInterface closed = new AuthUxJavaScriptInterface(sink);
+            final AuthUxJavaScriptInterface missing = new AuthUxJavaScriptInterface(
+                    newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+            closed.close();
+            try {
+                for (final AuthUxJavaScriptInterface processor : Arrays.asList(
+                        disabled, closed, missing)) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                }
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("blocking_errors").length());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+            } finally {
+                disabled.close();
+                closed.close();
+                missing.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_EmptySeedStillSuppressesFinalizedBlob() {
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder("{}", "client", "scope", mContext);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        assertEquals("", recorder.finalizeBlob());
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchDoesNotPersistAndMatchingEventStillAppends()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("seed-session", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertNoAuthUxCorrelationCacheEntry();
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchPreservesExistingBlobAndCache()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final String cacheKey = "com.microsoft.oneauth.session_correlation_cache";
+        final android.content.SharedPreferences preferences =
+                mContext.getSharedPreferences(cacheKey, Context.MODE_PRIVATE);
+        final String originalCache = preferences.getString(cacheKey, null);
+        final String seededCache = new org.json.JSONObject().put(
+                "correlation-test-client\u0001correlation-test-scope",
+                new org.json.JSONObject().put("id", "native-session").put("ts", 123456789L))
+                .toString();
+
+        try {
+            assertTrue(preferences.edit().putString(cacheKey, seededCache).commit());
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            final String initialBlob = recorder.finalizeBlob();
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
+            assertEquals(initialBlob, recorder.finalizeBlob());
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("abc", errors.getString(1));
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+        } finally {
+            assertTrue(preferences.edit().putString(cacheKey, originalCache).commit());
+        }
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_UnusableHostCorrelationRejectsEvents() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            if (hostId != null) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "53003")));
+            }
+            assertNoAuthUxCorrelationCacheEntry();
+            assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("blocking_errors").length());
+        }
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_DoesNotFallBackToDiagnosticContext() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(null);
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "thread-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("thread-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                .getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_KeepsCapturedRequestWhenDiagnosticContextChanges()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "other-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("abc", errors.getString(0));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_NoRecorderReturnsNull() {
+        assertNull(newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+    }
+
+    @Test
+    public void testAuthUxCorrelation_RawEnvelopesThroughLegacyAndListenerCallbacks() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            final AuthUxJavaScriptInterface processor = new AuthUxJavaScriptInterface(sink);
+            final AuthUxWebMessageListener listener =
+                    new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+            final JavaScriptReplyProxy replyProxy = Mockito.mock(JavaScriptReplyProxy.class);
+            try {
+                for (final String correlationId : Arrays.asList("other-request", "request-id")) {
+                    final String payload = "{\"correlationID\":\"" + correlationId
+                            + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                            + "\"params\":{\"errorCode\":\"abc\"}}";
+                    if (useListener) {
+                        listener.onPostMessage(
+                                mMockWebView,
+                                new WebMessageCompat(payload),
+                                Uri.parse("https://login.microsoftonline.com"),
+                                true,
+                                replyProxy
+                        );
+                    } else {
+                        processor.receiveAuthUxMessage(payload);
+                    }
+                    if ("other-request".equals(correlationId)) {
+                        assertNoAuthUxCorrelationCacheEntry();
+                    }
+                }
+                final org.json.JSONArray errors = new org.json.JSONObject(recorder.finalizeBlob())
+                        .getJSONArray("blocking_errors");
+                assertEquals(1, errors.length());
+                assertEquals("abc", errors.getString(0));
+            } finally {
+                processor.close();
+                mContext.getSharedPreferences(
+                        "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                        .edit().clear().commit();
+            }
+        }
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxCorrelationRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "correlation-test-client",
+                "correlation-test-scope",
+                mContext
+        );
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxOnboardingRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "onboarding-test-client",
+                "onboarding-test-scope",
+                mContext
+        );
+    }
+
+    private AuthUxTelemetryEvent authUxEvent(final String correlationId, final String errorCode) {
+        return new AuthUxTelemetryEvent(correlationId, errorCode, null, null, null, null);
+    }
+
+    private void assertNoAuthUxCorrelationCacheEntry() {
+        final String cache = mContext.getSharedPreferences(
+                "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                .getString("com.microsoft.oneauth.session_correlation_cache", "");
+        assertTrue("Auth UX telemetry must not create a session-correlation cache document.",
+                cache == null || cache.isEmpty());
+    }
+
+    private String authUxPayload(final String correlationId, final String errorJson) {
+        return "{\"correlationID\":\"" + correlationId
+                + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                + "\"params\":{\"errorCode\":" + errorJson + "}}";
+    }
+
+    private void deliverAuthUxPayload(final AuthUxJavaScriptInterface processor,
+                                     final boolean useListener,
+                                     final String payload) {
+        if (useListener) {
+            new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy()).onPostMessage(
+                    mMockWebView,
+                    new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"),
+                    true,
+                    Mockito.mock(JavaScriptReplyProxy.class));
+        } else {
+            processor.receiveAuthUxMessage(payload);
+        }
     }
 
     /**
