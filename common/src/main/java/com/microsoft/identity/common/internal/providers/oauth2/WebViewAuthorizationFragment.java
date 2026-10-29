@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.SKIP_ONBOARDING_RECORDER_LOOKUP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED;
@@ -148,6 +149,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private boolean webViewZoomEnabled;
 
     private boolean isWebViewWebcpEnabledInBrokerlessCase;
+
+    /**
+     * Suppresses correlation-ID-based onboarding recorder lookup for this invocation.
+     * Hosts can opt out when recorder registration fails or collides, preventing this
+     * WebView from borrowing another invocation's recorder without changing the
+     * authentication correlation ID. Defaults to false for existing callers and is
+     * preserved across fragment recreation. This flag only controls recorder lookup;
+     * it does not select the Auth UX bridge transport or alter authentication routing.
+     */
+    private boolean mSkipOnboardingRecorderLookup;
 
     private String mUtid;
 
@@ -275,6 +286,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         outState.putBoolean(WEB_VIEW_WEB_CP_ENABLED, isWebViewWebcpEnabledInBrokerlessCase);
+        outState.putBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP, mSkipOnboardingRecorderLookup);
         outState.putString(UTID, mUtid);
     }
 
@@ -294,6 +306,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
         isWebViewWebcpEnabledInBrokerlessCase = state.getBoolean(WEB_VIEW_WEB_CP_ENABLED, false);
+        mSkipOnboardingRecorderLookup = state.getBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP, false);
         mUtid = state.getString(UTID);
     }
 
@@ -323,7 +336,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @NonNull final WebView webView,
             @Nullable final String authorizationRequestUrl) {
         final OnboardingTelemetryRecorder recorder =
-                OnboardingRecorderRegistry.get(getCorrelationId());
+                mSkipOnboardingRecorderLookup ? null : OnboardingRecorderRegistry.get(getCorrelationId());
         webViewClient.setOnboardingTelemetryRecorder(recorder);
         webViewClient.initializeAuthUxJavaScriptApi(webView, authorizationRequestUrl);
     }
