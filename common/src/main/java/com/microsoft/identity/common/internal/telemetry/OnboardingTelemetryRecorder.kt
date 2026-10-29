@@ -272,7 +272,7 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)
                 }
             }
-
+            Logger.info(TAG, "BROKER FINAL BLOBL $blob")
             blob.toString()
         } catch (e: JSONException) {
             Logger.error(TAG, sessionCorrelationId, "Failed to serialize onboarding blob", e)

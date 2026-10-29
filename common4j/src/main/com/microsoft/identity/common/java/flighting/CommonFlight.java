@@ -135,7 +135,7 @@ public enum CommonFlight implements IFlightConfig {
      * Defaults to the managed JavaScript-interface transport. ENABLE_JS_API_FOR_AUTHUX remains
      * the independent bridge master gate.
      */
-    ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT("EnableAuthUxWebMessageListenerTransport", false),
+    ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT("EnableAuthUxWebMessageListenerTransport", true),
 
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
