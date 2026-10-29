@@ -1903,15 +1903,17 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * Reads the finalized onboarding blob and reports whether the broker-install step was recorded.
-     * processInstallRequest records this step; processRedirectUrl and processSwitchBrowserRequest do
-     * not, so its presence distinguishes which routing path handleUrl took.
+     * Reports whether either a broker-install prompt or installation-triggered step was recorded,
+     * so negative routing assertions reject both kinds of unintended broker-install telemetry.
      */
     private static boolean onboardingHasBrokerInstallStep(final OnboardingTelemetryRecorder recorder)
             throws org.json.JSONException {
         return onboardingHasStep(recorder,
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                        .STEP_BROKER_INSTALL_PROMPTED);
+                        .STEP_BROKER_INSTALL_PROMPTED)
+                || onboardingHasStep(recorder,
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_BROKER_INSTALLATION_TRIGGERED);
     }
 
     private static boolean onboardingHasStep(final OnboardingTelemetryRecorder recorder,
@@ -4775,12 +4777,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     /**
      * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
      * a broker install request URL produces a populated blob containing the
-     * {@code BrokerInstallPrompted} step. We construct a recorder with a synthetic seed
+     * {@code BrokerInstallTriggered} step. We construct a recorder with a synthetic seed
      * containing a session correlation id and a blocking error so {@code finalizeBlob}
      * returns non-empty.
      */
     @Test
-    public void testProcessInstallRequest_RecordsBrokerInstallPromptedStep() throws Exception {
+    public void testProcessInstallRequest_RecordsBrokerInstallTriggeredStep() throws Exception {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","
                 + "\"onboarding_mode\":\"non-brokered\"}";
@@ -4801,12 +4803,16 @@ public class AzureActiveDirectoryWebViewClientTest {
         boolean foundStep = false;
         for (int i = 0; i < steps.length(); i++) {
             if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+                    .STEP_BROKER_INSTALLATION_TRIGGERED.equals(steps.getJSONObject(i).getString("step_id"))) {
                 foundStep = true;
                 break;
             }
         }
-        assertTrue("Expected BrokerInstallPrompted step in onboarding blob", foundStep);
+        assertTrue("Expected BrokerInstallTriggered step in onboarding blob", foundStep);
+        assertFalse("Install navigation must not record a broker-install prompt",
+                onboardingHasStep(recorder,
+                        com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                                .STEP_BROKER_INSTALL_PROMPTED));
     }
 
     /**
@@ -5158,8 +5164,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("BrokerInstallPrompted", steps.getJSONObject(0).getString("step_id"));
         assertEquals("BrokerInstallPrompted", steps.getJSONObject(1).getString("step_id"));
         assertEquals("DeviceNotCompliant", steps.getJSONObject(2).getString("step_id"));
-        assertEquals("BrokerInstallPrompted", steps.getJSONObject(3).getString("step_id"));
-        assertEquals("BrokerInstallPrompted", blob.getString("last_completed_step"));
+        assertEquals("BrokerInstallTriggered", steps.getJSONObject(3).getString("step_id"));
+        assertEquals("BrokerInstallTriggered", blob.getString("last_completed_step"));
         assertEquals("501271", blob.getJSONArray("blocking_errors").getString(0));
         assertEquals("501271", blob.getJSONArray("blocking_errors").getString(1));
         assertEquals("530002", blob.getJSONArray("blocking_errors").getString(2));

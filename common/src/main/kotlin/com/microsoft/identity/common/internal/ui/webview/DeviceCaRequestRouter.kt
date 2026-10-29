@@ -356,9 +356,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
             val uri = Uri.parse(url)
             uri.isHierarchical &&
                 uri.scheme.equals("browser", ignoreCase = true) &&
-                uri.host.equals("go.microsoft.com", ignoreCase = true) &&
-                uri.port == -1 &&
-                uri.userInfo == null &&
+                uri.authority.equals("go.microsoft.com", ignoreCase = true) &&
                 uri.path == "/fwlink/" &&
                 uri.getQueryParameter("LinkId") == "396941"
         } catch (exception: RuntimeException) {

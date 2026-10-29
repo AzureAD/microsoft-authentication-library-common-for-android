@@ -113,6 +113,8 @@ class DeviceCaRequestRouterTest {
             "browser://other.example.com/fwlink/?LinkId=396941",
             "browser://go.microsoft.com/other/?LinkId=396941",
             "browser://go.microsoft.com:443/fwlink/?LinkId=396941",
+            "browser://go.microsoft.com:2147483648/fwlink/?LinkId=396941",
+            "browser://go.microsoft.com:/fwlink/?LinkId=396941",
             "browser://user@go.microsoft.com/fwlink/?LinkId=396941",
             "https://go.microsoft.com/fwlink/?LinkId=396941",
             "browser:opaque?LinkId=396941",
