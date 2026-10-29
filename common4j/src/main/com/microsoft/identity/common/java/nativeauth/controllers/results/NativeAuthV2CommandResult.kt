@@ -48,6 +48,12 @@ sealed interface NativeAuthV2SignInAfterSignUpCommandResult : INativeAuthCommand
 /** Results of enrolling or activating a strong-auth method in the original flow. */
 sealed interface NativeAuthV2StrongAuthCommandResult : INativeAuthCommandResult
 
+/** Sign-up discovered an existing account and requires an explicit sign-in credential. */
+sealed interface NativeAuthV2ExistingAccountCommandResult :
+    NativeAuthV2SignUpStartCommandResult,
+    NativeAuthV2SubmitAttributesCommandResult,
+    NativeAuthV2SignUpSubmitCodeCommandResult
+
 /** Registration can interrupt any reachable V2 interaction before the final token exchange. */
 sealed interface NativeAuthV2RegistrationCommandResult :
     NativeAuthV2ResetPasswordStartCommandResult,
@@ -91,6 +97,27 @@ sealed interface NativeAuthV2FlowCompletionCommandResult :
  * are wired to the marker interfaces above in [INativeAuthCommandResult].
  */
 interface NativeAuthV2CommandResult {
+    /** A sign-up attempt must continue by verifying the existing account's email code. */
+    data class ExistingAccountCodeRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val codeLength: Int,
+        val challengeTargetLabel: String,
+        val challengeChannel: String
+    ) : NativeAuthV2ExistingAccountCommandResult {
+        override fun toString(): String = "ExistingAccountCodeRequired(correlationId=$correlationId)"
+        override fun toUnsanitizedString(): String = toString()
+    }
+
+    /** A sign-up attempt must continue with the existing account's password, not a new password. */
+    data class ExistingAccountPasswordRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState
+    ) : NativeAuthV2ExistingAccountCommandResult {
+        override fun toString(): String = "ExistingAccountPasswordRequired(correlationId=$correlationId)"
+        override fun toUnsanitizedString(): String = toString()
+    }
+
     /** The app must choose an offered enrollment method and collect an explicit contact. */
     data class StrongAuthRegistrationRequired(
         override val correlationId: String,
