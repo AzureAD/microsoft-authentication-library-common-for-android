@@ -37,6 +37,83 @@ class NativeAuthV2ResponseParserTest {
     private val parser = NativeAuthV2ResponseParser()
 
     @Test
+    fun existingAccountChallenge_preservesContinuationAndDiscardsSignUpInput() {
+        for (type in listOf("email", "password")) {
+            val prior = NativeAuthV2ContinuationStateTestFactory.create(
+                CORRELATION_ID, listOf("User.Read"), NativeAuthV2LinkRelation.SIGN_UP,
+                NativeAuthV2FlowScenario.SIGN_UP, CLAIMS_REQUEST_JSON
+            ).withPendingSignUpAttributes(mapOf("email" to "user@contoso.com"), true)
+                .withAdditionalSubmittedAttributes(listOf("email", "password"))
+            val result = parser.parseInteraction(responseFrom("""
+                {"state":"interactionRequired","action":"challenge","continuationToken":"existing",
+                 "challengeContext":{"authenticationFactor":"singleFactor"},
+                 "_embedded":{"methods":[{"id":"method","type":"$type",
+                 "_links":{"challenge":{"href":"/tenant/$type/challenge?dc=test"}}}]}}
+            """), prior) as NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired
+            val state = result.continuationState
+            assertEquals(NativeAuthV2FlowScenario.SIGN_IN, state.flowScenario())
+            assertEquals("existing", state.continuationToken)
+            assertEquals(prior.correlationId, state.correlationId)
+            assertEquals(listOf("User.Read"), state.scopesForTokenRequest())
+            assertEquals(CLAIMS_REQUEST_JSON, state.claimsRequestJsonForTokenRequest())
+            assertEquals("/tenant/$type/challenge?dc=test",
+                state.withSelectedMethod("method")?.href(NativeAuthV2LinkRelation.CHALLENGE))
+            assertFalse(state.hasSubmittedAttribute("email"))
+            assertFalse(state.hasSubmittedAttribute("password"))
+            assertNull(state.pendingSignUpAttributesForSubmission())
+            assertFalse(state.requiresSignUpPasswordRecollection())
+            assertFalse(result.toString().contains("existing"))
+        }
+    }
+
+    @Test
+    fun existingAccountChallenge_doesNotReclassifyOtherScenariosStatesOrFactors() {
+        for (scenario in NativeAuthV2FlowScenario.values()) {
+            for (state in listOf("interactionRequired", "other")) {
+                for (factor in listOf("singleFactor", "multiFactor", "unknown")) {
+                    val result = parser.parseInteraction(responseFrom("""
+                        {"state":"$state","action":"challenge","continuationToken":"next",
+                         "challengeContext":{"authenticationFactor":"$factor"},
+                         "_embedded":{"methods":[{"id":"method","type":"email",
+                         "_links":{"challenge":{"href":"/tenant/challenge"}}}]}}
+                    """), previousState(scenario))
+                    val expected = when {
+                        factor == "unknown" -> NativeAuthV2InteractionApiResult.UnknownError::class.java
+                        factor == "multiFactor" -> NativeAuthV2InteractionApiResult.MFARequired::class.java
+                        scenario == NativeAuthV2FlowScenario.SIGN_UP && state == "interactionRequired" ->
+                            NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired::class.java
+                        else -> NativeAuthV2InteractionApiResult.ChallengeRequired::class.java
+                    }
+                    assertTrue("$scenario/$state/$factor: $result", expected.isInstance(result))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun existingAccountChallenge_requiresValidSupportedMethodAndContinuation() {
+        for (method in listOf(
+            """{"id":"m","type":"email"}""",
+            """{"type":"password","_links":{"challenge":{"href":"/challenge"}}}""",
+            """{"id":"m","type":"sms","_links":{"challenge":{"href":"/challenge"}}}"""
+        )) {
+            val result = parser.parseInteraction(responseFrom("""
+                {"state":"interactionRequired","action":"challenge","continuationToken":"next",
+                 "challengeContext":{"authenticationFactor":"singleFactor"},
+                 "_embedded":{"methods":[$method]}}
+            """), previousState(NativeAuthV2FlowScenario.SIGN_UP))
+            assertFalse(result is NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired)
+        }
+        val result = parser.parseInteraction(responseFrom("""
+            {"state":"interactionRequired","action":"challenge",
+             "challengeContext":{"authenticationFactor":"singleFactor"},
+             "_embedded":{"methods":[{"id":"m","type":"email",
+             "_links":{"challenge":{"href":"/challenge"}}}]}}
+        """), previousState(NativeAuthV2FlowScenario.SIGN_UP))
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+    }
+
+    @Test
     fun parseAuthorizeChallenge_prefersExplicitErrorCodesIncludingEmptyArray() {
         for (codes in listOf(listOf(100, 200), emptyList())) {
             val result = parser.parseAuthorizeChallenge(

@@ -167,6 +167,20 @@ class NativeAuthV2ContinuationState private constructor(
     /** Returns the originating scenario, never inferred from an enrollment response. */
     fun flowScenario(): NativeAuthV2FlowScenario = scenario
 
+    /** Continues an existing-account challenge as sign-in, discarding sign-up-only input. */
+    internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState =
+        NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = links,
+            methodLinks = methodLinks,
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = NativeAuthV2FlowScenario.SIGN_IN,
+            authenticationFactor = authenticationFactor
+        )
+
     /** Whether this reset flow has actually submitted a new password. */
     fun isResetPasswordUpdateSubmitted(): Boolean = resetPasswordUpdateSubmitted
 

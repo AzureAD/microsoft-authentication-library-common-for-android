@@ -419,9 +419,8 @@ class AuthUxJavaScriptInterfaceTest {
 
     @Test
     fun `test a code not consumed by the sink stays eligible for retry`() {
-        // A sink may legitimately accept the call and record nothing — the first real implementation
-        // returns false while its recorder is not yet attached. The bridge must NOT mark such a code
-        // as forwarded, otherwise the retry is suppressed and the value is lost for good.
+        // A not-ready sink returns false; later occurrences must remain eligible.
+        // This differs from deliberate host policy exclusion, which returns true.
         val sink = RecordingTelemetrySink(consume = false)
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
