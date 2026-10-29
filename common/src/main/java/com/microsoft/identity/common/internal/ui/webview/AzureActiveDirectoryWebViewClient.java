@@ -93,7 +93,17 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_BROKER_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT_ALTERNATE;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED_ALTERNATE;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_MAM_BROKER_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED_ALTERNATE;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.AUTH_UX_ERROR_STRONG_AUTH_SETUP_REQUIRED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALLATION_TRIGGERED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
@@ -466,22 +476,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Nullable
     private static String getAuthUxOnboardingStep(@NonNull final String errorCode) {
         switch (errorCode) {
-            case "50127":
+            case AUTH_UX_ERROR_MAM_BROKER_REQUIRED:
                 return STEP_BROKER_INSTALL_PROMPTED_FOR_MAM;
-            case "501271":
+            case AUTH_UX_ERROR_BROKER_REQUIRED:
                 return STEP_BROKER_INSTALL_PROMPTED;
-            case "50129":
-            case "501291":
+            case AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED:
+            case AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED_ALTERNATE:
                 return STEP_DEVICE_REGISTRATION_REQUIRED;
-            case "50079":
+            case AUTH_UX_ERROR_STRONG_AUTH_SETUP_REQUIRED:
                 return STEP_STRONG_AUTH_SETUP_STARTED;
-            case "53000":
-            case "530003":
+            case AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED:
+            case AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED_ALTERNATE:
                 return STEP_MDM_ENROLLMENT_REQUIRED;
-            case "530001":
-            case "530002":
+            case AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT:
+            case AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT_ALTERNATE:
                 return STEP_DEVICE_NOT_COMPLIANT;
             default:
+                Logger.verbose(TAG + ":getAuthUxOnboardingStep",
+                        "No onboarding step mapping exists for Auth UX error code: " + errorCode);
                 return null;
         }
     }
@@ -1543,7 +1555,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
-        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
+        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
@@ -1563,7 +1575,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
-        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
+        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_APP_PREFIX + appPackageName));
@@ -1889,7 +1901,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Onboarding telemetry: broker install request reached the WebView client. Record the
         // step at method entry so we capture intent regardless of the parsed result code.
-        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
+        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
 
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
 
@@ -1981,7 +1993,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
         // Onboarding telemetry: alternate broker install path (intent-scheme).
-        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
+        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
         try {
             final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
 
