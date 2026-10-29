@@ -182,7 +182,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .retryPolicy(StatusCodeAndExceptionRetry.builder()
+                    .retryPolicy(BoundedNetworkRetryContext.wrap(StatusCodeAndExceptionRetry.builder()
                             .number(1)
                             .extensionFactor(2)
                             .isAcceptable(new Function<HttpResponse, Boolean>() {
@@ -201,7 +201,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                     return ConnectionError.CONNECTION_TIMEOUT.compare(e);
                                 }
                             })
-                            .build())
+                            .build()))
                     .build());
             reference = defaultReference.get();
         }
@@ -506,11 +506,13 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     private int getReadTimeoutMs() {
-        return readTimeoutMsSupplier == null ? readTimeoutMs : readTimeoutMsSupplier.get();
+        return BoundedNetworkRetryContext.capTimeoutMs(
+                readTimeoutMsSupplier == null ? readTimeoutMs : readTimeoutMsSupplier.get());
     }
 
     private int getConnectTimeoutMs() {
-        return connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get();
+        return BoundedNetworkRetryContext.capTimeoutMs(
+                connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get());
     }
 
     private static void sendRequest(@NonNull final HttpURLConnection connection,
