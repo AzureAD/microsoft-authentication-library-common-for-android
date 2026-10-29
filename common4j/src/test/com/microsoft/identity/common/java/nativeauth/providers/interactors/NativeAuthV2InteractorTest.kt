@@ -377,7 +377,11 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state
+                previousState = match {
+                    it.isResetPasswordUpdateSubmitted() &&
+                        it.continuationToken == state.continuationToken &&
+                        it.scopesForTokenRequest() == state.scopesForTokenRequest()
+                }
             )
         } returns expected
 
@@ -400,7 +404,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state
+                previousState = match { it.isResetPasswordUpdateSubmitted() }
             )
         }
     }

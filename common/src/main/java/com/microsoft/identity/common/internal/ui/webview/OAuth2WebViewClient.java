@@ -257,13 +257,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         super.onPageStarted(view, url, favicon);
     }
 
-    protected void setAuthUxBridgeSession(final AuthUxBridgeSession authUxBridgeSession) {
-        if (mAuthUxBridgeSession != null && mAuthUxBridgeSession != authUxBridgeSession) {
-            mAuthUxBridgeSession.close();
-        }
-        mAuthUxBridgeSession = authUxBridgeSession;
-    }
-
     private void checkStartUrl(final String url) {
         final String methodTag = TAG + ":checkStartUrl";
         if (StringUtil.isEmpty(url)) {

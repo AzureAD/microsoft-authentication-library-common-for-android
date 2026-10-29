@@ -29,8 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Command class to call controllers to resend otp code request in the V2 self service password
- * reset flow.
+ * Resends a verification or JIT activation code using the current V2 continuation state.
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class NativeAuthV2ResendCodeCommand(

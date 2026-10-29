@@ -39,6 +39,8 @@ value class NativeAuthV2LinkRelation(val value: String) {
     companion object {
         val CHALLENGE = NativeAuthV2LinkRelation("challenge")
         val VERIFY = NativeAuthV2LinkRelation("verify")
+        val ENROLL = NativeAuthV2LinkRelation("enroll")
+        val ACTIVATE = NativeAuthV2LinkRelation("activate")
         val RESEND = NativeAuthV2LinkRelation("resend")
         val UPDATE = NativeAuthV2LinkRelation("update")
         val POLL = NativeAuthV2LinkRelation("poll")

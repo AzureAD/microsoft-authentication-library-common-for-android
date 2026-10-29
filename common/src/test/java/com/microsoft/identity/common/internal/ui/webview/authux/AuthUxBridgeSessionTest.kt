@@ -28,6 +28,8 @@ package com.microsoft.identity.common.internal.ui.webview.authux
 import android.webkit.WebView
 import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,6 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
@@ -53,8 +56,8 @@ class AuthUxBridgeSessionTest {
             webView = webView,
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
-            hasOnboardingTelemetryRecorder = false,
-            brokerMasterFlightEnabled = true,
+            telemetrySink = null,
+            brokerAuthUxBridgeEnabled = true,
             preferWebMessageListener = true,
             webKitAdapter = adapter
         )
@@ -75,8 +78,8 @@ class AuthUxBridgeSessionTest {
             webView = webView,
             initialUrl = LOGIN_URL,
             isBrokerAuthProcess = true,
-            hasOnboardingTelemetryRecorder = false,
-            brokerMasterFlightEnabled = true,
+            telemetrySink = null,
+            brokerAuthUxBridgeEnabled = true,
             preferWebMessageListener = false,
             webKitAdapter = adapter,
             originPolicy = originPolicy
@@ -101,13 +104,13 @@ class AuthUxBridgeSessionTest {
     }
 
     @Test
-    fun `broker request is disabled when master flight is off`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = false)
+    fun `broker request is disabled when bridge enablement is off`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = false)
     }
 
     @Test
-    fun `broker recorder does not bypass disabled master flight`() {
-        assertBrokerMasterFlightDisabled(hasOnboardingTelemetryRecorder = true)
+    fun `broker recorder does not bypass disabled bridge`() {
+        assertBrokerAuthUxBridgeDisabled(hasOnboardingTelemetryRecorder = true)
     }
 
     @Test
@@ -118,7 +121,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -147,7 +150,7 @@ class AuthUxBridgeSessionTest {
                 view,
                 url,
                 true,
-                false,
+                null,
                 true,
                 true,
                 adapter
@@ -188,7 +191,7 @@ class AuthUxBridgeSessionTest {
             webView,
             ENCODED_CLAIMS_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -213,7 +216,7 @@ class AuthUxBridgeSessionTest {
                 view,
                 ENCODED_CLAIMS_URL,
                 true,
-                false,
+                null,
                 true,
                 true,
                 adapter
@@ -236,7 +239,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "https://login.microsoftonline.com:8443/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             true,
             FakeWebKitAdapter()
@@ -252,7 +255,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "custom://login.microsoftonline.com/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             true,
             FakeWebKitAdapter()
@@ -268,7 +271,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             FakeWebKitAdapter(documentStartSupported = false)
@@ -308,7 +311,7 @@ class AuthUxBridgeSessionTest {
             webView,
             "http://login.microsoftonline.com/common/oauth2/authorize",
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -326,7 +329,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -345,7 +348,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -373,7 +376,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -409,7 +412,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -442,7 +445,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -462,8 +465,8 @@ class AuthUxBridgeSessionTest {
                 webView = webView,
                 initialUrl = LOGIN_URL,
                 isBrokerAuthProcess = false,
-                hasOnboardingTelemetryRecorder = false,
-                brokerMasterFlightEnabled = true,
+                telemetrySink = null,
+                brokerAuthUxBridgeEnabled = true,
                 preferWebMessageListener = preferWebMessageListener,
                 webKitAdapter = adapter
             )
@@ -489,7 +492,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             false,
-            true,
+            RecordingTelemetrySink(),
             true,
             true,
             adapter
@@ -506,7 +509,7 @@ class AuthUxBridgeSessionTest {
             webView,
             LOGIN_URL,
             true,
-            false,
+            null,
             true,
             true,
             adapter
@@ -530,7 +533,7 @@ class AuthUxBridgeSessionTest {
         assertTrue(script.contains("JSON.stringify(message)"))
     }
 
-    private fun assertBrokerMasterFlightDisabled(
+    private fun assertBrokerAuthUxBridgeDisabled(
         hasOnboardingTelemetryRecorder: Boolean
     ) {
         listOf(false, true).forEach { preferWebMessageListener ->
@@ -539,8 +542,12 @@ class AuthUxBridgeSessionTest {
                 webView = webView,
                 initialUrl = LOGIN_URL,
                 isBrokerAuthProcess = true,
-                hasOnboardingTelemetryRecorder = hasOnboardingTelemetryRecorder,
-                brokerMasterFlightEnabled = false,
+                telemetrySink = if (hasOnboardingTelemetryRecorder) {
+                    RecordingTelemetrySink()
+                } else {
+                    null
+                },
+                brokerAuthUxBridgeEnabled = false,
                 preferWebMessageListener = preferWebMessageListener,
                 webKitAdapter = adapter
             )
@@ -558,6 +565,46 @@ class AuthUxBridgeSessionTest {
             verify(webView, never()).evaluateJavascript(any(), any())
             verify(webView, never()).removeJavascriptInterface("broker")
             session.close()
+        }
+    }
+
+    @Test
+    fun `JavaScript interface forwards every accepted telemetry occurrence to supplied sink`() {
+        val sink = RecordingTelemetrySink()
+        val session = AuthUxBridgeSession.create(
+            webView,
+            LOGIN_URL,
+            false,
+            sink,
+            true,
+            true,
+            FakeWebKitAdapter(listenerSupported = false)
+        )
+        val processorCaptor = ArgumentCaptor.forClass(Any::class.java)
+        verify(webView).addJavascriptInterface(processorCaptor.capture(), eq("broker"))
+        val processor = processorCaptor.value as com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
+        val payload = """
+            {
+              "correlationID":"correlation-id",
+              "action_name":"log_telemetry",
+              "action_component":"host",
+              "params":{"errorCode":"530003"}
+            }
+        """.trimIndent()
+
+        processor.process(payload)
+        processor.process(payload)
+
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, session.mode)
+        assertEquals(listOf("530003", "530003"), sink.events.map { it.errorCode })
+    }
+
+    private class RecordingTelemetrySink : AuthUxTelemetrySink {
+        val events = mutableListOf<AuthUxTelemetryEvent>()
+
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            events.add(event)
+            return true
         }
     }
 
