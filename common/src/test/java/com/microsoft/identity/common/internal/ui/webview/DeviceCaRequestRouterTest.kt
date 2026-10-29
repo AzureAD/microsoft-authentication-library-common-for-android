@@ -32,6 +32,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockConstruction
+import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -69,7 +70,95 @@ class DeviceCaRequestRouterTest {
         verify(router).launchReWpjManagementApp(INTUNE_APP_PACKAGE_NAME)
         verify(webView).stopLoading()
         assertEquals(1, host.mdmFlowReturnCount)
-        assertEquals(listOf(STEP_MDM_ENROLLMENT_STARTED), host.onboardingSteps)
+        assertTrue(host.onboardingSteps.isEmpty())
+    }
+
+    @Test
+    fun route_mdmEnrollmentUrl_recordsStepAndPreservesRouting() {
+        host.webCpInWebViewEnabled = true
+        val urls = listOf(
+            MDM_ENROLLMENT_URL,
+            "$MDM_ENROLLMENT_URL&source=ADAL&ismdmurl=1",
+            "browser://go.microsoft.com/fwlink/?source=ADAL&LinkId=396941&ismdmurl=1",
+            "BROWSER://GO.MICROSOFT.COM/fwlink/?LinkId=396941",
+        )
+
+        for (url in urls) {
+            host.onboardingSteps.clear()
+
+            val result = router.route(webView, url)
+
+            assertSame(url, DeviceCaRequestRouter.RoutingResult.Completed, result)
+            assertEquals(url, listOf(STEP_MDM_ENROLLMENT_STARTED), host.onboardingSteps)
+            val expectedUrl = if (url.startsWith("browser://")) {
+                "https://" + url.removePrefix("browser://")
+            } else {
+                url
+            }
+            assertEquals(url, expectedUrl, host.loadedUrl)
+        }
+    }
+
+    @Test
+    fun route_otherUrls_skipEnrollmentStepAndPreserveRouting() {
+        host.webCpInWebViewEnabled = true
+        val urls = listOf(
+            DEVICE_CA_URL,
+            "browser://go.microsoft.com/fwlink/?LinkId=396942",
+            "browser://go.microsoft.com/fwlink/?LinkId=3969410",
+            "browser://go.microsoft.com/fwlink/?ismdmurl=1",
+            "browser://go.microsoft.com/fwlink/?linkid=396941",
+            "browser://go.microsoft.com/fwlink/?next=LinkId%3D396941",
+            "browser://go.microsoft.com.example.com/fwlink/?LinkId=396941",
+            "browser://other.example.com/fwlink/?LinkId=396941",
+            "browser://go.microsoft.com/other/?LinkId=396941",
+            "browser://go.microsoft.com:443/fwlink/?LinkId=396941",
+            "browser://go.microsoft.com:2147483648/fwlink/?LinkId=396941",
+            "browser://go.microsoft.com:/fwlink/?LinkId=396941",
+            "browser://user@go.microsoft.com/fwlink/?LinkId=396941",
+            "https://go.microsoft.com/fwlink/?LinkId=396941",
+            "browser:opaque?LinkId=396941",
+            "",
+        )
+
+        for (url in urls) {
+            val result = router.route(webView, url)
+
+            assertSame(url, DeviceCaRequestRouter.RoutingResult.Completed, result)
+            assertTrue(url, host.onboardingSteps.isEmpty())
+            val expectedUrl = if (url.startsWith("browser://")) {
+                "https://" + url.removePrefix("browser://")
+            } else {
+                url
+            }
+            assertEquals(url, expectedUrl, host.loadedUrl)
+        }
+    }
+
+    @Test
+    fun route_urlClassificationThrows_skipsEnrollmentStepAndContinuesRouting() {
+        host.webCpInWebViewEnabled = true
+        mockStatic(Uri::class.java).use { mockedUri ->
+            mockedUri.`when`<Uri> { Uri.parse(MDM_ENROLLMENT_URL) }
+                .thenThrow(IllegalArgumentException("Invalid URI"))
+
+            val result = router.route(webView, MDM_ENROLLMENT_URL)
+
+            assertSame(DeviceCaRequestRouter.RoutingResult.Completed, result)
+        }
+
+        assertTrue(host.onboardingSteps.isEmpty())
+        assertEquals("https://go.microsoft.com/fwlink/?LinkId=396941", host.loadedUrl)
+        assertEquals(1, host.webCpFlowStartedCount)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun route_recorderThrows_preservesExistingExceptionBehavior() {
+        val failingHost = mock(DeviceCaRequestRouter.Host::class.java)
+        doThrow(IllegalStateException("Recorder failure")).`when`(failingHost)
+            .recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED)
+
+        DeviceCaRequestRouter(failingHost).route(webView, MDM_ENROLLMENT_URL)
     }
 
     @Test
@@ -413,6 +502,7 @@ class DeviceCaRequestRouterTest {
     }
 
     private companion object {
+        const val MDM_ENROLLMENT_URL = "browser://go.microsoft.com/fwlink/?LinkId=396941"
         const val DEVICE_CA_URL = "browser://abcxyz/xyz?ismdmurl=1"
         const val HTTPS_DEVICE_CA_URL = "https://abcxyz/xyz?ismdmurl=1"
         const val RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj"

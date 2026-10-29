@@ -22,10 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.SKIP_ONBOARDING_RECORDER_LOOKUP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -147,6 +150,61 @@ public class AuthorizationFragmentCorrelationIdTest {
                 webView,
                 "https://login.microsoftonline.com"
         );
+    }
+
+    @Test
+    public void testSuppressedLookupPreservesCorrelationAndOtherOwnerAcrossRecreation() {
+        final OnboardingTelemetryRecorder existing = recorder();
+        OnboardingRecorderRegistry.register(CORRELATION_ID, existing);
+        for (final boolean silent : new boolean[]{false, true}) {
+            final Bundle launchState = state(CORRELATION_ID);
+            launchState.putBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP, true);
+            final WebViewAuthorizationFragment fragment = silent
+                    ? new SilentWebViewAuthorizationFragment() : new WebViewAuthorizationFragment();
+            fragment.extractState(launchState);
+            assertLookupSuppressed(fragment);
+
+            final Bundle savedState = new Bundle();
+            fragment.onSaveInstanceState(savedState);
+            assertTrue(savedState.getBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP));
+            final WebViewAuthorizationFragment recreated = silent
+                    ? new SilentWebViewAuthorizationFragment() : new WebViewAuthorizationFragment();
+            recreated.extractState(savedState);
+            assertLookupSuppressed(recreated);
+            assertSame(existing, OnboardingRecorderRegistry.get(CORRELATION_ID));
+        }
+    }
+
+    @Test
+    public void testExplicitFalsePreservesExistingLookupAcrossRecreation() {
+        final OnboardingTelemetryRecorder existing = recorder();
+        OnboardingRecorderRegistry.register(CORRELATION_ID, existing);
+        final Bundle launchState = state(CORRELATION_ID);
+        launchState.putBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP, false);
+        final WebViewAuthorizationFragment fragment = new WebViewAuthorizationFragment();
+        fragment.extractState(launchState);
+        final Bundle savedState = new Bundle();
+        fragment.onSaveInstanceState(savedState);
+        assertFalse(savedState.getBoolean(SKIP_ONBOARDING_RECORDER_LOOKUP));
+        final WebViewAuthorizationFragment recreated = new WebViewAuthorizationFragment();
+        recreated.extractState(savedState);
+        final AzureActiveDirectoryWebViewClient client =
+                Mockito.mock(AzureActiveDirectoryWebViewClient.class);
+        final WebView webView = Mockito.mock(WebView.class);
+        recreated.initializeAuthUxJavaScriptApi(client, webView, "https://login.microsoftonline.com");
+        Mockito.verify(client).setOnboardingTelemetryRecorder(existing);
+    }
+
+    private static void assertLookupSuppressed(final WebViewAuthorizationFragment fragment) {
+        assertEquals(CORRELATION_ID, fragment.getCorrelationId());
+        final AzureActiveDirectoryWebViewClient client =
+                Mockito.mock(AzureActiveDirectoryWebViewClient.class);
+        final WebView webView = Mockito.mock(WebView.class);
+        fragment.initializeAuthUxJavaScriptApi(client, webView, "https://login.microsoftonline.com");
+        final InOrder ordered = inOrder(client);
+        ordered.verify(client).setOnboardingTelemetryRecorder(null);
+        ordered.verify(client).initializeAuthUxJavaScriptApi(
+                webView, "https://login.microsoftonline.com");
     }
 
     private static Bundle state(final String correlationId) {

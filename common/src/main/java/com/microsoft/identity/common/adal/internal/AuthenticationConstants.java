@@ -2190,6 +2190,13 @@ public final class AuthenticationConstants {
 
         public static final String WEB_VIEW_WEB_CP_ENABLED = "com.microsoft.identity.web.view.web.cp.enabled";
 
+        /**
+         * Suppresses process-local onboarding recorder lookup for this invocation.
+         * Absence preserves the existing lookup behavior.
+         */
+        public static final String SKIP_ONBOARDING_RECORDER_LOOKUP =
+                "com.microsoft.identity.skip.onboarding.recorder.lookup";
+
         public static final String MAM_CA_INSTALL_REFERRER_ENABLED = "com.microsoft.identity.mam.ca.install.referrer.enabled";
 
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";

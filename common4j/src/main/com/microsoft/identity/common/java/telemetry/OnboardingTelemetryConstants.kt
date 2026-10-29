@@ -95,6 +95,19 @@ object OnboardingTelemetryConstants {
     const val STEP_USER_CANCELED = "UserCanceled"
     const val STEP_AUTHORIZATION_TIMED_OUT = "AuthorizationTimedOut"
 
+    const val STEP_BROKER_INSTALLATION_TRIGGERED = "BrokerInstallTriggered"
+
+    // Auth UX server error codes used for onboarding step classification
+    const val AUTH_UX_ERROR_MAM_BROKER_REQUIRED = "50127"
+    const val AUTH_UX_ERROR_BROKER_REQUIRED = "501271"
+    const val AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED = "50129"
+    const val AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED_ALTERNATE = "501291"
+    const val AUTH_UX_ERROR_STRONG_AUTH_SETUP_REQUIRED = "50079"
+    const val AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED = "53000"
+    const val AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED_ALTERNATE = "530003"
+    const val AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT = "530001"
+    const val AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT_ALTERNATE = "530002"
+
     // Blocking error values — must match C++ hardcoded strings in InteractiveRequest.cpp
     const val BLOCKING_ERROR_BROKER_INSTALL = "BROKER_INSTALLATION_TRIGGERED"
     const val BLOCKING_ERROR_MDM_FLOW = "MDM_FLOW"
