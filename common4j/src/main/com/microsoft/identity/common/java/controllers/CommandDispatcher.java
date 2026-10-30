@@ -64,6 +64,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.net.BoundedNetworkRetryContext;
 import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
@@ -657,6 +658,7 @@ public class CommandDispatcher {
 
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
+                        BoundedNetworkRetryContext.attachCancellationSignal(cancellationSignal);
                         //initializing again since the request is transferred to a different thread pool
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
