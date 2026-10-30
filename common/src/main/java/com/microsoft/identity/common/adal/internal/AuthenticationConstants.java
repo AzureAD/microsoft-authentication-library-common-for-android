@@ -1385,7 +1385,35 @@ public final class AuthenticationConstants {
         public static final String PRT_NONCE = "nonce";
 
         /**
-         * Complete compact JWT signed by the native PSI credential for PRT recovery.
+         * Compact ES256 JWT expected by the current native PSI caller and Broker implementation.
+         *
+         * <p>The wire value is three Base64URL-without-padding JWS segments:
+         * {@code header.payload.signature}. The PSI credential signs the ASCII
+         * {@code header.payload}; the signature segment contains the 64-byte JOSE {@code R || S}
+         * encoding, not the DER signature returned by the signing API. The header's {@code kid}
+         * retains the original registered credential identifier without re-encoding.
+         *
+         * <p>This is not an envelope for FIDO {@code signature}, {@code auth_data} and
+         * {@code clientDataJSON} fields, nor a signature over
+         * {@code authenticatorData || SHA256(clientDataJSON)}.
+         * Broker's {@code NativePsiPrtProofBuilder} validates the current compact shape and
+         * bindings; {@code NativePsiPrtRecoveryProtocol} places the unchanged string in the
+         * {@code assertion} claim of a separate WPJ device-key-signed RS256 JWT-bearer request.
+         * That implementation does not map this value into a {@code fido_signature} request.
+         *
+         * <p>Synthetic decoded example (illustrative values, not a valid or reusable assertion):
+         * <pre>
+         * header: {"alg":"ES256","kid":"AAECAw==","use":"ngc"}
+         * payload: {"iat":1700000000,"nbf":1700000000,"exp":1700000600,
+         *           "iss":"synthetic@example.invalid",
+         *           "aud":"29d9ed98-a469-4536-ade2-f981bc1d605e","scope":"openid",
+         *           "request_nonce":"synthetic-nonce",
+         *           "deviceid":"00000000-0000-0000-0000-000000000001"}
+         * </pre>
+         *
+         * <p>This documents the implementation, not confirmed service interoperability.
+         * Alignment with the separate GetPRTWithNGC FIDO design remains unresolved; the example
+         * does not establish service-mandated claims, encodings or lifetime requirements.
          */
         public static final String SIGNED_NATIVE_ASSERTION = "signed.native.assertion";
 
