@@ -208,8 +208,8 @@ Production canary rollout can begin after these operational prerequisites are re
 
 1. The dedicated dashboard compares enforced and shadow cohorts by caller, app version,
    broker version, Android version, OEM, verdict, origin source, parent outcome, and
-   sampled repeat share. At 100%, it uses the frozen historical reference in the runbook,
-   not a nonexistent contemporaneous shadow cohort.
+   sampled repeat share for the operator-selected time range. It uses same-window shadow
+   traffic when present, otherwise the frozen historical reference in the runbook.
 2. High-rate callers are included as explicit monitoring segments rather than hidden by the
    aggregate.
 3. Available controlled validation and the existing automated validation suite are green.
@@ -218,21 +218,24 @@ Production canary rollout can begin after these operational prerequisites are re
 ## Proposed rollout stages
 
 After the operational prerequisites are met, use a percentage-based rollout. Each stage
-requires an explicit review rather than automatic expansion.
+requires an explicit review rather than automatic expansion. These are suggested
+observation periods, not a timetable enforced by the dashboard. Operational needs can
+change the actual duration; choose the corresponding time range when reviewing telemetry.
 
-| Stage | Proposed exposure | Minimum observation | Challenge floor, each cohort | Allowed-only parent floor, each cohort |
-|---|---:|---|---:|---:|
-| Internal validation | Microsoft test accounts and devices only | 48 hours and available controlled validation | Not a production promotion gate | Not a production promotion gate |
-| Production canary | 1% | 48 hours | 500 | 200 |
-| Limited production | 5% | 48 hours | 2,000 | 1,000 |
-| Broad production | 25% | 72 hours | 5,000 | 2,000 |
-| Majority production | 50% | 72 hours | 5,000 | 2,000 |
-| Full enforcement | 100% | 72 hours after expansion | 5,000 | 2,000 |
+| Stage | Proposed exposure | Suggested observation |
+|---|---:|---|
+| Internal validation | Microsoft test accounts and devices only | 48 hours and available controlled validation |
+| Production canary | 1% | 48 hours |
+| Limited production | 5% | 48 hours |
+| Broad production | 25% | 72 hours |
+| Majority production | 50% | 72 hours |
+| Full enforcement | 100% | Continue monitoring; initially plan for 72 hours |
 
-Both current and reference populations must meet these floors across the stage's review
-window. Require an evaluable outcome comparison before expansion; insufficient samples
-mean keep the same stage, not pass the gate. No one-hour/1,000-parent condition is required
-at the 1% stage. At 100%, "reference" means the frozen, matching historical shadow data.
+The health comparison uses sample guides independent of exposure percentage: 500
+challenges per population for rejection rates and 200 allowed-only parents per population
+for outcome comparisons. Counts and rates remain visible below these guides, with an
+explicit sample warning. Record the selected review interval with the rollout decision;
+elapsed time alone does not establish health or approve expansion.
 
 At the 1% stage, review every sampled blocked challenge. At later stages, review every new
 caller, verdict, origin-source, app-version, Android-version, or OEM concentration.
@@ -261,8 +264,9 @@ thereafter, including at least 72 hours after reaching 100%.
      parents; keep unmatched and mixed-cohort parents visible.
    - Compare error/code and cancellation rates for parents with only `ALLOWED` PKeyAuth
      children; inspect intentional mismatch blocks separately.
-   - At 100%, compare with the frozen October 28 historical shadow baseline using matching
-     app-version / broker-host / caller keys and the same selected filters.
+   - If the selected period has no shadow traffic, compare with the frozen October 28
+     historical shadow baseline using matching app-version / broker-host / caller keys
+     and the same selected filters.
    - Track sampled device-day repeat share as a directional repeated-request signal.
 4. **Caller-specific guardrails**
    - Monitor Company Portal, MSApps, Teams, Outlook, Authenticator, Intune, Word, Samsung
@@ -277,15 +281,17 @@ thereafter, including at least 72 hours after reaching 100%.
 
 ## Stage gates and rollback thresholds
 
-The dashboard's gate tile implements the formulas and sample floors in the
+The dashboard's health-comparison tile implements the formulas and sample context in the
 [query runbook](./ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Dashboard.md).
-Update the stage percentage and actual ECS stage-start UTC timestamp at every expansion.
+Every tile uses the time picker; no rollout-stage percentage or stage-start timestamp is
+required. Choose the actual review interval even when it differs from the planned
+observation period.
 
 **Explicit rejection gate:** Define `R` as the enforced `REJECTED_*` percentage and `B` as
 the reference percentage over the same selected caller/app/host scope. Pause expansion
-when `R > max(B + 0.5 percentage points, 1.5 * B)` across the completed 48/72-hour review
-window, with both populations meeting the stage's challenge floor. At 1-50%, use
-contemporaneous shadow data. At 100%, use the frozen October 28 pre-enforcement snapshot;
+when `R > max(B + 0.5 percentage points, 1.5 * B)` across the selected review
+window, with at least 500 challenges in each population. Use same-window shadow data when
+present; otherwise use the frozen October 28 pre-enforcement snapshot;
 its aggregate source is 93,099 challenges and 1,715 rejections before matching/filtering.
 The historical 30-day 2.027% rate above is context, not a hard-coded live control rate.
 
@@ -300,17 +306,18 @@ Pause expansion and investigate when any of the following occurs:
 - A caller, origin-source, or platform segment shows an unexpected authentication-outcome
   regression relative to its shadow-mode baseline.
 - The exposed allowed-only parent error/code or cancellation percentage exceeds
-  `max(reference + 0.1 percentage points, 1.25 * reference)` across the stage review
-  window with both parent sample floors met.
+  `max(reference + 0.1 percentage points, 1.25 * reference)` across the selected review
+  window with at least 200 allowed-only parents in each population.
 - Sampled allowed-only repeat share exceeds
-  `max(reference + 5 percentage points, 1.25 * reference)`, using the same parent floors.
+  `max(reference + 5 percentage points, 1.25 * reference)`, using the same parent sample guide.
 - Any high-priority customer impact or Sev 2-or-higher incident is attributed to
   enforcement.
 
-Every promotion row must be evaluable. Hold expansion for incomplete telemetry, mixed or
-unknown parent cohorts, less than 95% matched-parent coverage, or (at 100%) less than 95%
-challenge coverage by matching frozen-baseline keys. These operational thresholds trigger
-review; they are not claims of statistical equivalence or final authentication success.
+Do not treat low samples or missing comparison data as evidence of health. The dashboard
+shows incomplete telemetry, mixed/unknown parent cohorts, less than 95% matched-parent
+coverage, and less than 95% coverage by historical-reference keys when applicable.
+Observed rates stay visible. These signals inform human review; they neither enforce a
+rollout schedule nor claim statistical equivalence or final authentication success.
 
 Roll back immediately rather than merely pausing when:
 
@@ -356,9 +363,9 @@ enforcement-only regression.
 - No regression remains concentrated in a caller, origin-source, Android-version, OEM, or
   app-version segment.
 - Allowed-only parent error/code, cancellation, and sampled repeat rates remain within
-  the stage gates, using the frozen historical control at 100%.
+  the review thresholds, using the reference source shown for the selected period.
 - Controlled interactive PKeyAuth validation remains successful for the supported broker,
   first-party app, federated, and device-management scenarios.
-- At least 72 hours at 100% and the final-stage sample/coverage floors are satisfied,
+- The chosen full-enforcement observation interval has adequate samples and coverage,
   including review of Company Portal, Teams, Outlook, Authenticator, and Intune segments.
 - No Sev 2-or-higher incident is attributed to PKeyAuth `SubmitUrl` origin enforcement.

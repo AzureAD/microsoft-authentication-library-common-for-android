@@ -19,47 +19,51 @@ tiles. It does not configure ECS, enable enforcement, or approve a rollout stage
 
 | Parameter | Meaning |
 |---|---|
-| Time range | Defaults to the last 48 hours; controls overview and diagnostic tiles. Cap the end at `now()` to exclude future-dated device events. |
-| Stage (%) | `1`, `5`, `25`, `50`, or `100`; determines the promotion window and sample floors. |
-| Stage start (UTC) | Actual time the ECS stage began, for example `2026-11-02T18:00:00Z`. Leave empty before exposure; the gate correctly shows `SET_STAGE_START`. Update at every expansion. |
+| Time range | Defaults to the last 48 hours but can be changed freely. Every panel uses this selected range, with its end capped at `now()` to exclude future-dated device events. |
 | Calling package / Broker host / Host app version | Apply identically to the current and reference populations. All means `dynamic(null)` and does not filter rows out. |
 
-The gate tile deliberately uses its own trailing 48/72-hour window ending at the time
-picker's end, never earlier than the current stage start. The minimum observation time
-must have elapsed before any row can report `WITHIN_GATE`. A retrospective time selection
-therefore evaluates a retrospective stage window, not the current rollout.
+There is no Stage or Stage start control. The dashboard does not assume a rollout
+percentage, enforce a minimum elapsed time, or truncate a longer review to 48/72 hours.
+Choose the period to investigate, whether that is the last 15 minutes, several days, or
+a custom interval. The premortem's rollout schedule is planning guidance, not a dependency
+of these queries. A range spanning multiple rollout percentages reports the observed
+enforced/shadow populations over that whole interval.
 
-At 1-50%, the reference is contemporaneous shadow traffic with the same filters. At 100%,
-there is no assumed shadow holdout: the reference is the frozen pre-enforcement dataset
+The comparison automatically uses contemporaneous shadow traffic from that same selected
+range when any is present. If there is none, it uses the frozen pre-enforcement dataset
 below, restricted to app-version / broker-host / caller keys present in the enforced
-cohort. This is a matched-segment operational comparison, not a causal or statistical
-equivalence test. Inspect caller segments before expansion rather than relying only on
-the aggregate.
+cohort. This also handles full enforcement without a manual 100% setting or a permanent
+holdout. The reference source and coverage are shown in the result. A historical reference
+later than the selected period is flagged rather than presented as a valid comparison.
 
-## Promotion windows and sample floors
+This is a matched-segment operational comparison, not a causal or statistical equivalence
+test. Inspect caller segments before expansion rather than relying only on the aggregate.
 
-| Exposure | Minimum elapsed observation | Enforced and reference challenge minimum, each | Enforced and reference allowed-only parent minimum, each |
-|---|---:|---:|---:|
-| 1% | 48 hours | 500 | 200 |
-| 5% | 48 hours | 2,000 | 1,000 |
-| 25% | 72 hours | 5,000 | 2,000 |
-| 50% | 72 hours | 5,000 | 2,000 |
-| 100% | 72 hours | 5,000 | 2,000 |
+## Sample context, independent of rollout schedule
 
-Require every gate row to be evaluable and within threshold before promotion. An
-insufficient sample, incomplete attributes, mixed/unknown parent cohort, or inadequate
-reference/join coverage is a hold, never a successful check. If a floor is not reached in
-48/72 hours, keep the same exposure and collect more data; this is not an automatic
-extension to a seven-day stage.
+| Comparison | Sample guide for each current/reference population |
+|---|---:|
+| Rejection percentage | 500 evaluated challenges |
+| Allowed-only parent errors, cancellations, and repeat proxy | 200 matched allowed-only parents |
+
+Rates and counts remain visible even below these guides; `LOW_SAMPLE` warns against
+overinterpreting a small population. It does not stop charts from rendering or require
+waiting a preset number of hours. Missing references, incomplete attributes, ambiguous
+parent cohorts, and low join/reference coverage are likewise reported as data-quality
+context, not disguised as healthy results.
+
+The comparison tile is a review aid, not a promotion engine. Actual rollout timing and
+go/no-go decisions remain with the operator.
 
 ## Explicit rejection-rate gate
 
-For the same review window and filters:
+For the operator-selected review window and filters:
 
 - `R = 100 * enforced REJECTED_* challenges / enforced evaluated challenges`.
 - `B` is the same rate in the selected reference population.
-- **Pause expansion when `R > max(B + 0.5 percentage points, 1.5 * B)`**, after the
-  stage's elapsed time and both challenge sample floors are satisfied.
+- **Pause expansion for review when `R > max(B + 0.5 percentage points, 1.5 * B)`**,
+  using at least 500 challenges in each population. The tile labels this
+  `ABOVE_THRESHOLD`; it does not change exposure or enforce a waiting period.
 - The October 26 descriptive 30-day rate was 2.027%; using that rate illustrates a
   threshold of 3.0405%. The live gate uses its actual selected reference, not this
   illustrative constant.
@@ -90,10 +94,10 @@ The operational review thresholds are:
 | Cancellation, among allowed-only parents | `max(reference + 0.1 percentage points, 1.25 * reference)` |
 | Repeat share among sampled allowed-only parents | `max(reference + 5 percentage points, 1.25 * reference)` |
 
-The outcome/repeat rows require the parent sample floor and at least 95% matched-parent
-coverage. At 100%, at least 95% of enforced challenges must also have an app-version /
-broker-host / caller key in the frozen baseline. Missing references are not treated as a
-zero error or rejection rate.
+The outcome/repeat rows show a sample warning below 200 parents and a coverage warning
+below 95% matched-parent coverage. When using the historical reference, less than 95% of
+enforced challenges with a matching frozen-baseline key is also flagged. Observed rates
+stay visible; missing references are not treated as a zero error or rejection rate.
 
 Repeat share is `(parents - sampled device-days) / parents`, calculated within each
 app-version / broker-host / caller segment. It is a same-day repeated-request proxy, not
@@ -101,7 +105,7 @@ proof that an app retried or a measurement of every physical-device attempt. Sam
 partial days affect this proxy. The parent status/error metrics are likewise directional
 signals, not a claim of end-to-end sign-in reliability.
 
-## Frozen historical reference for 100%
+## Frozen historical reference when no shadow traffic is selected
 
 **Window:** `2026-10-28T00:00:00Z <= EventInfo_Time < 2026-10-29T00:00:00Z`.
 
@@ -123,7 +127,7 @@ new server-side table is required.
 
 These are observed sampled counts. The high parent error/code share describes this
 PKeyAuth-selected, sampled population; it is not the global Broker failure rate. The
-100% gate uses only matching keys, so its filtered rates can differ from these totals.
+historical comparison uses only matching keys, so its filtered rates can differ from these totals.
 New versions or callers without adequate reference coverage require review rather than
 an invented historical baseline.
 
@@ -135,7 +139,7 @@ an invented historical baseline.
 | 02 | Sampled challenge requests by hour | Request traffic and rejected/blocked volume |
 | 03 | Sampled challenge devices by hour | Device traffic, separate from request counts |
 | 04 | Validation verdicts | Every verdict split by enforcement state |
-| 05 | Promotion gates | Explicit rejection, outcome, and repeat thresholds with elapsed-time/sample/coverage holds |
+| 05 | Health comparison | Selected-window rates, reference source, thresholds, sample counts, and data-quality context; no rollout clock |
 | 06 | Caller/app/platform breakdown | Caller, broker host/version, host app version, Android version, and manufacturer concentration |
 | 07 | Origin shapes | Recorded/fallback origin source, main-frame flag, and validated/not-validated cloud flags |
 | 08 | Deduplicated parent outcomes | Parent outcome codes, intentional-mismatch exclusion, cohort ambiguity, and unmatched links |
@@ -143,25 +147,23 @@ an invented historical baseline.
 
 ## Validation and query use
 
-All nine panel queries and four query-backed parameters executed successfully against
-production on October 29, 2026. A separate synthetic-input test exercised nine gate cases,
-including threshold equality, rejection-rate breach, insufficient samples, incomplete
-attributes, missing parents, observation not yet complete, and full enforcement without a
-shadow cohort. Synthetic tests only execute in-memory KQL; they do not ingest events.
+The nine panel queries and three remaining query-backed filters use the same time and
+population bindings. The health-comparison revision is checked with short and multi-day
+production windows and synthetic inputs for threshold boundaries, visible low-sample
+rates, missing parents/attributes, shadow-only data, and no-shadow historical fallback.
+Synthetic checks only execute in-memory KQL; they do not ingest events.
 
-The latest live validation observed 184,231 sampled challenges in approximately 48 hours:
+The earlier October 29 validation observed 184,231 sampled challenges in approximately 48 hours:
 all were in shadow mode, 3,509 had an origin mismatch, and none had missing feature
 attributes. Consequently, no actual enforced-cohort health result is claimed before ECS
 exposure begins.
 
 The exact panel queries appear below and match the checked-in JSON. In the ADX query
-editor, prepend these bindings (replace stage start only after a real stage begins):
+editor, prepend these bindings and choose the desired time range:
 
 ```kusto
 let _startTime = ago(48h);
 let _endTime = now();
-let _stage = "1";
-let _stageStart = "";
 let _caller = dynamic(null);
 let _brokerHost = dynamic(null);
 let _appVersion = dynamic(null);
@@ -311,16 +313,10 @@ Base
 | order by Challenges desc
 ```
 
-### 05-stage-gates: Promotion gates - fixed 48/72h stage window
+### 05-health-comparison: Health comparison - selected time range
 
 ```kusto
-let Stage = toint(_stage);
-let StageStart = todatetime(_stageStart);
-let StageValid = Stage in (1, 5, 25, 50, 100);
-let RequiredWindow = iff(Stage in (1, 5), 48h, 72h);
-let MinimumChallenges = case(Stage == 1, 500, Stage == 5, 2000, 5000);
-let MinimumParents = case(Stage == 1, 200, Stage == 5, 1000, 2000);
-let WindowStart = max_of(min_of(_endTime, now()) - RequiredWindow, coalesce(StageStart, min_of(_endTime, now()) - RequiredWindow));
+let WindowStart = _startTime;
 let WindowEnd = min_of(_endTime, now());
 let Base = materialize(
     android_spans
@@ -358,12 +354,11 @@ let Links = Base
 let Parents = android_spans
     | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))
     | where span_name in ("AcquireTokenInteractive", "ATIInteractively", "WorkplaceJoin")
-    | where span_id in (Links | project ParentId)
     | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,
         ParentStatus = span_status, ParentError = error_code
     | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;
 let Linked = materialize(Links
-    | join kind=leftouter hint.strategy=broadcast Parents on trace_id, ParentId
+    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId
     | extend Matched = isnotempty(ParentName),
         ErrorOrCode = ParentStatus =~ "ERROR" or isnotempty(ParentError),
         Cancelled = tolower(ParentError) contains "cancel"
@@ -675,6 +670,8 @@ let FrozenBaseline = datatable(
     "6.2609.6214", "com.azure.authenticator", "com.btg.pactual.autonomousagent.mobile", 1, 0, 0, 0, 0, 0, 0,
     "6.2609.6214", "com.azure.authenticator", "com.skyguard.s4h", 1, 0, 0, 0, 0, 0, 0
 ];
+let ShadowChallenges = toscalar(Observed | where Cohort == "shadow" | summarize sum(Challenges));
+let UseHistorical = ShadowChallenges == 0;
 let FrozenSelected = FrozenBaseline
     | where isnull(_appVersion) or AppVersion in (_appVersion)
 | where isnull(_brokerHost) or BrokerHost in (_brokerHost)
@@ -688,10 +685,10 @@ let Historical = FrozenSelected
         CancelParents = sum(CancelParents), DeviceDays = sum(DeviceDays),
         RepeatParents = sum(RepeatParents), CoveredChallenges = sum(KeyChallenges);
 let Reference = union
-    (Observed | where Stage != 100 and Cohort == "shadow"
+    (Observed | where not(UseHistorical) and Cohort == "shadow"
         | project Challenges, Rejected, AllowedParents, ErrorParents, CancelParents,
             DeviceDays, RepeatParents),
-    (Historical | where Stage == 100
+    (Historical | where UseHistorical
         | project Challenges, Rejected, AllowedParents, ErrorParents, CancelParents,
             DeviceDays, RepeatParents);
 let E = Observed | where Cohort == "enforced";
@@ -716,30 +713,30 @@ let RRetryPct = 100.0 * toscalar(Reference | project RepeatParents) /
 union
     (print Metric = "Rejected challenges", CurrentPct = ERejectPct, ReferencePct = RRejectPct,
         ThresholdPct = max_of(RRejectPct + 0.5, 1.5 * RRejectPct),
-        CurrentSamples = EChallenges, ReferenceSamples = RChallenges, Minimum = MinimumChallenges),
+        CurrentSamples = EChallenges, ReferenceSamples = RChallenges, SampleGuide = 500),
     (print Metric = "Allowed-only parent errors/codes", CurrentPct = EErrorPct, ReferencePct = RErrorPct,
         ThresholdPct = max_of(RErrorPct + 0.1, 1.25 * RErrorPct),
-        CurrentSamples = EParents, ReferenceSamples = RParents, Minimum = MinimumParents),
+        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200),
     (print Metric = "Allowed-only parent cancellations", CurrentPct = ECancelPct, ReferencePct = RCancelPct,
         ThresholdPct = max_of(RCancelPct + 0.1, 1.25 * RCancelPct),
-        CurrentSamples = EParents, ReferenceSamples = RParents, Minimum = MinimumParents),
+        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200),
     (print Metric = "Repeat share (sampled device-day proxy)", CurrentPct = ERetryPct, ReferencePct = RRetryPct,
         ThresholdPct = max_of(RRetryPct + 5.0, 1.25 * RRetryPct),
-        CurrentSamples = EParents, ReferenceSamples = RParents, Minimum = MinimumParents)
-| extend StagePct = Stage, WindowStart, WindowEnd,
-    ReferenceSource = iff(Stage == 100, "Frozen 2026-10-28 UTC shadow (matching app/host/caller keys)", "Contemporaneous shadow; same filters"),
-    ParentCoveragePct, HistoricalCoveragePct,
-    State = case(not(StageValid), "INVALID_STAGE",
-        isnull(StageStart) or StageStart > WindowEnd, "SET_STAGE_START",
-        WindowEnd - StageStart < RequiredWindow, "OBSERVING",
-        Incomplete > 0 or MixedParents > 0, "HOLD_INCOMPLETE_TELEMETRY",
-        isnull(CurrentSamples) or CurrentSamples < Minimum, "INSUFFICIENT_CURRENT_SAMPLE",
-        isnull(ReferenceSamples) or ReferenceSamples < Minimum, "INSUFFICIENT_REFERENCE_SAMPLE",
-        Stage == 100 and (isnull(HistoricalCoveragePct) or HistoricalCoveragePct < 95.0), "HOLD_BASELINE_COVERAGE",
-        Metric != "Rejected challenges" and (isnull(ParentCoveragePct) or ParentCoveragePct < 95.0), "HOLD_PARENT_COVERAGE",
+        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200)
+| extend WindowStart, WindowEnd,
+    ReferenceSource = iff(UseHistorical, "Frozen 2026-10-28 UTC shadow (matching app/host/caller keys)", "Contemporaneous shadow; same selected window and filters"),
+    ParentCoveragePct,
+    HistoricalCoveragePct = iff(UseHistorical, HistoricalCoveragePct, real(null)),
+    State = case(isnull(EChallenges) or EChallenges == 0, "NO_ENFORCED_DATA",
+        Incomplete > 0 or MixedParents > 0, "INCOMPLETE_TELEMETRY",
+        isnull(ReferenceSamples) or ReferenceSamples == 0, "NO_REFERENCE_DATA",
+        isnull(CurrentSamples) or CurrentSamples < SampleGuide or ReferenceSamples < SampleGuide, "LOW_SAMPLE",
+        UseHistorical and WindowEnd < datetime(2026-10-29T00:00:00Z), "REFERENCE_AFTER_SELECTED_WINDOW",
+        UseHistorical and (isnull(HistoricalCoveragePct) or HistoricalCoveragePct < 95.0), "LOW_REFERENCE_COVERAGE",
+        Metric != "Rejected challenges" and (isnull(ParentCoveragePct) or ParentCoveragePct < 95.0), "LOW_PARENT_COVERAGE",
         isnull(CurrentPct) or isnull(ReferencePct), "NOT_EVALUABLE",
-        CurrentPct > ThresholdPct, "PAUSE_EXPANSION", "WITHIN_GATE")
-| project Metric, State, StagePct, WindowStart, WindowEnd, CurrentSamples, ReferenceSamples, Minimum,
+        CurrentPct > ThresholdPct, "ABOVE_THRESHOLD", "WITHIN_THRESHOLD")
+| project Metric, State, WindowStart, WindowEnd, CurrentSamples, ReferenceSamples, SampleGuide,
     CurrentPct = round(CurrentPct, 3), ReferencePct = round(ReferencePct, 3),
     ThresholdPct = round(ThresholdPct, 3), ParentCoveragePct, HistoricalCoveragePct, ReferenceSource
 ```
@@ -860,12 +857,11 @@ let Links = Base
 let Parents = android_spans
     | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))
     | where span_name in ("AcquireTokenInteractive", "ATIInteractively", "WorkplaceJoin")
-    | where span_id in (Links | project ParentId)
     | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,
         ParentStatus = span_status, ParentError = error_code
     | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;
 let Linked = materialize(Links
-    | join kind=leftouter hint.strategy=broadcast Parents on trace_id, ParentId
+    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId
     | extend Matched = isnotempty(ParentName),
         ErrorOrCode = ParentStatus =~ "ERROR" or isnotempty(ParentError),
         Cancelled = tolower(ParentError) contains "cancel"
@@ -917,12 +913,11 @@ let Links = Base
 let Parents = android_spans
     | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))
     | where span_name in ("AcquireTokenInteractive", "ATIInteractively", "WorkplaceJoin")
-    | where span_id in (Links | project ParentId)
     | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,
         ParentStatus = span_status, ParentError = error_code
     | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;
 let Linked = materialize(Links
-    | join kind=leftouter hint.strategy=broadcast Parents on trace_id, ParentId
+    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId
     | extend Matched = isnotempty(ParentName),
         ErrorOrCode = ParentStatus =~ "ERROR" or isnotempty(ParentError),
         Cancelled = tolower(ParentError) contains "cancel"
