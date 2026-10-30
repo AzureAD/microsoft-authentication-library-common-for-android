@@ -47,6 +47,7 @@ import com.microsoft.identity.common.java.util.ported.Supplier;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +56,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +74,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
 import io.opentelemetry.api.trace.Span;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -85,7 +89,6 @@ import lombok.NonNull;
  * <p>
  * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
-@AllArgsConstructor
 @ThreadSafe
 public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
@@ -137,6 +140,64 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final SSLSocketFactoryWrapper sslSocketFactory;
 
     /**
+     * Whether redirects may be followed. Defaults to true.
+     */
+    private final boolean followRedirects;
+
+    /**
+     * Whether known request bodies use fixed-length streaming before opening the output stream.
+     * Defaults to false. Streaming prevents automatic HTTP authentication/redirect replay.
+     */
+    private final boolean useFixedLengthStreamingMode;
+
+    /**
+     * Whether the connection may use caches. Defaults to true.
+     */
+    private final boolean useCaches;
+
+    /**
+     * Maximum response body size in bytes, for both success and error streams, or null for unlimited.
+     */
+    @Nullable
+    private final Integer maxResponseBodyBytes;
+
+    /**
+     * Whether malformed UTF-8 response bytes are rejected instead of replaced. Defaults to false.
+     */
+    private final boolean strictUtf8Decoding;
+
+    /**
+     * Whether IO errors omit the original message, cause and suppressed exceptions before an
+     * exception (and its telemetry) is constructed. Defaults to false.
+     */
+    private final boolean redactIOExceptionDetails;
+
+    /**
+     * Retains the original public constructor and its legacy transport defaults.
+     */
+    public UrlConnectionHttpClient(final IRetryPolicy<HttpResponse> retryPolicy,
+                                   final int streamBufferSize,
+                                   final int connectTimeoutMs,
+                                   final int readTimeoutMs,
+                                   final Supplier<Integer> connectTimeoutMsSupplier,
+                                   final Supplier<Integer> readTimeoutMsSupplier,
+                                   final SSLSocketFactoryWrapper sslSocketFactory) {
+        this.retryPolicy = retryPolicy;
+        this.streamBufferSize = streamBufferSize;
+        this.connectTimeoutMs = connectTimeoutMs;
+        this.readTimeoutMs = readTimeoutMs;
+        this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
+        this.readTimeoutMsSupplier = readTimeoutMsSupplier;
+        this.sslSocketFactory = sslSocketFactory;
+        this.followRedirects = true;
+        this.useFixedLengthStreamingMode = false;
+        this.useCaches = true;
+        this.maxResponseBodyBytes = null;
+        this.strictUtf8Decoding = false;
+        this.redactIOExceptionDetails = false;
+    }
+
+    /**
      * Default Constructor, for constructing Lombok's Builder only. Do not expose.
      */
     @Builder
@@ -147,7 +208,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                     @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
                                     @Nullable final Supplier<Integer> readTimeoutMsSupplier,
                                     @Nullable final List<String> supportedSslProtocols,
-                                    @Nullable final SSLContext sslContext) {
+                                    @Nullable final SSLContext sslContext,
+                                    @Nullable final Boolean followRedirects,
+                                    @Nullable final Boolean useFixedLengthStreamingMode,
+                                    @Nullable final Boolean useCaches,
+                                    @Nullable final Integer maxResponseBodyBytes,
+                                    @Nullable final Boolean strictUtf8Decoding,
+                                    @Nullable final Boolean redactIOExceptionDetails) {
+
+        if (maxResponseBodyBytes != null && maxResponseBodyBytes <= 0) {
+            throw new IllegalArgumentException("Maximum response body size must be positive.");
+        }
 
         this.retryPolicy = retryPolicy != null ?
                 retryPolicy : new NoRetryPolicy();
@@ -159,6 +230,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 readTimeoutMs : CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.URL_CONNECTION_READ_TIME_OUT);
         this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
         this.readTimeoutMsSupplier = readTimeoutMsSupplier;
+        this.followRedirects = followRedirects == null || followRedirects;
+        this.useFixedLengthStreamingMode = Boolean.TRUE.equals(useFixedLengthStreamingMode);
+        this.useCaches = useCaches == null || useCaches;
+        this.maxResponseBodyBytes = maxResponseBodyBytes;
+        this.strictUtf8Decoding = Boolean.TRUE.equals(strictUtf8Decoding);
+        this.redactIOExceptionDetails = Boolean.TRUE.equals(redactIOExceptionDetails);
 
         final List<String> protocol = supportedSslProtocols != null ?
                 supportedSslProtocols : SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
@@ -314,6 +391,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @throws IOException Thrown when failing to access inputStream stream.
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
+        if (maxResponseBodyBytes != null || strictUtf8Decoding || redactIOExceptionDetails) {
+            return readRestrictedResponseBody(inputStream);
+        }
         try {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
                     AuthenticationConstants.CHARSET_UTF8));
@@ -328,6 +408,50 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             return stringBuilder.toString();
         } finally {
             safeCloseStream(inputStream);
+        }
+    }
+
+    private String readRestrictedResponseBody(final InputStream inputStream) throws IOException {
+        final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[streamBufferSize];
+        int count;
+        while ((count = inputStream.read(buffer, 0, maxResponseBodyBytes == null
+                ? buffer.length
+                : (int) Math.min(buffer.length, (long) maxResponseBodyBytes - bytes.size() + 1))) != -1) {
+            if (maxResponseBodyBytes != null && count > maxResponseBodyBytes - bytes.size()) {
+                throw new IOException("HTTP response body exceeds the configured byte limit.");
+            }
+            bytes.write(buffer, 0, count);
+        }
+
+        if (!strictUtf8Decoding) {
+            return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+        }
+        try {
+            return StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes.toByteArray()))
+                    .toString();
+        } catch (final CharacterCodingException e) {
+            throw new IOException("HTTP response body is not valid UTF-8.");
+        }
+    }
+
+    private static void closeStreamPreservingFailure(@Nullable final Closeable stream,
+                                                      @Nullable final Throwable failure) throws IOException {
+        if (stream == null) {
+            return;
+        }
+        try {
+            stream.close();
+        } catch (final IOException closeFailure) {
+            if (failure == null) {
+                throw closeFailure;
+            }
+            if (failure != closeFailure) {
+                failure.addSuppressed(closeFailure);
+            }
         }
     }
 
@@ -356,7 +480,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             urlConnection = setupConnection(request);
         } catch (final IOException e) {
             Logger.warn(TAG, "IOException occurred during setupConnection");
-            throw ConnectionError.getClientException(e);
+            throw ConnectionError.getClientException(e, redactIOExceptionDetails);
         }
 
         // Get the cancellation signal for this worker thread (if any).
@@ -389,9 +513,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 throw new ClientException(
                     ClientException.TIMED_OUT,
                     "Request cancelled due to command-level timeout",
-                    e);
+                    redactIOExceptionDetails ? null : e);
             }
-            throw ConnectionError.getClientException(e);
+            throw ConnectionError.getClientException(e, redactIOExceptionDetails);
         } finally {
             // Unregister cancel action — either we're done or an exception was thrown.
             // This prevents cancel() from disconnecting a potentially-reused connection.
@@ -405,6 +529,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                          HttpURLConnection urlConnection) throws IOException {
         InputStream responseStream = null;
         HttpResponse response = null;
+        Throwable failure = null;
         try {
             try {
                 responseStream = urlConnection.getInputStream();
@@ -466,9 +591,16 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                     AttributeName.http_status_code.name(),
                     response.getStatusCode()
             );
+        } catch (final IOException | RuntimeException | Error e) {
+            failure = e;
+            throw e;
         } finally {
             completionCallback.accept(response);
-            safeCloseStream(responseStream);
+            if (maxResponseBodyBytes != null || strictUtf8Decoding || redactIOExceptionDetails) {
+                closeStreamPreservingFailure(responseStream, failure);
+            } else {
+                safeCloseStream(responseStream);
+            }
         }
 
         return response;
@@ -498,8 +630,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         urlConnection.setRequestMethod(request.getRequestMethod());
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
-        urlConnection.setInstanceFollowRedirects(true);
-        urlConnection.setUseCaches(true);
+        urlConnection.setInstanceFollowRedirects(followRedirects);
+        urlConnection.setUseCaches(useCaches);
         urlConnection.setDoInput(true);
 
         return urlConnection;
@@ -515,7 +647,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get());
     }
 
-    private static void sendRequest(@NonNull final HttpURLConnection connection,
+    private void sendRequest(@NonNull final HttpURLConnection connection,
                                     final byte[] contentRequest,
                                     final String requestContentType) throws IOException {
         if (contentRequest == null) {
@@ -529,14 +661,25 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
 
         connection.setRequestProperty("Content-Length", String.valueOf(contentRequest.length));
+        if (useFixedLengthStreamingMode) {
+            connection.setFixedLengthStreamingMode(contentRequest.length);
+        }
 
         OutputStream out = null;
+        Throwable failure = null;
 
         try {
             out = connection.getOutputStream();
             out.write(contentRequest);
+        } catch (final IOException | RuntimeException | Error e) {
+            failure = e;
+            throw e;
         } finally {
-            safeCloseStream(out);
+            if (redactIOExceptionDetails) {
+                closeStreamPreservingFailure(out, failure);
+            } else {
+                safeCloseStream(out);
+            }
         }
     }
 

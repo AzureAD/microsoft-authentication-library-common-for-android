@@ -209,6 +209,12 @@ public class ClientException extends BaseException {
     public static final String UNKNOWN_ERROR = "unknown_error";
 
     /**
+     * Native PSI recovery may have been dispatched, but its final outcome could not be established.
+     * This error does not authorize replaying the assertion or imply server-side rollback.
+     */
+    public static final String NATIVE_PSI_PRT_RECOVERY_OUTCOME_UNKNOWN = "native_psi_prt_recovery_outcome_unknown";
+
+    /**
      * An unknown error that happens in the crypto layer.
      */
     public static final String UNKNOWN_CRYPTO_ERROR = "unknown_crypto_error";

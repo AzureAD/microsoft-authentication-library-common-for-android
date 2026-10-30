@@ -52,10 +52,20 @@ enum class ConnectionError(val value: String) {
          **/
         @JvmStatic
         fun getClientException(cause: Throwable): ClientException {
+            return getClientException(cause, false)
+        }
+
+        /**
+         * Converts an IO failure without exposing its details when [redactDetails] is true.
+         * Redaction occurs before exception construction because construction emits telemetry.
+         */
+        @JvmStatic
+        fun getClientException(cause: Throwable, redactDetails: Boolean): ClientException {
             val e = ClientException(
                 ClientException.IO_ERROR,
-                "An IO error occurred in the network layer: " + cause.message,
-                cause
+                if (redactDetails) "An IO error occurred in the network layer."
+                else "An IO error occurred in the network layer: " + cause.message,
+                if (redactDetails) null else cause
             )
 
             e.subErrorCode = getConnectionError(cause).value

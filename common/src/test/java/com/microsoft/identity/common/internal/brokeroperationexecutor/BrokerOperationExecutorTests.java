@@ -50,11 +50,14 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
@@ -126,6 +129,79 @@ public class BrokerOperationExecutorTests {
         strategyList.add(getStrategyWithBrokerCommunicationException());
 
         expectBindFailureException(strategyList);
+    }
+
+    @Test
+    public void singletonNativeStrategy_failureAfterDelivery_doesNotResubmit() throws Exception {
+        final AtomicInteger deliveries = new AtomicInteger();
+        final IIpcStrategy strategy = Mockito.mock(IIpcStrategy.class);
+        Mockito.when(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER);
+        Mockito.when(strategy.communicateToBroker(Mockito.any(BrokerOperationBundle.class)))
+                .thenAnswer(invocation -> {
+                    deliveries.incrementAndGet();
+                    throw new BrokerCommunicationException(CONNECTION_ERROR,
+                            IIpcStrategy.Type.CONTENT_PROVIDER, "Response lost after delivery.", null);
+                });
+        final BrokerOperationExecutor.BrokerOperation<Boolean> operation = Mockito.spy(
+                getBrokerOperation(BrokerOperationBundle.Operation.BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI));
+        final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                Collections.singletonList(strategy),
+                new ActiveBrokerCacheUpdater(broker -> true, new InMemoryActiveBrokerCache()));
+        try {
+            executor.execute(getMockParameter(), operation);
+            Assert.fail("A lost result must not produce success.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ErrorStrings.BROKER_BIND_SERVICE_FAILED, e.getErrorCode());
+        }
+        Assert.assertEquals(1, deliveries.get());
+        Mockito.verify(operation).performPrerequisites(strategy);
+        Mockito.verify(strategy).communicateToBroker(Mockito.any(BrokerOperationBundle.class));
+        Mockito.verify(operation, Mockito.never()).extractResultBundle(Mockito.any());
+    }
+
+    @Test
+    public void singletonNativeStrategy_unsupportedPrerequisite_doesNotDispatchProof() throws Exception {
+        final IIpcStrategy strategy = Mockito.mock(IIpcStrategy.class);
+        Mockito.when(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER);
+        final BrokerOperationExecutor.BrokerOperation<Boolean> operation = Mockito.spy(
+                getBrokerOperation(BrokerOperationBundle.Operation.BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI));
+        Mockito.doThrow(new ClientException(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                "Native PSI recovery is not supported.")).when(operation).performPrerequisites(strategy);
+        final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                Collections.singletonList(strategy),
+                new ActiveBrokerCacheUpdater(broker -> true, new InMemoryActiveBrokerCache()));
+        try {
+            executor.execute(getMockParameter(), operation);
+            Assert.fail("An unsupported prerequisite must stop before dispatch.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE, e.getErrorCode());
+        }
+        Mockito.verify(operation, Mockito.never()).getBundle();
+        Mockito.verify(strategy, Mockito.never()).communicateToBroker(Mockito.any());
+    }
+
+    @Test
+    public void singletonNativeStrategy_invalidResult_doesNotResubmit() throws Exception {
+        final IIpcStrategy strategy = Mockito.mock(IIpcStrategy.class);
+        Mockito.when(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER);
+        final Bundle result = new Bundle();
+        Mockito.when(strategy.communicateToBroker(Mockito.any())).thenReturn(result);
+        final BrokerOperationExecutor.BrokerOperation<Boolean> operation = Mockito.spy(
+                getBrokerOperation(BrokerOperationBundle.Operation.BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI));
+        Mockito.doThrow(new ClientException(ClientException.NATIVE_PSI_PRT_RECOVERY_OUTCOME_UNKNOWN,
+                "Native PSI recovery outcome is unknown.")).when(operation).extractResultBundle(result);
+        final BrokerOperationExecutor executor = new BrokerOperationExecutor(
+                Collections.singletonList(strategy),
+                new ActiveBrokerCacheUpdater(broker -> true, new InMemoryActiveBrokerCache()));
+        try {
+            executor.execute(getMockParameter(), operation);
+            Assert.fail("An invalid result must not produce success.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.NATIVE_PSI_PRT_RECOVERY_OUTCOME_UNKNOWN, e.getErrorCode());
+        }
+        Mockito.verify(operation).performPrerequisites(strategy);
+        Mockito.verify(strategy).communicateToBroker(Mockito.any(BrokerOperationBundle.class));
+        Mockito.verify(operation).extractResultBundle(result);
     }
 
     // Providing 2 strategies and the first one fails with BrokerCommunicationException inside IIpcStrategy.
@@ -414,6 +490,11 @@ public class BrokerOperationExecutorTests {
 
     // This will throw if the result is corrupted..
     private BrokerOperationExecutor.BrokerOperation<Boolean> getBrokerOperation() {
+        return getBrokerOperation(BrokerOperationBundle.Operation.BROKER_API_HELLO);
+    }
+
+    private BrokerOperationExecutor.BrokerOperation<Boolean> getBrokerOperation(
+            final BrokerOperationBundle.Operation requestedOperation) {
         return new BrokerOperationExecutor.BrokerOperation<Boolean>() {
             @Override
             public void performPrerequisites(@NonNull IIpcStrategy strategy) throws BaseException {
@@ -422,7 +503,7 @@ public class BrokerOperationExecutorTests {
             @Override
             public @NonNull BrokerOperationBundle getBundle() {
                 return new BrokerOperationBundle(
-                        BrokerOperationBundle.Operation.BROKER_API_HELLO,
+                        requestedOperation,
                         "MOCK_TARGET_APP",
                         new Bundle());
             }

@@ -1385,6 +1385,16 @@ public final class AuthenticationConstants {
         public static final String PRT_NONCE = "nonce";
 
         /**
+         * Complete compact JWT signed by the native PSI credential for PRT recovery.
+         */
+        public static final String SIGNED_NATIVE_ASSERTION = "signed.native.assertion";
+
+        /**
+         * Original registered credential identifier, passed without re-encoding.
+         */
+        public static final String ORIGINAL_REGISTERED_CREDENTIAL_ID = "original.registered.credential.id";
+
+        /**
          * broker request type.
          */
         public static final String ACCOUNT_REQUEST_TYPE = "broker.request.type";
@@ -1620,6 +1630,20 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
+         * Boolean true only after native PSI response validation, key import and existing-account
+         * save return successfully. Does not promise durable persistence or token acquisition.
+         */
+        public static final String NATIVE_PSI_PRT_RECOVERY_SUCCEEDED = "native_psi_prt_recovery_succeeded";
+
+        /**
+         * HELLO response Boolean indicating that the native PSI PRT recovery handler is implemented.
+         * Clients require an exact true value in addition to the API's minimum protocol version.
+         * This does not indicate account-specific credential or storage eligibility.
+         * A stub or fail-closed placeholder must omit this key or return false.
+         */
+        public static final String NATIVE_PSI_PRT_RECOVERY_HANDLER_AVAILABLE = "native_psi_prt_recovery_handler_available";
+
+        /**
          * Boolean to return when broker flights is successfully set.
          */
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
@@ -1795,6 +1819,8 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
         private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
+        // Local candidate only; release allocation must be confirmed before publication.
+        private static final String BROKER_VERSION_NATIVE_PSI = "5.1";
 
 
         /**
@@ -1842,7 +1868,8 @@ public final class AuthenticationConstants {
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
             GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
-            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null);
+            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null),
+            BROKER_RECOVER_PRT_WITH_NATIVE_PSI(BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH, BROKER_VERSION_NATIVE_PSI, null);
 
 
             /**
@@ -1952,6 +1979,11 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        /**
+         * Normal Broker API path for recovering an existing account's PRT using native PSI proof.
+         */
+        public static final String BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH = "/brokerApi/recoverPrtWithNativePsi";
 
         /**
          * Broker api path constant for setting flight information.
