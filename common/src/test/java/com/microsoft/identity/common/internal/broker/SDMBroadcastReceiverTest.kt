@@ -36,14 +36,12 @@ import io.mockk.unmockkObject
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.LooperMode
-import org.robolectric.shadows.ShadowSystemClock
 import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
@@ -65,88 +63,75 @@ class SDMBroadcastReceiverTest {
     }
 
     @Test
-    fun handleBroadcast_firstEventIsImmediate_duplicateIsDeliveredAtWindowBoundary() {
+    fun handleBroadcast_firstEventIsImmediate_duplicatesAreDroppedWithoutTrailingDelivery() {
         handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
         handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
 
         assertEquals(1, callback.globalSignOutCount)
 
         advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS - 1)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
         assertEquals(1, callback.globalSignOutCount)
 
         advanceMainLooperBy(1)
-        assertEquals(2, callback.globalSignOutCount)
+        assertEquals(1, callback.globalSignOutCount)
+        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
+        assertEquals(1, callback.globalSignOutCount)
     }
 
     @Test
-    fun runWithGlobalSignOutThrottle_manyDuplicates_deliversOnlyOneTrailingCallback() {
-        var deliveryCount = 0
+    fun handleBroadcast_continuousDuplicates_doNotExtendThrottleWindow() {
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
 
-        repeat(10) {
-            runThrottled {
-                deliveryCount++
+        repeat(2) { window ->
+            advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS - 1)
+            repeat(10) {
+                handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
             }
+            assertEquals(window + 1, callback.globalSignOutCount)
+
+            advanceMainLooperBy(1)
+            handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+            assertEquals(window + 2, callback.globalSignOutCount)
+
+            handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+            assertEquals(window + 2, callback.globalSignOutCount)
         }
-
-        assertEquals(1, deliveryCount)
-
-        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        assertEquals(2, deliveryCount)
-
-        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        assertEquals(2, deliveryCount)
     }
 
     @Test
-    fun runWithGlobalSignOutThrottle_continuousDuplicates_useFixedWindows() {
-        var deliveryCount = 0
-        val delivery: () -> Unit = { deliveryCount++ }
+    fun handleBroadcast_droppedCallback_isNeverReplayed() {
+        val droppedCallback = CountingCallback()
+        val nextCallback = CountingCallback()
 
-        runThrottled(delivery)
-        advanceMainLooperBy(4_000)
-        repeat(5) {
-            runThrottled(delivery)
-        }
-
-        advanceMainLooperBy(1_000)
-        assertEquals(2, deliveryCount)
-
-        advanceMainLooperBy(4_000)
-        repeat(5) {
-            runThrottled(delivery)
-        }
-
-        advanceMainLooperBy(1_000)
-        assertEquals(3, deliveryCount)
-    }
-
-    @Test
-    fun runWithGlobalSignOutThrottle_duplicates_deliversLatestOnMainLooper() {
-        val deliveries = mutableListOf<String>()
-
-        runThrottled { deliveries.add("first") }
-        runThrottled { deliveries.add("superseded") }
-        runThrottled {
-            assertSame(Looper.getMainLooper(), Looper.myLooper())
-            deliveries.add("latest")
-        }
-
-        assertEquals(listOf("first"), deliveries)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT, droppedCallback)
         advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        assertEquals(listOf("first", "latest"), deliveries)
+
+        assertEquals(1, callback.globalSignOutCount)
+        assertEquals(0, droppedCallback.globalSignOutCount)
+
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT, nextCallback)
+        assertEquals(1, nextCallback.globalSignOutCount)
+
+        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
+        assertEquals(0, droppedCallback.globalSignOutCount)
+        assertEquals(1, nextCallback.globalSignOutCount)
     }
 
     @Test
     fun handleBroadcast_registrationStarted_isNotThrottledBySignOut() {
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS - 1)
         repeat(2) {
-            handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
             handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_SDM_REGISTRATION_START)
         }
 
         assertEquals(1, callback.globalSignOutCount)
         assertEquals(2, callback.registrationStartedCount)
 
-        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
+        advanceMainLooperBy(1)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
         assertEquals(2, callback.globalSignOutCount)
         assertEquals(2, callback.registrationStartedCount)
     }
@@ -178,33 +163,17 @@ class SDMBroadcastReceiverTest {
     }
 
     @Test
-    fun runWithGlobalSignOutThrottle_quietWindowClosesWithoutTrailingCallback() {
-        var deliveryCount = 0
-        val delivery: () -> Unit = { deliveryCount++ }
+    fun handleBroadcast_firstEventAfterLongIdle_isImmediate() {
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        advanceMainLooperBy(10 * SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
+        assertEquals(1, callback.globalSignOutCount)
 
-        runThrottled(delivery)
-        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-
-        assertEquals(1, deliveryCount)
-
-        runThrottled(delivery)
-        assertEquals(2, deliveryCount)
-    }
-
-    @Test
-    fun runWithGlobalSignOutThrottle_expiredWindowWithQueuedTimer_replacesStaleDelivery() {
-        val deliveries = mutableListOf<String>()
-        runThrottled { deliveries.add("first") }
-        runThrottled { deliveries.add("stale") }
-
-        ShadowSystemClock.advanceBy(
-            Duration.ofMillis(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        )
-        runThrottled { deliveries.add("new") }
-        assertEquals(listOf("first", "new"), deliveries)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        assertEquals(2, callback.globalSignOutCount)
 
         advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        assertEquals(listOf("first", "new"), deliveries)
+        assertEquals(2, callback.globalSignOutCount)
     }
 
     @Test
@@ -215,34 +184,34 @@ class SDMBroadcastReceiverTest {
         assertEquals(0, callback.registrationStartedCount)
         assertEquals(0, callback.registeredCount)
         assertEquals(0, callback.globalSignOutCount)
+
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        assertEquals(1, callback.globalSignOutCount)
     }
 
     @Test
-    fun resetThrottleStateForTest_cancelsPendingDelivery() {
-        var deliveryCount = 0
-        val delivery: () -> Unit = { deliveryCount++ }
-
-        runThrottled(delivery)
-        runThrottled(delivery)
+    fun resetThrottleStateForTest_allowsImmediateDelivery() {
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        assertEquals(1, callback.globalSignOutCount)
         SDMBroadcastReceiver.resetThrottleStateForTest()
 
-        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
-        assertEquals(1, deliveryCount)
+        handleBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT)
+        assertEquals(2, callback.globalSignOutCount)
 
-        runThrottled(delivery)
-        assertEquals(2, deliveryCount)
+        advanceMainLooperBy(SDMBroadcastReceiver.GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS)
+        assertEquals(2, callback.globalSignOutCount)
     }
 
-    private fun handleBroadcast(broadcastType: String?) {
+    private fun handleBroadcast(
+        broadcastType: String?,
+        sharedDeviceModeCallback: SDMBroadcastReceiver.SharedDeviceModeCallback = callback
+    ) {
         val intent = Intent()
         broadcastType?.let {
             intent.putExtra(SharedDeviceModeConstants.BROADCAST_TYPE_KEY, it)
         }
-        SDMBroadcastReceiver.handleSharedDeviceModeBroadCast(context, intent, callback)
-    }
-
-    private fun runThrottled(delivery: () -> Unit) {
-        SDMBroadcastReceiver.runWithGlobalSignOutThrottle(Runnable(delivery))
+        SDMBroadcastReceiver.handleSharedDeviceModeBroadCast(context, intent, sharedDeviceModeCallback)
     }
 
     private fun advanceMainLooperBy(durationMillis: Long) {
