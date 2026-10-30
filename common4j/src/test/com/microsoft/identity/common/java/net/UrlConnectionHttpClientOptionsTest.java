@@ -54,6 +54,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.HttpRetryException;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -319,6 +320,23 @@ public class UrlConnectionHttpClientOptionsTest {
     }
 
     @Test
+    public void setupFailure_redactsOnlyWhenRequested_withoutOpeningStreamsOrRetrying() throws Exception {
+        for (final boolean redact : new boolean[]{false, true}) {
+            expectSetupFailure(redact);
+        }
+    }
+
+    @Test
+    public void outputFailure_preservesCancellationMappingAndRedaction_withoutRetryingOrRetainingCallback()
+            throws Exception {
+        for (final boolean redact : new boolean[]{false, true}) {
+            for (final boolean cancelDuringIo : new boolean[]{false, true}) {
+                expectOutputFailure(redact, cancelDuringIo);
+            }
+        }
+    }
+
+    @Test
     public void redaction_happensBeforeErrorEventConstruction_andNormalObserverDelivery() throws Exception {
         final Field singleton = Telemetry.class.getDeclaredField("sTelemetryInstance");
         singleton.setAccessible(true);
@@ -366,14 +384,20 @@ public class UrlConnectionHttpClientOptionsTest {
             Mockito.when(connection.getInputStream()).thenReturn(input);
             HttpUrlConnectionFactory.addMockedConnection(connection);
             assertNull(expectIoFailure(nativeClient()).getCause());
+            assertNull(expectSetupFailure(true).getCause());
+            assertNull(expectOutputFailure(true, true).getCause());
 
             final List<Map<String, String>> atConstruction = Telemetry.getInstance().getMap(correlation);
             assertTrue(atConstruction.stream().anyMatch(event -> ClientException.IO_ERROR.equals(
+                    event.get(TelemetryEventStrings.Key.ERROR_CODE))));
+            assertTrue(atConstruction.stream().anyMatch(event -> ClientException.TIMED_OUT.equals(
                     event.get(TelemetryEventStrings.Key.ERROR_CODE))));
             assertFalse(atConstruction.toString().contains(SENTINEL));
             assertFalse(atConstruction.toString().contains("synthetic.jwt.proof"));
             Telemetry.getInstance().flush(correlation);
             assertTrue(delivered.stream().anyMatch(event -> ClientException.IO_ERROR.equals(
+                    event.get(TelemetryEventStrings.Key.ERROR_CODE))));
+            assertTrue(delivered.stream().anyMatch(event -> ClientException.TIMED_OUT.equals(
                     event.get(TelemetryEventStrings.Key.ERROR_CODE))));
             assertFalse(delivered.toString().contains(SENTINEL));
             assertFalse(delivered.toString().contains("synthetic@example.test"));
@@ -392,6 +416,75 @@ public class UrlConnectionHttpClientOptionsTest {
                 DiagnosticContext.INSTANCE.getRequestContext()
                         .put(DiagnosticContext.CORRELATION_ID, previousCorrelation);
             }
+        }
+    }
+
+    private static ClientException expectSetupFailure(final boolean redact) throws Exception {
+        final ProtocolException original = new ProtocolException(SENTINEL);
+        final HttpURLConnection connection = connection(200, new byte[0], false);
+        Mockito.doThrow(original).when(connection).setRequestMethod("POST");
+        Mockito.clearInvocations(connection);
+        HttpUrlConnectionFactory.addMockedConnection(connection);
+        HttpUrlConnectionFactory.addMockedConnection(Mockito.mock(HttpURLConnection.class));
+        try {
+            final ClientException error = expectIoFailure(redact ? nativeClient() : legacyClient());
+            assertFailureDetails(error, original, redact);
+            assertTrue(ConnectionError.UNEXPECTED_EXCEPTION.compare(error));
+            Mockito.verify(connection, Mockito.never()).getOutputStream();
+            Mockito.verify(connection, Mockito.never()).getInputStream();
+            assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+            return error;
+        } finally {
+            HttpUrlConnectionFactory.clearMockedConnectionQueue();
+        }
+    }
+
+    private static ClientException expectOutputFailure(final boolean redact,
+                                                       final boolean cancelDuringIo) throws Exception {
+        final IOException original = new IOException(SENTINEL);
+        final CancellationSignal previousSignal = CancellationSignal.getCurrentThreadSignal();
+        final CancellationSignal signal = new CancellationSignal();
+        final HttpURLConnection connection = connection(200, new byte[0], false);
+        final OutputStream output = connection.getOutputStream();
+        Mockito.doAnswer(invocation -> {
+            if (cancelDuringIo) {
+                signal.cancel();
+            }
+            throw original;
+        }).when(output).write(REQUEST_BODY);
+        Mockito.clearInvocations(connection);
+        HttpUrlConnectionFactory.addMockedConnection(connection);
+        HttpUrlConnectionFactory.addMockedConnection(Mockito.mock(HttpURLConnection.class));
+        CancellationSignal.setForCurrentThread(signal);
+        try {
+            final ClientException error = expectFailure(redact ? nativeClient() : legacyClient(),
+                    cancelDuringIo ? ClientException.TIMED_OUT : ClientException.IO_ERROR);
+            assertFailureDetails(error, original, redact);
+            Mockito.verify(output).close();
+            Mockito.verify(connection, Mockito.never()).getInputStream();
+            assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+            signal.cancel();
+            Mockito.verify(connection, Mockito.times(cancelDuringIo ? 1 : 0)).disconnect();
+            return error;
+        } finally {
+            if (previousSignal == null) {
+                CancellationSignal.clearCurrentThread();
+            } else {
+                CancellationSignal.setForCurrentThread(previousSignal);
+            }
+            HttpUrlConnectionFactory.clearMockedConnectionQueue();
+        }
+    }
+
+    private static void assertFailureDetails(final ClientException error,
+                                             final IOException original,
+                                             final boolean redact) {
+        if (redact) {
+            assertNull(error.getCause());
+            assertEquals(0, error.getSuppressed().length);
+            assertFalse(error.getMessage().contains(SENTINEL));
+        } else {
+            assertSame(original, error.getCause());
         }
     }
 
@@ -433,12 +526,17 @@ public class UrlConnectionHttpClientOptionsTest {
     }
 
     private static ClientException expectIoFailure(final UrlConnectionHttpClient client) throws Exception {
+        return expectFailure(client, ClientException.IO_ERROR);
+    }
+
+    private static ClientException expectFailure(final UrlConnectionHttpClient client,
+                                                 final String expectedErrorCode) throws Exception {
         try {
             client.post(url(), REQUEST_HEADERS, REQUEST_BODY);
-            fail("Expected an IO failure.");
+            fail("Expected a network failure.");
             return null;
         } catch (final ClientException e) {
-            assertEquals(ClientException.IO_ERROR, e.getErrorCode());
+            assertEquals(expectedErrorCode, e.getErrorCode());
             return e;
         }
     }
