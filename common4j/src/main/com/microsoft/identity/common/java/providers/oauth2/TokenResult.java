@@ -24,13 +24,14 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 
 import javax.annotation.Nullable;
 
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
  */
-public class TokenResult implements IResult {
+public class TokenResult implements IResult, ISensitiveData {
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
@@ -164,4 +165,17 @@ public class TokenResult implements IResult {
     }
     //CHECKSTYLE:ON
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Delegates to the contained {@link TokenResponse#clearSensitiveData()} to null out
+     * all token fields, then releases the reference to the response object itself.
+     */
+    @Override
+    public void clearSensitiveData() {
+        if (mTokenResponse != null) {
+            mTokenResponse.clearSensitiveData();
+            mTokenResponse = null;
+        }
+    }
 }

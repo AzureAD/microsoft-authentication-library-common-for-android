@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-public class AccessToken {
+import com.microsoft.identity.common.java.util.ISensitiveData;
+
+public class AccessToken implements ISensitiveData {
     /**
      * A buffer of ten minutes (in milliseconds) for token expiration.
      */
@@ -125,5 +127,10 @@ public class AccessToken {
      */
     public void setRawAccessToken(String rawAccessToken) {
         mRawAccessToken = rawAccessToken;
+    }
+
+    @Override
+    public void clearSensitiveData() {
+        mRawAccessToken = null;
     }
 }

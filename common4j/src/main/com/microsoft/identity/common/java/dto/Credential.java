@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.dto;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.CACHED_AT;
 import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.CLIENT_ID;
@@ -35,7 +36,7 @@ import static com.microsoft.identity.common.java.dto.Credential.SerializedNames.
  * This is a generic credential schema that should be used as a reference to define schemas for
  * specific credential types.
  */
-public abstract class Credential extends AccountCredentialBase {
+public abstract class Credential extends AccountCredentialBase implements ISensitiveData {
 
     public static class SerializedNames {
         /**
@@ -236,6 +237,20 @@ public abstract class Credential extends AccountCredentialBase {
      * @return True, if expired. False otherwise.
      */
     public abstract boolean isExpired();
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Nulls out the secret (token value) and other identity-related fields held by this
+     * credential so that they become eligible for garbage collection. Subclasses (such as
+     * {@link PrimaryRefreshTokenRecord}) override this method, invoke {@code super.clearSensitiveData()},
+     * and clear any additional sensitive fields (such as session keys).
+     */
+    @Override
+    public void clearSensitiveData() {
+        mSecret = null;
+        mHomeAccountId = null;
+    }
 
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
