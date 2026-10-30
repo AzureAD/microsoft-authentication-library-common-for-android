@@ -715,6 +715,13 @@ public enum AttributeName {
      */
     client_tls_retry_number,
 
+    /** Whether the request is assigned to bounded network retries. SystemMetadata. */
+    network_retry_enabled,
+    /** Whether the bounded policy started an additional HTTP attempt. SystemMetadata. */
+    network_request_retried,
+    /** HTTP success of a completed additional attempt; absent otherwise. SystemMetadata. */
+    network_retry_succeeded,
+
     //region KeyPair generation
 
     /**
