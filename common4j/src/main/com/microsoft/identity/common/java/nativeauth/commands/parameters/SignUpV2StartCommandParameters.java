@@ -35,9 +35,10 @@ import lombok.experimental.SuperBuilder;
 /**
  * Parameters for the V2 sign-up start operation.
  * Carries the username that initiates the flow and, optionally, the password and custom user
- * attributes to submit upfront as soon as the server requests them. The password is never retained
- * in continuation or public state; the controller clears the buffer once the request has been
- * issued. Extends {@link BaseSignInTokenCommandParameters}.
+ * attributes to submit as soon as the server requests them. The username is sent at sign-up
+ * start, never as an email attribute. A pending password is retained only in an erasable,
+ * non-serialized continuation buffer; restored flows recollect it.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)

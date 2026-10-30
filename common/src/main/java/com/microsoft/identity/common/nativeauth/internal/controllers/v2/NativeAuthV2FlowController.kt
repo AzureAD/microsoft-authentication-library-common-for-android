@@ -223,7 +223,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         /**
          * Returned when, during sign-up, the server re-requests an attribute that was already
-         * submitted (including the always-upfront `email`) and therefore cannot be collected again.
+         * submitted, or requests email, which is supplied only as the username at start.
          */
         private const val ATTRIBUTE_ALREADY_SUBMITTED_ERROR = "attribute_already_submitted"
         private const val METHOD_TYPE_EMAIL = "email"
@@ -575,7 +575,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete ->
                     NativeAuthV2CommandResult.SignInAfterSignUpRequired(
                         correlationId = verifyResult.correlationId,
-                        continuationState = verifyResult.continuationState
+                        continuationState = verifyResult.continuationState.withoutPendingSignUpAttributes()
                     )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
                     correlationId = verifyResult.correlationId,
@@ -1368,11 +1368,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Starts the V2 sign-up flow: authorize-challenge start (sign-up scenario) → sign-up entry →
-     * first collect-attributes step.
+     * verification or attribute collection.
      *
-     * The sign-up entry posts only the continuation token; the username, an optional password, and
-     * any app-supplied attributes are submitted upfront on the first collect-attributes step via
-     * [handleSignUpInteractionResult] (see [upfrontAttributeValues]). Depending on what the server
+     * The entry posts the username and continuation token. An optional password and profile
+     * attributes are retained until the first collect-attributes step, including across code
+     * verification and resend. Depending on what the server
      * requests next this returns [NativeAuthV2CommandResult.CodeRequired] (email one-time code
      * verification), [NativeAuthV2CommandResult.PasswordRequired],
      * [NativeAuthV2CommandResult.AttributesRequired], [NativeAuthV2CommandResult.UserAlreadyExists],
@@ -1437,7 +1437,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 }
             }
 
-            val startResult = oAuth2Strategy.performSignUpStart(state = initialState)
+            val startResult = oAuth2Strategy.performSignUpStart(
+                username = parameters.username,
+                state = initialState
+            )
 
             val result = handleSignUpInteractionResult(
                 oAuth2Strategy = oAuth2Strategy,
@@ -1468,7 +1471,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * the sign-up completes server-side, [NativeAuthV2CommandResult.AttributesInvalid] when a value
      * is rejected (retryable through the same state), [NativeAuthV2CommandResult.UserAlreadyExists],
      * or an [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
-     * When enrollment interrupted the initial sign-up, retained non-password values are merged
+     * When verification or enrollment interrupted sign-up, retained profile values are merged
      * only after validating caller keys; a recollected password completes that initial submission.
      */
     fun submitAttributes(parameters: NativeAuthV2SubmitAttributesCommandParameters): NativeAuthV2SubmitAttributesCommandResult {
@@ -1502,7 +1505,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 attributes = if (pendingAttributes == null) parameters.attributes else {
                     LinkedHashMap(pendingAttributes).apply { putAll(parameters.attributes) }
                 },
-                password = parameters.password,
+                password = parameters.password
+                    ?: parameters.continuationState.pendingSignUpPasswordForSubmission(),
                 upfront = null
             )
             return result as? NativeAuthV2SubmitAttributesCommandResult
@@ -1575,7 +1579,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(
                 if (upfront == null) result else result.copy(
                     continuationState = result.continuationState.withPendingSignUpAttributes(
-                        upfrontAttributeValues(upfront), upfront.password?.isNotEmpty() == true
+                        upfront.attributes.orEmpty(), upfront.password?.isNotEmpty() == true,
+                        upfront.password
                     )
                 )
             )
@@ -1588,7 +1593,12 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 if (result.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
                     NativeAuthV2CommandResult.CodeRequired(
                         correlationId = result.correlationId,
-                        continuationState = result.continuationState,
+                        continuationState = if (upfront == null) result.continuationState else {
+                            result.continuationState.withPendingSignUpAttributes(
+                                upfront.attributes.orEmpty(), upfront.password?.isNotEmpty() == true,
+                                upfront.password
+                            )
+                        },
                         codeLength = result.codeLength,
                         challengeTargetLabel = result.challengeTargetLabel,
                         challengeChannel = result.challengeChannel
@@ -1602,7 +1612,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 }
             is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterSignUpRequired(
                 correlationId = result.correlationId,
-                continuationState = result.continuationState
+                continuationState = result.continuationState.withoutPendingSignUpAttributes()
             )
             is NativeAuthV2InteractionApiResult.UserAlreadyExists -> NativeAuthV2CommandResult.UserAlreadyExists(
                 correlationId = result.correlationId,
@@ -1679,13 +1689,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Handles a sign-up `collectAttributes` step.
      *
-     * On the first step ([upfront] is non-null, right after sign-up start) every value supplied
-     * upfront — `email` (the username), `password` if provided, and any app attributes — is
-     * submitted in a single request, regardless of which attributes the server asked for, and the
-     * submitted names are recorded on the continuation state by the interactor.
-     *
-     * If enrollment interrupted that first step, the state retains its non-password values.
-     * Resume their upfront submission, recollecting an interrupted password rather than storing it.
+     * Email must never be collected as an attribute. Any upfront password/profile values are
+     * submitted once, even if verification or enrollment preceded collection. A password lost
+     * through state serialization is recollected rather than persisted.
      *
      * On any later step (no [upfront] or pending initial values) the server requests more information. A `password`
      * not yet submitted is surfaced as [NativeAuthV2CommandResult.PasswordRequired] so the app can
@@ -1701,11 +1707,23 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     ): INativeAuthCommandResult {
         val nextState = attributesRequired.continuationState
 
-        if (upfront != null) {
+        if (attributesRequired.requiredAttributes.any {
+                it.name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true)
+            }) {
+            Logger.warn(TAG, attributesRequired.correlationId, "Server requested email as a sign-up attribute.")
+            return INativeAuthCommandResult.APIError(
+                error = ATTRIBUTE_ALREADY_SUBMITTED_ERROR,
+                errorDescription = "Email was supplied as the sign-up username and cannot be collected as an attribute.",
+                correlationId = attributesRequired.correlationId
+            )
+        }
+
+        if (upfront != null &&
+            (upfront.attributes?.isNotEmpty() == true || upfront.password?.isNotEmpty() == true)) {
             return performSignUpSubmitAttributes(
                 oAuth2Strategy = oAuth2Strategy,
                 state = nextState,
-                attributes = upfrontAttributeValues(upfront),
+                attributes = upfront.attributes.orEmpty(),
                 password = upfront.password,
                 upfront = null
             )
@@ -1717,12 +1735,16 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     attributesRequired.correlationId, nextState
                 )
             }
-            return performSignUpSubmitAttributes(
-                oAuth2Strategy = oAuth2Strategy,
-                state = nextState,
-                attributes = pendingAttributes,
-                upfront = null
-            )
+            val pendingPassword = nextState.pendingSignUpPasswordForSubmission()
+            if (pendingAttributes.isNotEmpty() || pendingPassword != null) {
+                return performSignUpSubmitAttributes(
+                    oAuth2Strategy = oAuth2Strategy,
+                    state = nextState,
+                    attributes = pendingAttributes,
+                    password = pendingPassword,
+                    upfront = null
+                )
+            }
         }
 
         val alreadySubmittedCredential = attributesRequired.requiredAttributes.firstOrNull {
@@ -1774,30 +1796,21 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 attributes.keys + ATTRIBUTE_NAME_PASSWORD
             }
         val retryState = state.withAdditionalSubmittedAttributes(submittedAttributeNames)
-        val result = oAuth2Strategy.performSubmitAttributes(
-            state = state,
-            attributes = attributes,
-            password = password
-        )
+        val result = try {
+            oAuth2Strategy.performSubmitAttributes(
+                state = state,
+                attributes = attributes,
+                password = password
+            )
+        } finally {
+            StringUtil.overwriteWithNull(password)
+        }
         return handleSignUpInteractionResult(
             oAuth2Strategy = oAuth2Strategy,
             result = result,
             retryState = retryState,
             upfront = upfront
         )
-    }
-
-    /**
-     * Builds the non-password attribute map submitted upfront: `email` (the username) plus any app
-     * attributes supplied to sign-up. The SDK-owned `email` and `password` keys cannot be
-     * overridden by app-supplied attributes; [signUpStart] rejects them before this map is built.
-     */
-    private fun upfrontAttributeValues(
-        parameters: SignUpV2StartCommandParameters
-    ): Map<String, String> = linkedMapOf(
-        ATTRIBUTE_NAME_EMAIL to parameters.username
-    ).apply {
-        parameters.attributes?.let(::putAll)
     }
 
     private fun validateSignUpAttributeKeys(

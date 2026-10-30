@@ -59,13 +59,14 @@ class NativeAuthV2ContinuationState private constructor(
     internal val scenario: NativeAuthV2FlowScenario,
     internal val authenticationFactor: String?,
     // Canonical names of SDK-owned credentials already submitted during a sign-up flow. Only
-    // `email` and `password` are retained; ordinary attributes remain retryable if the server asks
-    // for them again or rejects their values. Empty for every other flow.
+    // `password` and legacy `email` names are retained; ordinary attributes remain retryable if
+    // the server asks for them again or rejects their values. Empty for every other flow.
     internal val submittedAttributes: Set<String> = emptySet(),
     private val enrollmentChannels: Map<String, String>? = emptyMap(),
     private val resetPasswordUpdateSubmitted: Boolean = false,
     private val pendingSignUpAttributes: Map<String, String>? = null,
-    private val pendingSignUpPasswordRecollection: Boolean = false
+    private val pendingSignUpPasswordRecollection: Boolean = false,
+    @Transient private val pendingSignUpPassword: CharArray? = null
 ) : ILoggable, Serializable {
 
     /**
@@ -95,6 +96,7 @@ class NativeAuthV2ContinuationState private constructor(
      * names are deliberately ignored because their values may be corrected and resubmitted.
      * Public so the controller can preserve this bookkeeping when the server rejects a submission
      * without returning a successor continuation state.
+     * A nonempty submission also discards pending values and erases their shared password buffer.
      */
     fun withAdditionalSubmittedAttributes(
         names: Collection<String>
@@ -108,6 +110,7 @@ class NativeAuthV2ContinuationState private constructor(
                     merged.add(ATTRIBUTE_NAME_PASSWORD)
             }
         }
+        if (names.isNotEmpty()) pendingSignUpPassword?.fill('\u0000')
         return NativeAuthV2ContinuationState(
             continuationToken = continuationToken,
             links = links,
@@ -121,27 +124,34 @@ class NativeAuthV2ContinuationState private constructor(
             submittedAttributes = Collections.unmodifiableSet(merged),
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
-            pendingSignUpAttributes = if (merged.isEmpty()) pendingSignUpAttributes else null,
-            pendingSignUpPasswordRecollection = merged.isEmpty() && pendingSignUpPasswordRecollection
+            pendingSignUpAttributes = if (names.isEmpty()) pendingSignUpAttributes else null,
+            pendingSignUpPasswordRecollection = names.isEmpty() && pendingSignUpPasswordRecollection,
+            pendingSignUpPassword = if (names.isEmpty()) pendingSignUpPassword else null
         )
     }
 
     /**
-     * Retains the non-password initial sign-up values when enrollment interrupts their submission.
-     * Only the need to recollect a password is retained, never its value or a password buffer.
-     * The context is discarded by [withAdditionalSubmittedAttributes] on credential submission.
+     * Retains initial profile values across verification, resend, and enrollment. An optional
+     * password is defensively copied into an erasable, non-serialized buffer. Restored states
+     * recollect it. Submission discards the pending values even for profile-only requests.
      */
+    @JvmOverloads
     fun withPendingSignUpAttributes(
         attributes: Map<String, String>,
-        requiresPasswordRecollection: Boolean
+        requiresPasswordRecollection: Boolean,
+        password: CharArray? = null
     ): NativeAuthV2ContinuationState {
         require(scenario == NativeAuthV2FlowScenario.SIGN_UP && submittedAttributes.isEmpty())
-        require(attributes.keys.none { it.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) })
+        require(attributes.keys.none {
+            it.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) ||
+                it.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true)
+        })
         return NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
             resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes)),
-            requiresPasswordRecollection
+            requiresPasswordRecollection || password?.isNotEmpty() == true,
+            password?.takeUnless { it.isEmpty() }?.copyOf()
         )
     }
 
@@ -149,8 +159,24 @@ class NativeAuthV2ContinuationState private constructor(
     fun pendingSignUpAttributesForSubmission(): Map<String, String>? =
         pendingSignUpAttributes?.let { LinkedHashMap(it) }
 
-    /** Whether an interrupted initial password must be collected again before the initial submit. */
-    fun requiresSignUpPasswordRecollection(): Boolean = pendingSignUpPasswordRecollection
+    /** Returns an owned password copy for submission; the caller must erase it after use. */
+    fun pendingSignUpPasswordForSubmission(): CharArray? =
+        pendingSignUpPassword?.takeIf { value -> value.any { it != '\u0000' } }?.copyOf()
+
+    /** Whether a restored initial password must be collected again before the initial submit. */
+    fun requiresSignUpPasswordRecollection(): Boolean =
+        pendingSignUpPasswordRecollection &&
+            (pendingSignUpPassword == null || pendingSignUpPassword.all { it == '\u0000' })
+
+    /** Discards pending input at completion and erases the buffer shared by predecessor states. */
+    fun withoutPendingSignUpAttributes(): NativeAuthV2ContinuationState {
+        pendingSignUpPassword?.fill('\u0000')
+        return NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
+            resetPasswordUpdateSubmitted
+        )
+    }
 
     /**
      * Returns the scopes retained for the
@@ -168,8 +194,9 @@ class NativeAuthV2ContinuationState private constructor(
     fun flowScenario(): NativeAuthV2FlowScenario = scenario
 
     /** Continues an existing-account challenge as sign-in, discarding sign-up-only input. */
-    internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState =
-        NativeAuthV2ContinuationState(
+    internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState {
+        pendingSignUpPassword?.fill('\u0000')
+        return NativeAuthV2ContinuationState(
             continuationToken = continuationToken,
             links = links,
             methodLinks = methodLinks,
@@ -180,6 +207,7 @@ class NativeAuthV2ContinuationState private constructor(
             scenario = NativeAuthV2FlowScenario.SIGN_IN,
             authenticationFactor = authenticationFactor
         )
+    }
 
     /** Whether this reset flow has actually submitted a new password. */
     fun isResetPasswordUpdateSubmitted(): Boolean = resetPasswordUpdateSubmitted
@@ -188,7 +216,7 @@ class NativeAuthV2ContinuationState private constructor(
         NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
-            pendingSignUpAttributes, pendingSignUpPasswordRecollection
+            pendingSignUpAttributes, pendingSignUpPasswordRecollection, pendingSignUpPassword
         )
 
     /**
@@ -227,7 +255,8 @@ class NativeAuthV2ContinuationState private constructor(
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
             pendingSignUpAttributes = pendingSignUpAttributes,
-            pendingSignUpPasswordRecollection = pendingSignUpPasswordRecollection
+            pendingSignUpPasswordRecollection = pendingSignUpPasswordRecollection,
+            pendingSignUpPassword = pendingSignUpPassword
         )
     }
 
@@ -332,7 +361,8 @@ class NativeAuthV2ContinuationState private constructor(
                 } else emptyMap(),
                 resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
                 pendingSignUpAttributes = previous.pendingSignUpAttributes,
-                pendingSignUpPasswordRecollection = previous.pendingSignUpPasswordRecollection
+                pendingSignUpPasswordRecollection = previous.pendingSignUpPasswordRecollection,
+                pendingSignUpPassword = previous.pendingSignUpPassword
             )
         }
 

@@ -182,7 +182,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             AuthorizeChallengeApiResult.ContinuationRequired("cid", prior)
         every { strategy.performSignInStart(any(), any()) } returns registration
         every { strategy.performResetPasswordStart(any(), any()) } returns registration
-        every { strategy.performSignUpStart(any()) } returns registration.copy(
+        every { strategy.performSignUpStart(any(), any()) } returns registration.copy(
             continuationState = state(NativeAuthV2FlowScenario.SIGN_UP))
         every { strategy.performVerify(any(), any()) } returns registration
         every { strategy.performPasswordVerify(any(), any()) } returns registration
@@ -220,7 +220,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             val returnedState = (it as NativeAuthV2CommandResult.StrongAuthRegistrationRequired).continuationState
             if (index == 2) {
                 assertEquals(NativeAuthV2FlowScenario.SIGN_UP, returnedState.flowScenario())
-                assertEquals("user", returnedState.pendingSignUpAttributesForSubmission()?.get("email"))
+                assertEquals(emptyMap<String, String>(), returnedState.pendingSignUpAttributesForSubmission())
             } else {
                 assertSame(prior, returnedState)
             }

@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Send the Native Auth V2 sign-up username at start, defer password/profile submission across verification and resend, reject email attributes, and clear pending values at submission or completion without serializing passwords.
 - [PATCH] Refine onboarding telemetry by allowing per-invocation recorder lookup suppression without changing authentication correlation IDs or default lookup behavior for existing callers, and recording MDM enrollment start only for the enrollment fwlink destination; URL classification failures skip the telemetry step without changing Device-CA routing
 - [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)
 - [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)

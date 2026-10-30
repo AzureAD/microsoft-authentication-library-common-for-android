@@ -135,13 +135,14 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
-     * Starts the V2 Native Auth sign-up flow by posting the continuation token to the
+     * Starts the V2 Native Auth sign-up flow by posting the username and continuation token to the
      * server-provided `signUp` href.
      */
     fun performSignUpStart(
+        username: String,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performSignUpStart(state = state)
+        return nativeAuthV2Interactor.performSignUpStart(username = username, state = state)
     }
 
     /**

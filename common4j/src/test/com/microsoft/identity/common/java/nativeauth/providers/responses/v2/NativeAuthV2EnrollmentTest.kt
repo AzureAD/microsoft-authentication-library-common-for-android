@@ -108,27 +108,66 @@ class NativeAuthV2EnrollmentTest {
     }
 
     @Test
-    fun pendingSignUpInputIsDefensiveNonPasswordContextClearedOnCredentialSubmission() {
+    fun pendingSignUpInputIsDefensiveAndClearedOnProfileOnlySubmission() {
         val state = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
             response("""{"continuationToken":"start"}"""), "start", emptyList(), null,
             NativeAuthV2LinkRelation.SIGN_UP, NativeAuthV2FlowScenario.SIGN_UP)
-        val input = linkedMapOf("email" to "original@contoso.com", "displayName" to "Original")
+        val input = linkedMapOf("displayName" to "Original")
         val pending = state.withPendingSignUpAttributes(input, true)
-        input["email"] = "mutated@contoso.com"
+        input["displayName"] = "Mutated"
         val exposed = pending.pendingSignUpAttributesForSubmission() as MutableMap
-        exposed["email"] = "mutated-again@contoso.com"
-        assertEquals("original@contoso.com", pending.pendingSignUpAttributesForSubmission()?.get("email"))
+        exposed["displayName"] = "Mutated again"
+        assertEquals("Original", pending.pendingSignUpAttributesForSubmission()?.get("displayName"))
         assertTrue(pending.requiresSignUpPasswordRecollection())
-        assertNotNull(pending.withAdditionalSubmittedAttributes(listOf("displayName"))
-            .pendingSignUpAttributesForSubmission())
-        val submitted = pending.withAdditionalSubmittedAttributes(listOf("email"))
+        val submitted = pending.withAdditionalSubmittedAttributes(listOf("displayName"))
         assertNull(submitted.pendingSignUpAttributesForSubmission())
         assertFalse(submitted.requiresSignUpPasswordRecollection())
         assertTrue(runCatching {
-            state.withPendingSignUpAttributes(mapOf("email" to "original", "Password" to "secret"), true)
+            state.withPendingSignUpAttributes(mapOf("Password" to "secret"), true)
+        }.exceptionOrNull() is IllegalArgumentException)
+        assertTrue(runCatching {
+            state.withPendingSignUpAttributes(mapOf("EMAIL" to "original@contoso.com"), false)
         }.exceptionOrNull() is IllegalArgumentException)
         assertFalse(pending.toString().contains("original@contoso.com"))
         assertFalse(pending.toUnsanitizedString().contains("Original"))
+    }
+
+    @Test
+    fun pendingSignUpPasswordIsCopiedNotSerializedAndErasedAcrossSuccessors() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            "correlation", entryRelation = NativeAuthV2LinkRelation.SIGN_UP,
+            scenario = NativeAuthV2FlowScenario.SIGN_UP
+        )
+        val original = "pending-secret".toCharArray()
+        val pending = state.withPendingSignUpAttributes(emptyMap(), true, original)
+        original.fill('x')
+        val successor = NativeAuthV2ContinuationState.next(
+            pending, response("""{"continuationToken":"next"}""")
+        )!!
+        val copy = successor.pendingSignUpPasswordForSubmission()!!
+        assertArrayEquals("pending-secret".toCharArray(), copy)
+        copy.fill('y')
+        val submission = successor.pendingSignUpPasswordForSubmission()!!
+        assertArrayEquals("pending-secret".toCharArray(), submission)
+        assertFalse(successor.requiresSignUpPasswordRecollection())
+        val bytes = java.io.ByteArrayOutputStream().apply {
+            java.io.ObjectOutputStream(this).use { it.writeObject(successor) }
+        }.toByteArray()
+        assertFalse(String(bytes, Charsets.ISO_8859_1).contains("pending-secret"))
+        val restored = java.io.ObjectInputStream(bytes.inputStream()).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        assertNull(restored.pendingSignUpPasswordForSubmission())
+        assertTrue(restored.requiresSignUpPasswordRecollection())
+        assertEquals(emptyMap<String, String>(), restored.pendingSignUpAttributesForSubmission())
+        val submitted = successor.withAdditionalSubmittedAttributes(listOf("password"))
+        assertNull(submitted.pendingSignUpAttributesForSubmission())
+        assertFalse(submitted.requiresSignUpPasswordRecollection())
+        assertNull(pending.pendingSignUpPasswordForSubmission())
+        assertNull(successor.pendingSignUpPasswordForSubmission())
+        assertArrayEquals("pending-secret".toCharArray(), submission)
+        submission.fill('\u0000')
+        assertFalse(pending.toUnsanitizedString().contains("pending-secret"))
     }
 
     @Test
