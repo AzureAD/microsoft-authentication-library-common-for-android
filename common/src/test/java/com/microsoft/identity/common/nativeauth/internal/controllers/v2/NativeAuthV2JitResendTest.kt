@@ -93,7 +93,7 @@ class NativeAuthV2JitResendTest {
                 assertEquals("""{"id_token":{}}""", it.claimsRequestJsonForTokenRequest())
                 assertEquals(scenario == NativeAuthV2FlowScenario.RESET_PASSWORD, it.isResetPasswordUpdateSubmitted())
                 if (scenario == NativeAuthV2FlowScenario.SIGN_UP) {
-                    assertEquals(mapOf("email" to "original@contoso.com"), it.pendingSignUpAttributesForSubmission())
+                    assertEquals(mapOf("displayName" to "Original"), it.pendingSignUpAttributesForSubmission())
                     assertTrue(it.requiresSignUpPasswordRecollection())
                 }
             }
@@ -167,7 +167,7 @@ class NativeAuthV2JitResendTest {
             scenario = scenario, claimsRequestJson = """{"id_token":{}}""")
         return when (scenario) {
             NativeAuthV2FlowScenario.SIGN_UP -> state.withPendingSignUpAttributes(
-                mapOf("email" to "original@contoso.com"), true)
+                mapOf("displayName" to "Original"), true)
             NativeAuthV2FlowScenario.RESET_PASSWORD -> NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(state)
             else -> state
         }

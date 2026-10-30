@@ -61,7 +61,136 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
     private val requests = mutableListOf<ByteArray>()
 
     @Test
-    fun initialEmailAndUpfrontAttributesResumeAfterEnrollmentWithDistinctContact() {
+    fun verificationAndResendRetainUpfrontValuesUntilCollection() {
+        stubSignUpResponses(
+            verificationResponse("code"),
+            verificationResponse("resent"),
+            """{"action":"collectAttributes","continuationToken":"attributes",
+                "attributes":[{"attributeId":"password","inputType":"password","required":true}],
+                "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}""",
+            """{"state":"continue","continuationToken":"done"}"""
+        )
+        val password = "original-password".toCharArray()
+        val attributes = linkedMapOf("displayName" to "Original")
+        val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").password(password).attributes(attributes).build())
+            as NativeAuthV2CommandResult.CodeRequired
+        assertTrue(password.all { it == '\u0000' })
+        password.fill('x')
+        attributes["displayName"] = "Changed"
+        assertEquals(1, requests.size)
+        val entry = JsonParser.parseString(String(requests.single(), Charsets.UTF_8)).asJsonObject
+        assertEquals(setOf("username", "continuationToken"), entry.keySet())
+        assertEquals("original@contoso.com", entry["username"].asString)
+
+        val resent = controller.resendCode(configured(NativeAuthV2ResendCodeCommandParameters.builder())
+            .continuationState(start.continuationState).build()) as NativeAuthV2CommandResult.CodeRequired
+        assertEquals(2, requests.size)
+        val completed = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+            .continuationState(resent.continuationState).code("123456").build())
+            as NativeAuthV2CommandResult.SignInAfterSignUpRequired
+
+        assertEquals(4, requests.size)
+        val body = JsonParser.parseString(String(requests.last(), Charsets.UTF_8)).asJsonObject
+        assertEquals("attributes", body["continuationToken"].asString)
+        assertEquals("original-password", body["attributes"].asJsonObject["password"].asString)
+        assertEquals("Original", body["attributes"].asJsonObject["displayName"].asString)
+        assertFalse(body["attributes"].asJsonObject.has("email"))
+        assertNull(completed.continuationState.pendingSignUpAttributesForSubmission())
+        assertNull(completed.continuationState.pendingSignUpPasswordForSubmission())
+        assertFalse(completed.continuationState.requiresSignUpPasswordRecollection())
+        assertTrue(completed.continuationState.hasSubmittedAttribute("password"))
+        assertFalse(completed.continuationState.hasSubmittedAttribute("email"))
+        assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
+        assertNull(resent.continuationState.pendingSignUpPasswordForSubmission())
+    }
+
+    @Test
+    fun noUpfrontValuesSurfaceRequiredInputWithoutEmptySubmission() {
+        for (attribute in listOf("password", "displayName")) {
+            for (verifyFirst in listOf(false, true)) {
+                requests.clear()
+                val collection = """{"action":"collectAttributes","continuationToken":"attributes",
+                    "attributes":[{"attributeId":"$attribute","inputType":"text","required":true}],
+                    "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}"""
+                stubSignUpResponses(*(if (verifyFirst) {
+                    arrayOf(verificationResponse("code"), collection)
+                } else arrayOf(collection)))
+                val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+                    .username("original@contoso.com").build())
+                val result: INativeAuthCommandResult = if (verifyFirst) {
+                    controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+                        .continuationState((start as NativeAuthV2CommandResult.CodeRequired).continuationState)
+                        .code("123456").build())
+                } else start
+                if (attribute == "password") {
+                    assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+                } else {
+                    assertTrue(result is NativeAuthV2CommandResult.AttributesRequired)
+                }
+                assertEquals(if (verifyFirst) 2 else 1, requests.size)
+            }
+        }
+    }
+
+    @Test
+    fun emailCollectionIsRejectedBeforeAnyPendingValuesAreSubmitted() {
+        for (verifyFirst in listOf(false, true)) {
+            requests.clear()
+            val collection = """{"action":"collectAttributes","continuationToken":"attributes",
+                "attributes":[{"attributeId":"password","inputType":"password","required":true},
+                    {"attributeId":"EMAIL","inputType":"text","required":true}],
+                "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}"""
+            stubSignUpResponses(*(if (verifyFirst) {
+                arrayOf(verificationResponse("code"), collection)
+            } else arrayOf(collection)))
+            val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+                .username("original@contoso.com").password("password".toCharArray())
+                .attributes(mapOf("displayName" to "Original")).build())
+            val result: INativeAuthCommandResult = if (verifyFirst) {
+                controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+                    .continuationState((start as NativeAuthV2CommandResult.CodeRequired).continuationState)
+                    .code("123456").build())
+            } else start
+            assertTrue(result is INativeAuthCommandResult.APIError)
+            assertEquals("attribute_already_submitted", (result as INativeAuthCommandResult.APIError).error)
+            assertEquals(if (verifyFirst) 2 else 1, requests.size)
+        }
+    }
+
+    @Test
+    fun unexpectedCompletionAtStartRemainsAnApiError() {
+        stubSignUpResponses("""{"state":"continue","continuationToken":"unexpected"}""")
+        val result = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").build())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        assertEquals("unexpected_api_result", (result as INativeAuthCommandResult.APIError).error)
+        assertEquals(1, requests.size)
+    }
+
+    @Test
+    fun completionAfterVerificationWithoutCollectionDiscardsPendingValues() {
+        stubSignUpResponses(
+            verificationResponse("code"),
+            """{"state":"continue","continuationToken":"done"}"""
+        )
+        val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").password("password".toCharArray())
+            .attributes(mapOf("displayName" to "Original")).build()) as NativeAuthV2CommandResult.CodeRequired
+        val result = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+            .continuationState(start.continuationState).code("123456").build())
+        val state = (result as NativeAuthV2CommandResult.SignInAfterSignUpRequired).continuationState
+        assertNull(state.pendingSignUpAttributesForSubmission())
+        assertNull(state.pendingSignUpPasswordForSubmission())
+        assertFalse(state.requiresSignUpPasswordRecollection())
+        assertFalse(state.hasSubmittedAttribute("password"))
+        assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
+        assertEquals(2, requests.size)
+    }
+
+    @Test
+    fun usernameSentAtStartAndUpfrontAttributesResumeAfterEnrollmentWithDistinctContact() {
         stubFlow(requestsPassword = false)
         val activation = startAndEnroll(password = null)
 
@@ -71,12 +200,15 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         assertTrue(result.toString(), result is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
         val attributes = JsonParser().parse(String(requests.last(), Charsets.UTF_8))
             .asJsonObject.getAsJsonObject("attributes")
-        assertEquals("original@contoso.com", attributes["email"].asString)
+        assertFalse(attributes.has("email"))
+        val start = JsonParser.parseString(String(requests.first(), Charsets.UTF_8)).asJsonObject
+        assertEquals("original@contoso.com", start["username"].asString)
+        assertFalse(start.has("attributes"))
         assertEquals("Original Name", attributes["displayName"].asString)
         assertFalse(attributes.has("password"))
         assertTrue(String(requests[1], Charsets.UTF_8).contains("enrollment@contoso.com"))
         val completedState = (result as NativeAuthV2CommandResult.SignInAfterSignUpRequired).continuationState
-        assertTrue(completedState.hasSubmittedAttribute("email"))
+        assertFalse(completedState.hasSubmittedAttribute("email"))
         assertNull(completedState.pendingSignUpAttributesForSubmission())
     }
 
@@ -112,10 +244,10 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         assertEquals(details, result.attributeValidationDetails)
         val automatic = JsonParser.parseString(String(requests.last(), Charsets.UTF_8)).asJsonObject
         assertEquals("attributes", automatic["continuationToken"].asString)
-        assertEquals("original@contoso.com", automatic["attributes"].asJsonObject["email"].asString)
+        assertFalse(automatic["attributes"].asJsonObject.has("email"))
         assertEquals("Original Name", automatic["attributes"].asJsonObject["displayName"].asString)
         val retryState = roundTrip(result.continuationState)
-        assertTrue(retryState.hasSubmittedAttribute("email"))
+        assertFalse(retryState.hasSubmittedAttribute("email"))
         assertNull(retryState.pendingSignUpAttributesForSubmission())
         val retryUrl = slot<URL>()
         every { http.method(HttpClient.HttpMethod.POST, capture(retryUrl), any(), capture(requests)) } returns
@@ -159,7 +291,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
     }
 
     @Test
-    fun interruptedUpfrontPasswordIsRecollectedWithoutLosingInitialEmailOrAttributes() {
+    fun serializedUpfrontPasswordIsRecollectedWithoutLosingProfileAttributes() {
         stubFlow(requestsPassword = true)
         val original = "original-secret-never-retained".toCharArray()
         val activation = startAndEnroll(original)
@@ -180,8 +312,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         assertTrue(completed.toString(), completed is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
         val body = JsonParser().parse(String(requests.last(), Charsets.UTF_8)).asJsonObject
         val attributes = body.getAsJsonObject("attributes")
-        assertTrue("Original signup email must accompany the recollected password.", attributes.has("email"))
-        assertEquals("original@contoso.com", attributes["email"].asString)
+        assertFalse(attributes.has("email"))
         assertEquals("Original Name", attributes["displayName"].asString)
         assertEquals("recollected-password", attributes["password"].asString)
         assertTrue(replacement.all { it == '\u0000' })
@@ -191,7 +322,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
     }
 
     @Test
-    fun interruptedUpfrontPasswordIsRecollectedEvenWhenFirstCollectionRequestsOnlyEmail() {
+    fun serializedUpfrontPasswordIsRecollectedEvenWhenFirstCollectionRequestsOnlyProfileAttributes() {
         stubFlow(requestsPassword = false)
         val activation = startAndEnroll("original-secret-never-retained".toCharArray())
         val result = controller.activate(NativeAuthV2ActivateCommandParameters(
@@ -233,13 +364,29 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
                 "_links":{"activate":{"href":"/tenant/api/v2.0/auth/email/activate"}}}""")
         ) + emailVerification + listOf(
             response("""{"action":"collectAttributes","continuationToken":"attributes",
-                "attributes":[{"attributeId":"email","inputType":"text","required":true}$passwordAttribute],
+                "attributes":[{"attributeId":"displayName","inputType":"text","required":true}$passwordAttribute],
                 "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}"""),
             response(submitResponse)
         ))
     }
 
     private fun response(body: String) = HttpResponse(200, body, emptyMap())
+
+    private fun stubSignUpResponses(vararg bodies: String) {
+        every { http.post(any(), any(), any()) } returns response("""
+            {"continuationToken":"entry","_links":{"signUp":{"href":"/tenant/api/v2.0/auth/signup/start"}}}
+        """)
+        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returnsMany
+            bodies.map(::response)
+    }
+
+    private fun verificationResponse(token: String) = """
+        {"action":"verify","continuationToken":"$token","hint":"original-mask",
+         "type":"email","codeLength":6,"_links":{
+           "verify":{"href":"/tenant/api/v2.0/auth/email/verify"},
+           "resend":{"href":"/tenant/api/v2.0/auth/email/resend"}}}
+    """
+
     private fun parameters(state: NativeAuthV2ContinuationState) =
         configured(NativeAuthV2SignInAfterSignUpCommandParameters.builder()).continuationState(state).build()
     private fun <B : BaseSignInTokenCommandParameters.BaseSignInTokenCommandParametersBuilder<*, *>> configured(builder: B): B {

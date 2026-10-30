@@ -80,9 +80,10 @@ class NativeAuthV2SignUpInteractorTest {
     )
 
     @Test
-    fun performSignUpStart_postsContinuationTokenAndParsesAsSignUpStart() {
+    fun performSignUpStart_postsUsernameAndContinuationTokenAndParsesAsSignUpStart() {
         val state = continuationState(NativeAuthV2LinkRelation.SIGN_UP to "/signup/start")
         val request = NativeAuthV2SignUpStartRequest.create(
+            username = "user@contoso.com",
             continuationToken = CONTINUATION_TOKEN,
             requestUrl = signUpUrl.toString(),
             headers = jsonHeaders()
@@ -92,27 +93,27 @@ class NativeAuthV2SignUpInteractorTest {
         val expected = mockk<NativeAuthV2InteractionApiResult.AttributesRequired>(relaxed = true)
         val captured = capturePost(httpResponse)
 
-        every { requestProvider.createSignUpStartRequest(state) } returns request
+        every { requestProvider.createSignUpStartRequest("user@contoso.com", state) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
             responseParser.parseInteraction(halResponse, state)
         } returns expected
 
-        val actual = createInteractor().performSignUpStart(state)
+        val actual = createInteractor().performSignUpStart("user@contoso.com", state)
 
         assertSame(expected, actual)
         assertEquals(signUpUrl, captured.url.captured)
         assertMergedHeaders(captured.headers.captured)
         assertJsonBody(
             captured.body.captured,
-            mapOf("continuationToken" to CONTINUATION_TOKEN)
+            mapOf("username" to "user@contoso.com", "continuationToken" to CONTINUATION_TOKEN)
         )
     }
 
     @Test
     fun performSubmitAttributes_postsAllAttributesAndRecordsOnlyCredentialNames() {
         val state = continuationState(NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES to "/signup/submitattributes")
-        val attributes = linkedMapOf("email" to "user@contoso.com", "city" to "Seattle")
+        val attributes = linkedMapOf("city" to "Seattle")
         val password = "Password123!".toCharArray()
         val request = NativeAuthV2SubmitAttributesRequest.create(
             continuationToken = CONTINUATION_TOKEN,
@@ -140,17 +141,14 @@ class NativeAuthV2SignUpInteractorTest {
         assertSame(expected, actual)
         assertEquals(submitAttributesUrl, captured.url.captured)
 
-        assertTrue(parsedState.captured.hasSubmittedAttribute("email"))
+        assertFalse(parsedState.captured.hasSubmittedAttribute("email"))
         assertTrue(parsedState.captured.hasSubmittedAttribute("password"))
         assertFalse(parsedState.captured.hasSubmittedAttribute("city"))
         assertFalse(state.hasSubmittedAttribute("email"))
 
         val body = JSONObject(String(captured.body.captured, StandardCharsets.UTF_8))
         assertEquals(CONTINUATION_TOKEN, body.getString("continuationToken"))
-        assertEquals(
-            "user@contoso.com",
-            body.getJSONObject("attributes").getString("email")
-        )
+        assertFalse(body.getJSONObject("attributes").has("email"))
         assertEquals("Seattle", body.getJSONObject("attributes").getString("city"))
         assertEquals("Password123!", body.getJSONObject("attributes").getString("password"))
         assertTrue(password.all { it == '\u0000' })

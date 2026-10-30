@@ -42,7 +42,7 @@ class NativeAuthV2ResponseParserTest {
             val prior = NativeAuthV2ContinuationStateTestFactory.create(
                 CORRELATION_ID, listOf("User.Read"), NativeAuthV2LinkRelation.SIGN_UP,
                 NativeAuthV2FlowScenario.SIGN_UP, CLAIMS_REQUEST_JSON
-            ).withPendingSignUpAttributes(mapOf("email" to "user@contoso.com"), true)
+            ).withPendingSignUpAttributes(mapOf("displayName" to "Original"), true)
                 .withAdditionalSubmittedAttributes(listOf("email", "password"))
             val result = parser.parseInteraction(responseFrom("""
                 {"state":"interactionRequired","action":"challenge","continuationToken":"existing",
