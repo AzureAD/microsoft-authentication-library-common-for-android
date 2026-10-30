@@ -24,7 +24,9 @@
 package com.microsoft.identity.common.unit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import android.os.Build;
@@ -37,6 +39,7 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -137,8 +140,23 @@ public class NativePsiPrtContractTest {
         assertEquals(35, API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.ordinal());
         assertEquals("/brokerApi/recoverPrtWithNativePsi",
                 API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.getPath());
-        assertEquals("5.1", API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.getBrokerVersion());
+        assertEquals("6.0", API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.getBrokerVersion());
         assertNull(API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.getMsalVersion());
+    }
+
+    @Test
+    public void nativeHostMinimum_preservesLegacyHostAndMsalNamespaces() {
+        final String nativeMinimum = API.BROKER_RECOVER_PRT_WITH_NATIVE_PSI.getBrokerVersion();
+        assertFalse(BrokerProtocolVersionUtil.isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                "5.0", nativeMinimum));
+        assertTrue(BrokerProtocolVersionUtil.isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                "6.0", nativeMinimum));
+        assertTrue(BrokerProtocolVersionUtil.isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                "5.0", API.BROKER_HELLO.getBrokerVersion()));
+        assertTrue(BrokerProtocolVersionUtil.isProvidedBrokerProtocolLargerOrEqualThanRequiredBrokerProtocol(
+                "5.0", API.BROKER_RESTORE_MSA_ACCOUNTS_WITH_TRANSFER_TOKENS.getBrokerVersion()));
+        assertNull(API.GENERATE_SHR.getBrokerVersion());
+        assertEquals("6.0", API.GENERATE_SHR.getMsalVersion());
     }
 
     @Test
@@ -184,7 +202,7 @@ public class NativePsiPrtContractTest {
                 Broker.NATIVE_PSI_PRT_RECOVERY_HANDLER_AVAILABLE);
         assertEquals("native_psi_prt_recovery_outcome_unknown",
                 ClientException.NATIVE_PSI_PRT_RECOVERY_OUTCOME_UNKNOWN);
-        assertEquals("5.1", Broker.computeMaxHostBrokerProtocol());
+        assertEquals("6.0", Broker.computeMaxHostBrokerProtocol());
         assertEquals("20.0", Broker.CLIENT_MAX_PROTOCOL_VERSION);
         assertEquals("13.0", Broker.DEFAULT_MAX_BROKER_PROTOCOL_VERSION);
         assertEquals(AuthenticationConstants.BrokerContentProvider.BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH,

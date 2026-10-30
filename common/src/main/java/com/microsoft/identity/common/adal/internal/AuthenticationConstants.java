@@ -1819,8 +1819,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
         private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
-        // Local candidate only; release allocation must be confirmed before publication.
-        private static final String BROKER_VERSION_NATIVE_PSI = "5.1";
+        private static final String BROKER_VERSION_6 = "6.0";
 
 
         /**
@@ -1869,7 +1868,7 @@ public final class AuthenticationConstants {
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
             GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
             BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null),
-            BROKER_RECOVER_PRT_WITH_NATIVE_PSI(BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH, BROKER_VERSION_NATIVE_PSI, null);
+            BROKER_RECOVER_PRT_WITH_NATIVE_PSI(BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH, BROKER_VERSION_6, null);
 
 
             /**

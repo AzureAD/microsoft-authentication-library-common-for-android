@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Add native PSI PRT recovery IPC declarations and positive HELLO handler capability, with opt-in bounded, strict UTF-8, non-redirecting HTTP transport and redacted IO errors
+- [MINOR] Add native PSI PRT recovery IPC declarations with host protocol 6.0 and positive HELLO handler capability, with opt-in bounded, strict UTF-8, non-redirecting HTTP transport and redacted IO errors
 - [PATCH] Refine onboarding telemetry by allowing per-invocation recorder lookup suppression without changing authentication correlation IDs or default lookup behavior for existing callers, and recording MDM enrollment start only for the enrollment fwlink destination; URL classification failures skip the telemetry step without changing Device-CA routing
 - [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)
 - [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)
