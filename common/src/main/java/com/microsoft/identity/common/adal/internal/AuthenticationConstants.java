@@ -1385,6 +1385,44 @@ public final class AuthenticationConstants {
         public static final String PRT_NONCE = "nonce";
 
         /**
+         * Compact ES256 JWT expected by the current native PSI caller and Broker implementation.
+         *
+         * <p>The wire value is three Base64URL-without-padding JWS segments:
+         * {@code header.payload.signature}. The PSI credential signs the ASCII
+         * {@code header.payload}; the signature segment contains the 64-byte JOSE {@code R || S}
+         * encoding, not the DER signature returned by the signing API. The header's {@code kid}
+         * retains the original registered credential identifier without re-encoding.
+         *
+         * <p>This is not an envelope for FIDO {@code signature}, {@code auth_data} and
+         * {@code clientDataJSON} fields, nor a signature over
+         * {@code authenticatorData || SHA256(clientDataJSON)}.
+         * Broker's {@code NativePsiPrtProofBuilder} validates the current compact shape and
+         * bindings; {@code NativePsiPrtRecoveryProtocol} places the unchanged string in the
+         * {@code assertion} claim of a separate WPJ device-key-signed RS256 JWT-bearer request.
+         * That implementation does not map this value into a {@code fido_signature} request.
+         *
+         * <p>Synthetic decoded example (illustrative values, not a valid or reusable assertion):
+         * <pre>
+         * header: {"alg":"ES256","kid":"AAECAw==","use":"ngc"}
+         * payload: {"iat":1700000000,"nbf":1700000000,"exp":1700000600,
+         *           "iss":"synthetic@example.invalid",
+         *           "aud":"29d9ed98-a469-4536-ade2-f981bc1d605e","scope":"openid",
+         *           "request_nonce":"synthetic-nonce",
+         *           "deviceid":"00000000-0000-0000-0000-000000000001"}
+         * </pre>
+         *
+         * <p>This documents the implementation, not confirmed service interoperability.
+         * Alignment with the separate GetPRTWithNGC FIDO design remains unresolved; the example
+         * does not establish service-mandated claims, encodings or lifetime requirements.
+         */
+        public static final String SIGNED_NATIVE_ASSERTION = "signed.native.assertion";
+
+        /**
+         * Original registered credential identifier, passed without re-encoding.
+         */
+        public static final String ORIGINAL_REGISTERED_CREDENTIAL_ID = "original.registered.credential.id";
+
+        /**
          * broker request type.
          */
         public static final String ACCOUNT_REQUEST_TYPE = "broker.request.type";
@@ -1620,6 +1658,20 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
+         * Boolean true only after native PSI response validation, key import and existing-account
+         * save return successfully. Does not promise durable persistence or token acquisition.
+         */
+        public static final String NATIVE_PSI_PRT_RECOVERY_SUCCEEDED = "native_psi_prt_recovery_succeeded";
+
+        /**
+         * HELLO response Boolean indicating that the native PSI PRT recovery handler is implemented.
+         * Clients require an exact true value in addition to the API's minimum protocol version.
+         * This does not indicate account-specific credential or storage eligibility.
+         * A stub or fail-closed placeholder must omit this key or return false.
+         */
+        public static final String NATIVE_PSI_PRT_RECOVERY_HANDLER_AVAILABLE = "native_psi_prt_recovery_handler_available";
+
+        /**
          * Boolean to return when broker flights is successfully set.
          */
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
@@ -1795,6 +1847,7 @@ public final class AuthenticationConstants {
         private static final String BROKER_VERSION_3 = THREE_POINT_ZERO;
         private static final String BROKER_VERSION_4 = FOUR_POINT_ZERO;
         private static final String BROKER_VERSION_5 = FIVE_POINT_ZERO;
+        private static final String BROKER_VERSION_6 = "6.0";
 
 
         /**
@@ -1842,7 +1895,8 @@ public final class AuthenticationConstants {
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
             GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
-            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null);
+            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null),
+            BROKER_RECOVER_PRT_WITH_NATIVE_PSI(BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH, BROKER_VERSION_6, null);
 
 
             /**
@@ -1952,6 +2006,11 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        /**
+         * Normal Broker API path for recovering an existing account's PRT using native PSI proof.
+         */
+        public static final String BROKER_API_RECOVER_PRT_WITH_NATIVE_PSI_PATH = "/brokerApi/recoverPrtWithNativePsi";
 
         /**
          * Broker api path constant for setting flight information.
