@@ -94,7 +94,6 @@ class NativeAuthV2JitResendTest {
                 assertEquals(scenario == NativeAuthV2FlowScenario.RESET_PASSWORD, it.isResetPasswordUpdateSubmitted())
                 if (scenario == NativeAuthV2FlowScenario.SIGN_UP) {
                     assertEquals(mapOf("displayName" to "Original"), it.pendingSignUpAttributesForSubmission())
-                    assertTrue(it.requiresSignUpPasswordRecollection())
                 }
             }
             // The newest response removed resend: never reuse a previous response's link.
@@ -167,7 +166,7 @@ class NativeAuthV2JitResendTest {
             scenario = scenario, claimsRequestJson = """{"id_token":{}}""")
         return when (scenario) {
             NativeAuthV2FlowScenario.SIGN_UP -> state.withPendingSignUpAttributes(
-                mapOf("displayName" to "Original"), true)
+                mapOf("displayName" to "Original"))
             NativeAuthV2FlowScenario.RESET_PASSWORD -> NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(state)
             else -> state
         }

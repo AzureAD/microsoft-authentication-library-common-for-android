@@ -1370,7 +1370,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * Starts the V2 sign-up flow: authorize-challenge start (sign-up scenario) → sign-up entry →
      * verification or attribute collection.
      *
-     * The entry posts the username and continuation token. An optional password and profile
+     * The entry posts the username and continuation token. Optional profile
      * attributes are retained until the first collect-attributes step, including across code
      * verification and resend. Depending on what the server
      * requests next this returns [NativeAuthV2CommandResult.CodeRequired] (email one-time code
@@ -1453,9 +1453,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in signUpStart", e)
             throw e
-        } finally {
-            // Also clear here in case flow setup fails before the interactor takes ownership.
-            StringUtil.overwriteWithNull(parameters.password)
         }
     }
 
@@ -1472,7 +1469,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * is rejected (retryable through the same state), [NativeAuthV2CommandResult.UserAlreadyExists],
      * or an [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
      * When verification or enrollment interrupted sign-up, retained profile values are merged
-     * only after validating caller keys; a recollected password completes that initial submission.
+     * only after validating caller keys. Passwords are supplied explicitly when requested.
      */
     fun submitAttributes(parameters: NativeAuthV2SubmitAttributesCommandParameters): NativeAuthV2SubmitAttributesCommandResult {
         LogSession.logMethodCall(
@@ -1490,14 +1487,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 return validationError
             }
             val pendingAttributes = parameters.continuationState.pendingSignUpAttributesForSubmission()
-            if (pendingAttributes != null &&
-                parameters.continuationState.requiresSignUpPasswordRecollection() &&
-                parameters.password?.isNotEmpty() != true
-            ) {
-                return NativeAuthV2CommandResult.PasswordRequired(
-                    parameters.getCorrelationId(), parameters.continuationState
-                )
-            }
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
             val result = performSignUpSubmitAttributes(
                 oAuth2Strategy = oAuth2Strategy,
@@ -1505,8 +1494,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 attributes = if (pendingAttributes == null) parameters.attributes else {
                     LinkedHashMap(pendingAttributes).apply { putAll(parameters.attributes) }
                 },
-                password = parameters.password
-                    ?: parameters.continuationState.pendingSignUpPasswordForSubmission(),
+                password = parameters.password,
                 upfront = null
             )
             return result as? NativeAuthV2SubmitAttributesCommandResult
@@ -1579,8 +1567,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(
                 if (upfront == null) result else result.copy(
                     continuationState = result.continuationState.withPendingSignUpAttributes(
-                        upfront.attributes.orEmpty(), upfront.password?.isNotEmpty() == true,
-                        upfront.password
+                        upfront.attributes.orEmpty()
                     )
                 )
             )
@@ -1595,8 +1582,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                         correlationId = result.correlationId,
                         continuationState = if (upfront == null) result.continuationState else {
                             result.continuationState.withPendingSignUpAttributes(
-                                upfront.attributes.orEmpty(), upfront.password?.isNotEmpty() == true,
-                                upfront.password
+                                upfront.attributes.orEmpty()
                             )
                         },
                         codeLength = result.codeLength,
@@ -1689,9 +1675,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Handles a sign-up `collectAttributes` step.
      *
-     * Email must never be collected as an attribute. Any upfront password/profile values are
-     * submitted once, even if verification or enrollment preceded collection. A password lost
-     * through state serialization is recollected rather than persisted.
+     * Email must never be collected as an attribute. Any upfront profile values are submitted
+     * once, even if verification or enrollment preceded collection.
      *
      * On any later step (no [upfront] or pending initial values) the server requests more information. A `password`
      * not yet submitted is surfaced as [NativeAuthV2CommandResult.PasswordRequired] so the app can
@@ -1718,30 +1703,21 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
         }
 
-        if (upfront != null &&
-            (upfront.attributes?.isNotEmpty() == true || upfront.password?.isNotEmpty() == true)) {
+        if (upfront?.attributes?.isNotEmpty() == true) {
             return performSignUpSubmitAttributes(
                 oAuth2Strategy = oAuth2Strategy,
                 state = nextState,
                 attributes = upfront.attributes.orEmpty(),
-                password = upfront.password,
                 upfront = null
             )
         }
 
         nextState.pendingSignUpAttributesForSubmission()?.let { pendingAttributes ->
-            if (nextState.requiresSignUpPasswordRecollection()) {
-                return NativeAuthV2CommandResult.PasswordRequired(
-                    attributesRequired.correlationId, nextState
-                )
-            }
-            val pendingPassword = nextState.pendingSignUpPasswordForSubmission()
-            if (pendingAttributes.isNotEmpty() || pendingPassword != null) {
+            if (pendingAttributes.isNotEmpty()) {
                 return performSignUpSubmitAttributes(
                     oAuth2Strategy = oAuth2Strategy,
                     state = nextState,
                     attributes = pendingAttributes,
-                    password = pendingPassword,
                     upfront = null
                 )
             }
