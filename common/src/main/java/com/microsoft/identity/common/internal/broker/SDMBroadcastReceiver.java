@@ -30,8 +30,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
@@ -52,6 +54,10 @@ import java.util.UUID;
  */
 public class SDMBroadcastReceiver {
     private static final String TAG = SDMBroadcastReceiver.class.getSimpleName();
+    @VisibleForTesting
+    static final long GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS = 5_000L;
+    private static final Object sThrottleLock = new Object();
+    private static long sLastGlobalSignOutElapsedRealtime = -GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS;
     private static BroadcastReceiver sSDMBroadcastReceiver;
 
     /**
@@ -85,11 +91,22 @@ public class SDMBroadcastReceiver {
      * @param intent The receive intent for SDM broadcast.
      * @param sharedDeviceModeCallback Callback to be called.
      */
-    private static void handleSharedDeviceModeBroadCast(@NonNull final Context context,
-                                                        @NonNull final Intent intent,
-                                                        @NonNull SharedDeviceModeCallback sharedDeviceModeCallback) {
-        final String methodTag = TAG + ":handleSharedDeviceModeBroadCast";
+    @VisibleForTesting
+    static void handleSharedDeviceModeBroadCast(@NonNull final Context context,
+                                                @NonNull final Intent intent,
+                                                @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
         final String broadcastType = intent.getStringExtra(SharedDeviceModeConstants.BROADCAST_TYPE_KEY);
+        if (SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT.equals(broadcastType)) {
+            synchronized (sThrottleLock) {
+                final long now = SystemClock.elapsedRealtime();
+                if (now - sLastGlobalSignOutElapsedRealtime < GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS) {
+                    return;
+                }
+                sLastGlobalSignOutElapsedRealtime = now;
+            }
+        }
+
+        final String methodTag = TAG + ":handleSharedDeviceModeBroadCast";
         Logger.info(methodTag, "Received SDM broadcast with type: " + broadcastType);
         try {
             final IPlatformComponents platformComponents = AndroidPlatformComponentsFactory.createFromContext(context);
@@ -124,6 +141,13 @@ public class SDMBroadcastReceiver {
             }
         } catch (final BaseException e) {
             Logger.error(methodTag, "Failed to handle SDM broadcast", e);
+        }
+    }
+
+    @VisibleForTesting
+    static void resetThrottleStateForTest() {
+        synchronized (sThrottleLock) {
+            sLastGlobalSignOutElapsedRealtime = -GLOBAL_SIGN_OUT_THROTTLE_WINDOW_MILLIS;
         }
     }
 
