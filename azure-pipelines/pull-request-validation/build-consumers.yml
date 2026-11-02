@@ -129,7 +129,6 @@ stages:
     - task: Gradle@3
       displayName: Run msal Unit tests
       inputs:
-        # Omit -Plabtest: network E2E tests belong in weekly/monthly validation, not PR validation.
         tasks: msal:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         jdkArchitecture: x64
         jdkVersionOption: "1.17"
