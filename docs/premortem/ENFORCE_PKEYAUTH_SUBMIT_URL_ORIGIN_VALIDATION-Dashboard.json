@@ -1,0 +1,674 @@
+{
+  "title": "Android Broker - PKeyAuth SubmitUrl Enforcement Rollout",
+  "tiles": [
+    {
+      "id": "0dc30240-aceb-4725-9729-7072c2397b2e",
+      "title": "",
+      "visualType": "markdownCard",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 18,
+        "height": 7
+      },
+      "markdownText": "# PKeyAuth SubmitUrl enforcement rollout\n\n**Choose a time range. Every panel uses that range; no rollout stage or start timestamp is required.**\n\nRollout cadence is planning guidance in the premortem, not a dashboard prerequisite. Health comparisons show rates, sample counts and review signals, not rollout approval. Expected REJECTED_* blocks are measured separately from allowed-only parent health.\n\n**Reference:** same-window shadow traffic when present; otherwise the frozen 2026-10-28 UTC baseline. The reference source and coverage are shown explicitly. Low samples do not hide the observed rates. Cloud=false means not validated/unknown, not proof of malicious traffic. Counts are sampled telemetry, not installed-device prevalence.",
+      "visualOptions": {}
+    },
+    {
+      "id": "892e91a9-b166-43dd-81c0-0ab1c9daa9aa",
+      "title": "Flight exposure and attribute completeness",
+      "visualType": "table",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 7,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "71939a55-ee78-4cc3-b8bd-1d873ee79a2b"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "99b665c2-76dc-4f1b-afa7-ed66fc74683d",
+      "title": "Sampled challenge requests by hour",
+      "visualType": "line",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 14,
+        "width": 18,
+        "height": 8
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "028f247f-c601-4ead-a3cf-73c432646d22"
+      },
+      "visualOptions": {
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "hideLegend": false,
+        "xColumnTitle": "",
+        "yColumnTitle": "",
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "columns": [],
+            "label": "",
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "xColumn": "Hour",
+        "yColumns": [
+          "Challenges",
+          "Rejected",
+          "Blocked"
+        ],
+        "seriesColumns": [
+          "Cohort"
+        ]
+      }
+    },
+    {
+      "id": "b6e51f73-7c39-4b9b-af06-21474efbad23",
+      "title": "Sampled challenge devices by hour",
+      "visualType": "line",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 22,
+        "width": 18,
+        "height": 8
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "407dda3a-3a58-4fc6-b984-61cf812dc29d"
+      },
+      "visualOptions": {
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "hideLegend": false,
+        "xColumnTitle": "",
+        "yColumnTitle": "",
+        "multipleYAxes": {
+          "base": {
+            "id": "-1",
+            "columns": [],
+            "label": "",
+            "yAxisMaximumValue": null,
+            "yAxisMinimumValue": null,
+            "yAxisScale": "linear",
+            "horizontalLines": []
+          },
+          "additional": [],
+          "showMultiplePanels": false
+        },
+        "xColumn": "Hour",
+        "yColumns": [
+          "Devices",
+          "MismatchDevices"
+        ],
+        "seriesColumns": [
+          "Cohort"
+        ]
+      }
+    },
+    {
+      "id": "3a4fc7ec-7070-4e7a-8d09-1611738660c9",
+      "title": "Validation verdicts (shadow versus enforced)",
+      "visualType": "table",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 30,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "297c4889-a3ff-4203-861a-5c0bc3f0b3f5"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "b9f94634-93c8-4d65-9cbb-83497c790e24",
+      "title": "Health comparison - selected time range",
+      "visualType": "table",
+      "pageId": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "layout": {
+        "x": 0,
+        "y": 37,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "063683e3-2f6b-44b1-b9b2-43760c15cbca"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": [
+          {
+            "id": "bb02864e-e886-48b4-8337-ad99c8647c7c",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": false,
+            "applyTo": "rows",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "State",
+                "values": [
+                  "WITHIN_THRESHOLD"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "green",
+            "tag": "",
+            "icon": null,
+            "ruleName": "",
+            "visualType": "table"
+          },
+          {
+            "id": "f9d9b62d-63b1-4858-9b67-e70882979f7a",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": false,
+            "applyTo": "rows",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "State",
+                "values": [
+                  "ABOVE_THRESHOLD"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "red",
+            "tag": "",
+            "icon": null,
+            "ruleName": "",
+            "visualType": "table"
+          },
+          {
+            "id": "180f4ceb-c13d-43fe-8494-209fe2e54002",
+            "ruleType": "colorByCondition",
+            "applyToColumn": null,
+            "hideText": false,
+            "applyTo": "rows",
+            "conditions": [
+              {
+                "operator": "==",
+                "column": "State",
+                "values": [
+                  "NO_ENFORCED_DATA",
+                  "LOW_SAMPLE",
+                  "NO_REFERENCE_DATA",
+                  "INCOMPLETE_TELEMETRY",
+                  "LOW_PARENT_COVERAGE",
+                  "LOW_REFERENCE_COVERAGE",
+                  "NOT_EVALUABLE",
+                  "REFERENCE_AFTER_SELECTED_WINDOW"
+                ]
+              }
+            ],
+            "chainingOperator": "and",
+            "colorStyle": "bold",
+            "color": "yellow",
+            "tag": "",
+            "icon": null,
+            "ruleName": "",
+            "visualType": "table"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e91343a9-2d93-4ddb-b045-b74a237e1597",
+      "title": "",
+      "visualType": "markdownCard",
+      "pageId": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 18,
+        "height": 4
+      },
+      "markdownText": "# Segment and outcome diagnostics\n\nAll panels use the selected time range and caller / broker host / app-version filters. HasMismatch=true parents are intentionally excluded from the compatibility comparison. Parent statuses and sampled repeats are directional proxies, not end-to-end success or proven retry loops. No URLs, hosts, nonces, credentials or device identifiers are returned.",
+      "visualOptions": {}
+    },
+    {
+      "id": "4e763da9-f86f-4235-b853-2f62a9e61232",
+      "title": "Caller, app, platform and broker breakdown",
+      "visualType": "table",
+      "pageId": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "layout": {
+        "x": 0,
+        "y": 4,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "676c0291-eec0-4e1e-b3af-c36108adecf8"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "0be9e96b-c79e-4c5a-a9d7-6edc0017013e",
+      "title": "Origin source, frame and cloud-validation flags",
+      "visualType": "table",
+      "pageId": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "layout": {
+        "x": 0,
+        "y": 11,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "fb954539-5107-45cd-94ea-61d58bd351da"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "8694aadd-0902-40d5-b7ac-89fd6dd6038a",
+      "title": "Deduplicated parent outcomes and join coverage",
+      "visualType": "table",
+      "pageId": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "layout": {
+        "x": 0,
+        "y": 18,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "a1d18391-d327-4238-9628-ddf9bc65a5ac"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    },
+    {
+      "id": "4236fb50-2024-4aae-a7b9-cf6d0ae74628",
+      "title": "Allowed-only repeat share (sampled device-day proxy)",
+      "visualType": "table",
+      "pageId": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "layout": {
+        "x": 0,
+        "y": 25,
+        "width": 18,
+        "height": 7
+      },
+      "queryRef": {
+        "kind": "query",
+        "queryId": "7c67fed1-3de1-4b6f-8522-178dc7bf290e"
+      },
+      "visualOptions": {
+        "table__enableRenderLinks": true,
+        "colorRulesDisabled": false,
+        "crossFilterDisabled": false,
+        "drillthroughDisabled": false,
+        "crossFilter": [],
+        "drillthrough": [],
+        "table__renderLinks": [],
+        "colorRules": []
+      }
+    }
+  ],
+  "dataSources": [
+    {
+      "id": "ae02c2b4-1c21-4164-85d7-cf571906bc0b",
+      "kind": "manual-kusto",
+      "scopeId": "kusto",
+      "name": "Broker production",
+      "clusterUri": "https://idsharedeus2.kusto.windows.net/",
+      "database": "ad-accounts-android-otel"
+    }
+  ],
+  "schema_version": 68,
+  "pagesNavWidth": 298,
+  "parameters": [
+    {
+      "kind": "duration",
+      "id": "00df9dee-33bb-461b-92c4-16c6a5ed37b6",
+      "displayName": "Time range",
+      "description": "",
+      "beginVariableName": "_startTime",
+      "endVariableName": "_endTime",
+      "defaultValue": {
+        "kind": "dynamic",
+        "count": 48,
+        "unit": "hours"
+      },
+      "showOnPages": {
+        "kind": "all"
+      }
+    },
+    {
+      "kind": "string",
+      "id": "3a84de1f-ac36-44d0-bc2c-24a786e69d97",
+      "displayName": "Calling package",
+      "description": "",
+      "variableName": "_caller",
+      "showOnPages": {
+        "kind": "all"
+      },
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "calling_package_name"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "1bcd7cab-da7d-40b9-abb4-6fd5364110b3"
+        }
+      }
+    },
+    {
+      "kind": "string",
+      "id": "91e321da-d538-4ecc-a55a-422dccf8fc6d",
+      "displayName": "Broker host",
+      "description": "",
+      "variableName": "_brokerHost",
+      "showOnPages": {
+        "kind": "all"
+      },
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "active_broker_package_name"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "166a7f74-4a1c-4c64-8828-e53885da2b94"
+        }
+      }
+    },
+    {
+      "kind": "string",
+      "id": "e9fcd40b-e0d7-4187-98d9-379f66b29851",
+      "displayName": "Host app version",
+      "description": "",
+      "variableName": "_appVersion",
+      "showOnPages": {
+        "kind": "all"
+      },
+      "selectionType": "array",
+      "includeAllOption": true,
+      "defaultValue": {
+        "kind": "all"
+      },
+      "dataSource": {
+        "kind": "query",
+        "columns": {
+          "value": "AppInfo_Version"
+        },
+        "queryRef": {
+          "kind": "query",
+          "queryId": "6c84cbd8-3a24-4bed-af8b-af58300da260"
+        }
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "5b2508d2-84a8-4376-8342-5e98e92fc71d",
+      "name": "Rollout health"
+    },
+    {
+      "id": "5e79f1ca-e73e-4496-ad01-abe8148ef7e4",
+      "name": "Diagnostics"
+    }
+  ],
+  "queries": [
+    {
+      "id": "1bcd7cab-da7d-40b9-abb4-6fd5364110b3",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "android_spans\n| where EventInfo_Time between (_startTime .. min_of(_endTime, now()))\n| where span_name == \"ProcessPKeyAuthChallenge\"\n| distinct calling_package_name\n| order by calling_package_name asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime"
+      ]
+    },
+    {
+      "id": "166a7f74-4a1c-4c64-8828-e53885da2b94",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "android_spans\n| where EventInfo_Time between (_startTime .. min_of(_endTime, now()))\n| where span_name == \"ProcessPKeyAuthChallenge\"\n| distinct active_broker_package_name\n| order by active_broker_package_name asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime"
+      ]
+    },
+    {
+      "id": "6c84cbd8-3a24-4bed-af8b-af58300da260",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "android_spans\n| where EventInfo_Time between (_startTime .. min_of(_endTime, now()))\n| where span_name == \"ProcessPKeyAuthChallenge\"\n| distinct AppInfo_Version\n| order by AppInfo_Version asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime"
+      ]
+    },
+    {
+      "id": "71939a55-ee78-4cc3-b8bd-1d873ee79a2b",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| summarize Challenges = count(), Devices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id)),\n    Rejected = countif(IsRejected), Blocked = countif(IsRejected and Enforced == true),\n    MissingAttributes = countif(not(Complete)),\n    UnexpectedVerdicts = countif(Verdict !in (\"ALLOWED\", \"REJECTED_ORIGIN_MISMATCH\",\n        \"REJECTED_SUBMIT_NOT_HTTPS\", \"REJECTED_ORIGIN_UNRESOLVABLE\", \"REJECTED_BACKSLASH_AUTHORITY\"))\n    by Cohort\n| extend RejectedPct = round(100.0 * Rejected / Challenges, 3)\n| order by Cohort asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "028f247f-c601-4ead-a3cf-73c432646d22",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| summarize Challenges = count(), Rejected = countif(IsRejected),\n    Blocked = countif(IsRejected and Enforced == true) by Hour = bin(EventInfo_Time, 1h), Cohort\n| order by Hour asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "407dda3a-3a58-4fc6-b984-61cf812dc29d",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| summarize Devices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id)),\n    MismatchDevices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id) and IsRejected)\n    by Hour = bin(EventInfo_Time, 1h), Cohort\n| order by Hour asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "297c4889-a3ff-4203-861a-5c0bc3f0b3f5",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| summarize Challenges = count(), Devices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id))\n    by Cohort, Verdict\n| order by Challenges desc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "063683e3-2f6b-44b1-b9b2-43760c15cbca",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nlet Links = Base\n    | where isnotempty(trace_id) and isnotempty(ParentId)\n    | summarize EnforcedCount = countif(Cohort == \"enforced\"),\n        ShadowCount = countif(Cohort == \"shadow\"), UnknownCount = countif(Cohort == \"unknown\"),\n        HasMismatch = countif(IsRejected) > 0,\n        arg_max(EventInfo_Time, DeviceInfo_Id, AppVersion, BrokerHost, Caller)\n        by trace_id, ParentId\n    | extend Cohort = case(UnknownCount > 0, \"unknown\",\n        EnforcedCount > 0 and ShadowCount > 0, \"mixed\",\n        EnforcedCount > 0, \"enforced\", \"shadow\");\nlet Parents = android_spans\n    | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))\n    | where span_name in (\"AcquireTokenInteractive\", \"ATIInteractively\", \"WorkplaceJoin\")\n    | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,\n        ParentStatus = span_status, ParentError = error_code\n    | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;\nlet Linked = materialize(Links\n    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId\n    | extend Matched = isnotempty(ParentName),\n        ErrorOrCode = ParentStatus =~ \"ERROR\" or isnotempty(ParentError),\n        Cancelled = tolower(ParentError) contains \"cancel\"\n);\nlet ChallengeCounts = Base\n    | summarize Challenges = count(), Rejected = countif(IsRejected) by Cohort;\nlet ParentCounts = Linked\n    | summarize LinkedParents = count(), MatchedParents = countif(Matched),\n        AllowedParents = countif(Matched and not(HasMismatch)),\n        ErrorParents = countif(Matched and not(HasMismatch) and ErrorOrCode),\n        CancelParents = countif(Matched and not(HasMismatch) and Cancelled)\n        by Cohort;\nlet RetryCounts = Linked\n    | where Matched and not(HasMismatch) and isnotempty(DeviceInfo_Id)\n    | summarize Attempts = count() by Cohort, Day = bin(EventInfo_Time, 1d), DeviceInfo_Id,\n        AppVersion, BrokerHost, Caller\n    | summarize DeviceDays = count(), RepeatParents = sum(Attempts - 1) by Cohort;\nlet Observed = ChallengeCounts\n    | join kind=leftouter ParentCounts on Cohort\n    | join kind=leftouter RetryCounts on Cohort;\nlet FrozenBaseline = datatable(\n    AppVersion:string, BrokerHost:string, Caller:string, Challenges:long, Rejected:long,\n    AllowedParents:long, ErrorParents:long, CancelParents:long, DeviceDays:long, RepeatParents:long\n)[\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.teams\", 22944, 351, 17337, 13237, 7015, 14393, 2944,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.azure.authenticator\", 19012, 144, 10360, 8619, 4094, 8724, 1636,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.outlook\", 15632, 252, 11999, 8139, 3413, 10781, 1218,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.teams\", 7495, 157, 5535, 4166, 2335, 4509, 1026,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.outlook\", 7133, 144, 5415, 3246, 1233, 4978, 437,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.azure.authenticator\", 2602, 24, 1677, 1445, 824, 1371, 306,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.teams\", 1747, 42, 1290, 987, 522, 1082, 208,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.outlook\", 1697, 31, 1310, 810, 294, 1213, 97,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.windowsintune.companyportal\", 1548, 149, 1237, 1235, 122, 1173, 64,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.emmx\", 1404, 37, 972, 838, 546, 831, 141,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.azure.authenticator\", 890, 12, 492, 409, 200, 427, 65,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.teams\", 868, 11, 634, 465, 243, 545, 89,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.office.outlook\", 633, 8, 505, 332, 128, 448, 57,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.intune\", 632, 16, 574, 569, 38, 549, 25,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.windowsintune.companyportal\", 625, 40, 530, 530, 47, 509, 21,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.azure.authenticator\", 617, 10, 397, 346, 195, 325, 72,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.officehubrow\", 612, 7, 371, 314, 200, 339, 32,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.msapps\", 595, 35, 426, 356, 160, 345, 81,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.skydrive\", 577, 12, 334, 283, 181, 297, 37,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.emmx\", 518, 11, 309, 265, 198, 238, 71,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.skydrive\", 344, 14, 224, 174, 107, 203, 21,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.officehubrow\", 287, 10, 193, 165, 98, 178, 15,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.getvymo.android.intune\", 285, 0, 237, 37, 27, 212, 25,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.infosys.it.infosysitapp\", 245, 0, 202, 202, 186, 119, 83,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.excel\", 219, 3, 143, 119, 70, 136, 7,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.word\", 204, 13, 128, 104, 60, 118, 10,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.rdc.androidx\", 198, 5, 157, 44, 17, 134, 23,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.word\", 183, 11, 127, 89, 54, 112, 15,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.msapps\", 179, 9, 136, 109, 64, 100, 36,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.excel\", 127, 4, 88, 74, 45, 81, 7,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.windowsintune.companyportal\", 120, 7, 103, 103, 8, 101, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.samsung.android.email.provider\", 119, 3, 85, 49, 23, 79, 6,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"xdk.intel.cordova.template.eTMSBuddy\", 112, 0, 62, 56, 49, 57, 5,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.scmx\", 111, 5, 82, 75, 19, 81, 1,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.samsung.android.email.provider\", 94, 4, 65, 38, 22, 58, 7,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.emmx\", 92, 1, 68, 57, 41, 59, 9,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.zebra.workcloud.shift\", 82, 0, 58, 26, 16, 49, 9,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.windowsintune.companyportal\", 79, 7, 65, 65, 5, 62, 3,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.sec.android.app.myfiles\", 78, 0, 29, 25, 21, 28, 1,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.skydrive\", 75, 1, 44, 29, 20, 42, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.sharepoint\", 71, 2, 50, 42, 19, 46, 4,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.powerbim\", 71, 0, 53, 41, 18, 45, 8,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.promobitech.mobilock.pro\", 68, 0, 63, 63, 0, 59, 4,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.airwatch.androidagent\", 68, 2, 64, 64, 6, 62, 2,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.officehubrow\", 67, 1, 37, 29, 18, 31, 6,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.todos\", 64, 0, 42, 33, 16, 36, 6,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.rim.mobilefusion.client\", 60, 14, 37, 37, 6, 35, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.sec.android.app.myfiles\", 56, 0, 29, 25, 21, 29, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.emmx\", 52, 0, 44, 41, 28, 35, 9,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.samsung.android.knox.kam\", 50, 49, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.sharepoint\", 50, 2, 27, 23, 11, 23, 4,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.word\", 45, 4, 28, 21, 12, 28, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mobileiron.anyware.android\", 43, 0, 42, 42, 3, 35, 7,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.skydrive\", 42, 0, 23, 19, 8, 22, 1,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.msapps\", 38, 0, 32, 26, 17, 21, 11,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.office.officehubrow\", 37, 2, 21, 18, 12, 17, 4,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.excel\", 37, 1, 26, 25, 21, 21, 5,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.yammer.v1\", 36, 0, 18, 17, 10, 13, 5,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.launcher.enterprise\", 36, 16, 19, 11, 10, 17, 2,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.zebra.workcloud.shift\", 31, 0, 30, 15, 12, 27, 3,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.powerpoint\", 30, 1, 15, 12, 10, 13, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.scg.hqapp\", 30, 0, 18, 2, 2, 16, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.powerpoint\", 29, 1, 18, 14, 10, 18, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.rdc.androidx\", 27, 1, 21, 9, 5, 20, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.amazon.enterprise.access.android\", 27, 0, 25, 25, 1, 25, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"ca.gc.forces.navymarine.myrcn\", 26, 0, 23, 18, 1, 23, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.intune\", 24, 1, 23, 23, 1, 23, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.samsung.android.email.provider\", 24, 1, 18, 16, 8, 14, 4,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.outlooklite\", 23, 1, 10, 10, 7, 9, 1,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.scmx\", 23, 2, 20, 20, 5, 20, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.onenote\", 22, 0, 19, 14, 3, 19, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.powerbim\", 21, 2, 17, 14, 7, 15, 2,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.aisense.otter\", 20, 0, 4, 4, 4, 3, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nml.fxelectrodetest\", 20, 0, 1, 1, 1, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.msapps\", 16, 0, 14, 13, 4, 11, 3,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"ca.forces.dmpap.caf.pay\", 16, 0, 15, 5, 2, 12, 3,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.zimperium.zips\", 15, 0, 13, 13, 5, 12, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.axisbank.oneaxis.empappmanaged\", 14, 0, 11, 11, 2, 10, 1,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.sec.android.app.myfiles\", 14, 0, 6, 5, 5, 6, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.microsoft.teams\", 13, 0, 11, 9, 6, 8, 3,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.cognizant.onecognizant\", 13, 0, 2, 2, 2, 1, 1,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.azure.authenticator\", 13, 0, 7, 7, 5, 6, 1,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.samsung.android.email.provider\", 12, 0, 5, 4, 3, 4, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.adobe.reader\", 12, 0, 6, 5, 4, 5, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.talana.next\", 12, 0, 2, 2, 2, 1, 1,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.scmx\", 11, 0, 6, 6, 4, 4, 2,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.todos\", 11, 0, 8, 5, 2, 8, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.microsoft.office.outlook\", 11, 0, 11, 8, 0, 9, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.fiberlink.maas360.android.control\", 10, 0, 10, 10, 1, 8, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.uhg.mobile.sparqgo\", 10, 0, 8, 8, 1, 8, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.crm.crmphone.fieldServices\", 10, 0, 8, 2, 1, 8, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.zebra.mdna.els\", 10, 0, 9, 2, 0, 9, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.crm.crmphone.fieldServices\", 10, 0, 10, 6, 4, 9, 1,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.powerbim\", 10, 0, 8, 7, 2, 8, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.axisbank.vision.biometric\", 10, 2, 6, 6, 1, 4, 2,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.sharepoint\", 9, 5, 2, 2, 0, 2, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.getvymo.android.intune\", 9, 0, 9, 1, 1, 9, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.onenote\", 9, 0, 7, 6, 1, 7, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.rdc.androidx\", 8, 0, 8, 6, 3, 7, 1,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.infosys.it.infosysitapp\", 8, 0, 8, 8, 8, 3, 5,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.abm.prd.TeamConnectMAUI\", 8, 0, 7, 3, 3, 5, 2,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.yammer.v1\", 7, 0, 4, 3, 3, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.statefarm.myoffice\", 7, 0, 6, 6, 5, 1, 5,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.getvymo.android.intune\", 7, 0, 7, 0, 0, 6, 1,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"ca.gc.forces.navymarine.myrcn\", 7, 0, 7, 7, 0, 7, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.skype.teams.ipphone\", 7, 0, 6, 6, 0, 5, 1,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.powerpoint\", 7, 1, 4, 2, 1, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.planner\", 7, 0, 7, 3, 2, 5, 2,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.zimperium.zips\", 6, 0, 6, 6, 1, 6, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.getvymo.android.intune\", 6, 0, 3, 1, 1, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mobileiron\", 6, 0, 6, 6, 1, 4, 2,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.zebra.workcloud.shift\", 6, 0, 5, 3, 2, 5, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.office.word\", 6, 1, 4, 4, 3, 4, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.promobitech.mobilock.pro\", 6, 0, 6, 6, 0, 6, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.ms.office365admin\", 6, 1, 4, 3, 2, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.ninefolders.hd3\", 6, 0, 6, 1, 1, 6, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"ca.forces.dmpap.caf.pay\", 6, 0, 5, 5, 0, 5, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.rdc.androidx.beta\", 6, 0, 4, 1, 0, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.lumapps.android\", 6, 0, 2, 2, 2, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.axisbank.siddhi.v3\", 5, 1, 4, 4, 1, 2, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.marksandspencer.yourmns\", 5, 0, 5, 1, 0, 5, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"net.soti.mobicontrol.androidwork\", 5, 0, 4, 3, 0, 4, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.yammer.v1\", 5, 0, 3, 2, 0, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.azure\", 5, 0, 3, 3, 1, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.suth.onesutherland\", 5, 0, 4, 1, 1, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.good.gcs\", 4, 0, 4, 4, 1, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.Slack.intune\", 4, 0, 4, 2, 1, 4, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.airwatch.androidagent\", 4, 0, 4, 4, 0, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"us.zoom.videomeetings4intune\", 4, 0, 3, 3, 3, 2, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.crm.crmphone.sales\", 4, 0, 3, 3, 1, 3, 0,\n    \"1.26101.103.0-beta\", \"com.microsoft.appmanager\", \"com.microsoft.teams\", 4, 0, 3, 3, 2, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.loop\", 4, 0, 4, 3, 0, 4, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"ma.dista.axisbank\", 4, 0, 2, 2, 0, 2, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.microsoft.emmx\", 3, 0, 3, 1, 0, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.axisbank.siddhi.cug\", 3, 0, 3, 3, 3, 3, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.adani.aahluc\", 3, 0, 3, 1, 1, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.dcsg.relos\", 3, 0, 3, 3, 3, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.deloitte.dnmobile.trueview.store\", 3, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.lntecc.wisaworkernxt\", 3, 0, 2, 0, 0, 2, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.loop\", 3, 0, 2, 2, 1, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.medtrix\", 3, 0, 3, 0, 0, 3, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.mobileiron.anyware.android\", 3, 0, 3, 3, 0, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.hcl.hclempower\", 3, 0, 3, 0, 0, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.dynamics.ProjectMadeira\", 3, 0, 2, 0, 0, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.todos\", 3, 0, 3, 1, 1, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.sidelineassist\", 3, 0, 3, 2, 1, 3, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.office.excel\", 3, 0, 3, 1, 0, 3, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.statefarm.myoffice\", 3, 0, 3, 3, 3, 2, 1,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.rdc.androidx.beta\", 3, 0, 2, 0, 0, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.pvcombank.mypvcb.production\", 3, 0, 3, 0, 0, 1, 2,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.samsung.android.app.reminder\", 3, 0, 2, 2, 2, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.onenote\", 3, 2, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.centegy.deliveryapp\", 3, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.priavo.optum\", 3, 0, 3, 1, 0, 3, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"net.phoneappli.people\", 3, 0, 3, 3, 3, 3, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.scmx\", 3, 2, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.clomo.android.mdm\", 3, 2, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.Slack.intune\", 3, 1, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.beaumanoir.rembo\", 2, 0, 2, 1, 1, 2, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.reflexisinc.mywork17\", 2, 0, 2, 1, 0, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"au.com.axion.mywork\", 2, 0, 2, 2, 1, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.outlooklite\", 2, 0, 2, 2, 1, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.elearningforce.LMS\", 2, 0, 2, 0, 0, 2, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.rdc.androidx\", 2, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mitie.mijobsforte.internal\", 2, 0, 2, 1, 1, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mboamersfoort.app\", 2, 0, 2, 2, 1, 2, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"us.zoom.videomeetings4intune\", 2, 0, 2, 2, 2, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.fmr.mobile.workplaceexperience\", 2, 0, 2, 2, 0, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.abm.sit.TeamConnectMAUI\", 2, 0, 2, 1, 1, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"ca.forces.dmpap.caf.pay\", 2, 0, 2, 2, 0, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.pmi.store.PMIAPPM06901\", 2, 0, 2, 1, 1, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.parentsquare.psapp\", 2, 0, 2, 0, 0, 2, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.adobe.reader\", 2, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.vodacom.truesa\", 2, 0, 1, 1, 1, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.gm.fpr\", 2, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"io.zygal.viewer\", 2, 0, 2, 2, 2, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.lntecc.WorkmanAnnexure\", 2, 0, 2, 1, 0, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.lookout.enterprise\", 2, 0, 2, 2, 1, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"co.switchapp\", 2, 0, 2, 0, 0, 2, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.uhg.mobile.sparqgo\", 2, 0, 2, 2, 0, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.scg.hqapp\", 2, 0, 2, 0, 0, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"pe.compartamos.tcg.kallpacg\", 2, 0, 2, 1, 0, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.leadsquared.nextgen\", 2, 0, 2, 0, 0, 2, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.app.wellable\", 2, 0, 2, 2, 2, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.infosys.it.infosysitapp\", 2, 0, 2, 2, 0, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.bluefletch.ems.emm.auth.ross\", 2, 0, 2, 2, 1, 1, 1,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.intune.aospagent\", 2, 0, 2, 2, 0, 2, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"xdk.intel.cordova.template.eTMSBuddy\", 2, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.workvivo.android\", 2, 0, 0, 0, 0, 0, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.leadsquared.nextgen\", 2, 0, 0, 0, 0, 0, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"xdk.intel.cordova.template.eTMSBuddy\", 2, 0, 0, 0, 0, 0, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.sodexo.safetysalus\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.abi.interaction\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.clomo.android.mdm\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"se.awaio.awaioapp\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.smartsheet.android\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.ringcentral.intune\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.planner\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.axisbank.oneaxis.empappmanaged\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.uhg.mobile.sparqgo\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.sec.android.app.myfiles\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"co.switchapp.beta\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nuraspace.app.android\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"br.com.zaruc.plmandroid.energisa.cloud\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.infosys.it.infosysitapp\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mobileiron.android.emailplus\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.cxapp.mymutual\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"co.switchapp\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.earthsoft.equiscollect\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.symphony.android.messaging.intune\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.axisbank.siddhi.v3\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.mcafee.mvision\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"io.zynq.seating\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.bookkercorporate.b2b\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.sds.emm.cloud.knox.samsung\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.zebra.workcloud.shift\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.scg.hqapp\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.yammer.v1\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.ms.office365admin\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nvoq.sayitdictationkeyboard\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.huawei.email\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.103.0-beta\", \"com.microsoft.appmanager\", \"com.microsoft.emmx\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.kiem.app\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.moveinsync.ets\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.amazon.enterprise.access.android\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.office.officelens\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.reflexisinc.mywork17\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.magentatechnology.booking.emirates\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.lntgroup.wisastaff\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.android.email\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.dukeenergy.dukeemployee\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.emmx.canary\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.imprivata.imda\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.dukeenergy.dukeemployee\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nvoq.dictationkeyboard\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"in.bankofbaroda.rm360\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"io.island.island.intune\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.centegy.deliveryapp2\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.microsoft.todos\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"jp.co.vinx.mdbohht_test\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.abb.smarttracker\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.moviuscorp.multilineforintune\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.airwatch.androidagent\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.crm.crmphone.fieldServices\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.dow.cfp.rls\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.microsoft.dragoncopilot\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.ccamatil.id.roam.sales.oneroam\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nix\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.scg.hqapp\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.zimperium.zips\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.nuraspace.app.android.ourspace\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.fractal.fms.production\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.squint.mobile.ar.prod\", 1, 0, 1, 0, 0, 1, 0,\n    \"5.0.7139.0\", \"com.microsoft.windowsintune.companyportal\", \"com.microsoft.windowsintune.companyportal\", 1, 0, 1, 1, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.efima.puhekirjaus.dev\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.gm.fpr\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"us.zoom.videomeetings4intune\", 1, 0, 1, 1, 1, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.onfly.app\", 1, 0, 1, 1, 1, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.zimperium.zips\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.onfly.app\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.office.lync15\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.suth.onesutherland\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.dukeenergy.dukeemployee\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.ninefolders.hd3\", 1, 1, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.exyteqor\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.talonsec.intune.talon\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.smartsheet.android\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"se.awaio.awaioapp\", 1, 0, 1, 0, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.pmi.store.PMIAPPM06901\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.rim.mobilefusion.client\", 1, 1, 0, 0, 0, 0, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.vodacom.truesa\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.iconicsuk.ibss.roamer\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"ua.com.whtech.selfie\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.unily.caterpillar.catwork\", 1, 0, 1, 1, 0, 1, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.prompthrdenstsply\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.centegy.deliveryapp2\", 1, 0, 0, 0, 0, 0, 0,\n    \"1.26101.106.0-beta\", \"com.microsoft.appmanager\", \"com.sec.android.app.myfiles\", 1, 1, 0, 0, 0, 0, 0,\n    \"6.2610.7075\", \"com.azure.authenticator\", \"com.smartsheet.android\", 1, 1, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.emmx.canary\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.gobright.brightbooking\", 1, 0, 0, 0, 0, 0, 0,\n    \"1.26101.106.0\", \"com.microsoft.appmanager\", \"com.microsoft.planner\", 1, 0, 0, 0, 0, 0, 0,\n    \"1.26101.103.0\", \"com.microsoft.appmanager\", \"com.nuraspace.app.android\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.lookout.enterprise\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.microsoft.launcher\", 1, 0, 1, 0, 0, 1, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.btg.pactual.autonomousagent.mobile\", 1, 0, 0, 0, 0, 0, 0,\n    \"6.2609.6214\", \"com.azure.authenticator\", \"com.skyguard.s4h\", 1, 0, 0, 0, 0, 0, 0\n];\nlet ShadowChallenges = toscalar(Observed | where Cohort == \"shadow\" | summarize sum(Challenges));\nlet UseHistorical = ShadowChallenges == 0;\nlet FrozenSelected = FrozenBaseline\n    | where isnull(_appVersion) or AppVersion in (_appVersion)\n| where isnull(_brokerHost) or BrokerHost in (_brokerHost)\n| where isnull(_caller) or Caller in (_caller);\nlet EnforcedKeys = Base | where Cohort == \"enforced\"\n    | summarize KeyChallenges = count() by AppVersion, BrokerHost, Caller;\nlet Historical = FrozenSelected\n    | join kind=inner EnforcedKeys on AppVersion, BrokerHost, Caller\n    | summarize Challenges = sum(Challenges), Rejected = sum(Rejected),\n        AllowedParents = sum(AllowedParents), ErrorParents = sum(ErrorParents),\n        CancelParents = sum(CancelParents), DeviceDays = sum(DeviceDays),\n        RepeatParents = sum(RepeatParents), CoveredChallenges = sum(KeyChallenges);\nlet Reference = union\n    (Observed | where not(UseHistorical) and Cohort == \"shadow\"\n        | project Challenges, Rejected, AllowedParents, ErrorParents, CancelParents,\n            DeviceDays, RepeatParents),\n    (Historical | where UseHistorical\n        | project Challenges, Rejected, AllowedParents, ErrorParents, CancelParents,\n            DeviceDays, RepeatParents);\nlet E = Observed | where Cohort == \"enforced\";\nlet EChallenges = toscalar(E | project Challenges);\nlet EParents = toscalar(E | project AllowedParents);\nlet RChallenges = toscalar(Reference | project Challenges);\nlet RParents = toscalar(Reference | project AllowedParents);\nlet ParentCoveragePct = toscalar(E | project 100.0 * MatchedParents / LinkedParents);\nlet HistoricalCoveragePct = 100.0 * toscalar(Historical | project CoveredChallenges) / EChallenges;\nlet Incomplete = toscalar(Base | summarize countif(not(Complete)));\nlet MixedParents = toscalar(Linked | summarize countif(Cohort in (\"mixed\", \"unknown\")));\nlet ERejectPct = 100.0 * toscalar(E | project Rejected) / EChallenges;\nlet RRejectPct = 100.0 * toscalar(Reference | project Rejected) / RChallenges;\nlet EErrorPct = 100.0 * toscalar(E | project ErrorParents) / EParents;\nlet RErrorPct = 100.0 * toscalar(Reference | project ErrorParents) / RParents;\nlet ECancelPct = 100.0 * toscalar(E | project CancelParents) / EParents;\nlet RCancelPct = 100.0 * toscalar(Reference | project CancelParents) / RParents;\nlet ERetryPct = 100.0 * toscalar(E | project RepeatParents) /\n    toscalar(E | project DeviceDays + RepeatParents);\nlet RRetryPct = 100.0 * toscalar(Reference | project RepeatParents) /\n    toscalar(Reference | project DeviceDays + RepeatParents);\nunion\n    (print Metric = \"Rejected challenges\", CurrentPct = ERejectPct, ReferencePct = RRejectPct,\n        ThresholdPct = max_of(RRejectPct + 0.5, 1.5 * RRejectPct),\n        CurrentSamples = EChallenges, ReferenceSamples = RChallenges, SampleGuide = 500),\n    (print Metric = \"Allowed-only parent errors/codes\", CurrentPct = EErrorPct, ReferencePct = RErrorPct,\n        ThresholdPct = max_of(RErrorPct + 0.1, 1.25 * RErrorPct),\n        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200),\n    (print Metric = \"Allowed-only parent cancellations\", CurrentPct = ECancelPct, ReferencePct = RCancelPct,\n        ThresholdPct = max_of(RCancelPct + 0.1, 1.25 * RCancelPct),\n        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200),\n    (print Metric = \"Repeat share (sampled device-day proxy)\", CurrentPct = ERetryPct, ReferencePct = RRetryPct,\n        ThresholdPct = max_of(RRetryPct + 5.0, 1.25 * RRetryPct),\n        CurrentSamples = EParents, ReferenceSamples = RParents, SampleGuide = 200)\n| extend WindowStart, WindowEnd,\n    ReferenceSource = iff(UseHistorical, \"Frozen 2026-10-28 UTC shadow (matching app/host/caller keys)\", \"Contemporaneous shadow; same selected window and filters\"),\n    ParentCoveragePct,\n    HistoricalCoveragePct = iff(UseHistorical, HistoricalCoveragePct, real(null)),\n    State = case(isnull(EChallenges) or EChallenges == 0, \"NO_ENFORCED_DATA\",\n        Incomplete > 0 or MixedParents > 0, \"INCOMPLETE_TELEMETRY\",\n        isnull(ReferenceSamples) or ReferenceSamples == 0, \"NO_REFERENCE_DATA\",\n        isnull(CurrentSamples) or CurrentSamples < SampleGuide or ReferenceSamples < SampleGuide, \"LOW_SAMPLE\",\n        UseHistorical and WindowEnd < datetime(2026-10-29T00:00:00Z), \"REFERENCE_AFTER_SELECTED_WINDOW\",\n        UseHistorical and (isnull(HistoricalCoveragePct) or HistoricalCoveragePct < 95.0), \"LOW_REFERENCE_COVERAGE\",\n        Metric != \"Rejected challenges\" and (isnull(ParentCoveragePct) or ParentCoveragePct < 95.0), \"LOW_PARENT_COVERAGE\",\n        isnull(CurrentPct) or isnull(ReferencePct), \"NOT_EVALUABLE\",\n        CurrentPct > ThresholdPct, \"ABOVE_THRESHOLD\", \"WITHIN_THRESHOLD\")\n| project Metric, State, WindowStart, WindowEnd, CurrentSamples, ReferenceSamples, SampleGuide,\n    CurrentPct = round(CurrentPct, 3), ReferencePct = round(ReferencePct, 3),\n    ThresholdPct = round(ThresholdPct, 3), ParentCoveragePct, HistoricalCoveragePct, ReferenceSource",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "676c0291-eec0-4e1e-b3af-c36108adecf8",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| summarize Challenges = count(), Rejected = countif(IsRejected),\n    Devices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id)),\n    MismatchDevices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id) and IsRejected)\n    by Cohort, Caller, AppVersion, BrokerHost, BrokerVersion, AndroidVersion, Make\n| extend RejectedPct = round(100.0 * Rejected / Challenges, 3)\n| order by Rejected desc, Challenges desc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "fb954539-5107-45cd-94ea-61d58bd351da",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nBase\n| extend SubmitCloud = case(SubmitValidated == true, \"validated AAD\", SubmitValidated == false,\n        \"not validated / unknown\", \"missing\"),\n    ChallengerCloud = case(ChallengerValidated == true, \"validated AAD\", ChallengerValidated == false,\n        \"not validated / unknown\", \"missing\")\n| summarize Challenges = count(), Devices = dcountif(DeviceInfo_Id, isnotempty(DeviceInfo_Id))\n    by Cohort, Verdict, OriginSource, MainFrame, SubmitCloud, ChallengerCloud\n| order by Challenges desc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "a1d18391-d327-4238-9628-ddf9bc65a5ac",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nlet Links = Base\n    | where isnotempty(trace_id) and isnotempty(ParentId)\n    | summarize EnforcedCount = countif(Cohort == \"enforced\"),\n        ShadowCount = countif(Cohort == \"shadow\"), UnknownCount = countif(Cohort == \"unknown\"),\n        HasMismatch = countif(IsRejected) > 0,\n        arg_max(EventInfo_Time, DeviceInfo_Id, AppVersion, BrokerHost, Caller)\n        by trace_id, ParentId\n    | extend Cohort = case(UnknownCount > 0, \"unknown\",\n        EnforcedCount > 0 and ShadowCount > 0, \"mixed\",\n        EnforcedCount > 0, \"enforced\", \"shadow\");\nlet Parents = android_spans\n    | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))\n    | where span_name in (\"AcquireTokenInteractive\", \"ATIInteractively\", \"WorkplaceJoin\")\n    | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,\n        ParentStatus = span_status, ParentError = error_code\n    | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;\nlet Linked = materialize(Links\n    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId\n    | extend Matched = isnotempty(ParentName),\n        ErrorOrCode = ParentStatus =~ \"ERROR\" or isnotempty(ParentError),\n        Cancelled = tolower(ParentError) contains \"cancel\"\n);\nLinked\n| summarize Parents = count(), ErrorsOrCodes = countif(ErrorOrCode),\n    Cancellations = countif(Cancelled) by Cohort, Matched, HasMismatch, ParentName, ParentStatus, ParentError\n| order by Parents desc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    },
+    {
+      "id": "7c67fed1-3de1-4b6f-8522-178dc7bf290e",
+      "dataSource": {
+        "kind": "inline",
+        "dataSourceId": "ae02c2b4-1c21-4164-85d7-cf571906bc0b"
+      },
+      "text": "let WindowStart = _startTime;\nlet WindowEnd = min_of(_endTime, now());\nlet Base = materialize(\n    android_spans\n    | where EventInfo_Time between (WindowStart .. WindowEnd)\n    | where span_name == \"ProcessPKeyAuthChallenge\"\n    | where isnull(_appVersion) or AppInfo_Version in (_appVersion)\n| where isnull(_brokerHost) or active_broker_package_name in (_brokerHost)\n| where isnull(_caller) or calling_package_name in (_caller)\n    | project EventInfo_Time, trace_id, ParentId = parent_span_id, DeviceInfo_Id,\n        AppVersion = AppInfo_Version, BrokerHost = active_broker_package_name,\n        Caller = calling_package_name, BrokerVersion = broker_version,\n        AndroidVersion = DeviceInfo_OsVersion, Make = DeviceInfo_Make,\n        Verdict = pkeyauth_submit_url_origin_validation_result,\n        Enforced = pkeyauth_submit_url_origin_validation_enforced,\n        OriginSource = pkeyauth_challenging_origin_source,\n        MainFrame = pkeyauth_challenge_is_main_frame,\n        SubmitValidated = pkeyauth_submit_host_is_aad_cloud,\n        ChallengerValidated = pkeyauth_challenging_host_is_aad_cloud\n    | extend Cohort = case(Enforced == true, \"enforced\", Enforced == false, \"shadow\", \"unknown\"),\n        IsRejected = Verdict startswith_cs \"REJECTED_\",\n        Complete = isnotempty(Verdict) and isnotnull(Enforced)\n            and isnotempty(OriginSource) and isnotnull(MainFrame)\n            and isnotnull(SubmitValidated) and isnotnull(ChallengerValidated)\n);\nlet Links = Base\n    | where isnotempty(trace_id) and isnotempty(ParentId)\n    | summarize EnforcedCount = countif(Cohort == \"enforced\"),\n        ShadowCount = countif(Cohort == \"shadow\"), UnknownCount = countif(Cohort == \"unknown\"),\n        HasMismatch = countif(IsRejected) > 0,\n        arg_max(EventInfo_Time, DeviceInfo_Id, AppVersion, BrokerHost, Caller)\n        by trace_id, ParentId\n    | extend Cohort = case(UnknownCount > 0, \"unknown\",\n        EnforcedCount > 0 and ShadowCount > 0, \"mixed\",\n        EnforcedCount > 0, \"enforced\", \"shadow\");\nlet Parents = android_spans\n    | where EventInfo_Time between (WindowStart - 1h .. min_of(WindowEnd + 1h, now()))\n    | where span_name in (\"AcquireTokenInteractive\", \"ATIInteractively\", \"WorkplaceJoin\")\n    | project EventInfo_Time, trace_id, ParentId = span_id, ParentName = span_name,\n        ParentStatus = span_status, ParentError = error_code\n    | summarize arg_max(EventInfo_Time, ParentName, ParentStatus, ParentError) by trace_id, ParentId;\nlet Linked = materialize(Links\n    | join kind=leftouter hint.shufflekey=trace_id Parents on trace_id, ParentId\n    | extend Matched = isnotempty(ParentName),\n        ErrorOrCode = ParentStatus =~ \"ERROR\" or isnotempty(ParentError),\n        Cancelled = tolower(ParentError) contains \"cancel\"\n);\nLinked\n| where Matched and not(HasMismatch) and Cohort in (\"enforced\", \"shadow\") and isnotempty(DeviceInfo_Id)\n| summarize Attempts = count() by Cohort, Day = bin(EventInfo_Time, 1d), DeviceInfo_Id,\n    AppVersion, BrokerHost, Caller\n| summarize Parents = sum(Attempts), DeviceDays = count(), RepeatParents = sum(Attempts - 1) by Cohort, Day\n| extend RepeatSharePct = round(100.0 * RepeatParents / Parents, 3)\n| order by Day asc, Cohort asc",
+      "usedVariables": [
+        "_startTime",
+        "_endTime",
+        "_caller",
+        "_brokerHost",
+        "_appVersion"
+      ]
+    }
+  ],
+  "baseQueries": []
+}
