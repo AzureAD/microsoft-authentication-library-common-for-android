@@ -33,6 +33,59 @@ class AuthUxBridgeMeasurementsTest {
         "action_component":"host","params":{"errorCode":"53003"}}"""
     private val url = "https://login.microsoftonline.com"
 
+    /**
+     * Pins all 23 wire keys independently of production registry constants and enum-name derivation.
+     * Zero and distinct nonzero long counts detect missing, duplicated or swapped event mappings.
+     * Verifies the helper's Span calls, not Broker filtering or downstream ingestion.
+     */
+    @Test fun `all observer fields retain their independent wire names and counter types`() {
+        val counterKeys = linkedMapOf(
+            Event.SETUP_FAILED to "authux_setup_failed",
+            Event.INSTALL_ATTEMPTS to "authux_install_attempts",
+            Event.INSTALL_FAILED to "authux_install_failed",
+            Event.ROLLBACK_COMPLETE to "authux_rollback_complete",
+            Event.LEGACY_INSTALLED to "authux_legacy_installed",
+            Event.RECEIVED to "authux_received",
+            Event.REJECTED_CLOSED to "authux_rejected_closed",
+            Event.REJECTED_ORIGIN to "authux_rejected_origin",
+            Event.REJECTED_TYPE to "authux_rejected_type",
+            Event.REJECTED_MALFORMED to "authux_rejected_malformed",
+            Event.REJECTED_UNSUPPORTED to "authux_rejected_unsupported",
+            Event.REJECTED_CAPABILITY to "authux_rejected_capability",
+            Event.REJECTED_PROCESSING to "authux_rejected_processing",
+            Event.NUMBER_MATCH_IDENTIFIED to "authux_number_match_identified",
+            Event.RECORDER_WRITTEN to "authux_recorder_written",
+            Event.RECORDER_EXCLUDED_CID to "authux_recorder_excluded_cid",
+            Event.RECORDER_EXCLUDED_POLICY to "authux_recorder_excluded_policy",
+            Event.RECORDER_FAILED to "authux_recorder_failed",
+            Event.RECORDER_PARTIAL to "authux_recorder_partial"
+        )
+        assertEquals(Event.values().toSet(), counterKeys.keys)
+        assertEquals(19, counterKeys.values.toSet().size)
+        for (nonzero in listOf(false, true)) withSpan { span, observation ->
+            observation.state(BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT, Value.ON)
+            observation.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, Value.OFF)
+            observation.state(BridgeAttribute.TRANSPORT, Value.JAVASCRIPT_INTERFACE)
+            observation.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.JAVASCRIPT_INTERFACE_REQUESTED)
+            if (nonzero) {
+                counterKeys.keys.forEachIndexed { index, event ->
+                    repeat(index + 1) { observation.count(event) }
+                }
+            }
+            observation.setupFinished(false)
+
+            verify(span).setAttribute("authux_auth_ux_bridge_flight", "on")
+            verify(span).setAttribute("authux_web_message_listener_flight", "off")
+            verify(span).setAttribute("authux_transport", "javascript_interface")
+            verify(span).setAttribute("authux_transport_selection_reason", "javascript_interface_requested")
+            counterKeys.values.forEachIndexed { index, key ->
+                verify(span).setAttribute(key, if (nonzero) (index + 1).toLong() else 0L)
+            }
+            verify(span).end()
+            verifyNoMoreInteractions(span)
+        }
+    }
+
     @Test fun `finish waits for setup accounting and admitted callbacks without blocking`() = withSpan { span, observation ->
         val callback = observation.admitCallback()
         observation.finish()
@@ -158,8 +211,12 @@ class AuthUxBridgeMeasurementsTest {
             }
             session.close()
             verify(span).setAttribute("authux_received", 1L)
-            Event.values().filter { it.name.startsWith("REJECTED_") }.forEach {
-                verify(span).setAttribute("authux_${it.name.lowercase(java.util.Locale.ROOT)}", 0L)
+            listOf(
+                "authux_rejected_closed", "authux_rejected_origin", "authux_rejected_type",
+                "authux_rejected_malformed", "authux_rejected_unsupported",
+                "authux_rejected_capability", "authux_rejected_processing"
+            ).forEach {
+                verify(span).setAttribute(it, 0L)
             }
             verify(span).end()
             assertFalse(endedInsideSink)

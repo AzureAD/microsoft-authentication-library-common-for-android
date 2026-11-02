@@ -6,6 +6,7 @@ package com.microsoft.identity.common.internal.ui.webview.authux
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import io.opentelemetry.api.trace.Span
@@ -30,7 +31,10 @@ import java.util.Locale
  * configuration assigns this span a 25% trace-ID sampler rather than inheriting the global
  * parent-based decision. Span/app configuration overrides can change the effective sampling rate.
  * Captured attributes are exported as bounded lowercase strings; event counters are longs, including
- * zero. Keys are derived from enum names with an `authux_` prefix, so enum renames change the schema.
+ * zero. Observer attributes and events map explicitly to shared [AttributeName] constants, so their
+ * internal names do not determine the wire keys. State values retain their lowercase [Value] names.
+ * The mappings are exhaustive: adding an observer field requires an explicit schema decision.
+ * Shared key names and state-value names are wire contracts; keep the Broker allowlist in sync.
  *
  * For finalized records with the required fields present, 1 - setup_failed indicates initialization
  * returned normally, including disabled selection; it does not indicate successful installation.
@@ -128,13 +132,42 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
         ended = true
         return linkedMapOf<String, Any>().also { result ->
             BridgeAttribute.values().forEach {
-                result["$ATTRIBUTE_PREFIX${it.name.lowercase(Locale.ROOT)}"] =
+                result[it.toAttributeName().name] =
                     states[it.ordinal].name.lowercase(Locale.ROOT)
             }
             Event.values().forEach {
-                result["$ATTRIBUTE_PREFIX${it.name.lowercase(Locale.ROOT)}"] = counts[it.ordinal]
+                result[it.toAttributeName().name] = counts[it.ordinal]
             }
         }
+    }
+
+    private fun BridgeAttribute.toAttributeName(): AttributeName = when (this) {
+        BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT -> AttributeName.authux_auth_ux_bridge_flight
+        BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT -> AttributeName.authux_web_message_listener_flight
+        BridgeAttribute.TRANSPORT -> AttributeName.authux_transport
+        BridgeAttribute.TRANSPORT_SELECTION_REASON -> AttributeName.authux_transport_selection_reason
+    }
+
+    private fun Event.toAttributeName(): AttributeName = when (this) {
+        Event.SETUP_FAILED -> AttributeName.authux_setup_failed
+        Event.INSTALL_ATTEMPTS -> AttributeName.authux_install_attempts
+        Event.INSTALL_FAILED -> AttributeName.authux_install_failed
+        Event.ROLLBACK_COMPLETE -> AttributeName.authux_rollback_complete
+        Event.LEGACY_INSTALLED -> AttributeName.authux_legacy_installed
+        Event.RECEIVED -> AttributeName.authux_received
+        Event.REJECTED_CLOSED -> AttributeName.authux_rejected_closed
+        Event.REJECTED_ORIGIN -> AttributeName.authux_rejected_origin
+        Event.REJECTED_TYPE -> AttributeName.authux_rejected_type
+        Event.REJECTED_MALFORMED -> AttributeName.authux_rejected_malformed
+        Event.REJECTED_UNSUPPORTED -> AttributeName.authux_rejected_unsupported
+        Event.REJECTED_CAPABILITY -> AttributeName.authux_rejected_capability
+        Event.REJECTED_PROCESSING -> AttributeName.authux_rejected_processing
+        Event.NUMBER_MATCH_IDENTIFIED -> AttributeName.authux_number_match_identified
+        Event.RECORDER_WRITTEN -> AttributeName.authux_recorder_written
+        Event.RECORDER_EXCLUDED_CID -> AttributeName.authux_recorder_excluded_cid
+        Event.RECORDER_EXCLUDED_POLICY -> AttributeName.authux_recorder_excluded_policy
+        Event.RECORDER_FAILED -> AttributeName.authux_recorder_failed
+        Event.RECORDER_PARTIAL -> AttributeName.authux_recorder_partial
     }
 
     /**
@@ -159,12 +192,6 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
     }
 
     companion object {
-        /**
-         * Namespace for exported bridge attributes and counters.
-         * Changing this prefix changes telemetry keys consumed by the Broker allowlist and KQL.
-         */
-        private const val ATTRIBUTE_PREFIX = "authux_"
-
         /** Bridge lifetime duration must not be interpreted as setup or authentication latency. */
         @JvmField
         val SPAN_NAME = SpanName.AuthUxBridge.name

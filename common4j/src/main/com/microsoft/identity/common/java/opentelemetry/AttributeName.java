@@ -606,6 +606,145 @@ public enum AttributeName {
      */
     authux_js_error_code,
 
+    // AuthUxBridge describes one bridge initialization/lifetime, not an authentication request.
+    // Its counters include zero and saturate at Long.MAX_VALUE; absent fields are not zero.
+    // These names are wire contracts and must match the separately maintained Broker allowlist.
+
+    /**
+     * Captured {@code EnableJsApiForAuthUx} decision for an AuthUxBridge span.
+     * String: {@code on}, {@code off}, {@code not_evaluated} or {@code lookup_failed}.
+     * Observing this value does not reread the flight.
+     */
+    authux_auth_ux_bridge_flight,
+
+    /**
+     * Captured {@code EnableAuthUxWebMessageListenerTransport} decision.
+     * String: {@code on}, {@code off}, {@code not_evaluated} or {@code lookup_failed}.
+     * The bridge gate can skip this lookup; {@code on} does not guarantee modern installation.
+     */
+    authux_web_message_listener_flight,
+
+    /**
+     * Actual selection. String: {@code web_message_listener}, {@code javascript_interface},
+     * {@code disabled} or {@code not_selected}. JavaScript Interface selection may precede
+     * installation when the initial URL is ineligible; it is not proof of a usable bridge.
+     */
+    authux_transport,
+
+    /**
+     * Latest selection/setup explanation. String: {@code not_evaluated},
+     * {@code javascript_interface_requested}, {@code web_message_listener_prerequisites_not_met},
+     * {@code web_message_listener_installed}, {@code bridge_not_enabled},
+     * {@code web_message_listener_rolled_back}, {@code web_message_listener_rollback_incomplete}
+     * or {@code bridge_setup_failed}. Incomplete rollback disables the bridge. A later setup
+     * exception can overwrite a successful rollback reason; {@link #authux_rollback_complete}
+     * retains that earlier outcome.
+     */
+    authux_transport_selection_reason,
+
+    /**
+     * Long: initialization exited exceptionally ({@code 1}) or returned normally ({@code 0}).
+     * A normal return includes disabled selection, so {@code 1 - authux_setup_failed}
+     * measures normal initialization return, not successful transport installation.
+     */
+    authux_setup_failed,
+
+    /**
+     * Long count of installation attempts across both transports: one attempt for combined
+     * WebMessageListener and document-start script setup, or one per {@code addJavascriptInterface}
+     * call, including later navigation installations. Not a count of individual WebKit calls.
+     */
+    authux_install_attempts,
+
+    /**
+     * Long count of exceptions from the WebMessageListener setup block or an
+     * {@code addJavascriptInterface} call, even if subsequent rollback and fallback succeeded.
+     * The modern setup block includes post-registration work, not only registration-API calls.
+     */
+    authux_install_failed,
+
+    /**
+     * Long count of failed modern setups that were fully rolled back, permitting fallback.
+     * Retained even if subsequent legacy installation fails and changes the selection reason.
+     */
+    authux_rollback_complete,
+
+    /**
+     * Long count of successful {@code addJavascriptInterface} calls, including later navigation
+     * installations. Unlike transport selection, this records actual installation.
+     */
+    authux_legacy_installed,
+
+    /**
+     * Long count of physical native callbacks admitted before the observation's finish cutoff,
+     * counted once across validation and processing. Does not detect messages that never reached
+     * native code. After draining, processed = received - sum of the seven rejected counters,
+     * provided all fields are present and no counters saturated.
+     */
+    authux_received,
+
+    /**
+     * Long count of admitted callbacks that reached an already-closed processor. Callbacks arriving
+     * after the observation cutoff retain their functional behavior but are not counted here.
+     */
+    authux_rejected_closed,
+
+    /** Long count of native callbacks rejected by the existing origin or main-frame policy. */
+    authux_rejected_origin,
+
+    /** Long count of native callbacks rejected because the WebMessage data type was not a string. */
+    authux_rejected_type,
+
+    /**
+     * Long count of callbacks classified as missing data, malformed payloads or invalid required
+     * telemetry fields. Includes NullPointerException and JSON exceptions caught during processing;
+     * not conclusive evidence of malformed page input. Contains no payload or raw validation input.
+     */
+    authux_rejected_malformed,
+
+    /** Long count of parsed callbacks whose action/operation did not match a supported route. */
+    authux_rejected_unsupported,
+
+    /** Long count of callbacks whose identified operation was not permitted by request capabilities. */
+    authux_rejected_capability,
+
+    /**
+     * Long count of callback processing failures outside the other rejection categories, including
+     * escaping errors. Does not establish whether earlier side effects occurred before failure.
+     */
+    authux_rejected_processing,
+
+    /**
+     * Long count of parsed {@code number_matching} messages, excluding {@code log_telemetry}
+     * routing precedence. Counted before fallible legacy telemetry writes and capability checks;
+     * not proof of a store attempt, accepted parameters, later retrieval or MFA completion.
+     */
+    authux_number_match_identified,
+
+    /**
+     * Long count of deliveries whose applicable in-memory onboarding recorder writes completed.
+     * Does not prove final blob delivery, caller receipt or downstream ingestion.
+     */
+    authux_recorder_written,
+
+    /**
+     * Long count of sink deliveries excluded by missing or mismatched host correlation ID.
+     * Records only the disposition, never the correlation ID itself.
+     */
+    authux_recorder_excluded_cid,
+
+    /** Long count of sink deliveries excluded by the existing error-qualification policy. */
+    authux_recorder_excluded_policy,
+
+    /** Long count of recorder deliveries for which the blocking-error append did not complete. */
+    authux_recorder_failed,
+
+    /**
+     * Long count of recorder deliveries whose blocking-error append completed but a subsequent step
+     * write failed. The earlier mutation remains; this does not imply rollback or final blob delivery.
+     */
+    authux_recorder_partial,
+
     /**
      * Record whether or not the request stored a number match entry.
      */

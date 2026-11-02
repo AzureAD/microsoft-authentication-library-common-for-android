@@ -76,6 +76,8 @@ interface AuthUxMeasurementObserver {
 
     /**
      * Closed vocabulary, never page-supplied strings.
+     * Unlike observer attribute/event identifiers, these names are lowercased directly for export;
+     * renaming a value changes the wire contract.
      *
      * Flight attributes use ON, OFF, NOT_EVALUATED or LOOKUP_FAILED. TRANSPORT uses NOT_SELECTED,
      * WEB_MESSAGE_LISTENER, JAVASCRIPT_INTERFACE or DISABLED. TRANSPORT_SELECTION_REASON starts
@@ -100,7 +102,7 @@ interface AuthUxMeasurementObserver {
         BRIDGE_SETUP_FAILED
     }
     /**
-     * Fixed counters exported by [AuthUxBridgeMeasurements] as lowercase `authux_` attributes.
+     * Fixed counters explicitly mapped by [AuthUxBridgeMeasurements] to shared `authux_` attributes.
      *
      * For finalized records with all required fields present and no counter saturation, derive:
      * setup completed = 1 - SETUP_FAILED; processed = RECEIVED - sum(REJECTED_*).
