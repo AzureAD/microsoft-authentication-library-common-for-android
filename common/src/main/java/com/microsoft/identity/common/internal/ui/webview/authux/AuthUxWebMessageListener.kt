@@ -30,14 +30,17 @@ import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import com.microsoft.identity.common.internal.broker.AuthUxMessageProcessor
+import com.microsoft.identity.common.internal.broker.TelemetryAwareAuthUxMessageProcessor
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
 import com.microsoft.identity.common.logging.Logger
 
 /**
  * Validates and forwards main-frame Auth UX WebMessages to the request processor.
  */
-class AuthUxWebMessageListener(
+class AuthUxWebMessageListener @JvmOverloads constructor(
     private val processor: AuthUxMessageProcessor,
-    private val originPolicy: AuthUxOriginPolicy
+    private val originPolicy: AuthUxOriginPolicy,
+    private val bridgeTelemetry: AuthUxBridgeTelemetry = AuthUxBridgeTelemetry.NONE
 ) : WebViewCompat.WebMessageListener {
 
     @UiThread
@@ -48,23 +51,40 @@ class AuthUxWebMessageListener(
         isMainFrame: Boolean,
         replyProxy: JavaScriptReplyProxy
     ) {
-        if (!originPolicy.isAllowedCallback(sourceOrigin, isMainFrame)) {
-            Logger.warn(TAG, "Rejected Auth UX WebMessage callback.")
-            return
-        }
+        val callbackTelemetry = bridgeTelemetry.admitCallback()
+        var rejection: Event? = Event.REJECTED_PROCESSING
+        var forwarded = false
+        try {
+            if (!originPolicy.isAllowedCallback(sourceOrigin, isMainFrame)) {
+                rejection = Event.REJECTED_ORIGIN
+                Logger.warn(TAG, "Rejected Auth UX WebMessage callback.")
+                return
+            }
 
-        if (message.type != WebMessageCompat.TYPE_STRING) {
-            Logger.warn(TAG, "Rejected Auth UX WebMessage callback with unsupported data type.")
-            return
-        }
+            if (message.type != WebMessageCompat.TYPE_STRING) {
+                rejection = Event.REJECTED_TYPE
+                Logger.warn(TAG, "Rejected Auth UX WebMessage callback with unsupported data type.")
+                return
+            }
 
-        val data = message.data
-        if (data == null) {
-            Logger.info(TAG, "Ignoring Auth UX WebMessage callback with no data.")
-            return
-        }
+            val data = message.data
+            if (data == null) {
+                rejection = Event.REJECTED_MALFORMED
+                Logger.info(TAG, "Ignoring Auth UX WebMessage callback with no data.")
+                return
+            }
 
-        processor.process(data)
+            if (processor is TelemetryAwareAuthUxMessageProcessor) {
+                forwarded = true
+                processor.processWithTelemetry(data, callbackTelemetry)
+            } else {
+                processor.process(data)
+                rejection = null
+            }
+        } finally {
+            if (!forwarded) rejection?.let { callbackTelemetry.count(it) }
+            callbackTelemetry.completeCallback()
+        }
     }
 
     companion object {

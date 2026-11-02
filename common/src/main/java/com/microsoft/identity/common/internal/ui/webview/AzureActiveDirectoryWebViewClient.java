@@ -22,6 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeTelemetry;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeMeasurements;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -356,61 +363,99 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String methodTag = TAG + ":initializeAuthUxJavaScriptApi";
             final boolean isBrokerAuthProcess =
                     ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
-            final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink();
-            final boolean brokerAuthUxBridgeEnabled;
-            final boolean preferWebMessageListener;
-            if (isBrokerAuthProcess) {
-                final IFlightsProvider flightsProvider =
-                        CommonFlightsManager.INSTANCE.getFlightsProvider();
-                brokerAuthUxBridgeEnabled =
-                        flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
-                // A disabled bridge must not depend on the transport flight lookup succeeding.
-                preferWebMessageListener = brokerAuthUxBridgeEnabled
-                        && safelyResolveAuthUxTransportFlight(flightsProvider);
-            } else {
-                // Broker gate is not applied; recorder presence controls non-Broker eligibility.
-                brokerAuthUxBridgeEnabled = true;
-                preferWebMessageListener = telemetrySink != null;
+            final AuthUxBridgeTelemetry bridgeTelemetry = isBrokerAuthProcess
+                    ? AuthUxBridgeMeasurements.start() : AuthUxBridgeTelemetry.NONE;
+            boolean completed = false;
+            boolean retained = false;
+            try {
+                final AuthUxTelemetrySink telemetrySink = createAuthUxTelemetrySink(bridgeTelemetry);
+                final boolean brokerAuthUxBridgeEnabled;
+                final boolean preferWebMessageListener;
+                if (isBrokerAuthProcess) {
+                    final IFlightsProvider flightsProvider;
+                    try {
+                        flightsProvider = CommonFlightsManager.INSTANCE.getFlightsProvider();
+                        brokerAuthUxBridgeEnabled =
+                                flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                        bridgeTelemetry.state(BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT, brokerAuthUxBridgeEnabled ? Value.ON : Value.OFF);
+                    } catch (final Throwable exception) {
+                        bridgeTelemetry.state(BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT, Value.LOOKUP_FAILED);
+                        bridgeTelemetry.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, Value.NOT_EVALUATED);
+                        throw exception;
+                    }
+                    // A disabled bridge must not depend on the transport flight lookup succeeding.
+                    preferWebMessageListener = brokerAuthUxBridgeEnabled
+                            && safelyResolveAuthUxTransportFlight(flightsProvider, bridgeTelemetry);
+                    if (!brokerAuthUxBridgeEnabled) {
+                        bridgeTelemetry.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, Value.NOT_EVALUATED);
+                    }
+                } else {
+                    // Broker gate is not applied; recorder presence controls non-Broker eligibility.
+                    brokerAuthUxBridgeEnabled = true;
+                    preferWebMessageListener = telemetrySink != null;
+                }
+                Logger.info(
+                        methodTag,
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
+                                + isBrokerAuthProcess
+                                + "], hasTelemetrySink=["
+                                + (telemetrySink != null)
+                                + "], brokerAuthUxBridgeEnabled=["
+                                + brokerAuthUxBridgeEnabled
+                                + "], brokerAuthUxBridgeGateApplied=["
+                                + isBrokerAuthProcess
+                                + "], preferWebMessageListener=["
+                                + preferWebMessageListener
+                                + "]."
+                );
+                final AuthUxBridgeSession session = AuthUxBridgeSession.createWithTelemetry(
+                        view,
+                        url,
+                        isBrokerAuthProcess,
+                        telemetrySink,
+                        brokerAuthUxBridgeEnabled,
+                        preferWebMessageListener,
+                        bridgeTelemetry
+                );
+                // Completion means selection returned normally, including a disabled selection.
+                completed = true;
+                retained = session.getMode() != AuthUxTransportMode.DISABLED;
+                return session;
+            } finally {
+                if (!completed) {
+                    bridgeTelemetry.count(Event.SETUP_FAILED);
+                    bridgeTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.BRIDGE_SETUP_FAILED);
+                }
+                bridgeTelemetry.setupFinished(retained);
             }
-            Logger.info(
-                    methodTag,
-                    "Initializing the Auth UX bridge session. isBrokerAuthProcess=["
-                            + isBrokerAuthProcess
-                            + "], hasTelemetrySink=["
-                            + (telemetrySink != null)
-                            + "], brokerAuthUxBridgeEnabled=["
-                            + brokerAuthUxBridgeEnabled
-                            + "], brokerAuthUxBridgeGateApplied=["
-                            + isBrokerAuthProcess
-                            + "], preferWebMessageListener=["
-                            + preferWebMessageListener
-                            + "]."
-            );
-            return AuthUxBridgeSession.create(
-                    view,
-                    url,
-                    isBrokerAuthProcess,
-                    telemetrySink,
-                    brokerAuthUxBridgeEnabled,
-                    preferWebMessageListener
-            );
         });
     }
 
     private static boolean safelyResolveAuthUxTransportFlight(
-            @NonNull final IFlightsProvider flightsProvider) {
+            @NonNull final IFlightsProvider flightsProvider,
+            @NonNull final AuthUxBridgeTelemetry bridgeTelemetry) {
         try {
-            return flightsProvider.isFlightEnabled(
+            final boolean enabled = flightsProvider.isFlightEnabled(
                     CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+            bridgeTelemetry.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, enabled ? Value.ON : Value.OFF);
+            return enabled;
         } catch (final RuntimeException exception) {
+            bridgeTelemetry.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, Value.LOOKUP_FAILED);
             Logger.warn(TAG, "Auth UX transport flight lookup failed; selecting addJavascriptInterface.");
             return false;
+        } catch (final Error error) {
+            bridgeTelemetry.state(BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT, Value.LOOKUP_FAILED);
+            throw error;
         }
     }
 
     @Nullable
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     AuthUxTelemetrySink createAuthUxTelemetrySink() {
+        return createAuthUxTelemetrySink(AuthUxBridgeTelemetry.NONE);
+    }
+
+    private AuthUxTelemetrySink createAuthUxTelemetrySink(final AuthUxBridgeTelemetry bridgeTelemetry) {
         final String methodTag = TAG + ":createAuthUxTelemetrySink";
         final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
         if (recorder == null) {
@@ -431,6 +476,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // so an unrelated request's error cannot be attributed to this request.
             if (StringUtil.isNullOrEmpty(mCorrelationId)
                     || DiagnosticContext.UNSET_CORRELATION_ID.equals(mCorrelationId)) {
+                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_CID);
                 Logger.info(
                         methodTag,
                         "Auth UX telemetry occurrence was excluded because the host request "
@@ -439,6 +485,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return true;
             }
             if (!mCorrelationId.equals(event.getCorrelationId())) {
+                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_CID);
                 Logger.info(
                         methodTag,
                         "Auth UX telemetry occurrence was excluded because its correlation ID "
@@ -449,6 +496,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String blockingError =
                     OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
             if (blockingError == null) {
+                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_POLICY);
                 Logger.info(
                         methodTag,
                         event.getCorrelationId(),
@@ -461,12 +509,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     event.getCorrelationId(),
                     "Forwarding a qualified Auth UX telemetry occurrence to the onboarding recorder."
             );
-            recorder.addBlockingError(blockingError);
-            final String onboardingStep = getAuthUxOnboardingStep(blockingError);
-            if (onboardingStep != null) {
-                recorder.addStep(onboardingStep);
+            boolean appended = false;
+            boolean written = false;
+            try {
+                recorder.addBlockingError(blockingError);
+                appended = true;
+                final String onboardingStep = getAuthUxOnboardingStep(blockingError);
+                if (onboardingStep != null) {
+                    recorder.addStep(onboardingStep);
+                }
+                written = true;
+                return true;
+            } finally {
+                bridgeTelemetry.count(written ? Event.RECORDER_WRITTEN
+                        : appended ? Event.RECORDER_PARTIAL : Event.RECORDER_FAILED);
             }
-            return true;
         };
     }
 
