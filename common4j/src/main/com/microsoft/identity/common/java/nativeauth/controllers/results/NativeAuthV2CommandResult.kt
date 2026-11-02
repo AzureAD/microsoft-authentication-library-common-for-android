@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
 sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SelectResetPasswordMethodCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SelectAuthMethodCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResetPasswordSubmitCodeCommandResult :
     NativeAuthV2SubmitCodeCommandResult
@@ -57,7 +57,7 @@ sealed interface NativeAuthV2ExistingAccountCommandResult :
 /** Registration can interrupt any reachable V2 interaction before the final token exchange. */
 sealed interface NativeAuthV2RegistrationCommandResult :
     NativeAuthV2ResetPasswordStartCommandResult,
-    NativeAuthV2SelectResetPasswordMethodCommandResult,
+    NativeAuthV2SelectAuthMethodCommandResult,
     NativeAuthV2ResetPasswordSubmitCodeCommandResult,
     NativeAuthV2SignUpSubmitCodeCommandResult,
     NativeAuthV2SignInSubmitCodeCommandResult,
@@ -104,7 +104,7 @@ interface NativeAuthV2CommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String
-    ) : NativeAuthV2ExistingAccountCommandResult {
+    ) : NativeAuthV2ExistingAccountCommandResult, NativeAuthV2SelectAuthMethodCommandResult {
         override fun toString(): String = "ExistingAccountCodeRequired(correlationId=$correlationId)"
         override fun toUnsanitizedString(): String = toString()
     }
@@ -113,7 +113,7 @@ interface NativeAuthV2CommandResult {
     data class ExistingAccountPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState
-    ) : NativeAuthV2ExistingAccountCommandResult {
+    ) : NativeAuthV2ExistingAccountCommandResult, NativeAuthV2SelectAuthMethodCommandResult {
         override fun toString(): String = "ExistingAccountPasswordRequired(correlationId=$correlationId)"
         override fun toUnsanitizedString(): String = toString()
     }
@@ -151,7 +151,7 @@ interface NativeAuthV2CommandResult {
         val challengeTargetLabel: String,
         val challengeChannel: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SelectResetPasswordMethodCommandResult,
+        NativeAuthV2SelectAuthMethodCommandResult,
         NativeAuthV2SignInStartCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SignUpStartCommandResult,
@@ -165,19 +165,19 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
-     * The reset-password flow offers more than one supported first-factor method. The app must
-     * select one explicitly before the service sends a verification code.
+     * Password reset or an existing account found during sign-up offers multiple supported
+     * first-factor methods. The app must select one explicitly before a challenge is sent.
      */
-    data class ResetPasswordMethodRequired(
+    data class AuthMethodSelectionRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val authMethods: List<NativeAuthV2AuthMethod>,
-    ) : NativeAuthV2ResetPasswordStartCommandResult {
+    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ExistingAccountCommandResult {
         override fun toUnsanitizedString(): String =
-            "NativeAuthV2CommandResult.ResetPasswordMethodRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
+            "NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
 
         override fun toString(): String =
-            "NativeAuthV2CommandResult.ResetPasswordMethodRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toString() }})"
+            "NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toString() }})"
     }
 
     /**
@@ -521,7 +521,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SelectResetPasswordMethodCommandResult,
+        NativeAuthV2SelectAuthMethodCommandResult,
         NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SubmitNewPasswordCommandResult,

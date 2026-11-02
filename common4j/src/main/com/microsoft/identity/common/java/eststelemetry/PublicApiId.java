@@ -184,7 +184,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_CODE = "274";
     public static final String NATIVE_AUTH_V2_SIGN_IN_RESEND_CODE = "275";
     public static final String NATIVE_AUTH_V2_SIGN_UP_RESEND_CODE = "276";
-    public static final String NATIVE_AUTH_V2_RESET_PASSWORD_SELECT_METHOD = "277";
+    public static final String NATIVE_AUTH_V2_SELECT_AUTH_METHOD = "277";
     //endregion
 
     // region WebApps APIs

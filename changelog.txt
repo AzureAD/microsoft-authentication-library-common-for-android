@@ -1,5 +1,7 @@
 vNext
 ----------
+- [PATCH] Defer existing-account challenges during V2 sign-up when multiple supported methods are offered, and resume email/password sign-in after explicit method selection.
+- [PATCH] Rename reset-password method selection to shared NativeAuthV2SelectAuthMethodCommand/parameters/result and AuthMethodSelectionRequired, preserving ID-only selection parameters.
 - [PATCH] Remove password from the Native Auth V2 private-preview SignUpV2StartCommandParameters and pending sign-up continuation state. Submit passwords only through NativeAuthV2SubmitAttributesCommandParameters after PasswordRequired is returned. V1 sign-up is unchanged.
 - [PATCH] Send the Native Auth V2 sign-up username at start, defer profile submission across verification and resend, reject email attributes, and clear pending profile values at submission or completion.
 - [PATCH] Send the Native Auth V2 sign-up username at start, defer password/profile submission across verification and resend, reject email attributes, and clear pending values at submission or completion without serializing passwords.

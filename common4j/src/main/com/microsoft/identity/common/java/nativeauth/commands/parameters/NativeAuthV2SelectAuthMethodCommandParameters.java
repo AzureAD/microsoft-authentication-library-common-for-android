@@ -30,12 +30,12 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Parameters for selecting a V2 reset-password first-factor method.
+ * Parameters for selecting a V2 first-factor method.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class NativeAuthV2SelectResetPasswordMethodCommandParameters extends BaseSignInTokenCommandParameters {
+public class NativeAuthV2SelectAuthMethodCommandParameters extends BaseSignInTokenCommandParameters {
 
     /**
      * The opaque continuation state containing the server-provided method links.
@@ -52,7 +52,7 @@ public class NativeAuthV2SelectResetPasswordMethodCommandParameters extends Base
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "NativeAuthV2SelectResetPasswordMethodCommandParameters(methodId=" + methodId
+        return "NativeAuthV2SelectAuthMethodCommandParameters(methodId=" + methodId
                 + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
