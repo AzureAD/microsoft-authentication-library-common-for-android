@@ -25,11 +25,16 @@
 
 package com.microsoft.identity.common.internal.ui.webview.authux
 
+import android.net.Uri
 import android.webkit.WebView
+import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.ScriptHandler
+import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent
 import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
+import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -43,6 +48,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class AuthUxBridgeSessionTest {
@@ -599,6 +605,165 @@ class AuthUxBridgeSessionTest {
         assertEquals(listOf("530003", "530003"), sink.events.map { it.errorCode })
     }
 
+    /**
+     * Covers the preferred listener transport with both required AndroidX features supported.
+     * Messages enter the session-installed callback from an allowed origin in the main frame.
+     */
+    @Test
+    fun `broker page delivers telemetry and number matching through one WebMessageListener session`() {
+        assertBrokerPageSharesTransport(AuthUxTransportMode.WEB_MESSAGE_LISTENER)
+    }
+
+    /**
+     * Covers explicit JavaScript-interface selection despite both AndroidX features being supported.
+     * Messages enter through the annotated method on the object registered with the WebView.
+     */
+    @Test
+    fun `broker page delivers telemetry and number matching through one JavaScript interface session`() {
+        assertBrokerPageSharesTransport(AuthUxTransportMode.JAVASCRIPT_INTERFACE)
+    }
+
+    /**
+     * Sends one telemetry message followed by one Number Matching message on one Broker session,
+     * verifying isolated side effects and unchanged transport installation after each delivery.
+     *
+     * One mocked WebView and approved initial URL simulate the same page without navigation.
+     * This exercises installed native entry points, not webpage JavaScript or facade execution.
+     * Correlation assertions verify payload preservation, not rejection of mismatched request IDs.
+     */
+    private fun assertBrokerPageSharesTransport(mode: AuthUxTransportMode) {
+        val adapter = FakeWebKitAdapter()
+        val sink = RecordingTelemetrySink()
+        val sessionId = UUID.randomUUID().toString()
+        val correlationId = UUID.randomUUID().toString()
+        val initialStore = NumberMatchHelper.numberMatchMap.toMap()
+        val useListener = mode == AuthUxTransportMode.WEB_MESSAGE_LISTENER
+        val session = AuthUxBridgeSession.create(
+            webView = webView,
+            initialUrl = LOGIN_URL,
+            isBrokerAuthProcess = true,
+            telemetrySink = sink,
+            brokerAuthUxBridgeEnabled = true,
+            preferWebMessageListener = useListener,
+            webKitAdapter = adapter
+        )
+
+        try {
+            val deliver: (String) -> Unit = if (useListener) {
+                val listener = requireNotNull(adapter.installedListener)
+                val replyProxy = mock(JavaScriptReplyProxy::class.java)
+                val sendMessage: (String) -> Unit = { payload ->
+                    listener.onPostMessage(
+                        webView,
+                        WebMessageCompat(payload),
+                        Uri.parse("https://login.microsoftonline.com"),
+                        true,
+                        replyProxy
+                    )
+                }
+                sendMessage
+            } else {
+                val captor = ArgumentCaptor.forClass(AuthUxJavaScriptInterface::class.java)
+                verify(webView).addJavascriptInterface(captor.capture(), eq("broker"))
+                captor.value::receiveAuthUxMessage
+            }
+
+            fun assertTransportUnchanged(phase: String) {
+                assertEquals("$phase: selected transport", mode, session.mode)
+                assertEquals(
+                    "$phase: listener installation count",
+                    if (useListener) 1 else 0,
+                    adapter.listenerAddCount
+                )
+                assertEquals(
+                    "$phase: document-start script installation count",
+                    if (useListener) 1 else 0,
+                    adapter.scriptAddCount
+                )
+                assertEquals("$phase: unexpected listener removal", 0, adapter.listenerRemoveCount)
+                assertEquals("$phase: unexpected script removal", 0, adapter.scriptRemoveCount)
+                verify(webView, times(if (useListener) 0 else 1))
+                    .addJavascriptInterface(any(), any())
+                verify(webView, never()).removeJavascriptInterface(any())
+            }
+
+            val telemetryPayload = """
+                {
+                  "correlationID":"$correlationId",
+                  "action_name":"${AuthUxJavaScriptInterface.ActionNames.LOG_TELEMETRY}",
+                  "action_component":"host",
+                  "params":{
+                    "v":1,
+                    "sessionID":"$sessionId",
+                    "errorCode":"530003",
+                    "pageId":"ConvergedTFA",
+                    "trackingId":"tracking-id"
+                  }
+                }
+            """.trimIndent()
+            val numberMatchingPayload = """
+                {
+                  "correlationID":"$correlationId",
+                  "action_name":"write_data",
+                  "action_component":"broker",
+                  "params":{
+                    "operation":"${AuthUxJavaScriptInterface.OperationNames.NUMBER_MATCHING}",
+                    "sessionID":"$sessionId",
+                    "code_match":"42"
+                  }
+                }
+            """.trimIndent()
+            val expectedEvents = listOf(
+                AuthUxTelemetryEvent(
+                    correlationId = correlationId,
+                    errorCode = "530003",
+                    sessionId = sessionId,
+                    pageId = "ConvergedTFA",
+                    trackingId = "tracking-id",
+                    version = "1"
+                )
+            )
+
+            assertTransportUnchanged("After session creation")
+            deliver(telemetryPayload)
+            assertEquals(
+                "Telemetry must deliver exactly one event with the expected context",
+                expectedEvents,
+                sink.events
+            )
+            assertEquals(
+                "Telemetry must not modify the Number Matching store",
+                initialStore,
+                NumberMatchHelper.numberMatchMap
+            )
+            assertTransportUnchanged("After telemetry")
+
+            deliver(numberMatchingPayload)
+            assertEquals(
+                "Number Matching must update only the expected session entry",
+                initialStore + (sessionId to "42"),
+                NumberMatchHelper.numberMatchMap
+            )
+            assertEquals(
+                "Number Matching must not invoke the telemetry sink",
+                expectedEvents,
+                sink.events
+            )
+            assertTransportUnchanged("After Number Matching")
+        } finally {
+            try {
+                session.close()
+            } finally {
+                val previousValue = initialStore[sessionId]
+                if (previousValue == null) {
+                    NumberMatchHelper.numberMatchMap.remove(sessionId)
+                } else {
+                    NumberMatchHelper.numberMatchMap[sessionId] = previousValue
+                }
+            }
+        }
+    }
+
     private class RecordingTelemetrySink : AuthUxTelemetrySink {
         val events = mutableListOf<AuthUxTelemetryEvent>()
 
@@ -621,6 +786,9 @@ class AuthUxBridgeSessionTest {
         private val scriptHandler = mock(ScriptHandler::class.java)
         var listenerAdded = false
         var scriptAdded = false
+        var installedListener: WebViewCompat.WebMessageListener? = null
+        var listenerAddCount = 0
+        var scriptAddCount = 0
         var listenerRemoved = false
         var listenerRemoveCount = 0
         var scriptRemoveCount = 0
@@ -657,6 +825,8 @@ class AuthUxBridgeSessionTest {
                 throw IllegalStateException("listener registration failed")
             }
             listenerAdded = true
+            installedListener = listener
+            listenerAddCount++
             listenerAllowedOrigins = allowedOriginRules
             operationLog?.add("listener-added")
             if (failAfterListenerRegistration) {
@@ -683,6 +853,7 @@ class AuthUxBridgeSessionTest {
                 throw IllegalStateException("script registration failed")
             }
             scriptAdded = true
+            scriptAddCount++
             scriptAllowedOrigins = allowedOriginRules
             if (failAfterScriptRegistration) {
                 throw IllegalStateException("script registration failed after installation")
