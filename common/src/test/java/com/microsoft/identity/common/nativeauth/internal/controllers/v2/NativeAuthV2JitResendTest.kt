@@ -130,7 +130,9 @@ class NativeAuthV2JitResendTest {
             activation("first", "first"),
             """{"error":{"code":"invalidRequest","message":"Try later","traceId":"trace",
                 "timestamp":"time","innerError":{"code":"serviceSpecific"}}}""",
-            """{"state":"webFallbackRequired","continuationToken":"redirect"}"""
+            """{"error":"invalid_grant","error_description":"Browser required",
+                "suberror":"web_redirect_required","error_codes":[55214],
+                "trace_id":"redirect-trace","timestamp":"redirect-time"}"""
         )
         val state = enroll(initial(NativeAuthV2FlowScenario.SIGN_IN)).continuationState
         val error = controller.resendCode(resendParameters(state)) as INativeAuthCommandResult.APIError
@@ -138,7 +140,13 @@ class NativeAuthV2JitResendTest {
         assertEquals("serviceSpecific", error.subError)
         assertEquals("trace", error.traceId)
         assertEquals("time", error.timestamp)
-        assertTrue(controller.resendCode(resendParameters(state)) is INativeAuthCommandResult.Redirect)
+        val redirect = controller.resendCode(resendParameters(state)) as INativeAuthCommandResult.APIError
+        assertEquals("invalid_grant", redirect.error)
+        assertEquals("Browser required", redirect.errorDescription)
+        assertEquals("web_redirect_required", redirect.subError)
+        assertEquals(listOf(55214), redirect.errorCodes)
+        assertEquals("redirect-trace", redirect.traceId)
+        assertEquals("redirect-time", redirect.timestamp)
     }
 
     @Test

@@ -243,7 +243,7 @@ class NativeAuthV2ResponseHandlerTest {
     }
 
     @Test
-    fun getTokenApiResponse_whenSuccessStatusIndicatesRedirect_returnsRedirectResult() {
+    fun getTokenApiResponse_whenSuccessStatusIndicatesLegacyRedirect_returnsOrdinaryError() {
         val result = handler.getTokenApiResponse(
             requestCorrelationId = CORRELATION_ID,
             response = response(
@@ -252,10 +252,29 @@ class NativeAuthV2ResponseHandlerTest {
             )
         )
 
-        assertTrue(result is SignInTokenApiResult.Redirect)
-        val redirect = result as SignInTokenApiResult.Redirect
-        assertEquals(CORRELATION_ID, redirect.correlationId)
-        assertEquals("sms_not_supported", redirect.redirectReason)
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        val error = result as SignInTokenApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertNull(error.subError)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenExactBrowserPair_preservesRawDiagnosticsRegardlessOfStatusOrNumericCode() {
+        for (status in listOf(200, 400)) {
+            val result = handler.getTokenApiResponse(
+                CORRELATION_ID,
+                response(status, """{"error":"invalid_grant","suberror":"web_redirect_required",
+                    "error_description":"Browser required.","error_codes":[50126],
+                    "trace_id":"trace","timestamp":"time"}""")
+            ) as SignInTokenApiResult.UnknownError
+            assertEquals("invalid_grant", result.error)
+            assertEquals("web_redirect_required", result.subError)
+            assertEquals("Browser required.", result.errorDescription)
+            assertEquals(listOf(50126), result.errorCodes)
+            assertEquals("trace", result.traceId)
+            assertEquals("time", result.timestamp)
+        }
     }
 
     @Test

@@ -525,27 +525,31 @@ class NativeAuthV2SSPRFlowControllerTest {
     fun testSubmitNewPasswordPreservesInvalidPasswordSubError() {
         val state = mockContinuationState()
         val errorCodes = listOf(120002)
+        val details = listOf(mapOf("code" to "futureCode", "attributeIds" to listOf("password")))
 
         every { mockStrategy.performUpdatePassword(state = state, newPassword = any()) } returns
             NativeAuthV2InteractionApiResult.InvalidPassword(
                 correlationId = correlationId,
                 error = "invalid_request",
                 errorDescription = "Password is too weak.",
-                subError = "password_too_weak",
-                errorCodes = errorCodes
+                subError = "attributeValidationError",
+                errorCodes = errorCodes,
+                attributeValidationDetails = details
             )
 
         val result = controller.submitNewPassword(submitNewPasswordParameters(state)) as
             NativeAuthV2CommandResult.PasswordNotAccepted
 
-        assertEquals("password_too_weak", result.subError)
+        assertEquals("attributeValidationError", result.subError)
         assertEquals(errorCodes, result.errorCodes)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test
     fun testResetPasswordStartPreservesUserNotFoundErrorCodes() {
         val state = mockContinuationState()
         val errorCodes = listOf(50034)
+        val details = listOf(mapOf("code" to "userNotFound", "attributeIds" to listOf("email")))
 
         every {
             mockStrategy.performAuthorizeChallengeStart(
@@ -565,13 +569,17 @@ class NativeAuthV2SSPRFlowControllerTest {
             correlationId = correlationId,
             error = "invalidRequest",
             errorDescription = "AADSTS50034: User not found.",
-            errorCodes = errorCodes
+            errorCodes = errorCodes,
+            subError = "userNotFound",
+            attributeValidationDetails = details
         )
 
         val result = controller.resetPasswordStart(resetPasswordStartParameters()) as
             NativeAuthV2CommandResult.UserNotFound
 
         assertEquals(errorCodes, result.errorCodes)
+        assertEquals("userNotFound", result.subError)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test

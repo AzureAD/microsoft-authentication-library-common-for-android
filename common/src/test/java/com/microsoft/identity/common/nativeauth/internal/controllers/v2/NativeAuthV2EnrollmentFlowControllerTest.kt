@@ -361,15 +361,18 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     @Test
     fun activationPreservesServiceOtpErrorsAndRejectsUnsupportedActions() {
         val prior = state()
+        val details = listOf(mapOf("code" to "diagnostic", "attributeIds" to listOf("code")))
         every { strategy.performActivate(prior, "") } returns
             NativeAuthV2InteractionApiResult.InvalidCode(
                 "cid", "invalid_code", "Retry.", "invalid_oob_value",
-                traceId = "activation-trace", timestamp = "activation-time"
+                traceId = "activation-trace", timestamp = "activation-time",
+                attributeValidationDetails = details
             )
         val invalidCode = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, ""))
         assertTrue(invalidCode is NativeAuthV2CommandResult.IncorrectCode)
         assertEquals("activation-trace", invalidCode.traceId)
         assertEquals("activation-time", invalidCode.timestamp)
+        assertEquals(details, (invalidCode as NativeAuthV2CommandResult.IncorrectCode).attributeValidationDetails)
         every { strategy.performActivate(prior, "otp") } returns
             NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", prior)
         assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))

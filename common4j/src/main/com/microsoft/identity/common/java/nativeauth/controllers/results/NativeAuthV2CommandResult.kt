@@ -254,7 +254,8 @@ interface NativeAuthV2CommandResult {
         val subError: String,
         val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2SignInSubmitCodeCommandResult,
@@ -328,27 +329,6 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
-     * The server rejected the username/password combination supplied at the sign-in entry point.
-     * The developer must restart the flow with corrected credentials.
-     * Applies to the sign-in start step.
-     */
-    data class InvalidCredentials @JvmOverloads constructor(
-        override val correlationId: String,
-        val error: String,
-        val errorDescription: String,
-        val subError: String,
-        val errorCodes: List<Int>? = null,
-        override val traceId: String? = null,
-        override val timestamp: String? = null
-    ) : NativeAuthV2SignInStartCommandResult {
-        override fun toUnsanitizedString(): String =
-            "NativeAuthV2CommandResult.InvalidCredentials(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
-
-        override fun toString(): String =
-            "NativeAuthV2CommandResult.InvalidCredentials(correlationId=$correlationId)"
-    }
-
-    /**
      * The server rejected a password submitted from the password-required state. The developer can
      * retry through the state object used for the failed call.
      * Applies to the submit-password step.
@@ -360,7 +340,8 @@ interface NativeAuthV2CommandResult {
         val subError: String,
         val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : NativeAuthV2SubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectPassword(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -381,7 +362,8 @@ interface NativeAuthV2CommandResult {
         val subError: String,
         val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordNotAccepted(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -416,7 +398,9 @@ interface NativeAuthV2CommandResult {
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        val subError: String? = null,
+        val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SignInStartCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"

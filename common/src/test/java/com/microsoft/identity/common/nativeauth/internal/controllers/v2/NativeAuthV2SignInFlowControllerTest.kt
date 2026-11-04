@@ -277,19 +277,24 @@ class NativeAuthV2SignInFlowControllerTest {
 
     @Test
     fun testSignInStartMapsUnknownUserToUserNotFound() {
+        val details = listOf(mapOf("code" to "userNotFound", "attributeIds" to listOf("email")))
         stubAuthorizeChallengeStart()
         every { mockStrategy.performSignInStart(any(), any()) } returns
             NativeAuthV2InteractionApiResult.UserNotFound(
                 correlationId = correlationId,
                 error = "invalid_grant",
                 errorDescription = "AADSTS50034: user not found.",
-                errorCodes = listOf(50034)
+                errorCodes = listOf(50034),
+                subError = "userNotFound",
+                attributeValidationDetails = details
             )
 
         val result = controller.signInStart(signInStartParameters())
 
         assertTrue(result is NativeAuthV2CommandResult.UserNotFound)
         assertEquals(listOf(50034), (result as NativeAuthV2CommandResult.UserNotFound).errorCodes)
+        assertEquals("userNotFound", result.subError)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test
@@ -611,15 +616,19 @@ class NativeAuthV2SignInFlowControllerTest {
     @Test
     fun testSubmitPasswordMapsRejectedPasswordToIncorrectPasswordNotInvalidCredentials() {
         val state = mockContinuationState()
+        val details = listOf(mapOf("code" to "diagnostic", "attributeIds" to listOf("password")))
 
         every {
             mockStrategy.performPasswordVerify(state, any())
         } returns NativeAuthV2InteractionApiResult.InvalidCredentials(
             correlationId = correlationId,
-            error = "invalid_grant",
-            errorDescription = "AADSTS50126: invalid username or password.",
+            error = "invalidGrant",
+            errorDescription = "AADSTS50126: Error validating credentials due to invalid username or password.",
             subError = "invalidUserNameOrPassword",
-            errorCodes = listOf(50126)
+            errorCodes = listOf(50126),
+            traceId = "password-trace",
+            timestamp = "2026-11-03 10:08:36Z",
+            attributeValidationDetails = details
         )
 
         val result = controller.submitPassword(submitPasswordParameters(state))
@@ -629,6 +638,38 @@ class NativeAuthV2SignInFlowControllerTest {
             "invalidUserNameOrPassword",
             (result as NativeAuthV2CommandResult.IncorrectPassword).subError
         )
+        assertEquals("invalidGrant", result.error)
+        assertEquals("AADSTS50126: Error validating credentials due to invalid username or password.", result.errorDescription)
+        assertEquals(correlationId, result.correlationId)
+        assertEquals(listOf(50126), result.errorCodes)
+        assertEquals("password-trace", result.traceId)
+        assertEquals("2026-11-03 10:08:36Z", result.timestamp)
+        assertEquals(details, result.attributeValidationDetails)
+    }
+
+    @Test
+    fun testCodeAndMfaSubmissionsPreserveAllTypedErrorDiagnostics() {
+        val state = mockContinuationState()
+        val details = listOf(mapOf("code" to "diagnostic", "attributeIds" to listOf("code")))
+        every { mockStrategy.performVerify(state, "000000") } returns
+            NativeAuthV2InteractionApiResult.InvalidCode(
+                correlationId, "invalidGrant", "Original diagnostic.", "invalidOneTimeCode",
+                listOf(50184), "trace", "time", details
+            )
+        val results = listOf(
+            controller.submitSignInCode(submitCodeParameters(state, "000000")),
+            controller.submitMFAChallenge(submitMFAChallengeParameters(state, "000000"))
+        )
+        results.forEach {
+            val result = it as NativeAuthV2CommandResult.IncorrectCode
+            assertEquals("invalidGrant", result.error)
+            assertEquals("Original diagnostic.", result.errorDescription)
+            assertEquals("invalidOneTimeCode", result.subError)
+            assertEquals(listOf(50184), result.errorCodes)
+            assertEquals("trace", result.traceId)
+            assertEquals("time", result.timestamp)
+            assertEquals(details, result.attributeValidationDetails)
+        }
     }
 
     @Test
