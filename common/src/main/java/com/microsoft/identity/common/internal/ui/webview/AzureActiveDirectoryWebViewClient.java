@@ -1899,10 +1899,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processInstallRequest";
 
-        // Onboarding telemetry: broker install request reached the WebView client. Record the
-        // step at method entry so we capture intent regardless of the parsed result code.
-        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
-
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
 
         if (result.getResultCode() != RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED) {
@@ -1910,6 +1906,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
             return;
         }
+
+        // This handler also receives registration-only redirects; record only an install request.
+        recordOnboardingStep(STEP_BROKER_INSTALLATION_TRIGGERED);
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return

@@ -223,8 +223,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
     private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
             "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
-    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
-    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
+    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
+    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
@@ -4774,6 +4774,35 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Onboarding telemetry hooks
     // -----------------------------------------------------------------------
 
+    @Test
+    public void testProcessInstallRequest_registrationOnly_doesNotRecordBrokerInstall()
+            throws Exception {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        final OnboardingTelemetryRecorder recorder = new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"abc-123\","
+                        + "\"onboarding_mode\":\"brokered\"}",
+                "client-id", "scope1", mContext);
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(client.shouldOverrideUrlLoading(
+                webView, TEST_DEVICE_REGISTRATION_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.DEVICE_REGISTRATION_REQUIRED,
+                result.getValue().getResultCode());
+        Mockito.verify(webView).stopLoading();
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
+    }
+
     /**
      * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
      * a broker install request URL produces a populated blob containing the
@@ -4793,10 +4822,21 @@ public class AzureActiveDirectoryWebViewClientTest {
         recorder.addBlockingError(
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
 
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        client.setOnboardingTelemetryRecorder(recorder);
 
         // Trigger a broker install URL through the WebView client (delegates to processInstallRequest).
-        mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL);
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED,
+                result.getValue().getResultCode());
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNotNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
@@ -5677,12 +5717,18 @@ public class AzureActiveDirectoryWebViewClientTest {
      * demonstrably unreachable for app_links.
      */
     @Test
-    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist() {
+    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist()
+            throws Exception {
+        final AzureActiveDirectoryWebViewClient client = mamCaWebViewClient(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
         final Intent launched = launchInstallAndCaptureIntent(
-                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
+                client, TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
 
         assertNull("An app_link that is not https must never be launched, but was: "
                         + (launched == null ? "" : launched.getDataString()),
                 launched);
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
     }
 }
