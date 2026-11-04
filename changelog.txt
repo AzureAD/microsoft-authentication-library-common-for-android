@@ -1,6 +1,7 @@
 vNext
 ----------
-- [PATCH] Send the Native Auth V2 sign-up username at start, defer password/profile submission across verification and resend, reject email attributes, and clear pending values at submission or completion without serializing passwords.
+- [PATCH] Send the Native Auth V2 sign-up username at start and defer profile attributes until collection.
+- [MAJOR] Remove upfront password parameters and pending-password retention from Native Auth V2 sign-up.
 - [MINOR] Add native PSI PRT recovery IPC declarations with host protocol 6.0 and positive HELLO handler capability, with opt-in bounded, strict UTF-8, non-redirecting HTTP transport and redacted IO errors
 - [PATCH] Refine onboarding telemetry by allowing per-invocation recorder lookup suppression without changing authentication correlation IDs or default lookup behavior for existing callers, and recording MDM enrollment start only for the enrollment fwlink destination; URL classification failures skip the telemetry step without changing Device-CA routing
 - [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)

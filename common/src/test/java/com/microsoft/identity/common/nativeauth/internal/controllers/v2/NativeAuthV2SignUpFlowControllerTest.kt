@@ -113,14 +113,13 @@ class NativeAuthV2SignUpFlowControllerTest {
                 codeLength = 6
             )
 
-        val result = controller.signUpStart(signUpStartParameters())
+        val result = controller.signUpStart(signUpStartParameters(attributes = mapOf("city" to "Redmond")))
 
         assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
         result as NativeAuthV2CommandResult.CodeRequired
         assertEquals(codeState, result.continuationState)
         assertEquals(6, result.codeLength)
-        // The username is sent at start; only the password is submitted as an attribute.
-        verify(exactly = 1) { mockStrategy.performSubmitAttributes(entryState, any(), any()) }
+        verify(exactly = 1) { mockStrategy.performSubmitAttributes(entryState, mapOf("city" to "Redmond"), null) }
     }
 
     @Test
@@ -193,7 +192,7 @@ class NativeAuthV2SignUpFlowControllerTest {
             entryState.withAdditionalSubmittedAttributes(
                 match {
                     it.size == 1 &&
-                        it.any { name -> name.equals("password", ignoreCase = true) }
+                        it.any { name -> name.equals("city", ignoreCase = true) }
                 }
             )
         } returns submittedState
@@ -217,7 +216,7 @@ class NativeAuthV2SignUpFlowControllerTest {
                 attributeValidationDetails = details
             )
 
-        val result = controller.signUpStart(signUpStartParameters())
+        val result = controller.signUpStart(signUpStartParameters(attributes = mapOf("city" to "Redmond")))
 
         assertTrue(result is NativeAuthV2CommandResult.AttributesInvalid)
         result as NativeAuthV2CommandResult.AttributesInvalid
@@ -226,8 +225,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals("service-time", result.timestamp)
         assertEquals("attributeValidationError", result.subError)
         assertEquals(details, result.attributeValidationDetails)
-        // The validation-error body carries no fresh continuation token, so retry with a state
-        // that remembers the password submitted by the rejected request.
+        // The validation-error body carries no fresh continuation token.
         assertSame(submittedState, result.continuationState)
     }
 
@@ -277,7 +275,7 @@ class NativeAuthV2SignUpFlowControllerTest {
                 requiredAttributes = listOf(requiredAttribute("password"))
             )
 
-        val result = controller.signUpStart(signUpStartParameters(password = null))
+        val result = controller.signUpStart(signUpStartParameters())
 
         assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
         assertEquals(
@@ -329,10 +327,8 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     @Test
     fun testSignUpStartRejectsReservedAttributesBeforeNetworkRequest() {
-        val password = "Password123!".toCharArray()
         val result = controller.signUpStart(
             signUpStartParameters(
-                password = password,
                 attributes = linkedMapOf(
                     "EMAIL" to "other@contoso.com",
                     "Password" to "not-the-password"
@@ -346,7 +342,6 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals(listOf("EMAIL", "Password"), result.invalidAttributes)
         assertTrue(result.errorDescription.contains("EMAIL, Password"))
         verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
-        assertTrue(password.all { it == '\u0000' })
     }
 
     // -----------------------------------------------------------------------------------------
@@ -858,16 +853,13 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { state.hasSubmittedAttribute(any()) } returns false
         every { state.withAdditionalSubmittedAttributes(any()) } returns state
         every { state.pendingSignUpAttributesForSubmission() } returns null
-        every { state.requiresSignUpPasswordRecollection() } returns false
-        every { state.pendingSignUpPasswordForSubmission() } returns null
-        every { state.withPendingSignUpAttributes(any(), any(), any()) } returns state
+        every { state.withPendingSignUpAttributes(any()) } returns state
         every { state.withoutPendingSignUpAttributes() } returns state
         return state
     }
 
     private fun signUpStartParameters(
         username: String = "user@contoso.com",
-        password: CharArray? = "Password123!".toCharArray(),
         attributes: Map<String, String>? = null
     ): SignUpV2StartCommandParameters =
         SignUpV2StartCommandParameters.builder()
@@ -876,7 +868,6 @@ class NativeAuthV2SignUpFlowControllerTest {
             .correlationId(correlationId)
             .scopes(emptyList())
             .username(username)
-            .password(password)
             .attributes(attributes)
             .build()
 
@@ -949,7 +940,7 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
-    fun existingAccountPassword_isDistinctAndNeverReusesSignUpPassword() {
+    fun existingAccountPassword_isDistinctAndRequiresExplicitPassword() {
         val state = mockContinuationState()
         stubAuthorizeChallengeStart(state)
         every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns
@@ -958,10 +949,8 @@ class NativeAuthV2SignUpFlowControllerTest {
                     "password-id", "password", null)))
         every { mockStrategy.performMethodChallenge(state, "password-id") } returns
             NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
-        val password = "New-account-password!".toCharArray()
-        val result = controller.signUpStart(signUpStartParameters(password = password))
+        val result = controller.signUpStart(signUpStartParameters())
         assertEquals(NativeAuthV2CommandResult.ExistingAccountPasswordRequired(correlationId, state), result)
-        assertTrue(password.all { it == '\u0000' })
         verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
         verify(exactly = 0) { mockStrategy.performSubmitAttributes(any(), any(), any()) }
         verify(exactly = 0) { mockStrategy.performAuthorizeChallengeContinue(any()) }
