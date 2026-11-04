@@ -1032,9 +1032,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Submits a password from the deferred password-required state.
      *
-     * A rejected password becomes [NativeAuthV2CommandResult.IncorrectPassword] rather than
-     * [NativeAuthV2CommandResult.InvalidCredentials], preserving the submission context the public
-     * layer needs to match the iOS V2 error taxonomy.
+     * A rejected password becomes [NativeAuthV2CommandResult.IncorrectPassword], preserving the
+     * submission context the public layer needs to classify it as an invalid password.
      */
     fun submitPassword(parameters: NativeAuthV2SubmitPasswordCommandParameters): NativeAuthV2SubmitPasswordCommandResult {
         LogSession.logMethodCall(

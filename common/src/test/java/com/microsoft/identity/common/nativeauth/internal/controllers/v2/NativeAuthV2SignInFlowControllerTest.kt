@@ -507,10 +507,12 @@ class NativeAuthV2SignInFlowControllerTest {
             mockStrategy.performPasswordVerify(state, any())
         } returns NativeAuthV2InteractionApiResult.InvalidCredentials(
             correlationId = correlationId,
-            error = "invalid_grant",
-            errorDescription = "AADSTS50126: invalid username or password.",
+            error = "invalidGrant",
+            errorDescription = "AADSTS50126: Error validating credentials due to invalid username or password.",
             subError = "invalidUserNameOrPassword",
             errorCodes = listOf(50126),
+            traceId = "password-trace",
+            timestamp = "2026-11-03 10:08:36Z",
             attributeValidationDetails = details
         )
 
@@ -521,6 +523,12 @@ class NativeAuthV2SignInFlowControllerTest {
             "invalidUserNameOrPassword",
             (result as NativeAuthV2CommandResult.IncorrectPassword).subError
         )
+        assertEquals("invalidGrant", result.error)
+        assertEquals("AADSTS50126: Error validating credentials due to invalid username or password.", result.errorDescription)
+        assertEquals(correlationId, result.correlationId)
+        assertEquals(listOf(50126), result.errorCodes)
+        assertEquals("password-trace", result.traceId)
+        assertEquals("2026-11-03 10:08:36Z", result.timestamp)
         assertEquals(details, result.attributeValidationDetails)
     }
 
