@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 
 import com.google.gson.JsonParser
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ConnectionError
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.*
@@ -103,6 +105,112 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         assertFalse(completed.continuationState.hasSubmittedAttribute("email"))
         assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
         assertNull(resent.continuationState.pendingSignUpPasswordForSubmission())
+    }
+
+    @Test
+    fun rejectedPendingPasswordAfterVerificationPreservesPolicyDetails() {
+        stubSignUpResponses(
+            verificationResponse("code"),
+            collectionResponse(),
+            """{"error":{"code":"invalidRequest","message":"Password rejected",
+                "innerError":{"code":"attributeValidationError","details":[{
+                    "code":"passwordPolicyViolation","attributeIds":["password"]}]}}}"""
+        )
+        val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").password("weak-password".toCharArray()).build())
+            as NativeAuthV2CommandResult.CodeRequired
+        val rejected = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+            .continuationState(start.continuationState).code("123456").build())
+            as NativeAuthV2CommandResult.AttributesInvalid
+        assertEquals(listOf("password"), rejected.invalidAttributes)
+        assertEquals("passwordPolicyViolation", rejected.attributeValidationDetails?.single()?.get("code"))
+        assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
+
+        assertEquals(3, requests.size)
+    }
+
+    @Test
+    fun automaticSubmissionTransportFailurePropagatesAndErasesPassword() {
+        for (verifyFirst in listOf(false, true)) {
+            for (withPassword in listOf(false, true)) {
+                requests.clear()
+                val failure = ConnectionError.getClientException(IOException("Connection interrupted"))
+                val responses = if (verifyFirst) listOf(verificationResponse("code"), collectionResponse())
+                    else listOf(collectionResponse())
+                stubSignUpResponses(*responses.toTypedArray())
+                every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returnsMany
+                    responses.map(::response) andThenThrows failure
+                val password = if (withPassword) "original-secret-never-retained".toCharArray() else null
+                var codeState: NativeAuthV2ContinuationState? = null
+                try {
+                    val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+                        .username("original@contoso.com").password(password)
+                        .attributes(mapOf("displayName" to "Original Name")).build())
+                    codeState = (start as NativeAuthV2CommandResult.CodeRequired).continuationState
+                    controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+                        .continuationState(codeState).code("123456").build())
+                    fail("Expected the transport failure to propagate")
+                } catch (e: ClientException) {
+                    assertSame(failure, e)
+                }
+                assertTrue(password == null || password.all { it == '\u0000' })
+                assertNull(codeState?.pendingSignUpPasswordForSubmission())
+                assertEquals(responses.size + 1, requests.size)
+            }
+        }
+    }
+
+    @Test
+    fun automaticSubmissionTransportFailureAfterEnrollmentPropagates() {
+        stubFlow(requestsPassword = false)
+        val activation = startAndEnroll(password = null)
+        val failure = ConnectionError.getClientException(IOException("Connection interrupted"))
+        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returns
+            response(collectionResponse()) andThenThrows failure
+        try {
+            controller.activate(NativeAuthV2ActivateCommandParameters(parameters(activation), activation, "otp"))
+            fail("Expected the transport failure to propagate")
+        } catch (e: ClientException) {
+            assertSame(failure, e)
+        }
+    }
+
+    @Test
+    fun automaticSubmissionPropagatesProgrammingFailures() {
+        stubSignUpResponses(verificationResponse("code"))
+        val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").password("password".toCharArray()).build())
+            as NativeAuthV2CommandResult.CodeRequired
+        val failure = IllegalStateException("Unexpected implementation error")
+        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returns
+            response(collectionResponse()) andThenThrows failure
+        try {
+            controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+                .continuationState(start.continuationState).code("123456").build())
+            fail("Expected the programming failure to propagate")
+        } catch (e: IllegalStateException) {
+            assertSame(failure, e)
+        }
+        assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
+    }
+
+    @Test
+    fun automaticSubmissionPropagatesCommandCancellation() {
+        stubSignUpResponses(verificationResponse("code"))
+        val start = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
+            .username("original@contoso.com").password("password".toCharArray()).build())
+            as NativeAuthV2CommandResult.CodeRequired
+        val failure = ClientException(ClientException.TIMED_OUT, "Request cancelled")
+        every { http.method(HttpClient.HttpMethod.POST, any(), any(), capture(requests)) } returns
+            response(collectionResponse()) andThenThrows failure
+        try {
+            controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
+                .continuationState(start.continuationState).code("123456").build())
+            fail("Expected the cancellation to propagate")
+        } catch (e: ClientException) {
+            assertSame(failure, e)
+        }
+        assertNull(start.continuationState.pendingSignUpPasswordForSubmission())
     }
 
     @Test
@@ -385,6 +493,12 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
          "type":"email","codeLength":6,"_links":{
            "verify":{"href":"/tenant/api/v2.0/auth/email/verify"},
            "resend":{"href":"/tenant/api/v2.0/auth/email/resend"}}}
+    """
+
+    private fun collectionResponse() = """
+        {"action":"collectAttributes","continuationToken":"attributes",
+         "attributes":[{"attributeId":"displayName","inputType":"text","required":true}],
+         "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/signup/attributes"}}}
     """
 
     private fun parameters(state: NativeAuthV2ContinuationState) =
