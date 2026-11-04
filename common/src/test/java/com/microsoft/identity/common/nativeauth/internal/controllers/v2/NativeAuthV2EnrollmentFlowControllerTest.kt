@@ -208,7 +208,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
                 .continuationState(prior).newPassword("password".toCharArray())).build()),
             controller.selectMFAMethod(configured(NativeAuthV2SelectMFAMethodCommandParameters.builder()
                 .continuationState(prior).methodId("email")).build()),
-            controller.selectResetPasswordMethod(configured(NativeAuthV2SelectResetPasswordMethodCommandParameters.builder()
+            controller.selectAuthMethod(configured(NativeAuthV2SelectAuthMethodCommandParameters.builder()
                 .continuationState(prior).methodId("email")).build()),
             controller.submitMFAChallenge(configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
                 .continuationState(prior).code("otp")).build()),

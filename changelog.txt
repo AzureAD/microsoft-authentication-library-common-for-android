@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Add shared authentication-method selection for password reset and existing-account sign-up.
 - [PATCH] Send the Native Auth V2 sign-up username at start and defer profile attributes until collection.
 - [MAJOR] Remove upfront password parameters and pending-password retention from Native Auth V2 sign-up.
 - [MINOR] Add native PSI PRT recovery IPC declarations with host protocol 6.0 and positive HELLO handler capability, with opt-in bounded, strict UTF-8, non-redirecting HTTP transport and redacted IO errors

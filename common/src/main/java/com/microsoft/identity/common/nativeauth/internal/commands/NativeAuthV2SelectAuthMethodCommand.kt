@@ -24,35 +24,35 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectResetPasswordMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectAuthMethodCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Challenges the V2 reset-password first-factor method explicitly selected by the app.
+ * Challenges a V2 first-factor method explicitly selected by the app.
  */
-class NativeAuthV2SelectResetPasswordMethodCommand(
-    private val parameters: NativeAuthV2SelectResetPasswordMethodCommandParameters,
+class NativeAuthV2SelectAuthMethodCommand(
+    private val parameters: NativeAuthV2SelectAuthMethodCommandParameters,
     private val controller: NativeAuthV2FlowController,
     publicApiId: String
-) : BaseNativeAuthCommand<NativeAuthV2SelectResetPasswordMethodCommandResult>(
+) : BaseNativeAuthCommand<NativeAuthV2SelectAuthMethodCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = NativeAuthV2SelectResetPasswordMethodCommand::class.java.simpleName
+        private val TAG = NativeAuthV2SelectAuthMethodCommand::class.java.simpleName
     }
 
-    override fun execute(): NativeAuthV2SelectResetPasswordMethodCommandResult {
+    override fun execute(): NativeAuthV2SelectAuthMethodCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
 
-        val result = controller.selectResetPasswordMethod(parameters)
+        val result = controller.selectAuthMethod(parameters)
         Logger.infoWithObject(
             TAG,
             parameters.getCorrelationId(),
