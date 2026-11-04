@@ -116,6 +116,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
             verificationResponse("code"),
             passwordCollectionResponse(),
             """{"error":{"code":"invalidRequest","message":"Password rejected",
+                "traceId":"password-trace","timestamp":"password-time","error_codes":[1002027],
                 "innerError":{"code":"attributeValidationError","details":[{
                     "code":"passwordPolicyViolation","attributeIds":["password"]}]}}}"""
         )
@@ -129,8 +130,14 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         val password = "weak-password".toCharArray()
         val rejected = controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder())
             .continuationState(passwordRequired.continuationState).attributes(emptyMap())
-            .password(password).build()) as NativeAuthV2CommandResult.AttributesInvalid
-        assertEquals(listOf("password"), rejected.invalidAttributes)
+            .password(password).build()) as INativeAuthCommandResult.APIError
+        assertEquals("invalidRequest", rejected.error)
+        assertEquals("Password rejected", rejected.errorDescription)
+        assertEquals("attributeValidationError", rejected.subError)
+        assertEquals("password-trace", rejected.traceId)
+        assertEquals("password-time", rejected.timestamp)
+        assertEquals(listOf(1002027), rejected.errorCodes)
+        assertEquals(listOf("password"), rejected.attributeValidationDetails?.single()?.get("attributeIds"))
         assertEquals("passwordPolicyViolation", rejected.attributeValidationDetails?.single()?.get("code"))
         assertTrue(password.all { it == '\u0000' })
 
@@ -368,7 +375,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
     }
 
     @Test
-    fun existingUserAfterEmailVerificationKeepsTypedErrorAndDiagnostics() {
+    fun existingUserAfterEmailVerificationKeepsRawErrorAndDiagnostics() {
         stubFlow(
             requestsPassword = false,
             verifyEmailAfterActivation = true,
@@ -382,8 +389,8 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
             parameters(activation), activation, "activation-otp")) as NativeAuthV2CommandResult.CodeRequired
         val result: INativeAuthCommandResult = controller.submitSignUpCode(configured(NativeAuthV2SubmitCodeCommandParameters.builder())
             .continuationState(verification.continuationState).code("email-otp").build())
-        assertTrue(result.toString(), result is NativeAuthV2CommandResult.UserAlreadyExists)
-        result as NativeAuthV2CommandResult.UserAlreadyExists
+        assertTrue(result.toString(), result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
         assertEquals("invalidRequest", result.error)
         assertEquals("Account exists", result.errorDescription)
         assertEquals("accountConflict", result.subError)
