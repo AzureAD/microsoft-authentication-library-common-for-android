@@ -31,7 +31,7 @@ public class Configuration {
 
     /**
      * The URL for this client is ApiClient.BUILD_AUTOMATION_VAULT_BASE_PATH,
-     * i.e. the buildautomation KeyVault.
+     * i.e. the MobileBuildVault KeyVault.
      *
      * @return API client
      */
