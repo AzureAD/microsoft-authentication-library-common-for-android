@@ -145,7 +145,7 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
     }
 
     private fun BridgeAttribute.toAttributeName(): AttributeName = when (this) {
-        BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT -> AttributeName.authux_auth_ux_bridge_flight
+        BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT -> AttributeName.authux_bridge_flight
         BridgeAttribute.WEB_MESSAGE_LISTENER_FLIGHT -> AttributeName.authux_web_message_listener_flight
         BridgeAttribute.TRANSPORT -> AttributeName.authux_transport
         BridgeAttribute.TRANSPORT_SELECTION_REASON -> AttributeName.authux_transport_selection_reason

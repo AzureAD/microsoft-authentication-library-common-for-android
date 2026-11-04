@@ -615,7 +615,7 @@ public enum AttributeName {
      * String: {@code on}, {@code off}, {@code not_evaluated} or {@code lookup_failed}.
      * Observing this value does not reread the flight.
      */
-    authux_auth_ux_bridge_flight,
+    authux_bridge_flight,
 
     /**
      * Captured {@code EnableAuthUxWebMessageListenerTransport} decision.

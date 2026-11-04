@@ -161,7 +161,7 @@ class AuthUxBridgeMeasurementsTest {
             }
             observation.setupFinished(false)
 
-            verify(span).setAttribute("authux_auth_ux_bridge_flight", "on")
+            verify(span).setAttribute("authux_bridge_flight", "on")
             verify(span).setAttribute("authux_web_message_listener_flight", "off")
             verify(span).setAttribute("authux_transport", "javascript_interface")
             verify(span).setAttribute("authux_transport_selection_reason", "javascript_interface_requested")
@@ -203,7 +203,7 @@ class AuthUxBridgeMeasurementsTest {
         observation.finish()
         observation.setupFinished(true)
 
-        verify(span).setAttribute("authux_auth_ux_bridge_flight", "on")
+        verify(span).setAttribute("authux_bridge_flight", "on")
         verify(span).setAttribute("authux_web_message_listener_flight", "on")
         verify(span).setAttribute("authux_transport", "web_message_listener")
         verify(span).setAttribute("authux_transport_selection_reason", "web_message_listener_installed")
@@ -218,7 +218,7 @@ class AuthUxBridgeMeasurementsTest {
                 observation.setupFinished(false)
                 observation.setupFinished(false)
                 observation.finish()
-                verify(span).setAttribute("authux_auth_ux_bridge_flight", "not_evaluated")
+                verify(span).setAttribute("authux_bridge_flight", "not_evaluated")
                 verify(span).setAttribute("authux_web_message_listener_flight", "not_evaluated")
                 verify(span).setAttribute("authux_transport", "not_selected")
                 verify(span).setAttribute("authux_setup_failed", if (failed) 1L else 0L)

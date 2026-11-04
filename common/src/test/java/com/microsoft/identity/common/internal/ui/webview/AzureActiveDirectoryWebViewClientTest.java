@@ -581,7 +581,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.verify(span).setAttribute("authux_setup_failed", failed ? 1L : 0L);
                 Mockito.verify(span).setAttribute("authux_transport",
                         failed ? "not_selected" : "disabled".equals(scenario) ? "disabled" : "javascript_interface");
-                Mockito.verify(span).setAttribute("authux_auth_ux_bridge_flight", "master_failure".equals(scenario)
+                Mockito.verify(span).setAttribute("authux_bridge_flight", "master_failure".equals(scenario)
                         ? "lookup_failed" : "disabled".equals(scenario) ? "off" : "on");
                 Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "transport_failure".equals(scenario)
                         ? "lookup_failed" : ("master_failure".equals(scenario) || "disabled".equals(scenario))
@@ -700,7 +700,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     Mockito.verify(span, never()).end();
                     mWebViewClient.closeAuthUxBridgeSession();
 
-                    Mockito.verify(span).setAttribute("authux_auth_ux_bridge_flight", "on");
+                    Mockito.verify(span).setAttribute("authux_bridge_flight", "on");
                     Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "on");
                     Mockito.verify(span).setAttribute("authux_transport",
                             modern ? "web_message_listener" : "javascript_interface");
