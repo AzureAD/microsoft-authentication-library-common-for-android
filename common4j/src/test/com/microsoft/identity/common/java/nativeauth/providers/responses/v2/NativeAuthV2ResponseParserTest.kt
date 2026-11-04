@@ -214,6 +214,8 @@ class NativeAuthV2ResponseParserTest {
                         listOf("email"),
                         (interactionResult as NativeAuthV2InteractionApiResult.InvalidAttributes).invalidAttributes
                     )
+                } else if (subError == "userNotFound") {
+                    assertTrue(interactionResult is NativeAuthV2InteractionApiResult.UserNotFound)
                 } else {
                     assertTrue(interactionResult is NativeAuthV2InteractionApiResult.UnknownError)
                 }
@@ -242,13 +244,81 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseInteraction_classifiesUserNotFoundOnlyFromExactStructuredCodes() {
+        for (scenario in NativeAuthV2FlowScenario.values()) {
+            for ((code, subError, expected) in listOf(
+                Triple("invalidRequest", "userNotFound", true),
+                Triple("invalidRequest", "other", false),
+                Triple("invalidGrant", "userNotFound", false),
+                Triple("invalid_request", "userNotFound", false),
+                Triple("invalidRequest", "UserNotFound", false)
+            )) {
+                for (message in listOf("Account missing.", "AADSTS50034: Account missing.")) {
+                    val result = parser.parseInteraction(
+                        responseFrom("""{"error":{"code":"$code","message":"$message",
+                            "innerError":{"code":"$subError"}}}"""),
+                        previousState(scenario)
+                    )
+                    assertEquals("$scenario/$code/$subError/$message", expected,
+                        result is NativeAuthV2InteractionApiResult.UserNotFound)
+                    assertEquals(subError, (result as ApiErrorResult).subError)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseInteraction_passwordAttributeClassificationUsesExactOuterSubErrorAndAttributeId() {
+        for (scenario in NativeAuthV2FlowScenario.values()) {
+            for (detailCode in listOf("passwordPolicyViolation", "futureCode", "userAlreadyExists")) {
+                for ((code, subError, attributeId, expected) in listOf(
+                    listOf("invalidRequest", "attributeValidationError", "password", "true"),
+                    listOf("invalidGrant", "attributeValidationError", "password", "false"),
+                    listOf("invalidRequest", "other", "password", "false"),
+                    listOf("invalidRequest", "attributeValidationError", "PASSWORD", "false"),
+                    listOf("invalidRequest", "attributeValidationError", "email", "false")
+                )) {
+                    val result = parser.parseInteraction(
+                        responseFrom("""{"error":{"code":"$code","message":"Original diagnostic.",
+                            "innerError":{"code":"$subError","details":[{"code":"$detailCode",
+                            "attributeIds":["$attributeId"],"message":"Original detail."}]}}}"""),
+                        previousState(scenario)
+                    )
+                    assertEquals("$scenario/$code/$subError/$attributeId/$detailCode",
+                        expected.toBoolean(), result is NativeAuthV2InteractionApiResult.InvalidPassword)
+                    val error = result as ApiErrorResult
+                    assertEquals("Original diagnostic.", error.errorDescription)
+                    assertEquals(subError, error.subError)
+                    assertEquals(listOf(mapOf("code" to detailCode, "attributeIds" to listOf(attributeId),
+                        "message" to "Original detail.")), error.attributeValidationDetails)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_exactBrowserErrorOverridesContinuationAndPreservesDetails() {
+        val result = parser.parseAuthorizeChallenge(
+            responseFrom("""{"continuation_token":"token","sign_in":"/sign-in",
+                "error":"invalid_grant","suberror":"web_redirect_required",
+                "error_description":"Original diagnostic.","trace_id":"trace","timestamp":"time"}"""),
+            NativeAuthV2LinkRelation.SIGN_IN, NativeAuthV2FlowScenario.SIGN_IN, emptyList()
+        ) as AuthorizeChallengeApiResult.UnknownError
+        assertEquals("invalid_grant", result.error)
+        assertEquals("web_redirect_required", result.subError)
+        assertEquals("Original diagnostic.", result.errorDescription)
+        assertEquals("trace", result.traceId)
+        assertEquals("time", result.timestamp)
+    }
+
+    @Test
     fun parseInteraction_preservesDiagnosticsAcrossTypedAndUnknownErrors() {
         val cases = listOf(
             Triple("invalidGrant", "invalidOneTimeCode", NativeAuthV2InteractionApiResult.InvalidCode::class.java),
             Triple("invalidGrant", "invalidUserNameOrPassword", NativeAuthV2InteractionApiResult.InvalidCredentials::class.java),
             Triple("invalidRequest", "passwordTooWeak", NativeAuthV2InteractionApiResult.InvalidPassword::class.java),
             Triple("invalidRequest", "attributeValidationError", NativeAuthV2InteractionApiResult.InvalidAttributes::class.java),
-            Triple("invalidRequest", "userNotFound", NativeAuthV2InteractionApiResult.UnknownError::class.java)
+            Triple("invalidRequest", "userNotFound", NativeAuthV2InteractionApiResult.UserNotFound::class.java)
         )
         for ((code, innerCode, expectedClass) in cases) {
             val result = parser.parseInteraction(
@@ -267,6 +337,11 @@ class NativeAuthV2ResponseParserTest {
             assertEquals("unmodified-timestamp", error.timestamp)
             assertEquals("service-correlation", error.correlationId)
             assertEquals(listOf(10040172), error.errorCodes)
+            assertEquals(innerCode, error.subError)
+            assertEquals(
+                listOf(mapOf("code" to "attributeValidationFailed", "attributeIds" to listOf("email"))),
+                error.attributeValidationDetails
+            )
         }
     }
 
@@ -291,11 +366,15 @@ class NativeAuthV2ResponseParserTest {
     fun parseAuthorizeChallenge_browserFallbackRetainsDiagnostics() {
         val result = parser.parseAuthorizeChallenge(
             responseFrom(
-                """{"error":{"code":"redirect_to_web","message":"AADSTS123: Browser required.",
+                """{"error":{"code":"invalid_grant","message":"AADSTS123: Browser required.",
+                    "innerError":{"code":"web_redirect_required"},
                     "traceId":"fallback-trace","timestamp":"service-time"}}"""
             ),
             NativeAuthV2LinkRelation.SIGN_IN, NativeAuthV2FlowScenario.SIGN_IN, emptyList()
-        ) as AuthorizeChallengeApiResult.Redirect
+        ) as AuthorizeChallengeApiResult.UnknownError
+        assertEquals("invalid_grant", result.error)
+        assertEquals("web_redirect_required", result.subError)
+        assertEquals("AADSTS123: Browser required.", result.errorDescription)
         assertEquals("fallback-trace", result.traceId)
         assertEquals("service-time", result.timestamp)
         assertEquals(listOf(123), result.errorCodes)
@@ -436,10 +515,10 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
-    fun parseAuthorizeChallenge_whenWebFallbackRequired_returnsRedirect() {
+    fun parseAuthorizeChallenge_whenLegacyWebFallbackReturned_returnsOrdinaryError() {
         listOf(
             """{"error":{"code":"redirect_to_web","message":"Browser required."}}""" to "redirect_to_web",
-            """{"state":"webFallbackRequired"}""" to "webFallbackRequired"
+            """{"state":"webFallbackRequired"}""" to ApiErrorResult.INVALID_STATE
         ).forEach { (json, expectedReason) ->
             val result = parser.parseAuthorizeChallenge(
                 response = responseFrom(json),
@@ -448,10 +527,11 @@ class NativeAuthV2ResponseParserTest {
                 scopes = listOf("User.Read")
             )
 
-            assertTrue(result is AuthorizeChallengeApiResult.Redirect)
-            val redirect = result as AuthorizeChallengeApiResult.Redirect
-            assertEquals(CORRELATION_ID, redirect.correlationId)
-            assertEquals(expectedReason, redirect.redirectReason)
+            assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+            val error = result as AuthorizeChallengeApiResult.UnknownError
+            assertEquals(CORRELATION_ID, error.correlationId)
+            assertEquals(expectedReason, error.error)
+            assertNull(error.subError)
         }
     }
 
@@ -462,7 +542,8 @@ class NativeAuthV2ResponseParserTest {
                 """
                 {
                   "error": {
-                    "code": "redirect_to_web",
+                    "code": "invalid_grant",
+                    "innerError": {"code": "web_redirect_required"},
                     "message": "Browser required.",
                     "correlationId": "server-error-correlation-id"
                   }
@@ -474,10 +555,10 @@ class NativeAuthV2ResponseParserTest {
             scopes = listOf("User.Read")
         )
 
-        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
         assertEquals(
             "server-error-correlation-id",
-            (result as AuthorizeChallengeApiResult.Redirect).correlationId
+            (result as AuthorizeChallengeApiResult.UnknownError).correlationId
         )
     }
 
@@ -845,20 +926,21 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
-    fun parseAuthorizeChallenge_whenFlatRedirectToWebErrorPresent_returnsRedirect() {
+    fun parseAuthorizeChallenge_whenFlatBrowserErrorPresent_retainsOAuthPair() {
         val result = parser.parseAuthorizeChallenge(
             response = responseFrom(
-                """{"error":"redirect_to_web","error_description":"Browser required."}"""
+                """{"error":"invalid_grant","suberror":"web_redirect_required","error_description":"Browser required."}"""
             ),
             entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
             scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
             scopes = listOf("User.Read")
         )
 
-        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
-        val redirect = result as AuthorizeChallengeApiResult.Redirect
-        assertEquals(CORRELATION_ID, redirect.correlationId)
-        assertEquals("redirect_to_web", redirect.redirectReason)
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals("invalid_grant", error.error)
+        assertEquals("web_redirect_required", error.subError)
     }
 
     @Test
@@ -965,17 +1047,18 @@ class NativeAuthV2ResponseParserTest {
     // region parseInteraction - web fallback, continuation state, and missing-token
 
     @Test
-    fun parseInteraction_whenWebFallbackRequired_returnsRedirect() {
+    fun parseInteraction_whenLegacyWebFallbackReturned_returnsOrdinaryError() {
         listOf(
             """{"error":{"code":"redirect_to_web","message":"Browser required."}}""" to "redirect_to_web",
-            """{"state":"webFallbackRequired"}""" to "webFallbackRequired"
+            """{"state":"webFallbackRequired"}""" to ApiErrorResult.INVALID_STATE
         ).forEach { (json, expectedReason) ->
             val result = parser.parseInteraction(responseFrom(json), previousState())
 
-            assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)
-            val redirect = result as NativeAuthV2InteractionApiResult.Redirect
-            assertEquals(CORRELATION_ID, redirect.correlationId)
-            assertEquals(expectedReason, redirect.redirectReason)
+            assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+            val error = result as NativeAuthV2InteractionApiResult.UnknownError
+            assertEquals(CORRELATION_ID, error.correlationId)
+            assertEquals(expectedReason, error.error)
+            assertNull(error.subError)
         }
     }
 
@@ -986,7 +1069,8 @@ class NativeAuthV2ResponseParserTest {
                 """
                 {
                   "error": {
-                    "code": "redirect_to_web",
+                    "code": "invalid_grant",
+                    "innerError": {"code": "web_redirect_required"},
                     "message": "Browser required.",
                     "correlationId": "server-error-correlation-id"
                   }
@@ -994,7 +1078,7 @@ class NativeAuthV2ResponseParserTest {
                 """.trimIndent()
             ),
             previousState()
-        ) as NativeAuthV2InteractionApiResult.Redirect
+        ) as NativeAuthV2InteractionApiResult.UnknownError
 
         assertEquals("server-error-correlation-id", result.correlationId)
     }
@@ -1382,7 +1466,8 @@ class NativeAuthV2ResponseParserTest {
     @Test
     fun parseInteraction_whenResetPasswordStartUserNotFound_returnsUserNotFoundWithExtractedAadstsCode() {
         val response = responseFrom(
-            """{"error":{"code":"invalidRequest","message":"AADSTS50034: User account does not exist."}}"""
+            """{"error":{"code":"invalidRequest","message":"AADSTS50034: User account does not exist.",
+                "innerError":{"code":"userNotFound"}}}"""
         )
 
         val result = parser.parseInteraction(

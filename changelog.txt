@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Align Native Auth V2 structured user/password error classification and exact OAuth browser fallback with iOS, preserving diagnostics through typed errors and credential/MFA remapping.
 - [MAJOR] Remove upfront password parameters from Native Auth V2 sign-in; select among offered first-factor methods and submit passwords only from the password-required continuation.
 - [PATCH] Add shared authentication-method selection for password reset and existing-account sign-up.
 - [PATCH] Send the Native Auth V2 sign-up username at start and defer profile attributes until collection.

@@ -481,6 +481,7 @@ class NativeAuthV2SignInResponseParserTest {
                   "error": {
                     "code": "invalidRequest",
                     "message": "AADSTS50034: The user account does not exist in the directory.",
+                    "innerError": {"code": "userNotFound"},
                     "correlationId": "server-corr"
                   }
                 }
@@ -620,24 +621,25 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenSignInResponseRequiresWebFallback_redirectWinsOverEverythingElse() {
+    fun parseInteraction_whenSignInResponseRequiresWebFallback_preservesOAuthErrorOverChallenge() {
         val result = parser.parseInteraction(
             response = responseFrom(
                 """
                 {
                   "continuationToken": "ct-1",
                   "action": "challenge",
-                  "error": { "code": "redirect_to_web", "message": "Use the browser." }
+                  "error": { "code": "invalid_grant", "message": "Use the browser.",
+                    "innerError": {"code": "web_redirect_required"} }
                 }
                 """.trimIndent()
             ),
             previousState = signInState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
         assertEquals(
-            "redirect_to_web",
-            (result as NativeAuthV2InteractionApiResult.Redirect).redirectReason
+            "web_redirect_required",
+            (result as NativeAuthV2InteractionApiResult.UnknownError).subError
         )
     }
 

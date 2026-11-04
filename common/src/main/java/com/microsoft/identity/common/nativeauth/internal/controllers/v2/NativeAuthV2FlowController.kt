@@ -115,7 +115,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         if (result is NativeAuthV2InteractionApiResult.InvalidCode) {
             return NativeAuthV2CommandResult.IncorrectCode(
                 result.correlationId, result.error, result.errorDescription, result.subError,
-                result.errorCodes, result.traceId, result.timestamp
+                result.errorCodes, result.traceId, result.timestamp, result.attributeValidationDetails
             )
         }
         if (result is NativeAuthV2InteractionApiResult.Redirect) {
@@ -312,7 +312,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     errorDescription = startResult.errorDescription,
                     traceId = startResult.traceId,
                     timestamp = startResult.timestamp,
-                    errorCodes = startResult.errorCodes
+                    errorCodes = startResult.errorCodes,
+                    subError = startResult.subError,
+                    attributeValidationDetails = startResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
                     correlationId = startResult.correlationId,
@@ -504,7 +506,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = verifyResult.subError,
                     traceId = verifyResult.traceId,
                     timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
+                    errorCodes = verifyResult.errorCodes,
+                    attributeValidationDetails = verifyResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = verifyResult.correlationId,
@@ -558,7 +561,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = verifyResult.subError,
                     traceId = verifyResult.traceId,
                     timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
+                    errorCodes = verifyResult.errorCodes,
+                    attributeValidationDetails = verifyResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = verifyResult.correlationId,
@@ -619,7 +623,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = verifyResult.subError,
                     traceId = verifyResult.traceId,
                     timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
+                    errorCodes = verifyResult.errorCodes,
+                    attributeValidationDetails = verifyResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = verifyResult.correlationId,
@@ -746,7 +751,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = updateResult.subError,
                     traceId = updateResult.traceId,
                     timestamp = updateResult.timestamp,
-                    errorCodes = updateResult.errorCodes
+                    errorCodes = updateResult.errorCodes,
+                    attributeValidationDetails = updateResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = updateResult.correlationId,
@@ -941,7 +947,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     errorDescription = startResult.errorDescription,
                     traceId = startResult.traceId,
                     timestamp = startResult.timestamp,
-                    errorCodes = startResult.errorCodes
+                    errorCodes = startResult.errorCodes,
+                    subError = startResult.subError,
+                    attributeValidationDetails = startResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
                     correlationId = startResult.correlationId,
@@ -1064,7 +1072,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = verifyResult.subError,
                     traceId = verifyResult.traceId,
                     timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
+                    errorCodes = verifyResult.errorCodes,
+                    attributeValidationDetails = verifyResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = verifyResult.correlationId,
@@ -1191,7 +1200,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     subError = verifyResult.subError,
                     traceId = verifyResult.traceId,
                     timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
+                    errorCodes = verifyResult.errorCodes,
+                    attributeValidationDetails = verifyResult.attributeValidationDetails
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = verifyResult.correlationId,
