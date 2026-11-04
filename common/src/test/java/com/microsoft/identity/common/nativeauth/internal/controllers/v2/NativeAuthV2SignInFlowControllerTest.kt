@@ -356,6 +356,121 @@ class NativeAuthV2SignInFlowControllerTest {
     }
 
     @Test
+    fun testSignInStartPreservesAuthorizeChallengeRedirectWithoutStartingSignIn() {
+        val response = AuthorizeChallengeApiResult.Redirect(
+            correlationId = "server-correlation-id",
+            redirectReason = "redirect_to_web",
+            errorCodes = listOf(900001),
+            traceId = "server-trace-id",
+            timestamp = "2026-11-04T00:00:00Z"
+        )
+        every {
+            mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any())
+        } returns response
+
+        val result = controller.signInStart(signInStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.Redirect)
+        result as INativeAuthCommandResult.Redirect
+        assertEquals(response.correlationId, result.correlationId)
+        assertEquals(response.redirectReason, result.redirectReason)
+        assertEquals(response.errorCodes, result.errorCodes)
+        assertEquals(response.traceId, result.traceId)
+        assertEquals(response.timestamp, result.timestamp)
+        verify(exactly = 0) {
+            mockStrategy.performSignInStart(any(), any())
+            mockStrategy.performMethodChallenge(any(), any())
+            mockStrategy.performTokenRequest(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun testSignInStartRejectsPrematureAuthorizationCodeWithoutExchangingIt() {
+        every {
+            mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any())
+        } returns AuthorizeChallengeApiResult.AuthorizationCode(
+            "server-correlation-id", "unexpected-auth-code"
+        )
+
+        val result = controller.signInStart(signInStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unexpected_api_result", result.error)
+        assertEquals("server-correlation-id", result.correlationId)
+        verify(exactly = 0) {
+            mockStrategy.performSignInStart(any(), any())
+            mockStrategy.performMethodChallenge(any(), any())
+            mockStrategy.performAuthorizeChallengeContinue(any())
+            mockStrategy.performTokenRequest(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun testSignInStartPreservesAuthorizeChallengeErrorWithoutStartingSignIn() {
+        val response = AuthorizeChallengeApiResult.UnknownError(
+            correlationId = "server-correlation-id",
+            error = "invalid_request",
+            errorDescription = "The sign-in request could not be processed.",
+            subError = "invalid_state",
+            errorCodes = listOf(900001),
+            traceId = "server-trace-id",
+            timestamp = "2026-11-04T00:00:00Z",
+            attributeValidationDetails = listOf(mapOf("name" to "username", "reason" to "invalid"))
+        )
+        every {
+            mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any())
+        } returns response
+
+        val result = controller.signInStart(signInStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals(response.correlationId, result.correlationId)
+        assertEquals(response.error, result.error)
+        assertEquals(response.errorDescription, result.errorDescription)
+        assertEquals(response.subError, result.subError)
+        assertEquals(response.errorCodes, result.errorCodes)
+        assertEquals(response.traceId, result.traceId)
+        assertEquals(response.timestamp, result.timestamp)
+        assertEquals(response.attributeValidationDetails, result.attributeValidationDetails)
+        verify(exactly = 0) {
+            mockStrategy.performSignInStart(any(), any())
+            mockStrategy.performMethodChallenge(any(), any())
+            mockStrategy.performTokenRequest(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun testSignInStartPreservesMethodChallengeRedirectWithoutSubmittingPassword() {
+        stubStartThroughPasswordChallenge(mockContinuationState())
+        val response = NativeAuthV2InteractionApiResult.Redirect(
+            correlationId = "server-correlation-id",
+            redirectReason = "redirect_to_web",
+            errorCodes = listOf(900001),
+            traceId = "server-trace-id",
+            timestamp = "2026-11-04T00:00:00Z"
+        )
+        every { mockStrategy.performMethodChallenge(any(), "pwd-1") } returns response
+
+        val result = controller.signInStart(signInStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.Redirect)
+        result as INativeAuthCommandResult.Redirect
+        assertEquals(response.correlationId, result.correlationId)
+        assertEquals(response.redirectReason, result.redirectReason)
+        assertEquals(response.errorCodes, result.errorCodes)
+        assertEquals(response.traceId, result.traceId)
+        assertEquals(response.timestamp, result.timestamp)
+        verify(exactly = 1) { mockStrategy.performMethodChallenge(any(), "pwd-1") }
+        verify(exactly = 0) {
+            mockStrategy.performPasswordVerify(any(), any())
+            mockStrategy.performAuthorizeChallengeContinue(any())
+            mockStrategy.performTokenRequest(any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun testSignInStartCarriesScopesAndClaimsIntoAuthorizeChallengeAndToken() {
         val passwordState = mockContinuationState()
         val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")

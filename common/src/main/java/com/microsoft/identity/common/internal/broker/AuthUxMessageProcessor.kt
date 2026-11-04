@@ -69,3 +69,19 @@ interface AuthUxMessageProcessor : AutoCloseable {
     /** Idempotently stops this processor from accepting additional messages. */
     override fun close()
 }
+
+/**
+ * Optional bridge-telemetry adapter that preserves the original processor interface.
+ * The native listener owns callback admission/completion; forwarding must not count it twice.
+ */
+interface TelemetryAwareAuthUxMessageProcessor : AuthUxMessageProcessor {
+    /**
+     * Processes with the handle returned by the caller's callback admission, including a no-op handle.
+     * The caller completes that handle in its outermost `finally`; this method does not admit or
+     * complete the callback.
+     */
+    fun processWithTelemetry(
+        jsonPayload: String,
+        callbackTelemetry: com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeTelemetry
+    )
+}

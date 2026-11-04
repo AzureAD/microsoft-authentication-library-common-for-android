@@ -23,6 +23,10 @@
 
 package com.microsoft.identity.common.internal.ui.webview.authux
 
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
+
 import android.webkit.WebView
 import androidx.annotation.VisibleForTesting
 import androidx.webkit.ScriptHandler
@@ -42,7 +46,8 @@ class AuthUxBridgeSession private constructor(
     private val webKitAdapter: AuthUxWebKitAdapter,
     private var scriptHandler: ScriptHandler?,
     private var listenerRegistered: Boolean,
-    private var javaScriptInterfaceAdded: Boolean
+    private var javaScriptInterfaceAdded: Boolean,
+    private val bridgeTelemetry: AuthUxBridgeTelemetry = AuthUxBridgeTelemetry.NONE
 ) : AutoCloseable {
     private val closed = AtomicBoolean(false)
 
@@ -64,11 +69,18 @@ class AuthUxBridgeSession private constructor(
         if (AuthUxJavaScriptInterface.isValidUriForInterface(url)) {
             if (!javaScriptInterfaceAdded) {
                 val javaScriptInterfaceProcessor = processor ?: return
-                view.addJavascriptInterface(
-                    javaScriptInterfaceProcessor,
-                    AuthUxJavaScriptInterface.getInterfaceName()
-                )
+                bridgeTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
+                try {
+                    view.addJavascriptInterface(
+                        javaScriptInterfaceProcessor,
+                        AuthUxJavaScriptInterface.getInterfaceName()
+                    )
+                } catch (t: Throwable) {
+                    bridgeTelemetry.count(BridgeCounter.INSTALL_FAILED)
+                    throw t
+                }
                 javaScriptInterfaceAdded = true
+                bridgeTelemetry.count(BridgeCounter.LEGACY_INSTALLED)
                 Logger.info(TAG, "Added Auth UX JavaScript interface for an approved navigation.")
             }
         } else if (javaScriptInterfaceAdded) {
@@ -109,44 +121,48 @@ class AuthUxBridgeSession private constructor(
             return
         }
 
-        Logger.info(TAG, "Closing Auth UX bridge session for $mode transport.")
-        processor?.close()
-        val currentWebView = webView
-
         try {
-            if (scriptHandler != null) {
-                scriptHandler?.remove()
-                Logger.info(TAG, "Removed Auth UX document-start script.")
+            Logger.info(TAG, "Closing Auth UX bridge session for $mode transport.")
+            processor?.close()
+            val currentWebView = webView
+
+            try {
+                if (scriptHandler != null) {
+                    scriptHandler?.remove()
+                    Logger.info(TAG, "Removed Auth UX document-start script.")
+                }
+            } catch (t: Throwable) {
+                Logger.error(TAG, "Failed to remove Auth UX document-start script.", t)
+            } finally {
+                scriptHandler = null
             }
-        } catch (t: Throwable) {
-            Logger.error(TAG, "Failed to remove Auth UX document-start script.", t)
+
+            if (currentWebView != null && listenerRegistered) {
+                try {
+                    webKitAdapter.removeWebMessageListener(currentWebView, PRIVATE_OBJECT_NAME)
+                } catch (t: Throwable) {
+                    Logger.error(TAG, "Failed to remove Auth UX WebMessageListener.", t)
+                } finally {
+                    listenerRegistered = false
+                }
+            }
+
+            if (currentWebView != null && javaScriptInterfaceAdded) {
+                try {
+                    currentWebView.removeJavascriptInterface(AuthUxJavaScriptInterface.getInterfaceName())
+                    Logger.info(TAG, "Removed Auth UX JavaScript interface during session close.")
+                } catch (t: Throwable) {
+                    Logger.error(TAG, "Failed to remove Auth UX JavaScript interface.", t)
+                } finally {
+                    javaScriptInterfaceAdded = false
+                }
+            }
+
+            webView = null
+            Logger.info(TAG, "Closed Auth UX bridge session.")
         } finally {
-            scriptHandler = null
+            bridgeTelemetry.finish()
         }
-
-        if (currentWebView != null && listenerRegistered) {
-            try {
-                webKitAdapter.removeWebMessageListener(currentWebView, PRIVATE_OBJECT_NAME)
-            } catch (t: Throwable) {
-                Logger.error(TAG, "Failed to remove Auth UX WebMessageListener.", t)
-            } finally {
-                listenerRegistered = false
-            }
-        }
-
-        if (currentWebView != null && javaScriptInterfaceAdded) {
-            try {
-                currentWebView.removeJavascriptInterface(AuthUxJavaScriptInterface.getInterfaceName())
-                Logger.info(TAG, "Removed Auth UX JavaScript interface during session close.")
-            } catch (t: Throwable) {
-                Logger.error(TAG, "Failed to remove Auth UX JavaScript interface.", t)
-            } finally {
-                javaScriptInterfaceAdded = false
-            }
-        }
-
-        webView = null
-        Logger.info(TAG, "Closed Auth UX bridge session.")
     }
 
     companion object {
@@ -222,7 +238,27 @@ class AuthUxBridgeSession private constructor(
             preferWebMessageListener: Boolean,
             webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
             originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
+        ): AuthUxBridgeSession = createWithTelemetry(
+            webView, initialUrl, isBrokerAuthProcess, telemetrySink,
+            brokerAuthUxBridgeEnabled, preferWebMessageListener,
+            AuthUxBridgeTelemetry.NONE, webKitAdapter, originPolicy
+        )
+
+        /** Telemetry-aware construction; the original factory and its default-call ABI stay intact. */
+        @JvmStatic
+        @JvmOverloads
+        fun createWithTelemetry(
+            webView: WebView,
+            initialUrl: String?,
+            isBrokerAuthProcess: Boolean,
+            telemetrySink: AuthUxTelemetrySink?,
+            brokerAuthUxBridgeEnabled: Boolean,
+            preferWebMessageListener: Boolean,
+            bridgeTelemetry: AuthUxBridgeTelemetry,
+            webKitAdapter: AuthUxWebKitAdapter = DefaultAuthUxWebKitAdapter,
+            originPolicy: AuthUxOriginPolicy = AuthUxOriginPolicy()
         ): AuthUxBridgeSession {
+            val brokerTelemetry = if (isBrokerAuthProcess) bridgeTelemetry else AuthUxBridgeTelemetry.NONE
             // Capabilities are request-scoped. Broker behavior requires bridge enablement, while a
             // non-broker request can receive only onboarding telemetry when a recorder is present.
             val capabilities = when {
@@ -239,6 +275,8 @@ class AuthUxBridgeSession private constructor(
             }
 
             if (capabilities == null) {
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT, Value.DISABLED)
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.BRIDGE_NOT_ENABLED)
                 if (isBrokerAuthProcess) {
                     Logger.info(
                         TAG,
@@ -254,9 +292,10 @@ class AuthUxBridgeSession private constructor(
                 return disabled(webKitAdapter)
             }
 
-            val processor = AuthUxJavaScriptInterface(
+            val processor = AuthUxJavaScriptInterface.createWithTelemetry(
                 telemetrySink = telemetrySink,
-                capabilities = capabilities
+                capabilities = capabilities,
+                bridgeTelemetry = brokerTelemetry
             )
 
             if (!preferWebMessageListener) {
@@ -264,7 +303,8 @@ class AuthUxBridgeSession private constructor(
                     TAG,
                     "WebMessageListener preference disabled; selecting addJavascriptInterface."
                 )
-                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.JAVASCRIPT_INTERFACE_REQUESTED)
+                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter, brokerTelemetry)
             }
 
             // WebMessageListener and its document-start facade form one transport. Select it only
@@ -279,7 +319,8 @@ class AuthUxBridgeSession private constructor(
                     "WebMessageListener prerequisites are unavailable; selecting " +
                         "addJavascriptInterface."
                 )
-                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.WEB_MESSAGE_LISTENER_PREREQUISITES_NOT_MET)
+                return javaScriptInterface(webView, initialUrl, processor, webKitAdapter, brokerTelemetry)
             }
             val allowedOrigins = originPolicy.getAllowedOriginRules()
 
@@ -287,6 +328,7 @@ class AuthUxBridgeSession private constructor(
             var scriptRegistrationAttempted = false
             var handler: ScriptHandler? = null
             return try {
+                brokerTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
                 // Assume registration may have modified WebView state before throwing so rollback
                 // always attempts listener removal after this call begins.
                 listenerMayBeRegistered = true
@@ -294,7 +336,7 @@ class AuthUxBridgeSession private constructor(
                     webView,
                     PRIVATE_OBJECT_NAME,
                     allowedOrigins,
-                    AuthUxWebMessageListener(processor, originPolicy)
+                    AuthUxWebMessageListener(processor, originPolicy, brokerTelemetry)
                 )
                 // A thrown registration call may have installed the script without returning its
                 // removal handle. Treat that state as uncertain rather than falling back.
@@ -305,6 +347,8 @@ class AuthUxBridgeSession private constructor(
                     allowedOrigins
                 )
                 Logger.info(TAG, "Selected WebMessageListener Auth UX transport.")
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT, Value.WEB_MESSAGE_LISTENER)
+                brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.WEB_MESSAGE_LISTENER_INSTALLED)
                 AuthUxBridgeSession(
                     mode = AuthUxTransportMode.WEB_MESSAGE_LISTENER,
                     webView = webView,
@@ -312,9 +356,11 @@ class AuthUxBridgeSession private constructor(
                     webKitAdapter = webKitAdapter,
                     scriptHandler = handler,
                     listenerRegistered = true,
-                    javaScriptInterfaceAdded = false
+                    javaScriptInterfaceAdded = false,
+                    bridgeTelemetry = brokerTelemetry
                 )
             } catch (t: Throwable) {
+                brokerTelemetry.count(BridgeCounter.INSTALL_FAILED)
                 Logger.error(TAG, "WebMessageListener Auth UX setup failed; rolling back.", t)
                 var rollbackComplete = !scriptRegistrationAttempted || handler != null
                 try {
@@ -335,12 +381,16 @@ class AuthUxBridgeSession private constructor(
                 // Falling back is safe only after complete rollback. Otherwise disable the bridge
                 // to avoid exposing both transports after a partial setup failure.
                 if (rollbackComplete) {
+                    brokerTelemetry.count(BridgeCounter.ROLLBACK_COMPLETE)
+                    brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.WEB_MESSAGE_LISTENER_ROLLED_BACK)
                     Logger.info(
                         TAG,
                         "WebMessageListener rollback completed; selecting addJavascriptInterface."
                     )
-                    javaScriptInterface(webView, initialUrl, processor, webKitAdapter)
+                    javaScriptInterface(webView, initialUrl, processor, webKitAdapter, brokerTelemetry)
                 } else {
+                    brokerTelemetry.state(BridgeAttribute.TRANSPORT, Value.DISABLED)
+                    brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.WEB_MESSAGE_LISTENER_ROLLBACK_INCOMPLETE)
                     Logger.warn(
                         TAG,
                         "Auth UX bridge disabled because WebMessageListener rollback was incomplete."
@@ -366,13 +416,22 @@ class AuthUxBridgeSession private constructor(
             webView: WebView,
             initialUrl: String?,
             processor: AuthUxJavaScriptInterface,
-            webKitAdapter: AuthUxWebKitAdapter
+            webKitAdapter: AuthUxWebKitAdapter,
+            bridgeTelemetry: AuthUxBridgeTelemetry
         ): AuthUxBridgeSession {
             // Track the actual installation state separately from the selected transport mode.
             val shouldAdd = AuthUxJavaScriptInterface.isValidUriForInterface(initialUrl)
             if (shouldAdd) {
-                webView.addJavascriptInterface(processor, AuthUxJavaScriptInterface.getInterfaceName())
+                bridgeTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
+                try {
+                    webView.addJavascriptInterface(processor, AuthUxJavaScriptInterface.getInterfaceName())
+                } catch (t: Throwable) {
+                    bridgeTelemetry.count(BridgeCounter.INSTALL_FAILED)
+                    throw t
+                }
+                bridgeTelemetry.count(BridgeCounter.LEGACY_INSTALLED)
             }
+            bridgeTelemetry.state(BridgeAttribute.TRANSPORT, Value.JAVASCRIPT_INTERFACE)
             Logger.info(TAG, "Selected addJavascriptInterface Auth UX transport.")
             return AuthUxBridgeSession(
                 mode = AuthUxTransportMode.JAVASCRIPT_INTERFACE,
@@ -381,7 +440,8 @@ class AuthUxBridgeSession private constructor(
                 webKitAdapter = webKitAdapter,
                 scriptHandler = null,
                 listenerRegistered = false,
-                javaScriptInterfaceAdded = shouldAdd
+                javaScriptInterfaceAdded = shouldAdd,
+                bridgeTelemetry = bridgeTelemetry
             )
         }
 
