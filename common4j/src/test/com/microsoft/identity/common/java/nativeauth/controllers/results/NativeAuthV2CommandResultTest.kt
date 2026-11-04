@@ -48,7 +48,7 @@ class NativeAuthV2CommandResultTest {
                 TARGET,
                 "email"
             ),
-            NativeAuthV2CommandResult.ResetPasswordMethodRequired(
+            NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                 CORRELATION_ID,
                 state,
                 listOf(NativeAuthV2AuthMethod("sms-1", "sms", TARGET))
