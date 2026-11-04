@@ -697,8 +697,9 @@ public enum AttributeName {
 
     /**
      * Long count of callbacks classified as missing data, malformed payloads or invalid required
-     * telemetry fields. Includes NullPointerException and JSON exceptions caught during processing;
-     * not conclusive evidence of malformed page input. Contains no payload or raw validation input.
+     * telemetry fields. Includes exceptions caught during deserialization, not exceptions from
+     * later processing. This classification is not conclusive evidence of a page defect.
+     * Contains no payload or raw validation input.
      */
     authux_rejected_malformed,
 
@@ -710,7 +711,8 @@ public enum AttributeName {
 
     /**
      * Long count of callback processing failures outside the other rejection categories, including
-     * escaping errors. Does not establish whether earlier side effects occurred before failure.
+     * post-parse exceptions regardless of their type, and escaping errors.
+     * Does not establish whether earlier side effects occurred before failure.
      */
     authux_rejected_processing,
 

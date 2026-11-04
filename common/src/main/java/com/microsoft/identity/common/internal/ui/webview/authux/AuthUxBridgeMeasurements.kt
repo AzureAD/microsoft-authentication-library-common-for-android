@@ -4,12 +4,14 @@
 package com.microsoft.identity.common.internal.ui.webview.authux
 
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
 import java.util.Locale
 
 /**
@@ -27,11 +29,12 @@ import java.util.Locale
  * Process death, missing teardown or SDK failures may lose some or all of this record.
  * A callback that never completes also prevents finalization; there is no timeout or retry mechanism.
  *
- * Uses the existing factory without making this span current or forcing a root. Broker's default
+ * Uses the supplied request parent and standard metadata without making this span current or forcing
+ * a root. The calling package is supplied at creation so app-specific sampling can apply. Broker's default
  * configuration assigns this span a 25% trace-ID sampler rather than inheriting the global
  * parent-based decision. Span/app configuration overrides can change the effective sampling rate.
- * Captured attributes are exported as bounded lowercase strings; event counters are longs, including
- * zero. Observer attributes and events map explicitly to shared [AttributeName] constants, so their
+ * Captured attributes are exported as bounded lowercase strings; bridge counters are longs, including
+ * zero. Observer attributes and counters map explicitly to shared [AttributeName] constants, so their
  * internal names do not determine the wire keys. State values retain their lowercase [Value] names.
  * The mappings are exhaustive: adding an observer field requires an explicit schema decision.
  * Shared key names and state-value names are wire contracts; keep the Broker allowlist in sync.
@@ -46,7 +49,7 @@ import java.util.Locale
  */
 class AuthUxBridgeMeasurements private constructor(private val span: Span) : AuthUxMeasurementObserver {
     private val lock = Any()
-    private val counts = LongArray(Event.values().size)
+    private val counts = LongArray(BridgeCounter.values().size)
     private val states = Array(BridgeAttribute.values().size) { Value.NOT_EVALUATED }.also {
         it[BridgeAttribute.TRANSPORT.ordinal] = Value.NOT_SELECTED
     }
@@ -65,9 +68,9 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
      * Records an occurrence, saturating rather than wrapping on overflow.
      * Admitted callbacks may still record after finish is requested, but never after snapshotting.
      */
-    override fun count(event: Event) {
+    override fun count(counter: BridgeCounter) {
         synchronized(lock) {
-            if (!ended && counts[event.ordinal] < Long.MAX_VALUE) counts[event.ordinal]++
+            if (!ended && counts[counter.ordinal] < Long.MAX_VALUE) counts[counter.ordinal]++
         }
     }
 
@@ -78,7 +81,7 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
     override fun admitCallback(): Boolean = synchronized(lock) {
         if (finishing || ended) false else {
             callbacks++
-            if (counts[Event.RECEIVED.ordinal] < Long.MAX_VALUE) counts[Event.RECEIVED.ordinal]++
+            if (counts[BridgeCounter.RECEIVED.ordinal] < Long.MAX_VALUE) counts[BridgeCounter.RECEIVED.ordinal]++
             true
         }
     }
@@ -135,7 +138,7 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
                 result[it.toAttributeName().name] =
                     states[it.ordinal].name.lowercase(Locale.ROOT)
             }
-            Event.values().forEach {
+            BridgeCounter.values().forEach {
                 result[it.toAttributeName().name] = counts[it.ordinal]
             }
         }
@@ -148,26 +151,26 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
         BridgeAttribute.TRANSPORT_SELECTION_REASON -> AttributeName.authux_transport_selection_reason
     }
 
-    private fun Event.toAttributeName(): AttributeName = when (this) {
-        Event.SETUP_FAILED -> AttributeName.authux_setup_failed
-        Event.INSTALL_ATTEMPTS -> AttributeName.authux_install_attempts
-        Event.INSTALL_FAILED -> AttributeName.authux_install_failed
-        Event.ROLLBACK_COMPLETE -> AttributeName.authux_rollback_complete
-        Event.LEGACY_INSTALLED -> AttributeName.authux_legacy_installed
-        Event.RECEIVED -> AttributeName.authux_received
-        Event.REJECTED_CLOSED -> AttributeName.authux_rejected_closed
-        Event.REJECTED_ORIGIN -> AttributeName.authux_rejected_origin
-        Event.REJECTED_TYPE -> AttributeName.authux_rejected_type
-        Event.REJECTED_MALFORMED -> AttributeName.authux_rejected_malformed
-        Event.REJECTED_UNSUPPORTED -> AttributeName.authux_rejected_unsupported
-        Event.REJECTED_CAPABILITY -> AttributeName.authux_rejected_capability
-        Event.REJECTED_PROCESSING -> AttributeName.authux_rejected_processing
-        Event.NUMBER_MATCH_IDENTIFIED -> AttributeName.authux_number_match_identified
-        Event.RECORDER_WRITTEN -> AttributeName.authux_recorder_written
-        Event.RECORDER_EXCLUDED_CID -> AttributeName.authux_recorder_excluded_cid
-        Event.RECORDER_EXCLUDED_POLICY -> AttributeName.authux_recorder_excluded_policy
-        Event.RECORDER_FAILED -> AttributeName.authux_recorder_failed
-        Event.RECORDER_PARTIAL -> AttributeName.authux_recorder_partial
+    private fun BridgeCounter.toAttributeName(): AttributeName = when (this) {
+        BridgeCounter.SETUP_FAILED -> AttributeName.authux_setup_failed
+        BridgeCounter.INSTALL_ATTEMPTS -> AttributeName.authux_install_attempts
+        BridgeCounter.INSTALL_FAILED -> AttributeName.authux_install_failed
+        BridgeCounter.ROLLBACK_COMPLETE -> AttributeName.authux_rollback_complete
+        BridgeCounter.LEGACY_INSTALLED -> AttributeName.authux_legacy_installed
+        BridgeCounter.RECEIVED -> AttributeName.authux_received
+        BridgeCounter.REJECTED_CLOSED -> AttributeName.authux_rejected_closed
+        BridgeCounter.REJECTED_ORIGIN -> AttributeName.authux_rejected_origin
+        BridgeCounter.REJECTED_TYPE -> AttributeName.authux_rejected_type
+        BridgeCounter.REJECTED_MALFORMED -> AttributeName.authux_rejected_malformed
+        BridgeCounter.REJECTED_UNSUPPORTED -> AttributeName.authux_rejected_unsupported
+        BridgeCounter.REJECTED_CAPABILITY -> AttributeName.authux_rejected_capability
+        BridgeCounter.REJECTED_PROCESSING -> AttributeName.authux_rejected_processing
+        BridgeCounter.NUMBER_MATCH_IDENTIFIED -> AttributeName.authux_number_match_identified
+        BridgeCounter.RECORDER_WRITTEN -> AttributeName.authux_recorder_written
+        BridgeCounter.RECORDER_EXCLUDED_CID -> AttributeName.authux_recorder_excluded_cid
+        BridgeCounter.RECORDER_EXCLUDED_POLICY -> AttributeName.authux_recorder_excluded_policy
+        BridgeCounter.RECORDER_FAILED -> AttributeName.authux_recorder_failed
+        BridgeCounter.RECORDER_PARTIAL -> AttributeName.authux_recorder_partial
     }
 
     /**
@@ -197,13 +200,61 @@ class AuthUxBridgeMeasurements private constructor(private val span: Span) : Aut
         val SPAN_NAME = SpanName.AuthUxBridge.name
 
         /**
-         * Starts a best-effort observation using the existing OpenTelemetry factory.
-         * The caller must first check the Broker process; this method does not perform that check.
-         * Returns [AuthUxBridgeTelemetry.NONE] if creation fails, leaving functional setup unaffected.
+         * Starts a Broker bridge observation with the host request's context.
+         * The calling package is set before sampling; tenant and correlation metadata are attached
+         * before ownership transfers to the bridge. Missing/invalid parents use the factory fallback.
+         * This method never makes the span current and does not perform the Broker process check.
+         * Returns [AuthUxBridgeTelemetry.NONE] if initialization fails, leaving functional setup unaffected.
+         *
+         * @param parentSpanContext parent carried by the authorization Activity, when available.
+         * @param tenantId request tenant used by the exporter for region classification.
+         * @param correlationId request correlation ID, not a value supplied by page messages.
+         * @param callingPackageName originating app from the request's carried baggage.
          */
         @JvmStatic
-        fun start(): AuthUxBridgeTelemetry = try {
-            AuthUxBridgeTelemetry.wrap(AuthUxBridgeMeasurements(OTelUtility.createSpan(SPAN_NAME)))
-        } catch (_: Throwable) { AuthUxBridgeTelemetry.NONE }
+        fun start(
+            parentSpanContext: SpanContext?,
+            tenantId: String?,
+            correlationId: String?,
+            callingPackageName: String?
+        ): AuthUxBridgeTelemetry {
+            var startedSpan: Span? = null
+            return try {
+                val span = if (callingPackageName.isNullOrEmpty()) {
+                    OTelUtility.createSpanFromParent(SPAN_NAME, parentSpanContext)
+                } else {
+                    OTelUtility.createSpanFromParent(SPAN_NAME, parentSpanContext, callingPackageName)
+                }
+                startedSpan = span
+                setRequestAttribute(span, AttributeName.tenant_id, tenantId)
+                setRequestAttribute(span, AttributeName.correlation_id, correlationId)
+                AuthUxBridgeTelemetry.wrap(AuthUxBridgeMeasurements(span))
+            } catch (_: Throwable) {
+                warn("Unable to initialize bridge observation.")
+                try {
+                    startedSpan?.end()
+                } catch (_: Throwable) {
+                    warn("Unable to end unowned bridge span.")
+                }
+                AuthUxBridgeTelemetry.NONE
+            }
+        }
+
+        private fun setRequestAttribute(span: Span, name: AttributeName, value: String?) {
+            if (value.isNullOrEmpty()) return
+            try {
+                span.setAttribute(name.name, value)
+            } catch (_: Throwable) {
+                warn("Unable to attach bridge request metadata.")
+            }
+        }
+
+        private fun warn(message: String) {
+            try {
+                Logger.warn(AuthUxBridgeMeasurements::class.java.simpleName, message)
+            } catch (_: Throwable) {
+                // A logging failure must not turn optional instrumentation into an auth failure.
+            }
+        }
     }
 }

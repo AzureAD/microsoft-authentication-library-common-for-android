@@ -7,6 +7,7 @@ import android.net.Uri
 import android.webkit.WebView
 import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
+import com.google.gson.JsonParseException
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.broker.AuthUxMessageProcessor
 import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities
@@ -14,7 +15,7 @@ import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
 import io.opentelemetry.api.trace.Span
 import org.junit.After
@@ -41,10 +42,10 @@ class AuthUxMeasurementsTest {
             override fun finish() = error("observer")
             override fun setupFinished(active: Boolean) = error("observer")
             override fun state(attribute: BridgeAttribute, value: Value) = error("observer")
-            override fun count(event: Event) = error("observer")
+            override fun count(counter: BridgeCounter) = error("observer")
         }
         val guarded = AuthUxBridgeTelemetry.wrap(broken)
-        guarded.admitCallback().count(Event.RECEIVED)
+        guarded.admitCallback().count(BridgeCounter.RECEIVED)
         guarded.completeCallback()
         guarded.finish()
         guarded.setupFinished(false)
@@ -56,14 +57,14 @@ class AuthUxMeasurementsTest {
     @Test fun `throwing counter after successful admission preserves functional processing`() {
         var admissions = 0
         var completions = 0
-        val attemptedCounts = mutableListOf<Event>()
+        val attemptedCounts = mutableListOf<BridgeCounter>()
         val broken = object : AuthUxMeasurementObserver {
             override fun admitCallback(): Boolean {
                 admissions++
                 return true
             }
-            override fun count(event: Event) {
-                attemptedCounts.add(event)
+            override fun count(counter: BridgeCounter) {
+                attemptedCounts.add(counter)
                 error("counter")
             }
             override fun state(attribute: BridgeAttribute, value: Value) = Unit
@@ -75,7 +76,7 @@ class AuthUxMeasurementsTest {
             .process(payload)
 
         assertEquals(1, admissions)
-        assertEquals(listOf(Event.NUMBER_MATCH_IDENTIFIED), attemptedCounts)
+        assertEquals(listOf(BridgeCounter.NUMBER_MATCH_IDENTIFIED), attemptedCounts)
         assertEquals(1, completions)
         assertEquals("42", NumberMatchHelper.numberMatchMap["abcd1234"])
     }
@@ -89,9 +90,9 @@ class AuthUxMeasurementsTest {
         listener.onPostMessage(mock(WebView::class.java), WebMessageCompat(payload), origin,
             true, mock(JavaScriptReplyProxy::class.java))
         processor.receiveAuthUxMessage(payload)
-        assertEquals(2, owner.counts[Event.RECEIVED])
+        assertEquals(2, owner.counts[BridgeCounter.RECEIVED])
         assertEquals(2, owner.processed())
-        assertEquals(2, owner.counts[Event.NUMBER_MATCH_IDENTIFIED])
+        assertEquals(2, owner.counts[BridgeCounter.NUMBER_MATCH_IDENTIFIED])
         assertEquals("42", NumberMatchHelper.numberMatchMap["abcd1234"])
         AuthUxWebMessageListener::class.java.getConstructor(
             AuthUxMessageProcessor::class.java, AuthUxOriginPolicy::class.java)
@@ -110,9 +111,9 @@ class AuthUxMeasurementsTest {
         processor.process("{")
         processor.close()
         processor.process(payload)
-        assertEquals(4, owner.counts[Event.RECEIVED])
+        assertEquals(4, owner.counts[BridgeCounter.RECEIVED])
         assertEquals(2, owner.processed())
-        assertEquals(2, owner.counts[Event.NUMBER_MATCH_IDENTIFIED])
+        assertEquals(2, owner.counts[BridgeCounter.NUMBER_MATCH_IDENTIFIED])
         assertEquals("42", NumberMatchHelper.numberMatchMap["abcd1234"])
     }
 
@@ -123,7 +124,7 @@ class AuthUxMeasurementsTest {
             Uri.parse("https://login.microsoftonline.com"), true,
             mock(JavaScriptReplyProxy::class.java))
         verify(processor).process(payload)
-        assertEquals(1, owner.counts[Event.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.RECEIVED])
         assertEquals(1, owner.processed())
     }
 
@@ -132,8 +133,8 @@ class AuthUxMeasurementsTest {
         val listener = AuthUxWebMessageListener(processor, AuthUxOriginPolicy(), observation)
         listener.onPostMessage(mock(WebView::class.java), WebMessageCompat(payload),
             Uri.parse("https://evil.example"), false, mock(JavaScriptReplyProxy::class.java))
-        assertEquals(1, owner.counts[Event.RECEIVED])
-        assertEquals(1, owner.counts[Event.REJECTED_ORIGIN])
+        assertEquals(1, owner.counts[BridgeCounter.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_ORIGIN])
         assertEquals(0, owner.processed())
         verifyNoInteractions(processor)
     }
@@ -145,13 +146,113 @@ class AuthUxMeasurementsTest {
         processor.process(payload.replace("number_matching", "unknown"))
         processor.close()
         processor.process(payload)
-        assertEquals(4, owner.counts[Event.RECEIVED])
-        assertEquals(1, owner.counts[Event.REJECTED_MALFORMED])
-        assertEquals(1, owner.counts[Event.REJECTED_CAPABILITY])
-        assertEquals(1, owner.counts[Event.REJECTED_UNSUPPORTED])
-        assertEquals(1, owner.counts[Event.REJECTED_CLOSED])
+        assertEquals(4, owner.counts[BridgeCounter.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_MALFORMED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_CAPABILITY])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_UNSUPPORTED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_CLOSED])
         assertEquals(0, owner.processed())
         assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test fun `parse shape failures and explicit validation rejections are malformed on both transports`() {
+        val malformedPayloads = listOf(
+            "{", "[]", "42", "null", "",
+            payload.replace("\"cid\"", "null"),
+            payload.replace("\"write_data\"", "null"),
+            payload.replace("\"broker\"", "null"),
+            payload.replace("\"cid\"", "[]"),
+            payload.replace("\"write_data\"", "[]"),
+            payload.replace("\"broker\"", "[]"),
+            """{"correlationID":"cid","action_name":"log_telemetry","action_component":"host"}""",
+            """{"correlationID":"cid","action_name":"log_telemetry","action_component":"host","params":null}""",
+            """{"correlationID":"cid","action_name":"log_telemetry","action_component":"host","params":[]}""",
+            """{"correlationID":"cid","action_name":"log_telemetry","action_component":"host","params":{}}""",
+            """{"correlationID":"cid","action_name":"log_telemetry","action_component":"host","params":{"errorCode":"bad code"}}"""
+        )
+        for (modern in listOf(false, true)) {
+            for (message in malformedPayloads) {
+                val recorder = RecordingObserver()
+                val telemetry = AuthUxBridgeTelemetry.wrap(recorder)
+                val sink = mock(AuthUxTelemetrySink::class.java)
+                val processor = AuthUxJavaScriptInterface.createWithTelemetry(
+                    sink, AuthUxRequestCapabilities.BROKER, telemetry)
+                dispatch(processor, telemetry, message, modern)
+                assertEquals("modern=$modern, payload=$message", mapOf(
+                    BridgeCounter.RECEIVED to 1,
+                    BridgeCounter.REJECTED_MALFORMED to 1
+                ), recorder.counts)
+                assertEquals(1, recorder.completions)
+                verifyNoInteractions(sink)
+                assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+            }
+        }
+    }
+
+    @Test fun `post parse exceptions are processing failures regardless of exception type on both transports`() {
+        for (modern in listOf(false, true)) {
+            for (failure in listOf(
+                NullPointerException("span"),
+                JsonParseException("span"),
+                IllegalStateException("span"),
+                UnsupportedOperationException("span")
+            )) {
+                val recorder = RecordingObserver()
+                val telemetry = AuthUxBridgeTelemetry.wrap(recorder)
+                val span = mock(Span::class.java)
+                `when`(span.setAttribute("authux_js_action_name", "write_data")).thenThrow(failure)
+                mockStatic(SpanExtension::class.java).use { current ->
+                    current.`when`<Span> { SpanExtension.current() }.thenReturn(span)
+                    val processor = AuthUxJavaScriptInterface.createWithTelemetry(
+                        null, AuthUxRequestCapabilities.BROKER, telemetry)
+                    dispatch(processor, telemetry, payload, modern)
+                }
+                assertEquals("modern=$modern, exception=${failure.javaClass.simpleName}", mapOf(
+                    BridgeCounter.RECEIVED to 1,
+                    BridgeCounter.NUMBER_MATCH_IDENTIFIED to 1,
+                    BridgeCounter.REJECTED_PROCESSING to 1
+                ), recorder.counts)
+                assertEquals(1, recorder.completions)
+                assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+            }
+        }
+    }
+
+    @Test fun `existing Gson coercions remain accepted on both transports`() {
+        for (modern in listOf(false, true)) {
+            for (message in listOf(
+                payload.replace("\"cid\"", "[\"cid\"]"),
+                payload.replace("\"cid\"", "123")
+            )) {
+                NumberMatchHelper.clearNumberMatchMap()
+                val recorder = RecordingObserver()
+                val telemetry = AuthUxBridgeTelemetry.wrap(recorder)
+                val processor = AuthUxJavaScriptInterface.createWithTelemetry(
+                    null, AuthUxRequestCapabilities.BROKER, telemetry)
+                dispatch(processor, telemetry, message, modern)
+                assertEquals(mapOf(
+                    BridgeCounter.RECEIVED to 1,
+                    BridgeCounter.NUMBER_MATCH_IDENTIFIED to 1
+                ), recorder.counts)
+                assertEquals(1, recorder.completions)
+                assertEquals("42", NumberMatchHelper.numberMatchMap["abcd1234"])
+            }
+        }
+    }
+
+    private fun dispatch(
+        processor: AuthUxJavaScriptInterface,
+        telemetry: AuthUxBridgeTelemetry,
+        message: String,
+        modern: Boolean
+    ) {
+        if (modern) {
+            AuthUxWebMessageListener(processor, AuthUxOriginPolicy(), telemetry).onPostMessage(
+                mock(WebView::class.java), WebMessageCompat(message),
+                Uri.parse("https://login.microsoftonline.com"), true, mock(JavaScriptReplyProxy::class.java))
+        } else {
+            processor.receiveAuthUxMessage(message)
+        }
     }
 
     @Test fun `identification precedes legacy span writes but respects telemetry precedence`() {
@@ -165,10 +266,10 @@ class AuthUxMeasurementsTest {
             processor.process(payload)
             processor.process(payload.replace("write_data", "log_telemetry"))
         }
-        assertEquals(1, owner.counts[Event.NUMBER_MATCH_IDENTIFIED])
+        assertEquals(1, owner.counts[BridgeCounter.NUMBER_MATCH_IDENTIFIED])
         assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
-        assertEquals(1, owner.counts[Event.REJECTED_PROCESSING])
-        assertEquals(1, owner.counts[Event.REJECTED_MALFORMED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_PROCESSING])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_MALFORMED])
     }
 
     @Test fun `binary and null native callbacks each have exactly one terminal outcome`() {
@@ -183,9 +284,9 @@ class AuthUxMeasurementsTest {
                 Uri.parse("https://login.microsoftonline.com"), true,
                 mock(JavaScriptReplyProxy::class.java))
         }
-        assertEquals(2, owner.counts[Event.RECEIVED])
-        assertEquals(1, owner.counts[Event.REJECTED_TYPE])
-        assertEquals(1, owner.counts[Event.REJECTED_MALFORMED])
+        assertEquals(2, owner.counts[BridgeCounter.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_TYPE])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_MALFORMED])
         verifyNoInteractions(processor)
         assertEquals(0, owner.processed())
     }
@@ -220,9 +321,9 @@ class AuthUxMeasurementsTest {
                 .process(payload)
         }
         assertEquals("42", NumberMatchHelper.numberMatchMap["abcd1234"])
-        assertEquals(1, owner.counts[Event.RECEIVED])
-        assertEquals(1, owner.counts[Event.NUMBER_MATCH_IDENTIFIED])
-        assertEquals(1, owner.counts[Event.REJECTED_PROCESSING])
+        assertEquals(1, owner.counts[BridgeCounter.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.NUMBER_MATCH_IDENTIFIED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_PROCESSING])
         assertEquals(0, owner.processed())
     }
 
@@ -238,22 +339,24 @@ class AuthUxMeasurementsTest {
                 assertSame(failure, actual)
             }
         }
-        assertEquals(1, owner.counts[Event.RECEIVED])
-        assertEquals(1, owner.counts[Event.REJECTED_PROCESSING])
-        assertEquals(1, owner.counts[Event.NUMBER_MATCH_IDENTIFIED])
+        assertEquals(1, owner.counts[BridgeCounter.RECEIVED])
+        assertEquals(1, owner.counts[BridgeCounter.REJECTED_PROCESSING])
+        assertEquals(1, owner.counts[BridgeCounter.NUMBER_MATCH_IDENTIFIED])
         assertEquals(0, owner.processed())
         assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
     }
 
     private class RecordingObserver : AuthUxMeasurementObserver {
-        val counts = mutableMapOf<Event, Int>()
-        fun processed() = (counts[Event.RECEIVED] ?: 0) -
+        val counts = mutableMapOf<BridgeCounter, Int>()
+        var completions = 0
+        fun processed() = (counts[BridgeCounter.RECEIVED] ?: 0) -
             counts.filterKeys { it.name.startsWith("REJECTED_") }.values.sum()
         override fun admitCallback(): Boolean {
-            count(Event.RECEIVED)
+            count(BridgeCounter.RECEIVED)
             return true
         }
         override fun state(attribute: BridgeAttribute, value: Value) = Unit
-        override fun count(event: Event) { counts[event] = (counts[event] ?: 0) + 1 }
+        override fun count(counter: BridgeCounter) { counts[counter] = (counts[counter] ?: 0) + 1 }
+        override fun completeCallback() { completions++ }
     }
 }

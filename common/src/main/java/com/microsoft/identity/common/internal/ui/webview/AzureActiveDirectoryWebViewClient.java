@@ -27,7 +27,7 @@ import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeMeas
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value;
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -364,7 +364,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final boolean isBrokerAuthProcess =
                     ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
             final AuthUxBridgeTelemetry bridgeTelemetry = isBrokerAuthProcess
-                    ? AuthUxBridgeMeasurements.start() : AuthUxBridgeTelemetry.NONE;
+                    ? startAuthUxBridgeMeasurements() : AuthUxBridgeTelemetry.NONE;
             boolean completed = false;
             boolean retained = false;
             try {
@@ -423,12 +423,50 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return session;
             } finally {
                 if (!completed) {
-                    bridgeTelemetry.count(Event.SETUP_FAILED);
+                    bridgeTelemetry.count(BridgeCounter.SETUP_FAILED);
                     bridgeTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.BRIDGE_SETUP_FAILED);
                 }
                 bridgeTelemetry.setupFinished(retained);
             }
         });
+    }
+
+    /**
+     * Starts a bridge observation using the authorization Activity's carried request context.
+     * The caller must first check that this is the Broker auth process.
+     *
+     * <p>The parent span context identifies the trace but does not contain caller metadata.
+     * Read the calling package from the Activity's baggage, not the UI thread's ambient context,
+     * so it is available when the span's sampling decision is made. Missing Activity context uses
+     * empty baggage rather than potentially unrelated ambient baggage.
+     * Correlation precedence is the captured request ID, carried baggage, then the existing
+     * diagnostic-context fallback. The request tenant is supplied separately for export routing.
+     *
+     * @return a lifecycle-owned observation, or a no-op handle if instrumentation initialization
+     * fails; instrumentation failures must not prevent functional bridge setup.
+     */
+    private AuthUxBridgeTelemetry startAuthUxBridgeMeasurements() {
+        try {
+            final Context context = getActivity() instanceof AuthorizationActivity
+                    ? ((AuthorizationActivity) getActivity()).getOtelContext() : null;
+            final Baggage baggage = context == null ? Baggage.empty() : BaggageExtension.fromContext(context);
+            final String callingPackageName = baggage.getEntryValue(AttributeName.calling_package_name.name());
+            String correlationId = mCorrelationId;
+            if (StringUtil.isNullOrEmpty(correlationId)) {
+                correlationId = baggage.getEntryValue(AttributeName.correlation_id.name());
+            }
+            if (StringUtil.isNullOrEmpty(correlationId)) {
+                correlationId = getFlowCorrelationId();
+            }
+            return AuthUxBridgeMeasurements.start(mSpanContext, mUtid, correlationId, callingPackageName);
+        } catch (final Throwable exception) {
+            try {
+                Logger.warn(TAG + ":startAuthUxBridgeMeasurements", "Unable to read bridge request context.");
+            } catch (final Throwable loggingFailure) {
+                // Instrumentation, including its diagnostics, must not change authentication.
+            }
+            return AuthUxBridgeTelemetry.NONE;
+        }
     }
 
     private static boolean safelyResolveAuthUxTransportFlight(
@@ -476,7 +514,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // so an unrelated request's error cannot be attributed to this request.
             if (StringUtil.isNullOrEmpty(mCorrelationId)
                     || DiagnosticContext.UNSET_CORRELATION_ID.equals(mCorrelationId)) {
-                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_CID);
+                bridgeTelemetry.count(BridgeCounter.RECORDER_EXCLUDED_CID);
                 Logger.info(
                         methodTag,
                         "Auth UX telemetry occurrence was excluded because the host request "
@@ -485,7 +523,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return true;
             }
             if (!mCorrelationId.equals(event.getCorrelationId())) {
-                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_CID);
+                bridgeTelemetry.count(BridgeCounter.RECORDER_EXCLUDED_CID);
                 Logger.info(
                         methodTag,
                         "Auth UX telemetry occurrence was excluded because its correlation ID "
@@ -496,7 +534,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String blockingError =
                     OnboardingBlockingErrorParser.qualifyBlockingError(event.getErrorCode());
             if (blockingError == null) {
-                bridgeTelemetry.count(Event.RECORDER_EXCLUDED_POLICY);
+                bridgeTelemetry.count(BridgeCounter.RECORDER_EXCLUDED_POLICY);
                 Logger.info(
                         methodTag,
                         event.getCorrelationId(),
@@ -521,8 +559,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 written = true;
                 return true;
             } finally {
-                bridgeTelemetry.count(written ? Event.RECORDER_WRITTEN
-                        : appended ? Event.RECORDER_PARTIAL : Event.RECORDER_FAILED);
+                bridgeTelemetry.count(written ? BridgeCounter.RECORDER_WRITTEN
+                        : appended ? BridgeCounter.RECORDER_PARTIAL : BridgeCounter.RECORDER_FAILED);
             }
         };
     }

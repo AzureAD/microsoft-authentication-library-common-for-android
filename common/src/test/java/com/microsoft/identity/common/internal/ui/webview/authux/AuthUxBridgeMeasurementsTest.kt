@@ -13,10 +13,12 @@ import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities
 import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.logging.Logger
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,34 +35,119 @@ class AuthUxBridgeMeasurementsTest {
         "action_component":"host","params":{"errorCode":"53003"}}"""
     private val url = "https://login.microsoftonline.com"
 
+    @Test fun `request context uses caller aware factory and retains metadata until normal completion`() {
+        val parent = mock(SpanContext::class.java)
+        val span = mock(Span::class.java)
+        mockStatic(OTelUtility::class.java).use { factory ->
+            factory.`when`<Span> {
+                OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller")
+            }.thenReturn(span)
+            val observation = AuthUxBridgeMeasurements.start(parent, "tenant", "request-cid", "com.example.caller")
+            factory.verify {
+                OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller")
+            }
+            factory.verifyNoMoreInteractions()
+            verify(span).setAttribute("tenant_id", "tenant")
+            verify(span).setAttribute("correlation_id", "request-cid")
+            observation.setupFinished(true)
+            verify(span, never()).end()
+            observation.finish()
+            observation.finish()
+            verify(span).end()
+        }
+    }
+
+    @Test fun `missing caller and request metadata use parent only factory without invented attributes`() {
+        for (missing in listOf(null, "")) {
+            val span = mock(Span::class.java)
+            mockStatic(OTelUtility::class.java).use { factory ->
+                factory.`when`<Span> {
+                    OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)
+                }.thenReturn(span)
+                val observation = AuthUxBridgeMeasurements.start(null, missing, missing, missing)
+                factory.verify { OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null) }
+                factory.verifyNoMoreInteractions()
+                observation.setupFinished(false)
+                verify(span, never()).setAttribute(eq("tenant_id"), anyString())
+                verify(span, never()).setAttribute(eq("correlation_id"), anyString())
+                verify(span).end()
+            }
+        }
+    }
+
+    @Test fun `request factory metadata and logging failures do not escape or lose span ownership`() {
+        mockStatic(OTelUtility::class.java).use { factory ->
+            factory.`when`<Span> {
+                OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null, "caller")
+            }.thenThrow(AssertionError("factory"))
+            assertSame(AuthUxBridgeTelemetry.NONE, AuthUxBridgeMeasurements.start(null, "tenant", "cid", "caller"))
+
+            val span = mock(Span::class.java)
+            factory.`when`<Span> {
+                OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null, "caller")
+            }.thenReturn(span)
+            `when`(span.setAttribute("tenant_id", "tenant")).thenThrow(AssertionError("metadata"))
+            mockStatic(Logger::class.java).use { logger ->
+                logger.`when`<Unit> {
+                    Logger.warn("AuthUxBridgeMeasurements", "Unable to attach bridge request metadata.")
+                }.thenThrow(AssertionError("logger"))
+                val observation = AuthUxBridgeMeasurements.start(null, "tenant", "cid", "caller")
+                assertNotSame(AuthUxBridgeTelemetry.NONE, observation)
+                verify(span).setAttribute("correlation_id", "cid")
+                observation.setupFinished(true)
+                observation.finish()
+                observation.finish()
+                verify(span).end()
+            }
+        }
+    }
+
+    @Test fun `started span is ended if measurement ownership cannot be established`() {
+        for (endFails in listOf(false, true)) {
+            val span = mock(Span::class.java)
+            if (endFails) doThrow(AssertionError("end")).`when`(span).end()
+            mockStatic(OTelUtility::class.java).use { factory ->
+                factory.`when`<Span> {
+                    OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)
+                }.thenReturn(span)
+                mockConstruction(AuthUxBridgeMeasurements::class.java) { _, _ ->
+                    throw IllegalStateException("ownership")
+                }.use {
+                    assertSame(AuthUxBridgeTelemetry.NONE, AuthUxBridgeMeasurements.start(null, null, null, null))
+                    verify(span).end()
+                }
+            }
+        }
+    }
+
     /**
      * Pins all 23 wire keys independently of production registry constants and enum-name derivation.
-     * Zero and distinct nonzero long counts detect missing, duplicated or swapped event mappings.
+     * Zero and distinct nonzero long counts detect missing, duplicated or swapped counter mappings.
      * Verifies the helper's Span calls, not Broker filtering or downstream ingestion.
      */
     @Test fun `all observer fields retain their independent wire names and counter types`() {
         val counterKeys = linkedMapOf(
-            Event.SETUP_FAILED to "authux_setup_failed",
-            Event.INSTALL_ATTEMPTS to "authux_install_attempts",
-            Event.INSTALL_FAILED to "authux_install_failed",
-            Event.ROLLBACK_COMPLETE to "authux_rollback_complete",
-            Event.LEGACY_INSTALLED to "authux_legacy_installed",
-            Event.RECEIVED to "authux_received",
-            Event.REJECTED_CLOSED to "authux_rejected_closed",
-            Event.REJECTED_ORIGIN to "authux_rejected_origin",
-            Event.REJECTED_TYPE to "authux_rejected_type",
-            Event.REJECTED_MALFORMED to "authux_rejected_malformed",
-            Event.REJECTED_UNSUPPORTED to "authux_rejected_unsupported",
-            Event.REJECTED_CAPABILITY to "authux_rejected_capability",
-            Event.REJECTED_PROCESSING to "authux_rejected_processing",
-            Event.NUMBER_MATCH_IDENTIFIED to "authux_number_match_identified",
-            Event.RECORDER_WRITTEN to "authux_recorder_written",
-            Event.RECORDER_EXCLUDED_CID to "authux_recorder_excluded_cid",
-            Event.RECORDER_EXCLUDED_POLICY to "authux_recorder_excluded_policy",
-            Event.RECORDER_FAILED to "authux_recorder_failed",
-            Event.RECORDER_PARTIAL to "authux_recorder_partial"
+            BridgeCounter.SETUP_FAILED to "authux_setup_failed",
+            BridgeCounter.INSTALL_ATTEMPTS to "authux_install_attempts",
+            BridgeCounter.INSTALL_FAILED to "authux_install_failed",
+            BridgeCounter.ROLLBACK_COMPLETE to "authux_rollback_complete",
+            BridgeCounter.LEGACY_INSTALLED to "authux_legacy_installed",
+            BridgeCounter.RECEIVED to "authux_received",
+            BridgeCounter.REJECTED_CLOSED to "authux_rejected_closed",
+            BridgeCounter.REJECTED_ORIGIN to "authux_rejected_origin",
+            BridgeCounter.REJECTED_TYPE to "authux_rejected_type",
+            BridgeCounter.REJECTED_MALFORMED to "authux_rejected_malformed",
+            BridgeCounter.REJECTED_UNSUPPORTED to "authux_rejected_unsupported",
+            BridgeCounter.REJECTED_CAPABILITY to "authux_rejected_capability",
+            BridgeCounter.REJECTED_PROCESSING to "authux_rejected_processing",
+            BridgeCounter.NUMBER_MATCH_IDENTIFIED to "authux_number_match_identified",
+            BridgeCounter.RECORDER_WRITTEN to "authux_recorder_written",
+            BridgeCounter.RECORDER_EXCLUDED_CID to "authux_recorder_excluded_cid",
+            BridgeCounter.RECORDER_EXCLUDED_POLICY to "authux_recorder_excluded_policy",
+            BridgeCounter.RECORDER_FAILED to "authux_recorder_failed",
+            BridgeCounter.RECORDER_PARTIAL to "authux_recorder_partial"
         )
-        assertEquals(Event.values().toSet(), counterKeys.keys)
+        assertEquals(BridgeCounter.values().toSet(), counterKeys.keys)
         assertEquals(19, counterKeys.values.toSet().size)
         for (nonzero in listOf(false, true)) withSpan { span, observation ->
             observation.state(BridgeAttribute.AUTH_UX_BRIDGE_FLIGHT, Value.ON)
@@ -68,8 +155,8 @@ class AuthUxBridgeMeasurementsTest {
             observation.state(BridgeAttribute.TRANSPORT, Value.JAVASCRIPT_INTERFACE)
             observation.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.JAVASCRIPT_INTERFACE_REQUESTED)
             if (nonzero) {
-                counterKeys.keys.forEachIndexed { index, event ->
-                    repeat(index + 1) { observation.count(event) }
+                counterKeys.keys.forEachIndexed { index, counter ->
+                    repeat(index + 1) { observation.count(counter) }
                 }
             }
             observation.setupFinished(false)
@@ -90,10 +177,10 @@ class AuthUxBridgeMeasurementsTest {
         val callback = observation.admitCallback()
         observation.finish()
         observation.finish()
-        observation.admitCallback().count(Event.REJECTED_CLOSED)
+        observation.admitCallback().count(BridgeCounter.REJECTED_CLOSED)
         observation.setupFinished(true)
         verify(span, never()).end()
-        callback.count(Event.REJECTED_MALFORMED)
+        callback.count(BridgeCounter.REJECTED_MALFORMED)
         callback.completeCallback()
         observation.finish()
         verify(span).setAttribute("authux_received", 1L)
@@ -127,7 +214,7 @@ class AuthUxBridgeMeasurementsTest {
     @Test fun `disabled and failed initializations end locally once with truthful defaults`() {
         for (failed in listOf(false, true)) {
             withSpan { span, observation ->
-                if (failed) observation.count(Event.SETUP_FAILED)
+                if (failed) observation.count(BridgeCounter.SETUP_FAILED)
                 observation.setupFinished(false)
                 observation.setupFinished(false)
                 observation.finish()
@@ -142,9 +229,9 @@ class AuthUxBridgeMeasurementsTest {
 
     @Test fun `factory and export failures are isolated`() {
         mockStatic(OTelUtility::class.java).use { factory ->
-            factory.`when`<Span> { OTelUtility.createSpan(AuthUxBridgeMeasurements.SPAN_NAME) }
+            factory.`when`<Span> { OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null) }
                 .thenThrow(AssertionError("factory"))
-            assertSame(AuthUxBridgeTelemetry.NONE, AuthUxBridgeMeasurements.start())
+            assertSame(AuthUxBridgeTelemetry.NONE, AuthUxBridgeMeasurements.start(null, null, null, null))
         }
         withSpan { span, observation ->
             `when`(span.setAttribute("authux_setup_failed", 0L)).thenThrow(AssertionError("export"))
@@ -288,8 +375,8 @@ class AuthUxBridgeMeasurementsTest {
     private fun withSpan(block: (Span, AuthUxBridgeTelemetry) -> Unit) {
         val span = mock(Span::class.java)
         mockStatic(OTelUtility::class.java).use { factory ->
-            factory.`when`<Span> { OTelUtility.createSpan(AuthUxBridgeMeasurements.SPAN_NAME) }.thenReturn(span)
-            block(span, AuthUxBridgeMeasurements.start())
+            factory.`when`<Span> { OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null) }.thenReturn(span)
+            block(span, AuthUxBridgeMeasurements.start(null, null, null, null))
             for (removed in listOf("setup_completed", "processed", "store_attempts")) {
                 verify(span, never()).setAttribute(eq("authux_$removed"), anyLong())
             }

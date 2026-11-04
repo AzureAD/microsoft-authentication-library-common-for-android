@@ -56,8 +56,8 @@ class AuthUxBridgeSessionTest {
             webView, LOGIN_URL, true, null, true, true,
             observation, FakeWebKitAdapter(failListenerRegistration = true), AuthUxOriginPolicy())
         assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, fallback.mode)
-        verify(observer).count(AuthUxMeasurementObserver.Event.INSTALL_FAILED)
-        verify(observer).count(AuthUxMeasurementObserver.Event.ROLLBACK_COMPLETE)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.INSTALL_FAILED)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.ROLLBACK_COMPLETE)
         verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.JAVASCRIPT_INTERFACE)
         verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.WEB_MESSAGE_LISTENER_ROLLED_BACK)
         for (adapter in listOf(
@@ -73,7 +73,7 @@ class AuthUxBridgeSessionTest {
             verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.DISABLED)
             verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.WEB_MESSAGE_LISTENER_ROLLBACK_INCOMPLETE)
             verify(observer, never()).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.BRIDGE_SETUP_FAILED)
-            verify(observer, never()).count(AuthUxMeasurementObserver.Event.ROLLBACK_COMPLETE)
+            verify(observer, never()).count(AuthUxMeasurementObserver.BridgeCounter.ROLLBACK_COMPLETE)
         }
     }
 
@@ -84,9 +84,9 @@ class AuthUxBridgeSessionTest {
             webView, FEDERATED_URL, true, null, true, false,
             AuthUxBridgeTelemetry.wrap(observer), FakeWebKitAdapter(), AuthUxOriginPolicy())
         verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.JAVASCRIPT_INTERFACE)
-        verify(observer, never()).count(AuthUxMeasurementObserver.Event.LEGACY_INSTALLED)
+        verify(observer, never()).count(AuthUxMeasurementObserver.BridgeCounter.LEGACY_INSTALLED)
         session.onPageStarted(webView, LOGIN_URL)
-        verify(observer).count(AuthUxMeasurementObserver.Event.LEGACY_INSTALLED)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.LEGACY_INSTALLED)
     }
 
     @Test

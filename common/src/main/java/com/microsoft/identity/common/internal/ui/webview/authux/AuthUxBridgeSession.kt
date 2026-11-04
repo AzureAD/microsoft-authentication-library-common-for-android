@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview.authux
 
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeAttribute
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Value
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 
 import android.webkit.WebView
 import androidx.annotation.VisibleForTesting
@@ -69,18 +69,18 @@ class AuthUxBridgeSession private constructor(
         if (AuthUxJavaScriptInterface.isValidUriForInterface(url)) {
             if (!javaScriptInterfaceAdded) {
                 val javaScriptInterfaceProcessor = processor ?: return
-                bridgeTelemetry.count(Event.INSTALL_ATTEMPTS)
+                bridgeTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
                 try {
                     view.addJavascriptInterface(
                         javaScriptInterfaceProcessor,
                         AuthUxJavaScriptInterface.getInterfaceName()
                     )
                 } catch (t: Throwable) {
-                    bridgeTelemetry.count(Event.INSTALL_FAILED)
+                    bridgeTelemetry.count(BridgeCounter.INSTALL_FAILED)
                     throw t
                 }
                 javaScriptInterfaceAdded = true
-                bridgeTelemetry.count(Event.LEGACY_INSTALLED)
+                bridgeTelemetry.count(BridgeCounter.LEGACY_INSTALLED)
                 Logger.info(TAG, "Added Auth UX JavaScript interface for an approved navigation.")
             }
         } else if (javaScriptInterfaceAdded) {
@@ -328,7 +328,7 @@ class AuthUxBridgeSession private constructor(
             var scriptRegistrationAttempted = false
             var handler: ScriptHandler? = null
             return try {
-                brokerTelemetry.count(Event.INSTALL_ATTEMPTS)
+                brokerTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
                 // Assume registration may have modified WebView state before throwing so rollback
                 // always attempts listener removal after this call begins.
                 listenerMayBeRegistered = true
@@ -360,7 +360,7 @@ class AuthUxBridgeSession private constructor(
                     bridgeTelemetry = brokerTelemetry
                 )
             } catch (t: Throwable) {
-                brokerTelemetry.count(Event.INSTALL_FAILED)
+                brokerTelemetry.count(BridgeCounter.INSTALL_FAILED)
                 Logger.error(TAG, "WebMessageListener Auth UX setup failed; rolling back.", t)
                 var rollbackComplete = !scriptRegistrationAttempted || handler != null
                 try {
@@ -381,7 +381,7 @@ class AuthUxBridgeSession private constructor(
                 // Falling back is safe only after complete rollback. Otherwise disable the bridge
                 // to avoid exposing both transports after a partial setup failure.
                 if (rollbackComplete) {
-                    brokerTelemetry.count(Event.ROLLBACK_COMPLETE)
+                    brokerTelemetry.count(BridgeCounter.ROLLBACK_COMPLETE)
                     brokerTelemetry.state(BridgeAttribute.TRANSPORT_SELECTION_REASON, Value.WEB_MESSAGE_LISTENER_ROLLED_BACK)
                     Logger.info(
                         TAG,
@@ -422,14 +422,14 @@ class AuthUxBridgeSession private constructor(
             // Track the actual installation state separately from the selected transport mode.
             val shouldAdd = AuthUxJavaScriptInterface.isValidUriForInterface(initialUrl)
             if (shouldAdd) {
-                bridgeTelemetry.count(Event.INSTALL_ATTEMPTS)
+                bridgeTelemetry.count(BridgeCounter.INSTALL_ATTEMPTS)
                 try {
                     webView.addJavascriptInterface(processor, AuthUxJavaScriptInterface.getInterfaceName())
                 } catch (t: Throwable) {
-                    bridgeTelemetry.count(Event.INSTALL_FAILED)
+                    bridgeTelemetry.count(BridgeCounter.INSTALL_FAILED)
                     throw t
                 }
-                bridgeTelemetry.count(Event.LEGACY_INSTALLED)
+                bridgeTelemetry.count(BridgeCounter.LEGACY_INSTALLED)
             }
             bridgeTelemetry.state(BridgeAttribute.TRANSPORT, Value.JAVASCRIPT_INTERFACE)
             Logger.info(TAG, "Selected addJavascriptInterface Auth UX transport.")

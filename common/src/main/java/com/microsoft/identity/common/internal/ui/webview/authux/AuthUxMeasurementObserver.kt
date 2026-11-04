@@ -23,7 +23,7 @@ interface AuthUxMeasurementObserver {
      * Admits a physical native callback for measurement, not for functional execution.
      *
      * The lifetime owner atomically checks the finish cutoff, increments its in-flight count and
-     * records [Event.RECEIVED]. Returning false suppresses only measurement. The outer callback
+     * records [BridgeCounter.RECEIVED]. Returning false suppresses only measurement. The outer callback
      * boundary admits once; modern forwarding reuses that handle rather than admitting again.
      */
     fun admitCallback(): Boolean = true
@@ -55,8 +55,8 @@ interface AuthUxMeasurementObserver {
      */
     fun state(attribute: BridgeAttribute, value: Value)
 
-    /** Increments a bounded event counter without changing routing, validation or mutation ordering. */
-    fun count(event: Event)
+    /** Increments a bounded bridge counter without changing routing, validation or mutation ordering. */
+    fun count(counter: BridgeCounter)
 
     /**
      * Captured flight decisions and actual transport selection, not additional flight evaluations.
@@ -76,7 +76,7 @@ interface AuthUxMeasurementObserver {
 
     /**
      * Closed vocabulary, never page-supplied strings.
-     * Unlike observer attribute/event identifiers, these names are lowercased directly for export;
+     * Unlike observer attribute/counter identifiers, these names are lowercased directly for export;
      * renaming a value changes the wire contract.
      *
      * Flight attributes use ON, OFF, NOT_EVALUATED or LOOKUP_FAILED. TRANSPORT uses NOT_SELECTED,
@@ -103,6 +103,8 @@ interface AuthUxMeasurementObserver {
     }
     /**
      * Fixed counters explicitly mapped by [AuthUxBridgeMeasurements] to shared `authux_` attributes.
+     * Identifies counters accumulated on the bridge lifetime span, not separately emitted Aria or
+     * OpenTelemetry events and not onboarding steps. Bridges without a recorder also use these counters.
      *
      * For finalized records with all required fields present and no counter saturation, derive:
      * setup completed = 1 - SETUP_FAILED; processed = RECEIVED - sum(REJECTED_*).
@@ -110,7 +112,7 @@ interface AuthUxMeasurementObserver {
      * rollback is represented by TRANSPORT_SELECTION_REASON ==
      * WEB_MESSAGE_LISTENER_ROLLBACK_INCOMPLETE, not a counter.
      */
-    enum class Event {
+    enum class BridgeCounter {
         /** Initialization did not return normally; disabled selection alone is not failure. */
         SETUP_FAILED,
         /**
@@ -136,15 +138,15 @@ interface AuthUxMeasurementObserver {
         /** Native message type was not a string. */
         REJECTED_TYPE,
         /**
-         * Missing data, malformed payload or invalid required telemetry fields; also includes
-         * NullPointerException and JSON exceptions caught during processing, not proof of bad input.
+         * Missing data, invalid required telemetry fields, or exceptions caught during deserialization.
+         * Does not include post-parse exceptions and is not conclusive proof of a page defect.
          */
         REJECTED_MALFORMED,
         /** Parsed action/operation did not match a supported route. */
         REJECTED_UNSUPPORTED,
         /** The request did not permit the identified capability. */
         REJECTED_CAPABILITY,
-        /** Processing failed outside the other rejection categories, including escaping errors. */
+        /** Processing failed, including post-parse exceptions of any type and escaping errors. */
         REJECTED_PROCESSING,
         /** Parsed number_matching operation, excluding log_telemetry precedence; not a store attempt. */
         NUMBER_MATCH_IDENTIFIED,
@@ -196,8 +198,8 @@ class AuthUxBridgeTelemetry private constructor(private val observer: AuthUxMeas
     }
 
     /** Forwards one occurrence; no-op handles discard it without changing functional processing. */
-    fun count(event: AuthUxMeasurementObserver.Event) {
-        try { observer?.count(event) } catch (_: Throwable) { }
+    fun count(counter: AuthUxMeasurementObserver.BridgeCounter) {
+        try { observer?.count(counter) } catch (_: Throwable) { }
     }
 
     companion object {

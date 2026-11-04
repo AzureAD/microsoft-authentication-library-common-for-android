@@ -31,7 +31,7 @@ import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import com.microsoft.identity.common.internal.broker.AuthUxMessageProcessor
 import com.microsoft.identity.common.internal.broker.TelemetryAwareAuthUxMessageProcessor
-import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.Event
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -52,24 +52,24 @@ class AuthUxWebMessageListener @JvmOverloads constructor(
         replyProxy: JavaScriptReplyProxy
     ) {
         val callbackTelemetry = bridgeTelemetry.admitCallback()
-        var rejection: Event? = Event.REJECTED_PROCESSING
+        var rejection: BridgeCounter? = BridgeCounter.REJECTED_PROCESSING
         var forwarded = false
         try {
             if (!originPolicy.isAllowedCallback(sourceOrigin, isMainFrame)) {
-                rejection = Event.REJECTED_ORIGIN
+                rejection = BridgeCounter.REJECTED_ORIGIN
                 Logger.warn(TAG, "Rejected Auth UX WebMessage callback.")
                 return
             }
 
             if (message.type != WebMessageCompat.TYPE_STRING) {
-                rejection = Event.REJECTED_TYPE
+                rejection = BridgeCounter.REJECTED_TYPE
                 Logger.warn(TAG, "Rejected Auth UX WebMessage callback with unsupported data type.")
                 return
             }
 
             val data = message.data
             if (data == null) {
-                rejection = Event.REJECTED_MALFORMED
+                rejection = BridgeCounter.REJECTED_MALFORMED
                 Logger.info(TAG, "Ignoring Auth UX WebMessage callback with no data.")
                 return
             }
