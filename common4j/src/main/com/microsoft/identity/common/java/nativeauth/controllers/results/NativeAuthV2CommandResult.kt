@@ -165,14 +165,15 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
-     * Password reset or an existing account found during sign-up offers multiple supported
+     * Sign-in, password reset, or an existing account found during sign-up offers multiple
      * first-factor methods. The app must select one explicitly before a challenge is sent.
      */
     data class AuthMethodSelectionRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val authMethods: List<NativeAuthV2AuthMethod>,
-    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ExistingAccountCommandResult {
+    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ExistingAccountCommandResult,
+        NativeAuthV2SignInStartCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
 

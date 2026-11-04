@@ -205,7 +205,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         private const val UNEXPECTED_RESULT = "unexpected_api_result"
 
         /**
-         * Returned when sign-in offers neither email nor password as the first factor.
+         * Returned when sign-in offers no recognized first-factor methods.
          */
         private const val UNSUPPORTED_FIRST_FACTOR = "unsupported_first_factor"
         private const val UNSUPPORTED_CHALLENGE_METHOD = "unsupported_challenge_method"
@@ -866,14 +866,14 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Starts the V2 sign-in flow: authorize-challenge start → sign-in entry → first-factor
-     * challenge → optional password verification.
+     * selection (when multiple methods are offered) → first-factor challenge.
      *
-     * With an entry-supplied password, password is preferred. Without one, email one-time code is
-     * preferred, with a deferred password state retained as a fallback for password-only accounts.
+     * Known methods retain server order. A single method is challenged automatically; otherwise
+     * [NativeAuthV2CommandResult.AuthMethodSelectionRequired] lets the caller select one.
+     * Offering SMS does not imply primary SMS sign-in is supported.
      *
      * The selected challenge returns [NativeAuthV2CommandResult.CodeRequired] for email or
-     * [NativeAuthV2CommandResult.PasswordRequired] for a deferred password. A non-empty password
-     * is verified immediately and may complete or transition to MFA.
+     * [NativeAuthV2CommandResult.PasswordRequired] for a password supplied on a separate step.
      */
     fun signInStart(parameters: SignInV2StartCommandParameters): NativeAuthV2SignInStartCommandResult {
         LogSession.logMethodCall(
@@ -953,25 +953,28 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(startResult)
             }
 
-            val entryPassword = parameters.password
-            val preferredMethodType =
-                if (entryPassword == null || entryPassword.isEmpty()) METHOD_TYPE_EMAIL
-                else METHOD_TYPE_PASSWORD
-            val fallbackMethodType =
-                if (preferredMethodType == METHOD_TYPE_EMAIL) METHOD_TYPE_PASSWORD
-                else METHOD_TYPE_EMAIL
-            val firstFactorMethod = firstFactorChallenge.methods
-                .firstOrNull { it.type == preferredMethodType }
-                ?: firstFactorChallenge.methods.firstOrNull { it.type == fallbackMethodType }
-                ?: run {
-                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer a supported sign-in first factor.")
-                    return INativeAuthCommandResult.APIError(
-                        error = UNSUPPORTED_FIRST_FACTOR,
-                        errorDescription = "Native Auth V2 sign-in requires an email or password " +
-                                "authentication method, which the server did not offer.",
-                        correlationId = firstFactorChallenge.correlationId
-                    )
+            val methods = firstFactorChallenge.methods.filter {
+                val recognized = it.type == METHOD_TYPE_EMAIL ||
+                        it.type == METHOD_TYPE_PASSWORD || it.type == METHOD_TYPE_SMS
+                if (!recognized) {
+                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Ignoring an unknown sign-in authentication method type.")
                 }
+                recognized
+            }
+            if (methods.isEmpty()) {
+                Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer a supported sign-in first factor.")
+                return INativeAuthCommandResult.APIError(
+                    error = UNSUPPORTED_FIRST_FACTOR,
+                    errorDescription = "Native Auth V2 sign-in did not offer a recognized authentication method.",
+                    correlationId = firstFactorChallenge.correlationId
+                )
+            }
+            if (methods.size > 1) {
+                return NativeAuthV2CommandResult.AuthMethodSelectionRequired(
+                    firstFactorChallenge.correlationId, firstFactorChallenge.continuationState, methods
+                )
+            }
+            val firstFactorMethod = methods.single()
 
             val firstFactorChallengeResult = oAuth2Strategy.performMethodChallenge(
                 state = firstFactorChallenge.continuationState,
@@ -979,6 +982,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             )
 
             if (firstFactorChallengeResult is NativeAuthV2InteractionApiResult.CodeRequired) {
+                if (!firstFactorChallengeResult.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
+                    return mapInteractionError(firstFactorChallengeResult)
+                }
                 return NativeAuthV2CommandResult.CodeRequired(
                     correlationId = firstFactorChallengeResult.correlationId,
                     continuationState = firstFactorChallengeResult.continuationState,
@@ -1001,57 +1007,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(firstFactorChallengeResult)
             }
 
-            if (entryPassword == null || entryPassword.isEmpty()) {
-                return NativeAuthV2CommandResult.PasswordRequired(
-                    correlationId = firstFactorChallengeResult.correlationId,
-                    continuationState = passwordState
-                )
-            }
-
-            val verifyResult = oAuth2Strategy.performPasswordVerify(
-                state = passwordState,
-                password = entryPassword
+            return NativeAuthV2CommandResult.PasswordRequired(
+                correlationId = firstFactorChallengeResult.correlationId,
+                continuationState = passwordState
             )
-
-            return when (verifyResult) {
-                is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(verifyResult)
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parametersBuilder = parameters.toBuilder(),
-                    scopes = parameters.scopes,
-                    claimsRequestJson = parameters.claimsRequestJson,
-                    state = verifyResult.continuationState
-                )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
-                    correlationId = verifyResult.correlationId,
-                    continuationState = verifyResult.continuationState,
-                    authMethods = verifyResult.methods
-                )
-                is NativeAuthV2InteractionApiResult.InvalidCredentials -> NativeAuthV2CommandResult.InvalidCredentials(
-                    correlationId = verifyResult.correlationId,
-                    error = verifyResult.error,
-                    errorDescription = verifyResult.errorDescription,
-                    subError = verifyResult.subError,
-                    traceId = verifyResult.traceId,
-                    timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes
-                )
-                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
-                    correlationId = verifyResult.correlationId,
-                    traceId = verifyResult.traceId,
-                    timestamp = verifyResult.timestamp,
-                    errorCodes = verifyResult.errorCodes,
-                    redirectReason = verifyResult.redirectReason
-                )
-                else -> mapInteractionError(verifyResult)
-            }
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in signInStart", e)
             throw e
-        } finally {
-            // The interactor already clears the buffer it sent; this also covers the paths that
-            // never reached it (email first factor, redirect, protocol error).
-            StringUtil.overwriteWithNull(parameters.password)
         }
     }
 
