@@ -86,26 +86,28 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenSignInChallengeIsMultiFactor_returnsMFARequired() {
+    fun parseInteraction_whenSignInChallengeIsMultiFactor_returnsChallengeRequired() {
         val result = parser.parseInteraction(
             response = responseFrom(MULTI_FACTOR_EMAIL_CHALLENGE_JSON),
             previousState = signInState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
-        val mfa = result as NativeAuthV2InteractionApiResult.MFARequired
+        assertTrue(result is NativeAuthV2InteractionApiResult.ChallengeRequired)
+        val mfa = result as NativeAuthV2InteractionApiResult.ChallengeRequired
+        assertTrue(mfa.continuationState.isMultiFactorAuthentication())
         assertEquals(listOf("email-1"), mfa.methods.map { it.id })
         assertEquals("email", mfa.methods.single().type)
     }
 
     @Test
-    fun parseInteraction_whenDeferredPasswordProducesMultiFactorChallenge_returnsMFARequired() {
+    fun parseInteraction_whenDeferredPasswordProducesMultiFactorChallenge_returnsChallengeRequired() {
         val result = parser.parseInteraction(
             response = responseFrom(MULTI_FACTOR_EMAIL_CHALLENGE_JSON),
             previousState = signInState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
+        assertTrue(result is NativeAuthV2InteractionApiResult.ChallengeRequired)
+        assertTrue((result as NativeAuthV2InteractionApiResult.ChallengeRequired).continuationState.isMultiFactorAuthentication())
     }
 
     @Test
@@ -708,7 +710,7 @@ class NativeAuthV2SignInResponseParserTest {
 
     /**
      * The state the flow holds once the first factor is satisfied and the server has moved on to a
-     * `multiFactor` challenge, i.e. the state carried into `selectMFAMethod` and `submitMFAChallenge`.
+     * `multiFactor` challenge, i.e. the state carried into `selectAuthMethod` and `submitMFAChallenge`.
      */
     private fun secondFactorState(): NativeAuthV2ContinuationState = stateWithFactor("multiFactor")
 

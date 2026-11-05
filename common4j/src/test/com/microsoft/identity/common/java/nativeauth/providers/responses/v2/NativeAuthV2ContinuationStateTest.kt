@@ -40,6 +40,24 @@ import java.io.Serializable
 class NativeAuthV2ContinuationStateTest {
 
     @Test
+    fun multiFactorClassificationSurvivesSerializationWithoutClassifyingUnspecifiedStateAsMfa() {
+        val unspecified = NativeAuthV2ContinuationStateTestFactory.create(CORRELATION_ID)
+        assertFalse(unspecified.isMultiFactorAuthentication())
+        val original = NativeAuthV2ContinuationStateTestFactory.multiFactor(unspecified)
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        assertTrue(restored.isMultiFactorAuthentication())
+        assertEquals(unspecified.flowScenario(), restored.flowScenario())
+        assertEquals(unspecified.scopesForTokenRequest(), restored.scopesForTokenRequest())
+        assertEquals(REDACTED_STRING, restored.toString())
+    }
+
+    @Test
     fun testFixtureCreatesRepresentativeContinuationState() {
         val state = NativeAuthV2ContinuationStateTestFactory.create(
             correlationId = CORRELATION_ID,

@@ -29,7 +29,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSig
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2EnrollCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ActivateCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ResendCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectMFAMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
@@ -48,7 +47,6 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
-import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectMFAMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectAuthMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterSignUpCommandResult
@@ -135,13 +133,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     result.continuationState.scopesForTokenRequest(),
                     result.continuationState.claimsRequestJsonForTokenRequest(), result.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     result.correlationId, result.continuationState, result.methods
                 )
                 else -> mapInteractionError(result)
             }
             NativeAuthV2FlowScenario.RESET_PASSWORD -> when (result) {
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     result.correlationId, result.continuationState, result.methods
                 )
                 is NativeAuthV2InteractionApiResult.UpdateRequired -> NativeAuthV2CommandResult.NewPasswordRequired(
@@ -338,7 +336,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 )
             }
 
-            if (supportedMethods.size > 1) {
+            if (supportedMethods.size > 1 || challenge.continuationState.isMultiFactorAuthentication()) {
                 return NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     correlationId = challenge.correlationId,
                     continuationState = challenge.continuationState,
@@ -369,7 +367,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     }
 
     /**
-     * Challenges the selected first-factor method in the continuation's original flow.
+     * Challenges the selected method in the continuation's original flow and authentication factor.
      */
     fun selectAuthMethod(
         parameters: NativeAuthV2SelectAuthMethodCommandParameters
@@ -381,24 +379,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         try {
-            val strategy = createNativeAuthV2Strategy(parameters)
-            val state = parameters.continuationState
-            return when (state.flowScenario()) {
-                NativeAuthV2FlowScenario.RESET_PASSWORD,
-                NativeAuthV2FlowScenario.SIGN_IN -> challengeMethod(
-                    oAuth2Strategy = strategy,
-                    state = state,
-                    methodId = parameters.methodId
-                )
-                else -> {
-                    Logger.warn(TAG, state.correlationId, "Unsupported flow for first-factor method selection.")
-                    INativeAuthCommandResult.APIError(
-                        error = UNEXPECTED_RESULT,
-                        errorDescription = "Authentication method selection is unavailable in this flow.",
-                        correlationId = state.correlationId
-                    )
-                }
-            }
+            return challengeMethod(
+                oAuth2Strategy = createNativeAuthV2Strategy(parameters),
+                state = parameters.continuationState,
+                methodId = parameters.methodId
+            )
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in selectAuthMethod", e)
             throw e
@@ -423,7 +408,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         return when (verificationResult) {
             is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(verificationResult)
             is NativeAuthV2InteractionApiResult.CodeRequired ->
-                if (state.flowScenario() == NativeAuthV2FlowScenario.SIGN_IN) {
+                if (state.isMultiFactorAuthentication()) {
+                    NativeAuthV2CommandResult.MFAVerificationRequired(
+                        verificationResult.correlationId, verificationResult.continuationState,
+                        verificationResult.codeLength, verificationResult.challengeTargetLabel,
+                        verificationResult.challengeChannel
+                    )
+                } else if (state.flowScenario() == NativeAuthV2FlowScenario.SIGN_IN) {
                     if (verificationResult.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
                         NativeAuthV2CommandResult.ExistingAccountCodeRequired(
                             verificationResult.correlationId, verificationResult.continuationState,
@@ -549,7 +540,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     correlationId = verifyResult.correlationId,
                     continuationState = verifyResult.continuationState,
                     authMethods = verifyResult.methods
@@ -732,7 +723,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             return when (updateResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(updateResult)
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     updateResult.correlationId, updateResult.continuationState, updateResult.methods
                 )
                 is NativeAuthV2InteractionApiResult.PollInProgress -> pollUntilComplete(
@@ -803,7 +794,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             when (pollResult) {
                 is NativeAuthV2InteractionApiResult.RegistrationRequired -> return registrationRequired(pollResult)
-                is NativeAuthV2InteractionApiResult.MFARequired -> return NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> return NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     pollResult.correlationId, pollResult.continuationState, pollResult.methods
                 )
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> return NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
@@ -977,7 +968,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     correlationId = firstFactorChallenge.correlationId
                 )
             }
-            if (methods.size > 1) {
+            if (methods.size > 1 || firstFactorChallenge.continuationState.isMultiFactorAuthentication()) {
                 return NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     firstFactorChallenge.correlationId, firstFactorChallenge.continuationState, methods
                 )
@@ -1059,7 +1050,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     correlationId = verifyResult.correlationId,
                     continuationState = verifyResult.continuationState,
                     authMethods = verifyResult.methods
@@ -1088,58 +1079,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             throw e
         } finally {
             StringUtil.overwriteWithNull(parameters.password)
-        }
-    }
-
-    // -----------------------------------------------------------------------------------------
-    // selectMFAMethod
-    // -----------------------------------------------------------------------------------------
-
-    /**
-     * Challenges the multi-factor method the app selected, following the href the server attached
-     * to that method. No challenge is ever sent without an explicit selection.
-     */
-    fun selectMFAMethod(parameters: NativeAuthV2SelectMFAMethodCommandParameters): NativeAuthV2SelectMFAMethodCommandResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = parameters.getCorrelationId(),
-            methodName = "$TAG.selectMFAMethod"
-        )
-
-        try {
-            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
-
-            val challengeResult = oAuth2Strategy.performMethodChallenge(
-                state = parameters.continuationState,
-                methodId = parameters.methodId
-            )
-            val verificationResult = when (challengeResult) {
-                is NativeAuthV2InteractionApiResult.RiskVerificationRequired ->
-                    oAuth2Strategy.performRiskVerification(challengeResult.continuationState)
-                else -> challengeResult
-            }
-
-            return when (verificationResult) {
-                is NativeAuthV2InteractionApiResult.RegistrationRequired -> registrationRequired(verificationResult)
-                is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.MFAVerificationRequired(
-                    correlationId = verificationResult.correlationId,
-                    continuationState = verificationResult.continuationState,
-                    codeLength = verificationResult.codeLength,
-                    challengeTargetLabel = verificationResult.challengeTargetLabel,
-                    challengeChannel = verificationResult.challengeChannel
-                )
-                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
-                    correlationId = verificationResult.correlationId,
-                    traceId = verificationResult.traceId,
-                    timestamp = verificationResult.timestamp,
-                    errorCodes = verificationResult.errorCodes,
-                    redirectReason = verificationResult.redirectReason
-                )
-                else -> mapInteractionError(verificationResult)
-            }
-        } catch (e: Exception) {
-            Logger.error(TAG, parameters.getCorrelationId(), "Exception in selectMFAMethod", e)
-            throw e
         }
     }
 

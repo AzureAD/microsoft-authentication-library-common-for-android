@@ -79,6 +79,10 @@ class NativeAuthV2ContinuationState private constructor(
     internal val isFirstFactor: Boolean
         get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
 
+    /** Whether the server explicitly classified this continuation as multi-factor authentication. */
+    fun isMultiFactorAuthentication(): Boolean =
+        authenticationFactor == NativeAuthV2HalApiResponse.MULTI_FACTOR
+
     /**
      * `true` when the SDK-owned `email` or `password` attribute named by [name]
      * (case-insensitive) has already been submitted during a sign-up flow. Ordinary attributes

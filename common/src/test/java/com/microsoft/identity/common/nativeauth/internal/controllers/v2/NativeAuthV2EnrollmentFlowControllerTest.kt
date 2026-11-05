@@ -206,8 +206,6 @@ class NativeAuthV2EnrollmentFlowControllerTest {
                 .continuationState(prior).attributes(emptyMap())).build()),
             controller.submitNewPassword(configured(NativeAuthV2SubmitNewPasswordCommandParameters.builder()
                 .continuationState(prior).newPassword("password".toCharArray())).build()),
-            controller.selectMFAMethod(configured(NativeAuthV2SelectMFAMethodCommandParameters.builder()
-                .continuationState(prior).methodId("email")).build()),
             controller.selectAuthMethod(configured(NativeAuthV2SelectAuthMethodCommandParameters.builder()
                 .continuationState(prior).methodId("email")).build()),
             controller.submitMFAChallenge(configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
@@ -269,21 +267,22 @@ class NativeAuthV2EnrollmentFlowControllerTest {
 
     @Test
     fun resetPasswordPollingCanRequireMfaBeforeExplicitSignIn() {
-        val updated = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
-            state(NativeAuthV2FlowScenario.RESET_PASSWORD))
+        val updated = NativeAuthV2ContinuationStateTestFactory.multiFactor(
+            NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
+                state(NativeAuthV2FlowScenario.RESET_PASSWORD)))
         val methods = listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00"))
-        val mfa = NativeAuthV2InteractionApiResult.MFARequired("cid", updated, methods)
+        val mfa = NativeAuthV2InteractionApiResult.ChallengeRequired("cid", updated, null, methods)
         every { strategy.performUpdatePassword(any(), any()) } returns
             NativeAuthV2InteractionApiResult.PollInProgress("cid", updated, 0)
         every { strategy.performPoll(updated) } returns mfa
         val result = controller.submitNewPassword(configured(
             NativeAuthV2SubmitNewPasswordCommandParameters.builder()
                 .continuationState(updated).newPassword("password".toCharArray())).build())
-        assertEquals(NativeAuthV2CommandResult.MFARequired("cid", updated, methods), result)
+        assertEquals(NativeAuthV2CommandResult.AuthMethodSelectionRequired("cid", updated, methods), result)
         every { strategy.performMethodChallenge(updated, "sms-id") } returns
             NativeAuthV2InteractionApiResult.CodeRequired("cid", updated, "***00", "sms", 6)
-        assertTrue(controller.selectMFAMethod(configured(
-            NativeAuthV2SelectMFAMethodCommandParameters.builder()
+        assertTrue(controller.selectAuthMethod(configured(
+            NativeAuthV2SelectAuthMethodCommandParameters.builder()
                 .continuationState(updated).methodId("sms-id")).build())
             is NativeAuthV2CommandResult.MFAVerificationRequired)
         every { strategy.performVerify(updated, "123456") } returns
@@ -300,10 +299,10 @@ class NativeAuthV2EnrollmentFlowControllerTest {
         val updated = NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
             state(NativeAuthV2FlowScenario.RESET_PASSWORD))
         val methods = listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00"))
-        val mfa = NativeAuthV2InteractionApiResult.MFARequired("cid", updated, methods)
+        val mfa = NativeAuthV2InteractionApiResult.ChallengeRequired("cid", updated, null, methods)
         every { strategy.performUpdatePassword(any(), any()) } returns mfa
         every { strategy.performActivate(updated, "123456") } returns mfa
-        val expected = NativeAuthV2CommandResult.MFARequired("cid", updated, methods)
+        val expected = NativeAuthV2CommandResult.AuthMethodSelectionRequired("cid", updated, methods)
         assertEquals(expected, controller.submitNewPassword(configured(
             NativeAuthV2SubmitNewPasswordCommandParameters.builder()
                 .continuationState(updated).newPassword("password".toCharArray())).build()))

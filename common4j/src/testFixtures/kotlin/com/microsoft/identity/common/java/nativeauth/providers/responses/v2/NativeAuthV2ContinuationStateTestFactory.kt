@@ -30,6 +30,17 @@ import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2Fl
  */
 object NativeAuthV2ContinuationStateTestFactory {
 
+    /** Retains the originating flow while modeling a server-declared multi-factor challenge. */
+    @JvmStatic
+    fun multiFactor(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        requireNotNull(NativeAuthV2ContinuationState.next(
+            state,
+            NativeAuthV2HalApiResponse.from(HalResource.from("""
+                {"continuationToken":"opaque-mfa-token",
+                 "challengeContext":{"authenticationFactor":"multiFactor"}}
+            """.trimIndent()), 200, state.correlationId)
+        ))
+
     /** Models an enrollment offer containing SMS and email methods in server order. */
     @JvmStatic
     fun registration(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState {
