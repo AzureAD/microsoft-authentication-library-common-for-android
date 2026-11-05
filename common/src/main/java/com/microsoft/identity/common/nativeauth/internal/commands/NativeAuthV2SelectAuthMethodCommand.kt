@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Challenges a V2 first-factor method explicitly selected by the app.
+ * Challenges a V2 authentication method explicitly selected by the app.
  */
 class NativeAuthV2SelectAuthMethodCommand(
     private val parameters: NativeAuthV2SelectAuthMethodCommandParameters,

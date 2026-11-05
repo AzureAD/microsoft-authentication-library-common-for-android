@@ -24,12 +24,12 @@ package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectMFAMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitMFAChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInV2StartCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
@@ -37,6 +37,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationStateTestFactory
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import io.mockk.every
@@ -306,7 +307,7 @@ class NativeAuthV2SignInFlowControllerTest {
 
         every {
             mockStrategy.performPasswordVerify(passwordState, any())
-        } returns NativeAuthV2InteractionApiResult.MFARequired(correlationId, mfaState, methods)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(correlationId, mfaState, null, methods)
 
         val startResult = controller.signInStart(signInStartParameters())
         assertTrue(startResult is NativeAuthV2CommandResult.PasswordRequired)
@@ -315,8 +316,8 @@ class NativeAuthV2SignInFlowControllerTest {
             submitPasswordParameters((startResult as NativeAuthV2CommandResult.PasswordRequired).continuationState)
         )
 
-        assertTrue(result is NativeAuthV2CommandResult.MFARequired)
-        val mfa = result as NativeAuthV2CommandResult.MFARequired
+        assertTrue(result is NativeAuthV2CommandResult.AuthMethodSelectionRequired)
+        val mfa = result as NativeAuthV2CommandResult.AuthMethodSelectionRequired
         assertEquals(methods, mfa.authMethods)
         assertEquals(mfaState, mfa.continuationState)
         verify(exactly = 0) { mockStrategy.performMethodChallenge(mfaState, "email-1") }
@@ -555,12 +556,12 @@ class NativeAuthV2SignInFlowControllerTest {
         val methods = listOf(NativeAuthV2AuthMethod("email-2", "email", "u***@contoso.com"))
 
         every { mockStrategy.performVerify(state, "12345678") } returns
-            NativeAuthV2InteractionApiResult.MFARequired(correlationId, mfaState, methods)
+            NativeAuthV2InteractionApiResult.ChallengeRequired(correlationId, mfaState, null, methods)
 
         val result = controller.submitSignInCode(submitCodeParameters(state, "12345678"))
 
-        assertTrue(result is NativeAuthV2CommandResult.MFARequired)
-        result as NativeAuthV2CommandResult.MFARequired
+        assertTrue(result is NativeAuthV2CommandResult.AuthMethodSelectionRequired)
+        result as NativeAuthV2CommandResult.AuthMethodSelectionRequired
         assertEquals(mfaState, result.continuationState)
         assertEquals(methods, result.authMethods)
     }
@@ -680,12 +681,12 @@ class NativeAuthV2SignInFlowControllerTest {
 
         every {
             mockStrategy.performPasswordVerify(state, any())
-        } returns NativeAuthV2InteractionApiResult.MFARequired(correlationId, mfaState, methods)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(correlationId, mfaState, null, methods)
 
         val result = controller.submitPassword(submitPasswordParameters(state))
 
-        assertTrue(result is NativeAuthV2CommandResult.MFARequired)
-        assertEquals(methods, (result as NativeAuthV2CommandResult.MFARequired).authMethods)
+        assertTrue(result is NativeAuthV2CommandResult.AuthMethodSelectionRequired)
+        assertEquals(methods, (result as NativeAuthV2CommandResult.AuthMethodSelectionRequired).authMethods)
     }
 
     @Test
@@ -764,6 +765,169 @@ class NativeAuthV2SignInFlowControllerTest {
     // -----------------------------------------------------------------------------------------
 
     @Test
+    fun testSelectAuthMethodValidatesSuccessfulChallengesIncludingAfterRiskVerification() {
+        for ((scenario, factor, selectedType) in listOf(
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "email"),
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "password"),
+            Triple(NativeAuthV2FlowScenario.RESET_PASSWORD, "singleFactor", "email"),
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "multiFactor", "sms")
+        )) {
+            val mismatchedType = when (selectedType) {
+                "password", "sms" -> "email"
+                else -> if (scenario == NativeAuthV2FlowScenario.SIGN_IN) "password" else "sms"
+            }
+            val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                listOf(
+                    NativeAuthV2AuthMethod("selected-id", selectedType, "***"),
+                    NativeAuthV2AuthMethod("other-id", mismatchedType, "***")
+                ),
+                factor
+            )
+            for (throughRiskVerification in listOf(false, true)) {
+                for (returnedType in listOf(selectedType.uppercase(), mismatchedType)) {
+                    val parsed = if (returnedType.equals("password", ignoreCase = true)) {
+                        NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
+                    } else {
+                        NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***", returnedType, 6)
+                    }
+                    every { mockStrategy.performMethodChallenge(state, "selected-id") } returns
+                        if (throughRiskVerification) {
+                            NativeAuthV2InteractionApiResult.RiskVerificationRequired(correlationId, state)
+                        } else parsed
+                    every { mockStrategy.performRiskVerification(state) } returns parsed
+                    val parameters = NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                        .authority(mockAuthority).platformComponents(mockPlatformComponents)
+                        .correlationId(correlationId).scopes(emptyList())
+                        .continuationState(state).methodId("selected-id").build()
+
+                    val result = controller.selectAuthMethod(parameters)
+
+                    if (returnedType == mismatchedType) {
+                        assertTrue("$scenario/$factor/$selectedType/$throughRiskVerification: $result",
+                            result is INativeAuthCommandResult.APIError)
+                        result as INativeAuthCommandResult.APIError
+                        assertEquals("invalid_state", result.error)
+                    } else {
+                        assertTrue("$scenario/$factor/$selectedType/$throughRiskVerification: $result",
+                            when {
+                                factor == "multiFactor" -> result is NativeAuthV2CommandResult.MFAVerificationRequired
+                                selectedType == "password" -> result is NativeAuthV2CommandResult.ExistingAccountPasswordRequired
+                                scenario == NativeAuthV2FlowScenario.SIGN_IN -> result is NativeAuthV2CommandResult.ExistingAccountCodeRequired
+                                else -> result is NativeAuthV2CommandResult.CodeRequired
+                            })
+                    }
+                    assertEquals(correlationId, result.correlationId)
+                }
+            }
+        }
+        verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
+    }
+
+    @Test
+    fun testSharedChallengeRequiresExplicitMfaSelectionEvenWithOneMethod() {
+        stubAuthorizeChallengeStart()
+        for (scenario in listOf(NativeAuthV2FlowScenario.SIGN_IN, NativeAuthV2FlowScenario.RESET_PASSWORD)) {
+            for (channel in listOf("email", "sms")) {
+                val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                    listOf(NativeAuthV2AuthMethod("selected-id", channel, "***")), "multiFactor"
+                )
+                val methods = listOf(NativeAuthV2AuthMethod("selected-id", channel, "***"))
+                val challenge = NativeAuthV2InteractionApiResult.ChallengeRequired(correlationId, state, null, methods)
+                every { mockStrategy.performSignInStart(any(), any()) } returns challenge
+                every { mockStrategy.performResetPasswordStart(any(), any()) } returns challenge
+
+                val result = if (scenario == NativeAuthV2FlowScenario.SIGN_IN) {
+                    controller.signInStart(signInStartParameters())
+                } else {
+                    controller.resetPasswordStart(
+                        ResetPasswordV2StartCommandParameters.builder()
+                            .authority(mockAuthority)
+                            .platformComponents(mockPlatformComponents)
+                            .correlationId(correlationId)
+                            .scopes(emptyList())
+                            .username("user@contoso.com")
+                            .build()
+                    )
+                }
+
+                assertEquals(NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId, state, methods), result)
+            }
+        }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+    }
+
+    @Test
+    fun testSelectAuthMethodReturnsMfaVerificationForServerClassifiedMultiFactorAcrossFlows() {
+        for (scenario in NativeAuthV2FlowScenario.values()) {
+            for (channel in listOf("email", "sms")) {
+                val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                    listOf(NativeAuthV2AuthMethod("selected-id", channel, "***")), "multiFactor"
+                )
+                val verificationState = mockContinuationState()
+                every { mockStrategy.performMethodChallenge(state, "selected-id") } returns
+                    NativeAuthV2InteractionApiResult.CodeRequired(
+                        correlationId, verificationState, "***", channel, 7
+                    )
+
+                val result = controller.selectAuthMethod(
+                    NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                        .authority(mockAuthority)
+                        .platformComponents(mockPlatformComponents)
+                        .correlationId(correlationId)
+                        .scopes(emptyList())
+                        .continuationState(state)
+                        .methodId("selected-id")
+                        .build()
+                )
+
+                assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
+                result as NativeAuthV2CommandResult.MFAVerificationRequired
+                assertSame(verificationState, result.continuationState)
+                assertEquals(channel, result.challengeChannel)
+                assertEquals("***", result.challengeTargetLabel)
+                assertEquals(7, result.codeLength)
+            }
+        }
+        verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
+    }
+
+    @Test
+    fun testSelectAuthMethodFollowsMfaRiskVerificationWithoutLosingFactor() {
+        val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+            NativeAuthV2ContinuationStateTestFactory.create(
+                correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN
+            ),
+            listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***")), "multiFactor"
+        )
+        val riskState = mockContinuationState()
+        val verificationState = mockContinuationState()
+        every { mockStrategy.performMethodChallenge(state, "sms-id") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired(correlationId, riskState)
+        every { mockStrategy.performRiskVerification(riskState) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(
+                correlationId, verificationState, "***1234", "sms", 6
+            )
+
+        val result = controller.selectAuthMethod(
+            NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                .authority(mockAuthority)
+                .platformComponents(mockPlatformComponents)
+                .correlationId(correlationId)
+                .scopes(emptyList())
+                .continuationState(state)
+                .methodId("sms-id")
+                .build()
+        )
+
+        assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
+        assertSame(verificationState, (result as NativeAuthV2CommandResult.MFAVerificationRequired).continuationState)
+        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+    }
+
+    @Test
     fun testSelectMFAMethodReturnsMFAVerificationRequired() {
         val state = mockContinuationState()
         val challengeState = mockContinuationState()
@@ -777,7 +941,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 codeLength = 6
             )
 
-        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1"))
+        val result = controller.selectAuthMethod(selectMFAMethodParameters(state, "email-1"))
 
         assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
         val verification = result as NativeAuthV2CommandResult.MFAVerificationRequired
@@ -806,7 +970,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 codeLength = 7
             )
 
-        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "sms-1"))
+        val result = controller.selectAuthMethod(selectMFAMethodParameters(state, "sms-1"))
 
         assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
         val verification = result as NativeAuthV2CommandResult.MFAVerificationRequired
@@ -828,7 +992,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 errorDescription = "blocked"
             )
 
-        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1"))
+        val result = controller.selectAuthMethod(selectMFAMethodParameters(state, "email-1"))
 
         assertTrue(result is INativeAuthCommandResult.APIError)
     }
@@ -844,7 +1008,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 errorDescription = "The requested authentication method is not available."
             )
 
-        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "stale"))
+        val result = controller.selectAuthMethod(selectMFAMethodParameters(state, "stale"))
 
         assertTrue(result is INativeAuthCommandResult.APIError)
         assertEquals("invalid_state", (result as INativeAuthCommandResult.APIError).error)
@@ -957,7 +1121,7 @@ class NativeAuthV2SignInFlowControllerTest {
         val results = listOf(
             controller.submitPassword(submitPasswordParameters(state)),
             controller.submitSignInCode(submitCodeParameters(state, "123456")),
-            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1")),
+            controller.selectAuthMethod(selectMFAMethodParameters(state, "email-1")),
             controller.submitMFAChallenge(submitMFAChallengeParameters(state, "123456"))
         )
 
@@ -992,7 +1156,7 @@ class NativeAuthV2SignInFlowControllerTest {
         val results = listOf(
             controller.submitPassword(submitPasswordParameters(state)),
             controller.submitSignInCode(submitCodeParameters(state, "123456")),
-            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1")),
+            controller.selectAuthMethod(selectMFAMethodParameters(state, "email-1")),
             controller.submitMFAChallenge(submitMFAChallengeParameters(state, "123456"))
         )
 
@@ -1021,7 +1185,7 @@ class NativeAuthV2SignInFlowControllerTest {
                 traceId = "risk-trace"
             )
 
-        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "sms-1"))
+        val result = controller.selectAuthMethod(selectMFAMethodParameters(state, "sms-1"))
 
         assertTrue(result is INativeAuthCommandResult.APIError)
         result as INativeAuthCommandResult.APIError
@@ -1056,7 +1220,7 @@ class NativeAuthV2SignInFlowControllerTest {
         every { mockStrategy.performVerify(state, any()) } throws failure
 
         try {
-            controller.selectMFAMethod(selectMFAMethodParameters(state, "email-1"))
+            controller.selectAuthMethod(selectMFAMethodParameters(state, "email-1"))
             fail("Expected the method-selection exception")
         } catch (exception: IllegalStateException) {
             assertSame(failure, exception)
@@ -1114,6 +1278,7 @@ class NativeAuthV2SignInFlowControllerTest {
         every { state.correlationId } returns id
         every { state.scopesForTokenRequest() } returns scopes
         every { state.claimsRequestJsonForTokenRequest() } returns claimsRequestJson
+        every { state.matchesAuthenticationMethod(any(), any()) } returns true
         return state
     }
 
@@ -1166,8 +1331,9 @@ class NativeAuthV2SignInFlowControllerTest {
     private fun selectMFAMethodParameters(
         state: NativeAuthV2ContinuationState,
         methodId: String
-    ): NativeAuthV2SelectMFAMethodCommandParameters =
-        NativeAuthV2SelectMFAMethodCommandParameters.builder()
+    ): NativeAuthV2SelectAuthMethodCommandParameters {
+        every { state.isMultiFactorAuthentication() } returns true
+        return NativeAuthV2SelectAuthMethodCommandParameters.builder()
             .authority(mockAuthority)
             .platformComponents(mockPlatformComponents)
             .correlationId(correlationId)
@@ -1175,6 +1341,7 @@ class NativeAuthV2SignInFlowControllerTest {
             .continuationState(state)
             .methodId(methodId)
             .build()
+    }
 
     private fun submitMFAChallengeParameters(
         state: NativeAuthV2ContinuationState,

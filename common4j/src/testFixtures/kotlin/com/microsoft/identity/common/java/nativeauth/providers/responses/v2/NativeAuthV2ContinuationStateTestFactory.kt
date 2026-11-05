@@ -23,12 +23,52 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.google.gson.Gson
 
 /**
  * Creates representative continuation states for tests in downstream repositories without
  * exposing or depending on the state's private constructor.
  */
 object NativeAuthV2ContinuationStateTestFactory {
+
+    /** Retains actual server-offered method IDs and types for a first-factor or MFA challenge. */
+    @JvmStatic
+    fun challenge(
+        state: NativeAuthV2ContinuationState,
+        methods: List<NativeAuthV2AuthMethod>,
+        factor: String = "singleFactor"
+    ): NativeAuthV2ContinuationState {
+        val embeddedMethods = methods.map { method ->
+            mapOf(
+                "id" to method.id,
+                "type" to method.type,
+                "hint" to method.hint,
+                "_links" to mapOf(
+                    "challenge" to mapOf("href" to "/test/${method.id}/challenge"),
+                    "verify" to mapOf("href" to "/test/${method.id}/verify")
+                )
+            )
+        }
+        val response = NativeAuthV2HalApiResponse.from(HalResource.from(Gson().toJson(mapOf(
+            "state" to "interactionRequired",
+            "action" to "challenge",
+            "continuationToken" to "challenge-token",
+            "challengeContext" to mapOf("authenticationFactor" to factor),
+            "_embedded" to mapOf("methods" to embeddedMethods)
+        ))), 200, state.correlationId)
+        return requireNotNull(NativeAuthV2ContinuationState.next(state, response))
+    }
+
+    /** Retains the originating flow while modeling a server-declared multi-factor challenge. */
+    @JvmStatic
+    fun multiFactor(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        requireNotNull(NativeAuthV2ContinuationState.next(
+            state,
+            NativeAuthV2HalApiResponse.from(HalResource.from("""
+                {"continuationToken":"opaque-mfa-token",
+                 "challengeContext":{"authenticationFactor":"multiFactor"}}
+            """.trimIndent()), 200, state.correlationId)
+        ))
 
     /** Models an enrollment offer containing SMS and email methods in server order. */
     @JvmStatic
