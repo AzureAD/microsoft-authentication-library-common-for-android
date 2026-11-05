@@ -8,6 +8,10 @@ We encourage users of ADAL and MSAL to file issues against the library that they
 
 ### Contributing
 
+For agent guidance, prerequisites, and repeatable build/test verification, see
+[AGENTS.md](AGENTS.md). It links the existing domain instructions and CI workflows
+and covers JVM, Android, instrumented, and consumer test layers.
+
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.microsoft.com.
