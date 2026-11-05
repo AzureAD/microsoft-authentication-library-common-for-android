@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Unify Native Auth V2 first-factor and MFA method-selection results and share the challenge path.
+- [PATCH] Unify Native Auth V2 first-factor and MFA method selection and reject mismatched method challenges.
 - [PATCH] Remove the unused Native Auth V2 sign-in-start InvalidCredentials command result. Password submission continues to return IncorrectPassword; V1 is unchanged.
 - [PATCH] Align Native Auth V2 structured user/password error classification and exact OAuth browser fallback with iOS, preserving diagnostics through typed errors and credential/MFA remapping.
 - [PATCH] Remove upfront password parameters from Native Auth V2 sign-in; select among offered first-factor methods and submit passwords only from the password-required continuation.

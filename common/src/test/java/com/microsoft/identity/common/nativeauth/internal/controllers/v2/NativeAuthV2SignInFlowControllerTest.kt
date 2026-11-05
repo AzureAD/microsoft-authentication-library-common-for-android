@@ -765,12 +765,73 @@ class NativeAuthV2SignInFlowControllerTest {
     // -----------------------------------------------------------------------------------------
 
     @Test
+    fun testSelectAuthMethodValidatesSuccessfulChallengesIncludingAfterRiskVerification() {
+        for ((scenario, factor, selectedType) in listOf(
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "email"),
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "password"),
+            Triple(NativeAuthV2FlowScenario.RESET_PASSWORD, "singleFactor", "email"),
+            Triple(NativeAuthV2FlowScenario.SIGN_IN, "multiFactor", "sms")
+        )) {
+            val mismatchedType = when (selectedType) {
+                "password", "sms" -> "email"
+                else -> if (scenario == NativeAuthV2FlowScenario.SIGN_IN) "password" else "sms"
+            }
+            val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                listOf(
+                    NativeAuthV2AuthMethod("selected-id", selectedType, "***"),
+                    NativeAuthV2AuthMethod("other-id", mismatchedType, "***")
+                ),
+                factor
+            )
+            for (throughRiskVerification in listOf(false, true)) {
+                for (returnedType in listOf(selectedType.uppercase(), mismatchedType)) {
+                    val parsed = if (returnedType.equals("password", ignoreCase = true)) {
+                        NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
+                    } else {
+                        NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***", returnedType, 6)
+                    }
+                    every { mockStrategy.performMethodChallenge(state, "selected-id") } returns
+                        if (throughRiskVerification) {
+                            NativeAuthV2InteractionApiResult.RiskVerificationRequired(correlationId, state)
+                        } else parsed
+                    every { mockStrategy.performRiskVerification(state) } returns parsed
+                    val parameters = NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                        .authority(mockAuthority).platformComponents(mockPlatformComponents)
+                        .correlationId(correlationId).scopes(emptyList())
+                        .continuationState(state).methodId("selected-id").build()
+
+                    val result = controller.selectAuthMethod(parameters)
+
+                    if (returnedType == mismatchedType) {
+                        assertTrue("$scenario/$factor/$selectedType/$throughRiskVerification: $result",
+                            result is INativeAuthCommandResult.APIError)
+                        result as INativeAuthCommandResult.APIError
+                        assertEquals("invalid_state", result.error)
+                    } else {
+                        assertTrue("$scenario/$factor/$selectedType/$throughRiskVerification: $result",
+                            when {
+                                factor == "multiFactor" -> result is NativeAuthV2CommandResult.MFAVerificationRequired
+                                selectedType == "password" -> result is NativeAuthV2CommandResult.ExistingAccountPasswordRequired
+                                scenario == NativeAuthV2FlowScenario.SIGN_IN -> result is NativeAuthV2CommandResult.ExistingAccountCodeRequired
+                                else -> result is NativeAuthV2CommandResult.CodeRequired
+                            })
+                    }
+                    assertEquals(correlationId, result.correlationId)
+                }
+            }
+        }
+        verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
+    }
+
+    @Test
     fun testSharedChallengeRequiresExplicitMfaSelectionEvenWithOneMethod() {
         stubAuthorizeChallengeStart()
         for (scenario in listOf(NativeAuthV2FlowScenario.SIGN_IN, NativeAuthV2FlowScenario.RESET_PASSWORD)) {
             for (channel in listOf("email", "sms")) {
-                val state = NativeAuthV2ContinuationStateTestFactory.multiFactor(
-                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario)
+                val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                    listOf(NativeAuthV2AuthMethod("selected-id", channel, "***")), "multiFactor"
                 )
                 val methods = listOf(NativeAuthV2AuthMethod("selected-id", channel, "***"))
                 val challenge = NativeAuthV2InteractionApiResult.ChallengeRequired(correlationId, state, null, methods)
@@ -801,8 +862,9 @@ class NativeAuthV2SignInFlowControllerTest {
     fun testSelectAuthMethodReturnsMfaVerificationForServerClassifiedMultiFactorAcrossFlows() {
         for (scenario in NativeAuthV2FlowScenario.values()) {
             for (channel in listOf("email", "sms")) {
-                val state = NativeAuthV2ContinuationStateTestFactory.multiFactor(
-                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario)
+                val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                    NativeAuthV2ContinuationStateTestFactory.create(correlationId, scenario = scenario),
+                    listOf(NativeAuthV2AuthMethod("selected-id", channel, "***")), "multiFactor"
                 )
                 val verificationState = mockContinuationState()
                 every { mockStrategy.performMethodChallenge(state, "selected-id") } returns
@@ -834,10 +896,11 @@ class NativeAuthV2SignInFlowControllerTest {
 
     @Test
     fun testSelectAuthMethodFollowsMfaRiskVerificationWithoutLosingFactor() {
-        val state = NativeAuthV2ContinuationStateTestFactory.multiFactor(
+        val state = NativeAuthV2ContinuationStateTestFactory.challenge(
             NativeAuthV2ContinuationStateTestFactory.create(
                 correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN
-            )
+            ),
+            listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***")), "multiFactor"
         )
         val riskState = mockContinuationState()
         val verificationState = mockContinuationState()
@@ -1215,6 +1278,7 @@ class NativeAuthV2SignInFlowControllerTest {
         every { state.correlationId } returns id
         every { state.scopesForTokenRequest() } returns scopes
         every { state.claimsRequestJsonForTokenRequest() } returns claimsRequestJson
+        every { state.matchesAuthenticationMethod(any(), any()) } returns true
         return state
     }
 

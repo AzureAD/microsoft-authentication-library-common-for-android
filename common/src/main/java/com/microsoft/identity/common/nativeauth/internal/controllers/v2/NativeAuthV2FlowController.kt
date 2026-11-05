@@ -368,6 +368,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Challenges the selected method in the continuation's original flow and authentication factor.
+     * Rejects verification challenges that do not match the selected method's server-declared type.
      */
     fun selectAuthMethod(
         parameters: NativeAuthV2SelectAuthMethodCommandParameters
@@ -403,6 +404,19 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             is NativeAuthV2InteractionApiResult.RiskVerificationRequired ->
                 oAuth2Strategy.performRiskVerification(challengeResult.continuationState)
             else -> challengeResult
+        }
+        val challengeChannel = when (verificationResult) {
+            is NativeAuthV2InteractionApiResult.CodeRequired -> verificationResult.challengeChannel
+            is NativeAuthV2InteractionApiResult.PasswordRequired -> METHOD_TYPE_PASSWORD
+            else -> null
+        }
+        if (challengeChannel != null && !state.matchesAuthenticationMethod(methodId, challengeChannel)) {
+            Logger.warn(TAG, state.correlationId, "Challenge response does not match the selected authentication method.")
+            return INativeAuthCommandResult.APIError(
+                error = ApiErrorResult.INVALID_STATE,
+                errorDescription = "The challenge response does not match the selected authentication method.",
+                correlationId = state.correlationId
+            )
         }
 
         return when (verificationResult) {

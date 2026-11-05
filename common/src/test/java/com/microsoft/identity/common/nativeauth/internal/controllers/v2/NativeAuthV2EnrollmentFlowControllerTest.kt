@@ -267,9 +267,10 @@ class NativeAuthV2EnrollmentFlowControllerTest {
 
     @Test
     fun resetPasswordPollingCanRequireMfaBeforeExplicitSignIn() {
-        val updated = NativeAuthV2ContinuationStateTestFactory.multiFactor(
+        val updated = NativeAuthV2ContinuationStateTestFactory.challenge(
             NativeAuthV2ContinuationStateTestFactory.afterPasswordUpdate(
-                state(NativeAuthV2FlowScenario.RESET_PASSWORD)))
+                state(NativeAuthV2FlowScenario.RESET_PASSWORD)),
+            listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00")), "multiFactor")
         val methods = listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***00"))
         val mfa = NativeAuthV2InteractionApiResult.ChallengeRequired("cid", updated, null, methods)
         every { strategy.performUpdatePassword(any(), any()) } returns

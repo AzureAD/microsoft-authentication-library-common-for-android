@@ -92,8 +92,10 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     @Test
     fun existingAccountChallenge_handlesRiskVerificationForAutomaticAndExplicitSelection() {
-        val state = NativeAuthV2ContinuationStateTestFactory.create(
-            correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN)
+        val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+            NativeAuthV2ContinuationStateTestFactory.create(
+                correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN),
+            listOf(NativeAuthV2AuthMethod("email-id", "email", null)))
         val riskState = NativeAuthV2ContinuationStateTestFactory.create(
             correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN)
         stubAuthorizeChallengeStart(state)
@@ -874,6 +876,7 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
+        every { state.matchesAuthenticationMethod(any(), any()) } returns true
         every { state.correlationId } returns id
         every { state.scopesForTokenRequest() } returns emptyList()
         every { state.hasSubmittedAttribute(any()) } returns false

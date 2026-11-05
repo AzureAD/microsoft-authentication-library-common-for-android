@@ -30,7 +30,7 @@ import java.util.Collections
 
 /**
  * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
- * token, the server-provided relation-to-href map, the per-method relation-to-href maps of the
+ * token, the server-provided relation-to-href map, the types and per-method relation-to-href maps of the
  * methods the server offered, the requested scopes, the correlation ID, the flow entry relation,
  * and the internal flow scenario that produced it.
  *
@@ -64,7 +64,8 @@ class NativeAuthV2ContinuationState private constructor(
     internal val submittedAttributes: Set<String> = emptySet(),
     private val enrollmentChannels: Map<String, String>? = emptyMap(),
     private val resetPasswordUpdateSubmitted: Boolean = false,
-    private val pendingSignUpAttributes: Map<String, String>? = null
+    private val pendingSignUpAttributes: Map<String, String>? = null,
+    private val authenticationMethodTypes: Map<String, String>? = emptyMap()
 ) : ILoggable, Serializable {
 
     /**
@@ -82,6 +83,13 @@ class NativeAuthV2ContinuationState private constructor(
     /** Whether the server explicitly classified this continuation as multi-factor authentication. */
     fun isMultiFactorAuthentication(): Boolean =
         authenticationFactor == NativeAuthV2HalApiResponse.MULTI_FACTOR
+
+    /**
+     * Whether a challenge channel matches the server-offered method identified by [methodId].
+     * Missing method metadata, including in older serialized states, never matches.
+     */
+    fun matchesAuthenticationMethod(methodId: String, challengeChannel: String): Boolean =
+        authenticationMethodTypes?.get(methodId)?.equals(challengeChannel, ignoreCase = true) == true
 
     /**
      * `true` when the SDK-owned `email` or `password` attribute named by [name]
@@ -125,7 +133,8 @@ class NativeAuthV2ContinuationState private constructor(
             submittedAttributes = Collections.unmodifiableSet(merged),
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
-            pendingSignUpAttributes = if (names.isEmpty()) pendingSignUpAttributes else null
+            pendingSignUpAttributes = if (names.isEmpty()) pendingSignUpAttributes else null,
+            authenticationMethodTypes = authenticationMethodTypes
         )
     }
 
@@ -144,7 +153,8 @@ class NativeAuthV2ContinuationState private constructor(
         return NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
-            resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes))
+            resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes)),
+            authenticationMethodTypes
         )
     }
 
@@ -157,7 +167,7 @@ class NativeAuthV2ContinuationState private constructor(
         return NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
-            resetPasswordUpdateSubmitted
+            resetPasswordUpdateSubmitted, authenticationMethodTypes = authenticationMethodTypes
         )
     }
 
@@ -187,7 +197,8 @@ class NativeAuthV2ContinuationState private constructor(
             correlationId = correlationId,
             entryRelation = entryRelation,
             scenario = NativeAuthV2FlowScenario.SIGN_IN,
-            authenticationFactor = authenticationFactor
+            authenticationFactor = authenticationFactor,
+            authenticationMethodTypes = authenticationMethodTypes
         )
     }
 
@@ -198,7 +209,7 @@ class NativeAuthV2ContinuationState private constructor(
         NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
-            pendingSignUpAttributes
+            pendingSignUpAttributes, authenticationMethodTypes
         )
 
     /**
@@ -236,7 +247,8 @@ class NativeAuthV2ContinuationState private constructor(
             submittedAttributes = submittedAttributes,
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
-            pendingSignUpAttributes = pendingSignUpAttributes
+            pendingSignUpAttributes = pendingSignUpAttributes,
+            authenticationMethodTypes = authenticationMethodTypes
         )
     }
 
@@ -293,7 +305,8 @@ class NativeAuthV2ContinuationState private constructor(
                 entryRelation = entryRelation,
                 scenario = scenario,
                 authenticationFactor = response.authenticationFactor,
-                submittedAttributes = emptySet()
+                submittedAttributes = emptySet(),
+                authenticationMethodTypes = retainAuthenticationMethodTypes(response)
             )
         }
 
@@ -340,8 +353,23 @@ class NativeAuthV2ContinuationState private constructor(
                     })
                 } else emptyMap(),
                 resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
-                pendingSignUpAttributes = previous.pendingSignUpAttributes
+                pendingSignUpAttributes = previous.pendingSignUpAttributes,
+                authenticationMethodTypes = retainAuthenticationMethodTypes(response)
             )
+        }
+
+        private fun retainAuthenticationMethodTypes(
+            response: NativeAuthV2HalApiResponse
+        ): Map<String, String> {
+            val types = LinkedHashMap<String, String>()
+            response.methods.forEach { method ->
+                val id = method.id?.takeUnless { it.isBlank() } ?: return@forEach
+                val type = method.type?.takeUnless { it.isBlank() } ?: return@forEach
+                if (!types.containsKey(id)) {
+                    types[id] = type
+                }
+            }
+            return Collections.unmodifiableMap(types)
         }
 
         /**
