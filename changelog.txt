@@ -14,6 +14,19 @@ Version 25.1.0-RC1
 - [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)
 - [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)
 - [MINOR] Add a process-local, correlation-ID-keyed onboarding recorder handoff for Common WebView authorization, including identity-safe registry lifecycle, fragment correlation restoration, and recorder-backed Auth UX telemetry forwarding across brokered and non-brokered flows
+- [PATCH] Update Native Auth V2 error mapping and MFA routing, Fixes AB#3808200 (#3342)
+- [PATCH] Remove password from sign-in parameters, Fixes AB#3808198 (#3341)
+- [PATCH] Update Native Auth V2 sign-up and authentication-method selection, Fixes AB#3803937 (#3336)
+- [MINOR] AB#3805163: Add bridge-local Auth UX transport telemetry for Broker, Fixes AB#3805163 (#3339)
+- [PATCH] Fix broker-install onboarding telemetry for registration redirects, Fixes AB#3803513 (#3335)
+- [MINOR] Add native PSI PRT recovery prerequisites (AB#3751396), Fixes AB#3751396 (#3337)
+- [MINOR] Throttle repeated shared-device sign-out notifications, Fixes AB#3801751 (#3334)
+- [MINOR] Fixes AB#3533732: [ATS reliability] Add bounded retries for ce_no_network (#3327)
+- [PATCH] [common] Isolate onboarding recorder lookup and refine MDM enrollment telemetry, Fixes AB#3783247 (#3333)
+- [MINOR] [common] Record onboarding steps from correlated Auth UX errors, AB#3800818, Fixes AB#3800818 (#3332)
+- [MINOR] Add Native Auth V2 SMS and email JIT enrollment, Fixes AB#3797291 (#3315)
+- [MINOR] [common] Add request-scoped onboarding recorder handoff, Fixes AB#3688632 (#3318)
+- [MINOR] Fixes AB#3797297 [ATS Perf] [common] Update PR review skills to prevent performance regressions (#3321)
 
 Version 25.0.0
 ----------
