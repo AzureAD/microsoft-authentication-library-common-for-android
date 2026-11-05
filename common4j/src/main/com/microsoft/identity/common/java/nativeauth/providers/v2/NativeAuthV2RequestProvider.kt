@@ -163,10 +163,10 @@ class NativeAuthV2RequestProvider(
 
     /**
      * Creates the request object for the sign-up flow's entry (`signup/start`) call, resolved via
-     * the [NativeAuthV2LinkRelation.SIGN_UP] relation on [state]. Unlike sign-in, the body carries
-     * only `continuationToken`; the username is supplied later as an attribute.
+     * the [NativeAuthV2LinkRelation.SIGN_UP] relation on [state]. The body carries the username
+     * and continuation token, without user attributes.
      */
-    fun createSignUpStartRequest(state: NativeAuthV2ContinuationState): NativeAuthV2SignUpStartRequest {
+    fun createSignUpStartRequest(username: String, state: NativeAuthV2ContinuationState): NativeAuthV2SignUpStartRequest {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = state.correlationId,
@@ -175,6 +175,7 @@ class NativeAuthV2RequestProvider(
 
         val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.SIGN_UP)
         return NativeAuthV2SignUpStartRequest.create(
+            username = username,
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
             headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)

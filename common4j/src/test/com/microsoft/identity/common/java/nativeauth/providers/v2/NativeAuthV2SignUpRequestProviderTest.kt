@@ -41,21 +41,21 @@ import org.junit.Test
 import java.net.URL
 
 /**
- * Covers the V2 sign-up request contract: the entry (`signup/start`) body carries only the
- * continuation token (the username is submitted later as an attribute), and the `submitattributes`
+ * Covers the V2 sign-up request contract: the entry (`signup/start`) body carries the
+ * username and continuation token, and the `submitattributes`
  * body carries the continuation token plus the attribute map. All hrefs come from the server
  * response, never assembled locally, and attribute values are never rendered in either string form.
  */
 class NativeAuthV2SignUpRequestProviderTest {
 
     @Test
-    fun createSignUpStartRequest_postsOnlyContinuationTokenToServerHref() {
-        val request = provider().createSignUpStartRequest(entryState())
+    fun createSignUpStartRequest_postsUsernameAndContinuationTokenToServerHref() {
+        val request = provider().createSignUpStartRequest("user@contoso.com", entryState())
 
         assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/signup/start"), request.requestUrl)
         assertEquals(JSON_CONTENT_TYPE, request.headers[HttpConstants.HeaderField.CONTENT_TYPE])
         assertEquals(
-            mapOf("continuationToken" to "flow-token"),
+            mapOf("username" to "user@contoso.com", "continuationToken" to "flow-token"),
             jsonBodyOf(request.parameters)
         )
     }
@@ -63,7 +63,7 @@ class NativeAuthV2SignUpRequestProviderTest {
     @Test
     fun createSignUpStartRequest_whenSignUpRelationIsMissing_throwsMissingParameter() {
         val exception = assertClientException {
-            provider().createSignUpStartRequest(entryState(signUpHref = null))
+            provider().createSignUpStartRequest("user@contoso.com", entryState(signUpHref = null))
         }
 
         assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
@@ -186,10 +186,40 @@ class NativeAuthV2SignUpRequestProviderTest {
     fun createSignUpStartRequest_whenProductionAuthorityIsHttp_rejectsInsecureEndpoint() {
         val exception = assertClientException {
             provider(authorityUrl = "http://login.contoso.com/tenant")
-                .createSignUpStartRequest(entryState())
+                .createSignUpStartRequest("user@contoso.com", entryState())
         }
 
         assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
+    }
+
+    @Test
+    fun createSignUpStartRequest_redactsUsernameAndToken() {
+        val request = provider().createSignUpStartRequest("user@contoso.com", entryState())
+        listOf(request.toString(), request.toUnsanitizedString(),
+            request.parameters.toString(), request.parameters.toUnsanitizedString()).forEach {
+            assertFalse(it.contains("user@contoso.com"))
+            assertFalse(it.contains("flow-token"))
+        }
+    }
+
+    @Test
+    fun createSignUpStartRequest_rejectsEmptyUsername() {
+        val exception = assertClientException {
+            provider().createSignUpStartRequest("", entryState())
+        }
+        assertEquals("username", exception.errorCode)
+    }
+
+    @Test
+    fun createSubmitAttributesRequest_rejectsEmailCaseInsensitively() {
+        for (key in listOf("email", "Email", "EMAIL")) {
+            val exception = assertClientException {
+                provider().createSubmitAttributesRequest(
+                    collectAttributesState(), mapOf(key to "user@contoso.com")
+                )
+            }
+            assertEquals("email", exception.errorCode)
+        }
     }
 
     // -----------------------------------------------------------------------------------------

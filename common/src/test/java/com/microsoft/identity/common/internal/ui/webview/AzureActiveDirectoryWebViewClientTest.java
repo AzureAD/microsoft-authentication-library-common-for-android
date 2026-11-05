@@ -84,6 +84,8 @@ import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecor
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeMeasurements;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxOriginPolicy;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxWebMessageListener;
 import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
@@ -136,6 +138,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -148,6 +151,7 @@ import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 
 /**
  * Tests for {@link AzureActiveDirectoryWebViewClient}.
@@ -223,8 +227,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
     private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
             "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
-    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
-    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
+    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
+    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
@@ -528,6 +532,343 @@ public class AzureActiveDirectoryWebViewClientTest {
             } finally {
                 mWebViewClient.closeAuthUxBridgeSession();
             }
+
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_setupOwnershipAndCapturedFlights() {
+        for (final String scenario : Arrays.asList("active", "disabled", "master_failure",
+                "transport_failure", "install_failure")) {
+            final IFlightsProvider flights = Mockito.mock(IFlightsProvider.class);
+            when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                    .thenReturn(!"disabled".equals(scenario));
+            final IllegalStateException failure = new IllegalStateException("original");
+            if ("master_failure".equals(scenario)) {
+                when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenThrow(failure);
+            }
+            if ("transport_failure".equals(scenario)) {
+                when(flights.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                        .thenThrow(failure);
+            }
+            final MockCommonFlightsManager manager = new MockCommonFlightsManager();
+            manager.setMockCommonFlightsProvider(flights);
+            CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+            final WebView view = Mockito.mock(WebView.class);
+            if ("install_failure".equals(scenario)) {
+                Mockito.doThrow(failure).when(view).addJavascriptInterface(any(), eq("broker"));
+            }
+            final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+                final boolean failed = "master_failure".equals(scenario) || "install_failure".equals(scenario);
+                if (failed) {
+                    assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                            mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+                } else {
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                }
+                if (!failed && !"disabled".equals(scenario)) {
+                    Mockito.verify(span, never()).end();
+                } else {
+                    Mockito.verify(span).end();
+                }
+                mWebViewClient.closeAuthUxBridgeSession();
+                mWebViewClient.closeAuthUxBridgeSession();
+                Mockito.verify(span).end();
+                Mockito.verify(span, never()).setAttribute(eq("authux_setup_completed"), Mockito.anyLong());
+                Mockito.verify(span).setAttribute("authux_setup_failed", failed ? 1L : 0L);
+                Mockito.verify(span).setAttribute("authux_transport",
+                        failed ? "not_selected" : "disabled".equals(scenario) ? "disabled" : "javascript_interface");
+                Mockito.verify(span).setAttribute("authux_bridge_flight", "master_failure".equals(scenario)
+                        ? "lookup_failed" : "disabled".equals(scenario) ? "off" : "on");
+                Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "transport_failure".equals(scenario)
+                        ? "lookup_failed" : ("master_failure".equals(scenario) || "disabled".equals(scenario))
+                        ? "not_evaluated" : "off");
+                Mockito.verify(flights).isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                Mockito.verify(flights, Mockito.times("master_failure".equals(scenario)
+                        || "disabled".equals(scenario) ? 0 : 1))
+                        .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_usesHostContextAndRequestCorrelationPrecedence() {
+        configureAuthUxTransportFlight(false);
+        for (final String source : Arrays.asList("request", "baggage", "diagnostic")) {
+            final RequestContext diagnostic = new RequestContext();
+            diagnostic.put(DiagnosticContext.CORRELATION_ID, "diagnostic-cid");
+            DiagnosticContext.INSTANCE.setRequestContext(diagnostic);
+            final AuthorizationActivity host = Mockito.mock(AuthorizationActivity.class);
+            when(host.getApplicationContext()).thenReturn(mContext);
+            final SpanContext parent = Mockito.mock(SpanContext.class);
+            when(host.getSpanContext()).thenReturn(parent);
+            final io.opentelemetry.api.baggage.BaggageBuilder baggage = Baggage.builder()
+                    .put(AttributeName.calling_package_name.name(), "com.example.caller");
+            if (!"diagnostic".equals(source)) {
+                baggage.put(AttributeName.correlation_id.name(), "baggage-cid");
+            }
+            when(host.getOtelContext()).thenReturn(baggage.build().storeInContext(
+                    io.opentelemetry.context.Context.root()));
+            final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                    host, Mockito.mock(IAuthorizationCompletionCallback.class), url -> {},
+                    TEST_REDIRECT_URI, Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                    "tenant-id", false, false, null, "request".equals(source) ? "request-cid" : null);
+            final Span span = Mockito.mock(Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(
+                        AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller")).thenReturn(span);
+                client.initializeAuthUxJavaScriptApi(Mockito.mock(WebView.class), TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                factory.verify(() -> OTelUtility.createSpanFromParent(
+                        AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller"));
+                factory.verifyNoMoreInteractions();
+                Mockito.verify(span).setAttribute("tenant_id", "tenant-id");
+                Mockito.verify(span).setAttribute("correlation_id", source + "-cid");
+                Mockito.verify(span, never()).end();
+                client.closeAuthUxBridgeSession();
+                Mockito.verify(span).end();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_contextExtractionFailureDoesNotPreventSetup() {
+        configureAuthUxTransportFlight(false);
+        final AuthorizationActivity host = Mockito.mock(AuthorizationActivity.class);
+        when(host.getApplicationContext()).thenReturn(mContext);
+        when(host.getOtelContext()).thenThrow(new AssertionError("context"));
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                host, Mockito.mock(IAuthorizationCompletionCallback.class), url -> {},
+                TEST_REDIRECT_URI, Mockito.mock(SwitchBrowserProtocolCoordinator.class), null, false);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            client.initializeAuthUxJavaScriptApi(Mockito.mock(WebView.class), TEST_PUBLIC_CLOUD_REDIRECT_URL);
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, client.mAuthUxBridgeSession.getMode());
+            client.closeAuthUxBridgeSession();
+            factory.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void testAuthUxBridgeMeasurements_nonBrokerAndFailedOldCloseCreateNoObservation() {
+        final AuthUxBridgeSession old = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> old);
+        final IllegalStateException failure = new IllegalStateException("old close");
+        Mockito.doThrow(failure).when(old).close();
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+             MockedStatic<ProcessUtil> process = Mockito.mockStatic(ProcessUtil.class)) {
+            assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                    mWebViewClient.initializeAuthUxJavaScriptApi(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+            process.verifyNoInteractions();
+            factory.verifyNoInteractions();
+            process.when(() -> ProcessUtil.isRunningOnAuthService(any())).thenReturn(false);
+            mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+            try (MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class)) {
+                mWebViewClient.initializeAuthUxJavaScriptApi(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+            factory.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_modernSetupAndPrerequisiteFallback() {
+        configureAuthUxTransportFlight(true);
+        for (final String scenario : Arrays.asList("modern", "listener_unavailable", "script_unavailable")) {
+            final boolean modern = "modern".equals(scenario);
+            final WebView view = Mockito.mock(WebView.class);
+            final ScriptHandler script = Mockito.mock(ScriptHandler.class);
+            final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+                 MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+                 MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+                features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                        .thenReturn(!"listener_unavailable".equals(scenario));
+                features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                        .thenReturn(!"script_unavailable".equals(scenario));
+                webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(eq(view), anyString(), any()))
+                        .thenReturn(script);
+                try {
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                    assertEquals(modern ? AuthUxTransportMode.WEB_MESSAGE_LISTENER
+                            : AuthUxTransportMode.JAVASCRIPT_INTERFACE, mWebViewClient.mAuthUxBridgeSession.getMode());
+                    Mockito.verify(span, never()).end();
+                    mWebViewClient.closeAuthUxBridgeSession();
+
+                    Mockito.verify(span).setAttribute("authux_bridge_flight", "on");
+                    Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "on");
+                    Mockito.verify(span).setAttribute("authux_transport",
+                            modern ? "web_message_listener" : "javascript_interface");
+                    Mockito.verify(span).setAttribute("authux_transport_selection_reason", modern
+                            ? "web_message_listener_installed" : "web_message_listener_prerequisites_not_met");
+                    Mockito.verify(span).setAttribute("authux_install_attempts", 1L);
+                    Mockito.verify(span).setAttribute("authux_install_failed", 0L);
+                    Mockito.verify(span).setAttribute("authux_setup_failed", 0L);
+                    Mockito.verify(span).setAttribute("authux_rollback_complete", 0L);
+                    Mockito.verify(span).setAttribute("authux_legacy_installed", modern ? 0L : 1L);
+                    Mockito.verify(span).end();
+                    webKit.verify(() -> WebViewCompat.addWebMessageListener(
+                            eq(view), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()),
+                            Mockito.times(modern ? 1 : 0));
+                    webKit.verify(() -> WebViewCompat.addDocumentStartJavaScript(eq(view), anyString(), any()),
+                            Mockito.times(modern ? 1 : 0));
+                    Mockito.verify(view, Mockito.times(modern ? 0 : 1)).addJavascriptInterface(any(), eq("broker"));
+                    Mockito.verify(script, Mockito.times(modern ? 1 : 0)).remove();
+                } finally {
+                    mWebViewClient.closeAuthUxBridgeSession();
+                }
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_completedRollbackSurvivesLegacyInstallationFailure() {
+        configureAuthUxTransportFlight(true);
+        final WebView view = Mockito.mock(WebView.class);
+        final IllegalStateException failure = new IllegalStateException("legacy installation");
+        Mockito.doThrow(failure).when(view).addJavascriptInterface(any(), eq("broker"));
+        final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+             MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(view), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()))
+                    .thenThrow(new IllegalStateException("listener registration"));
+
+            assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            mWebViewClient.closeAuthUxBridgeSession();
+            webKit.verify(() -> WebViewCompat.removeWebMessageListener(view, AuthUxBridgeSession.PRIVATE_OBJECT_NAME));
+            webKit.verify(() -> WebViewCompat.addDocumentStartJavaScript(any(), anyString(), any()), never());
+            Mockito.verify(view).addJavascriptInterface(any(), eq("broker"));
+            Mockito.verify(span).setAttribute("authux_install_attempts", 2L);
+            Mockito.verify(span).setAttribute("authux_install_failed", 2L);
+            Mockito.verify(span).setAttribute("authux_rollback_complete", 1L);
+            Mockito.verify(span).setAttribute("authux_legacy_installed", 0L);
+            Mockito.verify(span).setAttribute("authux_setup_failed", 1L);
+            Mockito.verify(span).setAttribute("authux_transport", "not_selected");
+            Mockito.verify(span).setAttribute("authux_transport_selection_reason", "bridge_setup_failed");
+            Mockito.verify(span).end();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_replacementSeparatesRealOwnersAndLateCallbacks() {
+        configureAuthUxTransportFlight(false);
+        final WebView view = Mockito.mock(WebView.class);
+        final io.opentelemetry.api.trace.Span firstSpan = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        final io.opentelemetry.api.trace.Span secondSpan = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null))
+                    .thenReturn(firstSpan, secondSpan);
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final ArgumentCaptor<AuthUxJavaScriptInterface> captured =
+                        ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+                Mockito.verify(view).addJavascriptInterface(captured.capture(), eq("broker"));
+                final AuthUxJavaScriptInterface first = captured.getValue();
+                first.process("{");
+                Mockito.verify(firstSpan, never()).end();
+
+                mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                Mockito.verify(firstSpan).end();
+                final int firstExportCalls = Mockito.mockingDetails(firstSpan).getInvocations().size();
+                Mockito.verify(view, Mockito.times(2)).addJavascriptInterface(captured.capture(), eq("broker"));
+                final AuthUxJavaScriptInterface second = captured.getValue();
+                assertNotSame(first, second);
+                final int secondSetupCalls = Mockito.mockingDetails(secondSpan).getInvocations().size();
+                final String unsupported = "{\"correlationID\":\"cid\",\"action_name\":\"unknown\","
+                        + "\"action_component\":\"host\",\"params\":{\"operation\":\"unknown\"}}";
+                first.process("{");
+                first.process(unsupported);
+                assertEquals(secondSetupCalls, Mockito.mockingDetails(secondSpan).getInvocations().size());
+                second.process(unsupported);
+                second.process(unsupported);
+                Mockito.verify(secondSpan, never()).end();
+                mWebViewClient.closeAuthUxBridgeSession();
+                mWebViewClient.closeAuthUxBridgeSession();
+
+                assertEquals(firstExportCalls, Mockito.mockingDetails(firstSpan).getInvocations().size());
+                Mockito.verify(firstSpan).setAttribute("authux_received", 1L);
+                Mockito.verify(firstSpan).setAttribute("authux_rejected_malformed", 1L);
+                Mockito.verify(firstSpan).setAttribute("authux_rejected_unsupported", 0L);
+                Mockito.verify(secondSpan).setAttribute("authux_received", 2L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_malformed", 0L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_unsupported", 2L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_closed", 0L);
+                Mockito.verify(firstSpan).end();
+                Mockito.verify(secondSpan).end();
+                factory.verify(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null), Mockito.times(2));
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    private void configureAuthUxTransportFlight(final boolean enabled) {
+        final IFlightsProvider flights = Mockito.mock(IFlightsProvider.class);
+        when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flights.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(enabled);
+        final MockCommonFlightsManager manager = new MockCommonFlightsManager();
+        manager.setMockCommonFlightsProvider(flights);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_recorderDispositionsAndLaterSpanFailure() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        final OnboardingTelemetryRecorder recorder = Mockito.spy(newAuthUxOnboardingRecorder());
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView view = Mockito.mock(WebView.class);
+        final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+            client.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+            final ArgumentCaptor<AuthUxJavaScriptInterface> captured =
+                    ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+            Mockito.verify(view).addJavascriptInterface(captured.capture(), eq("broker"));
+            final AuthUxJavaScriptInterface processor = captured.getValue();
+            processor.process(authUxPayload("other-id", "50127"));
+            processor.process(authUxPayload("request-id", "50058"));
+            Mockito.doThrow(new IllegalStateException("append")).when(recorder).addBlockingError("50127");
+            processor.process(authUxPayload("request-id", "50127"));
+            Mockito.doCallRealMethod().when(recorder).addBlockingError("50127");
+            Mockito.doThrow(new IllegalStateException("step")).when(recorder).addStep("BrokerInstallPromptedForMAM");
+            processor.process(authUxPayload("request-id", "50127"));
+            Mockito.doCallRealMethod().when(recorder).addStep("BrokerInstallPromptedForMAM");
+            final io.opentelemetry.api.trace.Span legacy = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            when(legacy.setAttribute("authux_js_error_code", "50127")).thenThrow(new IllegalStateException("old span"));
+            try (MockedStatic<com.microsoft.identity.common.java.opentelemetry.SpanExtension> current =
+                         Mockito.mockStatic(com.microsoft.identity.common.java.opentelemetry.SpanExtension.class)) {
+                current.when(com.microsoft.identity.common.java.opentelemetry.SpanExtension::current).thenReturn(legacy);
+                processor.process(authUxPayload("request-id", "50127"));
+            }
+            client.closeAuthUxBridgeSession();
+            for (final String disposition : Arrays.asList("written", "excluded_cid", "excluded_policy", "failed", "partial")) {
+                Mockito.verify(span).setAttribute("authux_recorder_" + disposition, 1L);
+            }
+            Mockito.verify(span).setAttribute("authux_rejected_processing", 3L);
+            Mockito.verify(span).setAttribute("authux_received", 5L);
+            Mockito.verify(span).end();
+            Mockito.verify(recorder, Mockito.times(3)).addBlockingError("50127");
+            Mockito.verify(recorder, Mockito.times(2)).addStep("BrokerInstallPromptedForMAM");
+        } finally {
+            client.closeAuthUxBridgeSession();
         }
     }
 
@@ -4774,6 +5115,35 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Onboarding telemetry hooks
     // -----------------------------------------------------------------------
 
+    @Test
+    public void testProcessInstallRequest_registrationOnly_doesNotRecordBrokerInstall()
+            throws Exception {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        final OnboardingTelemetryRecorder recorder = new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"abc-123\","
+                        + "\"onboarding_mode\":\"brokered\"}",
+                "client-id", "scope1", mContext);
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(client.shouldOverrideUrlLoading(
+                webView, TEST_DEVICE_REGISTRATION_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.DEVICE_REGISTRATION_REQUIRED,
+                result.getValue().getResultCode());
+        Mockito.verify(webView).stopLoading();
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
+    }
+
     /**
      * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
      * a broker install request URL produces a populated blob containing the
@@ -4793,10 +5163,21 @@ public class AzureActiveDirectoryWebViewClientTest {
         recorder.addBlockingError(
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
 
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        client.setOnboardingTelemetryRecorder(recorder);
 
         // Trigger a broker install URL through the WebView client (delegates to processInstallRequest).
-        mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL);
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED,
+                result.getValue().getResultCode());
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNotNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
@@ -5677,12 +6058,18 @@ public class AzureActiveDirectoryWebViewClientTest {
      * demonstrably unreachable for app_links.
      */
     @Test
-    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist() {
+    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist()
+            throws Exception {
+        final AzureActiveDirectoryWebViewClient client = mamCaWebViewClient(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
         final Intent launched = launchInstallAndCaptureIntent(
-                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
+                client, TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
 
         assertNull("An app_link that is not https must never be launched, but was: "
                         + (launched == null ? "" : launched.getDataString()),
                 launched);
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
     }
 }

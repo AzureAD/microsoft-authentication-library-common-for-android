@@ -63,7 +63,10 @@ stages:
           jdkVersionOption: "1.17"
       - script: tree "$(Build.SourcesDirectory)" /F /A
         displayName: 'Print File Structure Tree'
-      - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+      - template: ../templates/steps/collect-changed-files.yml
+        parameters:
+          outputDir: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport
+      - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport
         artifact: jacocoReport
         displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
       - task: PublishCodeCoverageResults@1

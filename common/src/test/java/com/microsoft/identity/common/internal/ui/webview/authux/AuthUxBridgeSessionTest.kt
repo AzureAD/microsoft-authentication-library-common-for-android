@@ -49,6 +49,57 @@ class AuthUxBridgeSessionTest {
     private val webView = mock(WebView::class.java)
 
     @Test
+    fun `measurements distinguish fallback rollback and uncertain disabled setup`() {
+        val observer = mock(AuthUxMeasurementObserver::class.java)
+        val observation = AuthUxBridgeTelemetry.wrap(observer)
+        val fallback = AuthUxBridgeSession.createWithTelemetry(
+            webView, LOGIN_URL, true, null, true, true,
+            observation, FakeWebKitAdapter(failListenerRegistration = true), AuthUxOriginPolicy())
+        assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, fallback.mode)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.INSTALL_FAILED)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.ROLLBACK_COMPLETE)
+        verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.JAVASCRIPT_INTERFACE)
+        verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.WEB_MESSAGE_LISTENER_ROLLED_BACK)
+        for (adapter in listOf(
+            FakeWebKitAdapter(failScriptRegistration = true),
+            FakeWebKitAdapter(failAfterListenerRegistration = true, failListenerRemoval = true)
+        )) {
+            org.mockito.Mockito.reset(observer)
+            val disabled = AuthUxBridgeSession.createWithTelemetry(
+                webView, LOGIN_URL, true, null, true, true,
+                observation, adapter, AuthUxOriginPolicy())
+            assertEquals(AuthUxTransportMode.DISABLED, disabled.mode)
+            disabled.close()
+            verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.DISABLED)
+            verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.WEB_MESSAGE_LISTENER_ROLLBACK_INCOMPLETE)
+            verify(observer, never()).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT_SELECTION_REASON, AuthUxMeasurementObserver.Value.BRIDGE_SETUP_FAILED)
+            verify(observer, never()).count(AuthUxMeasurementObserver.BridgeCounter.ROLLBACK_COMPLETE)
+        }
+    }
+
+    @Test
+    fun `selected legacy is not mistaken for an installed interface`() {
+        val observer = mock(AuthUxMeasurementObserver::class.java)
+        val session = AuthUxBridgeSession.createWithTelemetry(
+            webView, FEDERATED_URL, true, null, true, false,
+            AuthUxBridgeTelemetry.wrap(observer), FakeWebKitAdapter(), AuthUxOriginPolicy())
+        verify(observer).state(AuthUxMeasurementObserver.BridgeAttribute.TRANSPORT, AuthUxMeasurementObserver.Value.JAVASCRIPT_INTERFACE)
+        verify(observer, never()).count(AuthUxMeasurementObserver.BridgeCounter.LEGACY_INSTALLED)
+        session.onPageStarted(webView, LOGIN_URL)
+        verify(observer).count(AuthUxMeasurementObserver.BridgeCounter.LEGACY_INSTALLED)
+    }
+
+    @Test
+    fun `non broker measurement observer stays inert even with recorder`() {
+        val observer = mock(AuthUxMeasurementObserver::class.java)
+        val session = AuthUxBridgeSession.createWithTelemetry(
+            webView, LOGIN_URL, false, RecordingTelemetrySink(), true, true,
+            AuthUxBridgeTelemetry.wrap(observer), FakeWebKitAdapter(), AuthUxOriginPolicy())
+        session.close()
+        org.mockito.Mockito.verifyNoInteractions(observer)
+    }
+
+    @Test
     fun `eligible broker selects WebMessageListener when both features are supported`() {
         val adapter = FakeWebKitAdapter()
 

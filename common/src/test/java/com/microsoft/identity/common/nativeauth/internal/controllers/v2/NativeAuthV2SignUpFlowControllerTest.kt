@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeA
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterSignUpCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpV2StartCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
@@ -89,6 +90,31 @@ class NativeAuthV2SignUpFlowControllerTest {
         controller = NativeAuthV2FlowController()
     }
 
+    @Test
+    fun existingAccountChallenge_handlesRiskVerificationForAutomaticAndExplicitSelection() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN)
+        val riskState = NativeAuthV2ContinuationStateTestFactory.create(
+            correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN)
+        stubAuthorizeChallengeStart(state)
+        every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns
+            NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
+                correlationId, state, listOf(NativeAuthV2AuthMethod("email-id", "email", null)))
+        every { mockStrategy.performMethodChallenge(state, "email-id") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired(correlationId, riskState)
+        every { mockStrategy.performRiskVerification(riskState) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(correlationId, riskState, "***", "email", 6)
+        val expected = NativeAuthV2CommandResult.ExistingAccountCodeRequired(
+            correlationId, riskState, 6, "***", "email")
+        assertEquals(expected, controller.signUpStart(signUpStartParameters()))
+        val parameters = NativeAuthV2SelectAuthMethodCommandParameters.builder()
+            .authority(mockAuthority).platformComponents(mockPlatformComponents)
+            .correlationId(correlationId).scopes(emptyList()).continuationState(state)
+            .methodId("email-id").build()
+        assertEquals(expected, controller.selectAuthMethod(parameters))
+        verify(exactly = 2) { mockStrategy.performRiskVerification(riskState) }
+    }
+
     // -----------------------------------------------------------------------------------------
     // signUpStart
     // -----------------------------------------------------------------------------------------
@@ -98,11 +124,11 @@ class NativeAuthV2SignUpFlowControllerTest {
         val entryState = mockContinuationState()
         val codeState = mockContinuationState()
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.AttributesRequired(
                 correlationId = correlationId,
                 continuationState = entryState,
-                requiredAttributes = listOf(requiredAttribute("email"))
+                requiredAttributes = listOf(requiredAttribute("password"))
             )
         every { mockStrategy.performSubmitAttributes(entryState, any(), any()) } returns
             NativeAuthV2InteractionApiResult.CodeRequired(
@@ -113,14 +139,13 @@ class NativeAuthV2SignUpFlowControllerTest {
                 codeLength = 6
             )
 
-        val result = controller.signUpStart(signUpStartParameters())
+        val result = controller.signUpStart(signUpStartParameters(attributes = mapOf("city" to "Redmond")))
 
         assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
         result as NativeAuthV2CommandResult.CodeRequired
         assertEquals(codeState, result.continuationState)
         assertEquals(6, result.codeLength)
-        // The upfront submit must post email (and password), so the app never re-supplies them.
-        verify(exactly = 1) { mockStrategy.performSubmitAttributes(entryState, any(), any()) }
+        verify(exactly = 1) { mockStrategy.performSubmitAttributes(entryState, mapOf("city" to "Redmond"), null) }
     }
 
     @Test
@@ -128,7 +153,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         val entryState = mockContinuationState()
         val codeState = mockContinuationState()
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.CodeRequired(
                 correlationId = correlationId,
                 continuationState = codeState,
@@ -157,7 +182,7 @@ class NativeAuthV2SignUpFlowControllerTest {
             "message" to "An account already exists for this email."
         ))
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.UserAlreadyExists(
                 correlationId = correlationId,
                 error = "user_already_exists",
@@ -192,18 +217,17 @@ class NativeAuthV2SignUpFlowControllerTest {
         every {
             entryState.withAdditionalSubmittedAttributes(
                 match {
-                    it.size == 2 &&
-                        it.any { name -> name.equals("email", ignoreCase = true) } &&
-                        it.any { name -> name.equals("password", ignoreCase = true) }
+                    it.size == 1 &&
+                        it.any { name -> name.equals("city", ignoreCase = true) }
                 }
             )
         } returns submittedState
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.AttributesRequired(
                 correlationId = correlationId,
                 continuationState = entryState,
-                requiredAttributes = listOf(requiredAttribute("email"))
+                requiredAttributes = listOf(requiredAttribute("password"))
             )
         every { mockStrategy.performSubmitAttributes(entryState, any(), any()) } returns
             NativeAuthV2InteractionApiResult.InvalidAttributes(
@@ -218,7 +242,7 @@ class NativeAuthV2SignUpFlowControllerTest {
                 attributeValidationDetails = details
             )
 
-        val result = controller.signUpStart(signUpStartParameters())
+        val result = controller.signUpStart(signUpStartParameters(attributes = mapOf("city" to "Redmond")))
 
         assertTrue(result is NativeAuthV2CommandResult.AttributesInvalid)
         result as NativeAuthV2CommandResult.AttributesInvalid
@@ -227,8 +251,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals("service-time", result.timestamp)
         assertEquals("attributeValidationError", result.subError)
         assertEquals(details, result.attributeValidationDetails)
-        // The validation-error body carries no fresh continuation token, so retry with a state
-        // that remembers the email and password submitted by the rejected request.
+        // The validation-error body carries no fresh continuation token.
         assertSame(submittedState, result.continuationState)
     }
 
@@ -241,7 +264,7 @@ class NativeAuthV2SignUpFlowControllerTest {
             "message" to "Unrecognized attribute diagnostic."
         ))
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.UnknownError(
                 correlationId = correlationId,
                 error = "future_error",
@@ -270,36 +293,29 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun testSignUpStartWithoutPasswordDefersToPasswordRequired() {
         val entryState = mockContinuationState()
-        val passwordState = mockContinuationState()
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.AttributesRequired(
                 correlationId = correlationId,
                 continuationState = entryState,
-                requiredAttributes = listOf(requiredAttribute("email"))
-            )
-        // The upfront submit (email only, no password) makes the server request the password next.
-        every { mockStrategy.performSubmitAttributes(entryState, any()) } returns
-            NativeAuthV2InteractionApiResult.AttributesRequired(
-                correlationId = correlationId,
-                continuationState = passwordState,
                 requiredAttributes = listOf(requiredAttribute("password"))
             )
 
-        val result = controller.signUpStart(signUpStartParameters(password = null))
+        val result = controller.signUpStart(signUpStartParameters())
 
         assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
         assertEquals(
-            passwordState,
+            entryState,
             (result as NativeAuthV2CommandResult.PasswordRequired).continuationState
         )
+        verify(exactly = 0) { mockStrategy.performSubmitAttributes(any(), any(), any()) }
     }
 
     @Test
     fun testSignUpStartMapsRedirect() {
         val entryState = mockContinuationState()
         stubAuthorizeChallengeStart(entryState)
-        every { mockStrategy.performSignUpStart(entryState) } returns
+        every { mockStrategy.performSignUpStart("user@contoso.com", entryState) } returns
             NativeAuthV2InteractionApiResult.Redirect(
                 correlationId = correlationId,
                 redirectReason = "fallback_required",
@@ -332,15 +348,13 @@ class NativeAuthV2SignUpFlowControllerTest {
         val result = controller.signUpStart(signUpStartParameters())
 
         assertTrue(result is INativeAuthCommandResult.Redirect)
-        verify(exactly = 0) { mockStrategy.performSignUpStart(any()) }
+        verify(exactly = 0) { mockStrategy.performSignUpStart(any(), any()) }
     }
 
     @Test
     fun testSignUpStartRejectsReservedAttributesBeforeNetworkRequest() {
-        val password = "Password123!".toCharArray()
         val result = controller.signUpStart(
             signUpStartParameters(
-                password = password,
                 attributes = linkedMapOf(
                     "EMAIL" to "other@contoso.com",
                     "Password" to "not-the-password"
@@ -354,7 +368,6 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertEquals(listOf("EMAIL", "Password"), result.invalidAttributes)
         assertTrue(result.errorDescription.contains("EMAIL, Password"))
         verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
-        assertTrue(password.all { it == '\u0000' })
     }
 
     // -----------------------------------------------------------------------------------------
@@ -866,13 +879,13 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { state.hasSubmittedAttribute(any()) } returns false
         every { state.withAdditionalSubmittedAttributes(any()) } returns state
         every { state.pendingSignUpAttributesForSubmission() } returns null
-        every { state.requiresSignUpPasswordRecollection() } returns false
+        every { state.withPendingSignUpAttributes(any()) } returns state
+        every { state.withoutPendingSignUpAttributes() } returns state
         return state
     }
 
     private fun signUpStartParameters(
         username: String = "user@contoso.com",
-        password: CharArray? = "Password123!".toCharArray(),
         attributes: Map<String, String>? = null
     ): SignUpV2StartCommandParameters =
         SignUpV2StartCommandParameters.builder()
@@ -881,7 +894,6 @@ class NativeAuthV2SignUpFlowControllerTest {
             .correlationId(correlationId)
             .scopes(emptyList())
             .username(username)
-            .password(password)
             .attributes(attributes)
             .build()
 
@@ -954,19 +966,108 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
-    fun existingAccountPassword_isDistinctAndNeverReusesSignUpPassword() {
+    fun existingAccountMultipleMethods_waitForSelectionAtEverySignUpStep() {
         val state = mockContinuationState()
         stubAuthorizeChallengeStart(state)
-        every { mockStrategy.performSignUpStart(state) } returns
+        for (methods in listOf(
+            listOf(NativeAuthV2AuthMethod("email-id", "email", null), NativeAuthV2AuthMethod("password-id", "password", null)),
+            listOf(NativeAuthV2AuthMethod("email-1", "email", null), NativeAuthV2AuthMethod("email-2", "email", null),
+                NativeAuthV2AuthMethod("password-id", "password", null))
+        )) {
+            val challenge = NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
+                correlationId, state, methods + NativeAuthV2AuthMethod("unsupported", "sms", null))
+            every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns challenge
+            every { mockStrategy.performSubmitAttributes(state, any(), any()) } returns challenge
+            every { mockStrategy.performVerify(state, any()) } returns challenge
+            val expected = NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId, state, methods)
+            assertEquals(expected, controller.signUpStart(signUpStartParameters()))
+            assertEquals(expected, controller.submitAttributes(submitAttributesParameters(state)))
+            assertEquals(expected, controller.submitSignUpCode(submitCodeParameters(state)))
+        }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+        verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
+        verify(exactly = 0) { mockStrategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun existingAccountSingleSupportedMethod_ignoresUnsupportedAlternatives() {
+        val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
+        stubAuthorizeChallengeStart(state)
+        every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns
+            NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(correlationId, state,
+                listOf(NativeAuthV2AuthMethod("sms-id", "sms", null),
+                    NativeAuthV2AuthMethod("password-id", "password", null)))
+        every { mockStrategy.performMethodChallenge(state, "password-id") } returns
+            NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
+        assertEquals(NativeAuthV2CommandResult.ExistingAccountPasswordRequired(correlationId, state),
+            controller.signUpStart(signUpStartParameters()))
+        verify(exactly = 1) { mockStrategy.performMethodChallenge(state, "password-id") }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(state, "sms-id") }
+    }
+
+    @Test
+    fun existingAccountSelection_challengesChosenMethodAndPreservesOutcomes() {
+        val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
+        val code = NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***", "email", 6)
+        val password = NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
+        val enrollment = NativeAuthV2InteractionApiResult.RegistrationRequired(
+            correlationId, state, listOf(NativeAuthV2AuthMethod("sms", "sms", null)))
+        val redirect = NativeAuthV2InteractionApiResult.Redirect(
+            correlationId = correlationId, redirectReason = "browser required")
+        for ((method, response, expected) in listOf(
+            Triple(NativeAuthV2AuthMethod("email-id", "email", null), code,
+                NativeAuthV2CommandResult.ExistingAccountCodeRequired(correlationId, state, 6, "***", "email")),
+            Triple(NativeAuthV2AuthMethod("password-id", "password", null), password,
+                NativeAuthV2CommandResult.ExistingAccountPasswordRequired(correlationId, state)),
+            Triple(NativeAuthV2AuthMethod("email-id", "email", null), enrollment,
+                NativeAuthV2CommandResult.StrongAuthRegistrationRequired(correlationId, state, enrollment.methods)),
+            Triple(NativeAuthV2AuthMethod("password-id", "password", null), redirect,
+                INativeAuthCommandResult.Redirect(correlationId, "browser required"))
+        )) {
+            every { mockStrategy.performMethodChallenge(state, method.id) } returns response
+            val parameters = NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                .authority(mockAuthority).platformComponents(mockPlatformComponents)
+                .correlationId(correlationId).scopes(emptyList())
+                .continuationState(state).methodId(method.id).build()
+            assertEquals(expected, controller.selectAuthMethod(parameters))
+        }
+        verify(exactly = 2) { mockStrategy.performMethodChallenge(state, "email-id") }
+        verify(exactly = 2) { mockStrategy.performMethodChallenge(state, "password-id") }
+        verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
+        verify(exactly = 0) { mockStrategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun existingAccountSelection_rejectsUnsupportedChallengeChannels() {
+        val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
+        every { mockStrategy.performMethodChallenge(state, any()) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***", "sms", 6)
+        for (type in listOf("email", "password")) {
+            val parameters = NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                .authority(mockAuthority).platformComponents(mockPlatformComponents)
+                .correlationId(correlationId).scopes(emptyList()).continuationState(state)
+                .methodId("$type-id").build()
+            assertTrue(controller.selectAuthMethod(parameters) is INativeAuthCommandResult.APIError)
+        }
+        verify(exactly = 2) { mockStrategy.performMethodChallenge(state, any()) }
+    }
+
+    @Test
+    fun existingAccountPassword_isDistinctAndRequiresExplicitPassword() {
+        val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
+        stubAuthorizeChallengeStart(state)
+        every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns
             NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(correlationId, state,
                 listOf(com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod(
                     "password-id", "password", null)))
         every { mockStrategy.performMethodChallenge(state, "password-id") } returns
             NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, state)
-        val password = "New-account-password!".toCharArray()
-        val result = controller.signUpStart(signUpStartParameters(password = password))
+        val result = controller.signUpStart(signUpStartParameters())
         assertEquals(NativeAuthV2CommandResult.ExistingAccountPasswordRequired(correlationId, state), result)
-        assertTrue(password.all { it == '\u0000' })
         verify(exactly = 0) { mockStrategy.performPasswordVerify(any(), any()) }
         verify(exactly = 0) { mockStrategy.performSubmitAttributes(any(), any(), any()) }
         verify(exactly = 0) { mockStrategy.performAuthorizeChallengeContinue(any()) }
@@ -975,11 +1076,12 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun existingAccountEmail_isDistinctAtStartAttributesAndCodeVerification() {
         val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
         val challenge = NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(correlationId, state,
             listOf(com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod(
                 "email-id", "email", null)))
         stubAuthorizeChallengeStart(state)
-        every { mockStrategy.performSignUpStart(state) } returns challenge
+        every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns challenge
         every { mockStrategy.performSubmitAttributes(state, any(), any()) } returns challenge
         every { mockStrategy.performVerify(state, any()) } returns challenge
         every { mockStrategy.performMethodChallenge(state, "email-id") } returns
@@ -1005,7 +1107,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         for (type in listOf("email", "password")) {
             val challenge = NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
                 correlationId, signInState, listOf(NativeAuthV2AuthMethod("$type-id", type, null)))
-            every { mockStrategy.performSignUpStart(signUpState) } returns challenge
+            every { mockStrategy.performSignUpStart("user@contoso.com", signUpState) } returns challenge
             every { mockStrategy.performSubmitAttributes(signUpState, any(), any()) } returns challenge
             every { mockStrategy.performVerify(signUpState, any()) } returns challenge
             every { mockStrategy.performMethodChallenge(signInState, "$type-id") } returns
@@ -1032,10 +1134,11 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun existingAccountEmail_acceptsMixedCaseChallengeChannels() {
         val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
         val challenge = NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
             correlationId, state, listOf(NativeAuthV2AuthMethod("email-id", "email", null)))
         stubAuthorizeChallengeStart(state)
-        every { mockStrategy.performSignUpStart(state) } returns challenge
+        every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns challenge
 
         for (channel in listOf("email", "Email", "EMAIL")) {
             every { mockStrategy.performMethodChallenge(state, "email-id") } returns
@@ -1053,11 +1156,12 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun existingAccountChallenge_doesNotAcceptMismatchedOrUnsupportedMethods() {
         val state = mockContinuationState()
+        every { state.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
         stubAuthorizeChallengeStart(state)
         every { mockStrategy.performMethodChallenge(any(), any()) } returns
             NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***", "sms", 6)
         for (type in listOf("sms", "email", "password")) {
-            every { mockStrategy.performSignUpStart(state) } returns
+            every { mockStrategy.performSignUpStart("user@contoso.com", state) } returns
                 NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(correlationId, state,
                     listOf(com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod(
                         "$type-id", type, null)))

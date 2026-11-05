@@ -29,9 +29,8 @@ import java.net.URL
 /**
  * Represents a request to the HAL-resolved entry endpoint of a Native Auth V2 sign-up flow
  * (`signup/start`), resolved via the [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation.SIGN_UP]
- * relation. Unlike sign-in and reset-password, sign-up's entry call carries no username: the
- * identifier is supplied later as an attribute via `submitattributes`, so the body is just the
- * `continuationToken`.
+ * relation. The body carries the username and continuation token; email is never submitted
+ * as a user attribute.
  */
 data class NativeAuthV2SignUpStartRequest private constructor(
     override var requestUrl: URL,
@@ -41,10 +40,12 @@ data class NativeAuthV2SignUpStartRequest private constructor(
 
     companion object {
         fun create(
+            username: String,
             continuationToken: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): NativeAuthV2SignUpStartRequest {
+            ArgUtils.validateNonNullArg(username, "username")
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -53,6 +54,7 @@ data class NativeAuthV2SignUpStartRequest private constructor(
                 requestUrl = URL(requestUrl),
                 headers = headers,
                 parameters = NativeAuthV2SignUpStartRequestParameters(
+                    username = username,
                     continuationToken = continuationToken
                 )
             )
@@ -65,10 +67,11 @@ data class NativeAuthV2SignUpStartRequest private constructor(
 
     /**
      * NativeAuthV2SignUpStartRequestParameters represents the JSON request body sent to a Native
-     * Auth V2 sign-up flow's entry endpoint. [continuationToken] is never included in either
-     * string representation.
+     * Auth V2 sign-up flow's entry endpoint. Neither [username] nor [continuationToken] is
+     * included in either string representation.
      */
     data class NativeAuthV2SignUpStartRequestParameters(
+        val username: String,
         val continuationToken: String
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthV2SignUpStartRequestParameters()"

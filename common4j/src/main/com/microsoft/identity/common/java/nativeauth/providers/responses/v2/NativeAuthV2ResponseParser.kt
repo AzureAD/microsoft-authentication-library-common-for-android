@@ -67,22 +67,11 @@ class NativeAuthV2ResponseParser {
             methodName = "$TAG.parseAuthorizeChallenge"
         )
 
-        if (response.isWebFallbackRequired) {
-            return AuthorizeChallengeApiResult.Redirect(
-                correlationId = response.serverError?.correlationId
-                    ?.takeUnless { it.isBlank() } ?: response.correlationId,
-                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON,
-                traceId = response.serverError?.traceId,
-                timestamp = response.serverError?.timestamp,
-                errorCodes = response.serverError?.errorCodes ?: extractAadstsCodes(response.serverError?.message)
-            )
-        }
-
         val continuationToken = response.continuationToken
         val hasValidContinuation = !continuationToken.isNullOrBlank() &&
             !response.links[entryRelation.value].isNullOrBlank()
 
-        response.serverError?.takeUnless { hasValidContinuation }?.let { serverError ->
+        response.serverError?.takeUnless { hasValidContinuation && !response.isWebFallbackRequired }?.let { serverError ->
             return AuthorizeChallengeApiResult.UnknownError(
                 correlationId = serverError.correlationId
                     ?.takeUnless { it.isBlank() } ?: response.correlationId,
@@ -177,16 +166,6 @@ class NativeAuthV2ResponseParser {
 
         val errorCorrelationId = response.serverError?.correlationId
             ?.takeUnless { it.isBlank() } ?: response.correlationId
-
-        if (response.isWebFallbackRequired) {
-            return NativeAuthV2InteractionApiResult.Redirect(
-                correlationId = errorCorrelationId,
-                redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON,
-                traceId = response.serverError?.traceId,
-                timestamp = response.serverError?.timestamp,
-                errorCodes = response.serverError?.errorCodes ?: extractAadstsCodes(response.serverError?.message)
-            )
-        }
 
         response.serverError?.let { serverError ->
             return mapInteractionError(
@@ -622,17 +601,32 @@ class NativeAuthV2ResponseParser {
                     subError = innerErrorCode.orEmpty(),
                     errorCodes = errorCodes,
                     traceId = serverError.traceId,
-                    timestamp = serverError.timestamp
+                    timestamp = serverError.timestamp,
+                    attributeValidationDetails = validationDetails(serverError)
                 )
 
             innerErrorCode == INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
                 unknownInteractionError(correlationId, serverError, errorCodes)
 
+            code == ERROR_INVALID_REQUEST &&
+                    (innerErrorCode in INNER_ERROR_INVALID_PASSWORD ||
+                            (innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED &&
+                                    serverError.details.any { "password" in it.attributeIds })) ->
+                NativeAuthV2InteractionApiResult.InvalidPassword(
+                    correlationId = correlationId,
+                    error = code,
+                    errorDescription = message.orEmpty(),
+                    subError = innerErrorCode.orEmpty(),
+                    errorCodes = errorCodes,
+                    traceId = serverError.traceId,
+                    timestamp = serverError.timestamp,
+                    attributeValidationDetails = validationDetails(serverError)
+                )
+
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
                 run {
                     val invalidAttributes = serverError.details
-                        .filterNot { it.code == INNER_ERROR_USER_ALREADY_EXISTS }
                         .flatMap { it.attributeIds }
                         .distinct()
                     if (invalidAttributes.isEmpty()) {
@@ -652,31 +646,6 @@ class NativeAuthV2ResponseParser {
                     }
                 }
 
-            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
-                    serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
-                // An account already exists for the identifier supplied to sign-up.
-                NativeAuthV2InteractionApiResult.UserAlreadyExists(
-                    correlationId = correlationId,
-                    error = code.orEmpty(),
-                    errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes,
-                    subError = innerErrorCode,
-                    attributeValidationDetails = validationDetails(serverError),
-                    traceId = serverError.traceId,
-                    timestamp = serverError.timestamp
-                )
-
-            code == ERROR_INVALID_REQUEST && innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
-                NativeAuthV2InteractionApiResult.InvalidPassword(
-                    correlationId = correlationId,
-                    error = code.orEmpty(),
-                    errorDescription = message.orEmpty(),
-                    subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes,
-                    traceId = serverError.traceId,
-                    timestamp = serverError.timestamp
-                )
-
             code == ERROR_INVALID_GRANT &&
                     innerErrorCode == INNER_ERROR_INVALID_USERNAME_OR_PASSWORD ->
                 NativeAuthV2InteractionApiResult.InvalidCredentials(
@@ -686,21 +655,20 @@ class NativeAuthV2ResponseParser {
                     subError = innerErrorCode.orEmpty(),
                     errorCodes = errorCodes,
                     traceId = serverError.traceId,
-                    timestamp = serverError.timestamp
+                    timestamp = serverError.timestamp,
+                    attributeValidationDetails = validationDetails(serverError)
                 )
 
-            // The account does not exist in the directory. This response carries no inner error
-            // code, so it is identified by the AADSTS code in the message. Gate on the outer code
-            // as well so that a message which merely mentions AADSTS50034 cannot shadow a
-            // recoverable credentials error, which is reported under a different outer code.
-            code == ERROR_INVALID_REQUEST && message?.contains(AADSTS_USER_NOT_FOUND) == true ->
+            code == ERROR_INVALID_REQUEST && innerErrorCode == INNER_ERROR_USER_NOT_FOUND ->
                 NativeAuthV2InteractionApiResult.UserNotFound(
                     correlationId = correlationId,
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     errorCodes = errorCodes,
                     traceId = serverError.traceId,
-                    timestamp = serverError.timestamp
+                    timestamp = serverError.timestamp,
+                    subError = innerErrorCode,
+                    attributeValidationDetails = validationDetails(serverError)
                 )
 
             else -> unknownInteractionError(correlationId, serverError, errorCodes)
@@ -783,7 +751,6 @@ class NativeAuthV2ResponseParser {
         private val TAG: String = NativeAuthV2ResponseParser::class.java.simpleName
 
         private const val STATE_CONTINUE = "continue"
-        private const val WEB_FALLBACK_REDIRECT_REASON = "web_fallback_required"
 
         private const val CODE_LENGTH_FIELD = "codeLength"
         private const val CHALLENGE_TARGET_LABEL_FIELD = "challengeTargetLabel"
@@ -806,10 +773,7 @@ class NativeAuthV2ResponseParser {
         )
         private const val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD = "invalidUserNameOrPassword"
 
-        private const val AADSTS_USER_NOT_FOUND = "AADSTS50034"
-
-        /** `error.innerError.details[].code` value indicating an account already exists. */
-        private const val INNER_ERROR_USER_ALREADY_EXISTS = "userAlreadyExists"
+        private const val INNER_ERROR_USER_NOT_FOUND = "userNotFound"
 
         /** `error.innerError.code` value indicating one or more attributes failed validation. */
         private const val INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED = "attributeValidationError"
