@@ -19,6 +19,8 @@ Every review comment must contain:
 
 Quote the code when the location is not self-explanatory. Avoid vague words such as "might", "maybe", and "probably" unless uncertainty is inherent. When a domain assumption cannot be verified, write `Assumption: ... If incorrect, disregard.`
 
+Narrow process exception: an informational [rollout consideration](rollout-guidance.md#comment-shape) identifies an evidenced material changed risk, not a verified defect. Explain its concrete potential impact and give a bounded recommendation naming a verified safe deployment boundary, or the exact missing deployment contract. Permit at most one visible, non-blocking `Rollout consideration:` per coherent change; omit severity and merge-blocker labels. Keep proven bugs separate and remove advice already covered by adequate gates/plans. This does not admit speculative style/process checklists or generic missing-flag comments.
+
 ## Severity
 
 - Prefix high-severity findings exactly with `Severity: High –`. Use this for verified exploitable vulnerabilities, secrets/PII exposure, authentication/authorization bypass, crypto misuse, security-relevant races, or denial-of-service crashes.
