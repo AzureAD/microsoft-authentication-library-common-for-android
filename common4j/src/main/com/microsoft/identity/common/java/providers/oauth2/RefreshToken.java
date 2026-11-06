@@ -23,8 +23,9 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.dto.IRefreshTokenRecord;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 
-public abstract class RefreshToken implements IRefreshTokenRecord {
+public abstract class RefreshToken implements IRefreshTokenRecord, ISensitiveData {
 
     private long mTokenReceivedTime;
     private String mRawRefreshToken;
@@ -69,5 +70,10 @@ public abstract class RefreshToken implements IRefreshTokenRecord {
      */
     public long getTokenReceivedTime() {
         return mTokenReceivedTime;
+    }
+
+    @Override
+    public void clearSensitiveData() {
+        mRawRefreshToken = null;
     }
 }
