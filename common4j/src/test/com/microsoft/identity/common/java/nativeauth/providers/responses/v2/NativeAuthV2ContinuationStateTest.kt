@@ -401,6 +401,26 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun withoutPendingSignUpAttributes_discardsProfileWithoutChangingOriginalOrTokenContext() {
+        val original = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            responseFrom("""{"continuationToken":"next","_links":{"continue":{"href":"/tenant/continue"}}}"""),
+            "next", SCOPES, CLAIMS_REQUEST_JSON, NativeAuthV2LinkRelation.SIGN_UP,
+            NativeAuthV2FlowScenario.SIGN_UP
+        ).withPendingSignUpAttributes(mapOf("displayName" to "Original"))
+
+        val completed = original.withoutPendingSignUpAttributes()
+
+        assertNull(completed.pendingSignUpAttributesForSubmission())
+        assertEquals(mapOf("displayName" to "Original"), original.pendingSignUpAttributesForSubmission())
+        assertEquals("next", completed.continuationToken)
+        assertEquals("/tenant/continue", completed.href(NativeAuthV2LinkRelation.CONTINUE))
+        assertEquals(SCOPES, completed.scopesForTokenRequest())
+        assertEquals(CLAIMS_REQUEST_JSON, completed.claimsRequestJsonForTokenRequest())
+        assertEquals(CORRELATION_ID, completed.correlationId)
+        assertEquals(NativeAuthV2FlowScenario.SIGN_UP, completed.flowScenario())
+    }
+
+    @Test
     fun next_inheritsSubmittedAttributesFromPreviousState() {
         val previous = createState().withAdditionalSubmittedAttributes(listOf("email"))
 

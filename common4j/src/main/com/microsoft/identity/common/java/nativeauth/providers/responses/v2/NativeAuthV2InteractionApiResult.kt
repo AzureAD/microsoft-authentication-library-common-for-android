@@ -214,7 +214,9 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override val errorDescription: String,
         override val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        override val subError: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -236,7 +238,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override val subError: String,
         override val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -259,7 +262,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override val subError: String,
         override val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -282,7 +286,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override val subError: String,
         override val errorCodes: List<Int>? = null,
         override val traceId: String? = null,
-        override val timestamp: String? = null
+        override val timestamp: String? = null,
+        override val attributeValidationDetails: List<Map<String, Any?>>? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,

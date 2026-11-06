@@ -34,10 +34,10 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Parameters for the V2 sign-up start operation.
- * Carries the username that initiates the flow and, optionally, the password and custom user
- * attributes to submit upfront as soon as the server requests them. The password is never retained
- * in continuation or public state; the controller clears the buffer once the request has been
- * issued. Extends {@link BaseSignInTokenCommandParameters}.
+ * Carries the username that initiates the flow and optional custom user attributes to submit
+ * as soon as the server requests them. The username is sent at sign-up start, never as an email
+ * attribute. Passwords are collected separately when requested by the service.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -51,13 +51,6 @@ public class SignUpV2StartCommandParameters extends BaseSignInTokenCommandParame
     public final String username;
 
     /**
-     * The password to submit upfront when the server requests it, or {@code null} when the app
-     * defers the password to the password-required state.
-     */
-    @Nullable
-    public final char[] password;
-
-    /**
      * The custom user attributes to submit upfront, keyed by attribute name, or {@code null} when
      * the app supplies no additional attributes.
      */
@@ -68,7 +61,7 @@ public class SignUpV2StartCommandParameters extends BaseSignInTokenCommandParame
     @Override
     public String toUnsanitizedString() {
         return "SignUpV2StartCommandParameters(username=" + username + ", authority=" + authority
-                + ", challengeTypes=" + challengeType + ", hasPassword=" + (password != null)
+                + ", challengeTypes=" + challengeType
                 + ", attributeNames=" + (attributes != null ? attributes.keySet() : "[]") + ")";
     }
 
@@ -81,7 +74,7 @@ public class SignUpV2StartCommandParameters extends BaseSignInTokenCommandParame
     @Override
     public String toString() {
         return "SignUpV2StartCommandParameters(authority=" + authority + ", challengeTypes="
-                + challengeType + ", hasPassword=" + (password != null)
+                + challengeType
                 + ", attributeNames=" + (attributes != null ? attributes.keySet() : "[]") + ")";
     }
 }

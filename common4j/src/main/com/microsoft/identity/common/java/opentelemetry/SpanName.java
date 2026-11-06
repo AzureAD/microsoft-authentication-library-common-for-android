@@ -162,5 +162,10 @@ public enum SpanName {
     /**
      * Span name for original-caller assessment during legacy broker account enumeration.
      */
-    LegacyBrokerUsersCallerEvaluation
+    LegacyBrokerUsersCallerEvaluation,
+
+    /**
+     * Broker Auth UX bridge lifetime guardrails, not authentication outcome or latency.
+     */
+    AuthUxBridge
 }

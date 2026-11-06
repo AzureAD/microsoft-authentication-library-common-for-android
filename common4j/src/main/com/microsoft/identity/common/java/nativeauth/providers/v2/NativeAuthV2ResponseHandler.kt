@@ -63,8 +63,8 @@ import java.net.HttpURLConnection
  *
  * [getTokenApiResponse] follows standard OAuth conventions: 4xx/5xx status codes map through
  * [SignInTokenApiResponse.toErrorResult]; 2xx responses are deserialized as
- * [NativeAuthMicrosoftStsTokenResponse] and returned as [SignInTokenApiResult.Success] (or
- * [SignInTokenApiResult.Redirect] when the service requests a browser redirect).
+ * [NativeAuthMicrosoftStsTokenResponse] and returned as [SignInTokenApiResult.Success].
+ * OAuth errors retain their raw diagnostics, including the exact browser-fallback error pair.
  */
 class NativeAuthV2ResponseHandler {
 
@@ -165,7 +165,10 @@ class NativeAuthV2ResponseHandler {
             )
         }
 
-        return if (!isSuccessfulStatus) {
+        val body = response.body?.takeUnless { it.isBlank() }?.let {
+            ObjectMapper.deserializeJsonStringToObject(it, JsonObject::class.java)
+        }
+        return if (!isSuccessfulStatus || !body?.string("error").isNullOrEmpty()) {
             val apiResponse = if (response.body.isNullOrBlank()) {
                 SignInTokenApiResponse(
                     statusCode = response.statusCode,
@@ -178,10 +181,7 @@ class NativeAuthV2ResponseHandler {
                     errorCodes = null
                 )
             } else {
-                val body = ObjectMapper.deserializeJsonStringToObject(
-                    response.body,
-                    JsonObject::class.java
-                ) ?: return buildTokenErrorResult(
+                if (body == null) return buildTokenErrorResult(
                     statusCode = response.statusCode,
                     correlationId = correlationId,
                     errorCode = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR,
@@ -204,10 +204,21 @@ class NativeAuthV2ResponseHandler {
                     timestamp = body.string("timestamp")
                 )
             }
-            apiResponse.toErrorResult(
-                diagnosticErrorCodes = apiResponse.errorCodes
-                    ?: NativeAuthV2ErrorDiagnostics.codesFromMessage(apiResponse.errorDescription)
-            )
+            val errorCodes = apiResponse.errorCodes
+                ?: NativeAuthV2ErrorDiagnostics.codesFromMessage(apiResponse.errorDescription)
+            if (apiResponse.error == "invalid_grant" && apiResponse.subError == "web_redirect_required") {
+                SignInTokenApiResult.UnknownError(
+                    correlationId = correlationId,
+                    error = apiResponse.error.orEmpty(),
+                    errorDescription = apiResponse.errorDescription.orEmpty(),
+                    subError = apiResponse.subError,
+                    errorCodes = errorCodes.orEmpty(),
+                    traceId = apiResponse.traceId,
+                    timestamp = apiResponse.timestamp
+                )
+            } else {
+                apiResponse.toErrorResult(diagnosticErrorCodes = errorCodes)
+            }
         } else {
             val tokenResponse = ObjectMapper.deserializeJsonStringToObject(
                 response.body,
@@ -219,9 +230,11 @@ class NativeAuthV2ResponseHandler {
                 errorMessage = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION
             )
             if (tokenResponse.challengeType.isRedirect()) {
-                SignInTokenApiResult.Redirect(
+                SignInTokenApiResult.UnknownError(
                     correlationId = correlationId,
-                    redirectReason = tokenResponse.redirectReason.orEmpty()
+                    error = ApiErrorResult.INVALID_STATE,
+                    errorDescription = "Native Auth V2 token response used an unsupported redirect challenge.",
+                    errorCodes = emptyList()
                 )
             } else {
                 SignInTokenApiResult.Success(

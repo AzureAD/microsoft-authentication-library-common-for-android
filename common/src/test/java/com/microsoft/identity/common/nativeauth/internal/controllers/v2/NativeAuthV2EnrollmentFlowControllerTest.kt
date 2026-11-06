@@ -182,7 +182,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             AuthorizeChallengeApiResult.ContinuationRequired("cid", prior)
         every { strategy.performSignInStart(any(), any()) } returns registration
         every { strategy.performResetPasswordStart(any(), any()) } returns registration
-        every { strategy.performSignUpStart(any()) } returns registration.copy(
+        every { strategy.performSignUpStart(any(), any()) } returns registration.copy(
             continuationState = state(NativeAuthV2FlowScenario.SIGN_UP))
         every { strategy.performVerify(any(), any()) } returns registration
         every { strategy.performPasswordVerify(any(), any()) } returns registration
@@ -208,7 +208,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
                 .continuationState(prior).newPassword("password".toCharArray())).build()),
             controller.selectMFAMethod(configured(NativeAuthV2SelectMFAMethodCommandParameters.builder()
                 .continuationState(prior).methodId("email")).build()),
-            controller.selectResetPasswordMethod(configured(NativeAuthV2SelectResetPasswordMethodCommandParameters.builder()
+            controller.selectAuthMethod(configured(NativeAuthV2SelectAuthMethodCommandParameters.builder()
                 .continuationState(prior).methodId("email")).build()),
             controller.submitMFAChallenge(configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
                 .continuationState(prior).code("otp")).build()),
@@ -220,7 +220,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             val returnedState = (it as NativeAuthV2CommandResult.StrongAuthRegistrationRequired).continuationState
             if (index == 2) {
                 assertEquals(NativeAuthV2FlowScenario.SIGN_UP, returnedState.flowScenario())
-                assertEquals("user", returnedState.pendingSignUpAttributesForSubmission()?.get("email"))
+                assertEquals(emptyMap<String, String>(), returnedState.pendingSignUpAttributesForSubmission())
             } else {
                 assertSame(prior, returnedState)
             }
@@ -361,15 +361,18 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     @Test
     fun activationPreservesServiceOtpErrorsAndRejectsUnsupportedActions() {
         val prior = state()
+        val details = listOf(mapOf("code" to "diagnostic", "attributeIds" to listOf("code")))
         every { strategy.performActivate(prior, "") } returns
             NativeAuthV2InteractionApiResult.InvalidCode(
                 "cid", "invalid_code", "Retry.", "invalid_oob_value",
-                traceId = "activation-trace", timestamp = "activation-time"
+                traceId = "activation-trace", timestamp = "activation-time",
+                attributeValidationDetails = details
             )
         val invalidCode = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, ""))
         assertTrue(invalidCode is NativeAuthV2CommandResult.IncorrectCode)
         assertEquals("activation-trace", invalidCode.traceId)
         assertEquals("activation-time", invalidCode.timestamp)
+        assertEquals(details, (invalidCode as NativeAuthV2CommandResult.IncorrectCode).attributeValidationDetails)
         every { strategy.performActivate(prior, "otp") } returns
             NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", prior)
         assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
