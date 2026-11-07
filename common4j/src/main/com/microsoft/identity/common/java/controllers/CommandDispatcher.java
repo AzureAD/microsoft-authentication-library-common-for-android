@@ -53,6 +53,7 @@ import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -69,6 +70,7 @@ import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -1009,9 +1011,18 @@ public class CommandDispatcher {
      *
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull CommandParameters commandParameters) {
+    static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull CommandParameters commandParameters) {
         //Token Commands
         if (result.getSucceeded()) {
+            try {
+                if (commandParameters instanceof TokenCommandParameters) {
+                    AgeAssuranceTargetValidator.validateResult(
+                            ((TokenCommandParameters) commandParameters).getClaimsRequestJson(), result);
+                }
+            } catch (final ClientException e) {
+                return new CommandResult<>(CommandResult.ResultStatus.ERROR, e,
+                        commandParameters.getCorrelationId());
+            }
             return new CommandResult<>(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), commandParameters.getCorrelationId());
         } else {
@@ -1381,4 +1392,3 @@ public class CommandDispatcher {
         resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
-

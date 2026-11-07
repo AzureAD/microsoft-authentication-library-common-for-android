@@ -67,6 +67,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
@@ -760,6 +761,8 @@ public class LocalMSALController extends BaseController {
 
             // Validate request success, may throw MsalServiceException
             validateDeviceCodeFlowServiceResult(tokenResult);
+            AgeAssuranceTargetValidator.validate(
+                    parameters.getClaimsRequestJson(), tokenResult.getTokenResponse().getIdToken());
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);
