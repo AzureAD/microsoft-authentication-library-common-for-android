@@ -44,6 +44,84 @@ internal class StubCall(private val value: Request, private val status: Int, pri
 }
 
 internal class AdapterTest {
+    private fun pullRecords(count: Int, paddingFrom: Int = 1, olderFrom: Int = Int.MAX_VALUE): List<Map<String, Any?>> =
+        (1..count).map { number ->
+            mapOf("number" to number, "user" to mapOf("id" to 3, "type" to "User"),
+                "base" to mapOf("ref" to "dev"), "head" to mapOf("ref" to "fix-$number", "sha" to "a".repeat(40)),
+                "updated_at" to (if (number >= olderFrom) now.minusSeconds(7200) else now).toString(),
+                "merged_at" to now.toString(), "state" to "closed", "html_url" to "${policy.web}/pull/$number",
+                "body" to if (number >= paddingFrom) "fixture ".repeat(3_200) else "")
+        }
+
+    private fun pullTransport(records: List<Map<String, Any?>>, requests: MutableList<Pair<Int, Int>>): HttpTransport =
+        HttpTransport(policy, "unused-pagination-fixture", object : Call.Factory {
+            override fun newCall(request: Request): Call {
+                assertEquals("GET", request.method)
+                val size = request.url.queryParameter("per_page")!!.toInt()
+                val page = request.url.queryParameter("page")!!.toInt()
+                requests.add(size to page)
+                return StubCall(request, 200, Json.encode(records.drop((page - 1) * size).take(size)))
+            }
+        })
+
+    @Test fun oversizedPullPagesAreReducedWithoutSkippingOrDuplicatingRecords() = runBlocking {
+        val requests = mutableListOf<Pair<Int, Int>>()
+        val records = pullRecords(220, paddingFrom = 101)
+        assertTrue(Json.encode(records.take(100)).length < 2_000_000)
+        assertTrue(Json.encode(records.drop(100).take(100)).length > 2_000_000)
+        val github = GitHub(policy, pullTransport(records, requests))
+        val result = github.recentPulls(now.minusSeconds(3600))
+        assertEquals((1L..220L).toList(), result.map { it.number })
+        assertEquals(listOf(100 to 1, 100 to 2, 50 to 3, 50 to 4, 50 to 5), requests)
+    }
+
+    @Test fun oversizedFirstPullPageStillHonorsLookbackAndSuccessfulPageBudget() = runBlocking {
+        val requests = mutableListOf<Pair<Int, Int>>()
+        val records = pullRecords(180, olderFrom = 131)
+        val github = GitHub(policy.copy(maxPages = 3), pullTransport(records, requests))
+        val result = github.recentPulls(now.minusSeconds(3600))
+        assertEquals((1L..130L).toList(), result.map { it.number })
+        assertEquals(listOf(100 to 1, 50 to 1, 50 to 2, 50 to 3), requests)
+    }
+
+    @Test fun singleOversizedRecordFailsClosedAfterFinitePageReductions() = runBlocking {
+        val requests = mutableListOf<Pair<Int, Int>>()
+        val records = listOf(pullRecords(1).single() + ("body" to "fixture ".repeat(260_000)))
+        val github = GitHub(policy.copy(maxPages = 1), pullTransport(records, requests))
+        fails { runBlocking { github.recentPulls(now.minusSeconds(3600)) } }
+        assertEquals(listOf(100 to 1, 50 to 1, 25 to 1, 5 to 1, 1 to 1), requests)
+    }
+
+    @Test fun authenticationFailuresAreNotRetriedAsOversizedPages() = runBlocking {
+        var requests = 0
+        val factory = object : Call.Factory {
+            override fun newCall(request: Request): Call {
+                requests++
+                return StubCall(request, 403, "private diagnostic")
+            }
+        }
+        val github = GitHub(policy, HttpTransport(policy, "unused", factory))
+        fails { runBlocking { github.recentPulls(now.minusSeconds(3600)) } }
+        assertEquals(1, requests)
+    }
+
+    @Test fun sourceLimitsStayEnforcedForDeclaredDecodedAndStreamedSizes() = runBlocking {
+        fun source(size: Int, content: String): String = Json.encode(mapOf("type" to "file", "encoding" to "base64",
+            "size" to size, "content" to java.util.Base64.getEncoder().encodeToString(content.toByteArray(Charsets.UTF_8))))
+        var response = source(128_000, "x".repeat(128_000))
+        val factory = object : Call.Factory {
+            override fun newCall(request: Request): Call = StubCall(request, 200, response)
+        }
+        val github = GitHub(policy, HttpTransport(policy, "unused", factory))
+        assertEquals(128_000, github.source("src/Fixture.kt", "a".repeat(40))!!.length)
+        for (oversized in listOf(source(128_001, ""), source(1, "x".repeat(128_001)), "x".repeat(2_000_001))) {
+            response = oversized
+            assertThrows(SourceTooLarge::class.java) {
+                runBlocking { github.source("src/Fixture.kt", "a".repeat(40)) }
+            }
+        }
+    }
+
     @Test fun httpAdapterSupportsPatchAndNeverChangesCredentialOrigin() = runBlocking {
         val requests = mutableListOf<Request>()
         val factory = object : Call.Factory {

@@ -114,8 +114,12 @@ internal class Extractor(private val repository: Repository, private val now: In
         ensure(safePath(where.path) && sha(where.commit) && where.first >= 1 &&
             where.last in where.first..(where.first + 39), "Invalid immutable code citation")
         ensure(where.path in paths, "Citation is outside the source PR's changed paths")
-        val fullCode = repository.source(where.path, where.commit)
-            ?: run { exclude("inaccessible_source"); return null }
+        val fullCode = try {
+            repository.source(where.path, where.commit) ?: run { exclude("inaccessible_source"); return null }
+        } catch (_: SourceTooLarge) {
+            exclude("source_exceeds_limit")
+            return null
+        }
         val lines = fullCode.lines()
         ensure(where.last <= lines.size, "Source line range does not exist")
         val code = lines.subList(where.first - 1, where.last).joinToString("\n")

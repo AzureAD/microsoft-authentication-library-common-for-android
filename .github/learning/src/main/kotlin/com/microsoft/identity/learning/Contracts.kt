@@ -33,7 +33,8 @@ import java.math.BigDecimal
 import java.security.MessageDigest
 import java.time.Instant
 
-internal class LearningFailure(message: String) : RuntimeException(message)
+internal open class LearningFailure(message: String) : RuntimeException(message)
+internal class SourceTooLarge : LearningFailure("Source file exceeds the limit")
 
 internal fun ensure(condition: Boolean, message: String) {
     if (!condition) throw LearningFailure(message)

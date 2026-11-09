@@ -127,6 +127,41 @@ internal class LearningTest {
         assertTrue(repository.writes.isEmpty())
     }
 
+    @Test fun oversizedEvidenceIsExplicitlyExcludedWithoutDiscardingOtherWitnesses() = runBlocking {
+        val memory = MemoryRepository().also { it.add(1); it.add(2); it.add(3) }
+        for (allOversized in listOf(false, true)) {
+            val repository = object : Repository by memory {
+                override suspend fun source(path: String, ref: String): String? {
+                    if (path.startsWith("src/") && (allOversized || path == "src/Case1.kt")) throw SourceTooLarge()
+                    return memory.source(path, ref)
+                }
+            }
+            val extractor = Extractor(repository, now)
+            val result = extractor.extract(State(repository = policy.repository), null)
+            assertEquals(if (allOversized) 3 else 1, extractor.exclusions["source_exceeds_limit"])
+            assertEquals(!allOversized, result.hasSignal)
+            assertEquals(if (allOversized) emptyList<Long>() else listOf(2L, 3L), result.evidence.map { it.citation.pr })
+            assertTrue(memory.writes.isEmpty())
+        }
+    }
+
+    @Test fun requiredOversizedGuidanceAndSourceAccessFailuresStillFailClosed(): Unit = runBlocking {
+        val memory = MemoryRepository().also { it.add(1); it.add(2) }
+        val denied = object : Repository by memory {
+            override suspend fun source(path: String, ref: String): String? = throw LearningFailure("HTTP 403")
+        }
+        fails { runBlocking { Extractor(denied, now).extract(State(repository = policy.repository), null) } }
+        val oversizedGuidance = object : Repository by memory {
+            override suspend fun source(path: String, ref: String): String? {
+                if (path == topic) throw SourceTooLarge()
+                return memory.source(path, ref)
+            }
+        }
+        assertThrows(SourceTooLarge::class.java) {
+            runBlocking { Learner(oversizedGuidance, now).prepare { throw AssertionError("Invalid guidance model call") } }
+        }
+    }
+
     @Test fun oneNonSeverePrIsRetainedWithoutModelInvocation() = runBlocking {
         val repository = MemoryRepository().also { it.add(1) }
         val result = packet(repository)

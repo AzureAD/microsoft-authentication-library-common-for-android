@@ -35,6 +35,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 internal data class Response(val status: Int, val body: String)
+internal class ApiResponseTooLarge : LearningFailure("API response exceeds the limit")
+
 internal fun interface Transport {
     suspend fun request(method: String, path: String, body: String?): Response
 }
@@ -62,7 +64,7 @@ internal class HttpTransport(
                 while (true) {
                     val count = reader.read(buffer)
                     if (count == -1) break
-                    ensure(result.length + count <= 2_000_000, "API response exceeds the limit")
+                    if (result.length + count > 2_000_000) throw ApiResponseTooLarge()
                     result.append(buffer, 0, count)
                 }
                 result.toString()
@@ -101,16 +103,30 @@ internal class GitHub(override val policy: Policy, private val transport: Transp
         return if (response.body.isBlank()) JsonObject() else Json.parse(response.body)
     }
 
-    private suspend fun pages(path: String): List<JsonObject> {
+    private suspend fun pages(path: String, stopAfter: (List<JsonObject>) -> Boolean = { false }): List<JsonObject> {
         val result = mutableListOf<JsonObject>()
-        for (page in 1..policy.maxPages) {
+        // Each smaller size divides the previous size, preserving the already-consumed offset.
+        val sizes = listOf(100, 50, 25, 5, 1)
+        var sizeIndex = 0
+        var completedPages = 0
+        while (completedPages < policy.maxPages) {
+            val size = sizes[sizeIndex]
+            val page = result.size / size + 1
             val separator = if ('?' in path) "&" else "?"
-            val response = request("GET", "$path${separator}per_page=100&page=$page")
-                ?: throw LearningFailure("Missing API response")
+            val response = try {
+                request("GET", "$path${separator}per_page=$size&page=$page")
+                    ?: throw LearningFailure("Missing API response")
+            } catch (_: ApiResponseTooLarge) {
+                ensure(sizeIndex < sizes.lastIndex, "A single GitHub API record exceeds the response limit")
+                sizeIndex++
+                continue
+            }
             ensure(response.isJsonArray, "Expected paginated API records")
             val items = response.asJsonArray.map { it.obj() }
+            ensure(items.size <= size, "GitHub API returned more records than requested")
             result.addAll(items)
-            if (items.size < 100) return result
+            completedPages++
+            if (items.size < size || stopAfter(items)) return result
         }
         throw LearningFailure("Pagination bound reached; extraction is incomplete")
     }
@@ -139,18 +155,10 @@ internal class GitHub(override val policy: Policy, private val transport: Transp
 
     override suspend fun baseSha(): String = branchSha(policy.base) ?: throw LearningFailure("Missing target branch")
 
-    override suspend fun recentPulls(since: Instant): List<Pull> {
-        val result = mutableListOf<Pull>()
-        for (page in 1..policy.maxPages) {
-            val response = request("GET", "$repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page")
-                ?: throw LearningFailure("Missing pull response")
-            ensure(response.isJsonArray, "Expected pull records")
-            val pulls = response.asJsonArray.map { parsePull(it.obj()) }
-            result.addAll(pulls.takeWhile { !it.updated.isBefore(since) })
-            if (pulls.size < 100 || pulls.any { it.updated.isBefore(since) }) return result
-        }
-        throw LearningFailure("Pull pagination bound reached; extraction is incomplete")
-    }
+    override suspend fun recentPulls(since: Instant): List<Pull> =
+        pages("$repo/pulls?state=closed&sort=updated&direction=desc") { items ->
+            items.any { Instant.parse(it.text("updated_at")).isBefore(since) }
+        }.map(::parsePull).takeWhile { !it.updated.isBefore(since) }
 
     override suspend fun pull(number: Long): Pull =
         parsePull(request("GET", "$repo/pulls/$number")!!.obj())
@@ -228,10 +236,15 @@ internal class GitHub(override val policy: Policy, private val transport: Transp
     override suspend fun source(path: String, ref: String): String? {
         ensure(safePath(path) && sha(ref), "Source must use a safe path and immutable commit")
         val apiPath = path.split('/').joinToString("/") { encoded(it) }
-        val value = request("GET", "$repo/contents/$apiPath?ref=$ref", missing = true)?.obj() ?: return null
+        val value = try {
+            request("GET", "$repo/contents/$apiPath?ref=$ref", missing = true)?.obj() ?: return null
+        } catch (_: ApiResponseTooLarge) {
+            throw SourceTooLarge()
+        }
         ensure(value.text("type") == "file" && value.text("encoding") == "base64", "Unsupported source object")
-        ensure(value.number("size") <= 128_000, "Source file exceeds the limit")
+        if (value.number("size") > 128_000) throw SourceTooLarge()
         val decoded = Base64.getDecoder().decode(value.text("content").replace("\n", ""))
+        if (decoded.size > 128_000) throw SourceTooLarge()
         return Charsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(decoded)).toString()
     }
 

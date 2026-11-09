@@ -118,6 +118,16 @@ isolated organization-owned sandbox with an App installed only there.
   learning PRs, generated-only changes, versioning-only changes, and inaccessible
   source files are excluded. Closed-but-unmerged PRs are not treated as accepted
   fixes.
+- Large REST pages shrink from 100 records to 50, 25, 5, then 1 without raising
+  the two-million-character response limit. Divisor page sizes preserve the
+  consumed offset when a later page shrinks. `maxPages` bounds completed pages;
+  at most four additional size-reduction attempts are allowed per collection.
+  An oversized single record still fails closed, and authentication/other
+  failures are not retried as size errors.
+- Code-witness files retain their 128,000-byte limit. Oversized evidence files
+  are excluded with the explicit `source_exceeds_limit` counter; they cannot
+  support a proposal. Oversized required guidance, checkpoint, or provenance
+  files still fail the run. Access failures are not converted into exclusions.
 - REST comments/replies and review bodies are paginated. GraphQL supplies
   thread-resolution context. Resolution is never evidence that a finding was
   correct. Authentication failures, invalid contracts, and pagination exhaustion
