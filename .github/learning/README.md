@@ -33,7 +33,8 @@ The runtime does not depend on the product Common library.
 
 ## Default-off operation
 
-The workflow is manual-only. There is no scheduled trigger in the initial pilot.
+Learning runs only on manual dispatch or an explicitly approved PR preview.
+There is no scheduled trigger in the initial pilot.
 Without `REVIEW_LEARNING_ENABLED=true`, no extraction, CLI installation,
 synthesis, checkpoint write, or guidance publication job runs. The offline
 verification job can still run.
@@ -43,6 +44,61 @@ proposal artifact but writes no GitHub branches or PRs. Publication additionally
 requires dispatch mode `propose` and
 `REVIEW_LEARNING_PUBLISH_APPROVED=true`. Neither variable is provisioned by this
 change. Enabling learning does not disable or alter native Copilot reviews.
+
+## Live preview before merging the tooling PR
+
+Use the ordinary `pull_request` label event to test real extraction, Copilot
+synthesis, and proposal validation from an unmerged tooling PR. This is a
+read-only generation test, not a test of publication or a training run.
+It never uses `pull_request_target`.
+Use only maintainer-trusted PR code: checks inside a PR's workflow are not a
+sandbox for arbitrary workflow edits by repository writers.
+
+1. Establish organization-billed CLI permission and configure the generation
+   variables listed below: `REVIEW_LEARNING_POLICY`,
+   `REVIEW_LEARNING_COPILOT_VERSION`, `REVIEW_LEARNING_MODEL`,
+   `REVIEW_LEARNING_MAX_AI_CREDITS`, and `REVIEW_LEARNING_ENABLED=true`.
+   Owners must approve the actual identities, model, and credit cap; the
+   workflow does not select them automatically. No publishing App is needed.
+2. Review the same-repository tooling PR's exact head commit. In repository
+   **Settings > Secrets and variables > Actions > Variables**, set
+   `REVIEW_LEARNING_PREVIEW_SHA` to that full 40-character commit SHA.
+   The workflow checks out that exact revision, not the PR's merge ref.
+3. An approved human whose immutable ID is in the policy's `ownerIds` applies
+   the label `learning-live-preview` to that PR targeting `dev`. A maintainer
+   may need to create the label first. Applying it is the explicit request for
+   the potentially billed run; a bot or an unregistered reviewer cannot
+   authorize it.
+4. Open **Actions > Review guidance learning**, select the run for that
+   `labeled` event, and expand `prepare`. `inspect` reports the number of
+   qualifying evidence records and whether there is signal. Only usable new
+   signal installs/invokes Copilot. Download **review-learning-proposal** from
+   that run's artifacts and inspect `proposal.json`: each rule has a statement,
+   supporting evidence IDs, and exact `path`/`before`/`after` edits. The artifact
+   expires after one day.
+
+An unmerged PR supplies the tooling being tested, not accepted evidence:
+the learner still reads qualifying human feedback from merged source PRs
+on `dev`. Fewer than two independent witnesses (without an owner-approved
+severe exception), unchanged evidence, or an active guidance draft can
+legitimately skip the model. In that case the empty proposal/status proves
+the extraction/gating path, **not** a successful live model call. Do not
+weaken the evidence policy or invent source comments to force a result.
+
+Pushes, unrelated labels, forks, different actors, and nonapproved SHAs do not
+start live synthesis. To test a newer commit, review it, update
+`REVIEW_LEARNING_PREVIEW_SHA`, then remove and reapply the preview label.
+Re-running an old event does not approve a new commit. Clear the preview SHA
+after testing. Normal Actions re-runs of the approved event remain potentially
+billable; this is an explicit-event gate, not a one-use credit reservation.
+
+The PR preparation job has only read permissions plus `copilot-requests: write`.
+No publishing App token/secret is supplied. The CLI repeats preview admission
+checks before API/model initialization and rejects `publish` on PR events,
+even if publication is otherwise enabled. The writer remains restricted to
+manual `propose` dispatch on `dev` with separate publication approval.
+Test a full write-path E2E before merge only in an explicitly approved,
+isolated organization-owned sandbox with an App installed only there.
 
 ## Evidence policy
 
@@ -112,6 +168,7 @@ Use repository variables, not secrets or tracked credentials, for these values:
 | `REVIEW_LEARNING_COPILOT_VERSION` | An exact approved `@github/copilot` version, never `latest`. |
 | `REVIEW_LEARNING_MODEL` | An explicitly approved model identifier; `auto` is rejected. |
 | `REVIEW_LEARNING_MAX_AI_CREDITS` | A positive owner-approved CLI credit ceiling; there is no inferred budget. |
+| `REVIEW_LEARNING_PREVIEW_SHA` | Optional, full approved PR head SHA for a pre-merge preview; never a branch name. |
 | `REVIEW_LEARNING_PUBLISH_APPROVED` | Separately enables draft/checkpoint publication. |
 | `REVIEW_LEARNING_PUBLISH_APP_ID` | Owner-approved publishing GitHub App ID, not a user or bot-account ID. |
 

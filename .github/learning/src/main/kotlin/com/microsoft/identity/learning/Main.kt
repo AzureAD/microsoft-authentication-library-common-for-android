@@ -167,8 +167,16 @@ internal class Command(
         ensure(args.size == 2 && args[0] in setOf("inspect", "prepare", "publish"),
             "Usage: review-learning inspect|prepare|publish <bundle-path>")
         if (environment["REVIEW_LEARNING_ENABLED"] != "true") return mapOf("status" to "disabled", "hasSignal" to false)
+        val preview = environment["GITHUB_EVENT_NAME"] == "pull_request"
+        ensure(!preview || args[0] != "publish", "Publication is never allowed from a PR event")
         val policy = Policy.parse(required("REVIEW_LEARNING_POLICY"))
         ensure(policy.repository == required("GITHUB_REPOSITORY"), "Workflow repository does not match approved policy")
+        if (preview) {
+            val eventPath = Paths.get(required("GITHUB_EVENT_PATH"))
+            ensure(Files.size(eventPath) <= 2_000_000, "Preview event exceeds the input limit")
+            authorizePreview(policy, required("REVIEW_LEARNING_PREVIEW_SHA"),
+                String(Files.readAllBytes(eventPath), Charsets.UTF_8))
+        }
         val repository = createRepository(policy, required("GITHUB_TOKEN"))
         val now = clock()
         val file = Paths.get(args[1])
