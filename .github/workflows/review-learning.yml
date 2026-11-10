@@ -58,6 +58,31 @@ jobs:
           java-version: '17'
       - name: Test isolated learning tooling
         run: ./gradlew -p .github/learning --no-daemon --console=plain test jacocoTestCoverageVerification
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: >-
+          vars.REVIEW_LEARNING_ENABLED == 'true' &&
+          vars.REVIEW_LEARNING_COPILOT_VERSION != '' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        with:
+          node-version: '22'
+      - name: Verify the pinned CLI protocol offline without Copilot credentials
+        if: >-
+          vars.REVIEW_LEARNING_ENABLED == 'true' &&
+          vars.REVIEW_LEARNING_COPILOT_VERSION != '' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          CLI_VERSION: ${{ vars.REVIEW_LEARNING_COPILOT_VERSION }}
+          CLI_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$CLI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo 'An owner-approved exact Copilot CLI version is required.' >&2
+            exit 1
+          fi
+          npm install --global --no-audit --no-fund "@github/copilot@$CLI_VERSION"
+          ./gradlew -p .github/learning --no-daemon --console=plain test \
+            --tests '*CopilotProtocolTest' \
+            "-PcopilotExecutable=$(command -v copilot)" "-PcopilotModel=$CLI_MODEL"
 
   prepare:
     needs: verify
@@ -125,6 +150,15 @@ jobs:
             exit 1
           fi
           npm install --global --no-audit --no-fund "@github/copilot@$CLI_VERSION"
+      - name: Verify installed CLI exposes no tools before supplying real evidence
+        if: steps.inspect.outputs.has_signal == 'true'
+        env:
+          CLI_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
+        run: |
+          set -euo pipefail
+          ./gradlew -p .github/learning --no-daemon --console=plain test \
+            --tests '*CopilotProtocolTest' \
+            "-PcopilotExecutable=$(command -v copilot)" "-PcopilotModel=$CLI_MODEL"
       - name: Synthesize and validate bounded guidance proposals
         if: steps.inspect.outputs.has_signal == 'true'
         env:

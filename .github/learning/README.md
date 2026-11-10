@@ -72,7 +72,8 @@ sandbox for arbitrary workflow edits by repository writers.
 4. Open **Actions > Review guidance learning**, select the run for that
    `labeled` event, and expand `prepare`. `inspect` reports the number of
    qualifying evidence records and whether there is signal. Only usable new
-   signal installs/invokes Copilot. Download **review-learning-proposal** from
+   signal invokes a real model; offline compatibility tests can separately
+   install/run the CLI against local fixtures. Download **review-learning-proposal** from
    that run's artifacts and inspect `proposal.json`: each rule has a statement,
    supporting evidence IDs, and exact `path`/`before`/`after` edits. The artifact
    expires after one day.
@@ -177,7 +178,7 @@ Use repository variables, not secrets or tracked credentials, for these values:
 | `REVIEW_LEARNING_POLICY` | Versioned JSON below, containing approved immutable identity IDs and topic paths. |
 | `REVIEW_LEARNING_COPILOT_VERSION` | An exact approved `@github/copilot` version, never `latest`. |
 | `REVIEW_LEARNING_MODEL` | An explicitly approved model identifier; `auto` is rejected. |
-| `REVIEW_LEARNING_MAX_AI_CREDITS` | A positive owner-approved CLI credit ceiling; there is no inferred budget. |
+| `REVIEW_LEARNING_MAX_AI_CREDITS` | An owner-approved CLI credit ceiling of at least 30; there is no inferred budget. |
 | `REVIEW_LEARNING_PREVIEW_SHA` | Optional, full approved PR head SHA for a pre-merge preview; never a branch name. |
 | `REVIEW_LEARNING_PUBLISH_APPROVED` | Separately enables draft/checkpoint publication. |
 | `REVIEW_LEARNING_PUBLISH_APP_ID` | Owner-approved publishing GitHub App ID, not a user or bot-account ID. |
@@ -238,6 +239,11 @@ tools/URLs, disables repository custom-instruction and builtin-MCP loading,
 does not grant folder trust, disables account history sync, and runs with an
 isolated temporary home and a minimal environment. There is no publisher token
 in that process. The temporary home is removed after completion or failure.
+Known built-in tools are explicitly excluded, with defense-in-depth denials
+using the supported `read,write,shell,url,memory` permission kinds.
+`--deny-tool=*` is not valid CLI syntax and fails before inference. In CLI
+1.0.108, an empty `--available-tools` flag defaults to the full tool roster;
+it is not a zero-tool control.
 Token environment variables are supplied only to the API/synthesis/publisher
 steps, never to Gradle builds or the npm installer.
 
@@ -247,6 +253,10 @@ packet, prompt, response, or session history is uploaded as an artifact.
 Only the validated publication bundle is retained for one day. Runtime stdout
 contains bounded status/counter JSON; failure diagnostics with raw source or
 secrets are withheld.
+Subprocess failures report the stage, exit code, and a static diagnostic category
+(arguments, credits, authentication/policy, network, model access, or
+unclassified), never arbitrary CLI stdout/stderr. These hints do not prove
+whether a failed request consumed credits.
 
 Known secret/instruction-injection patterns and private-host links are rejected
 before synthesis or publication. This deny-pattern screen is not a complete
@@ -329,6 +339,20 @@ be built with the repository wrapper on an existing Java 8 installation;
 this does not change the recommended JDK for product-module validation.
 No Android SDK, lab credentials, or private-feed credentials are needed.
 
+When learning is enabled on a trusted same-repository PR, verification also
+installs the owner-pinned CLI and runs an offline protocol contract. The same
+contract runs in preparation after installation and before real evidence or
+credentials are supplied. It uses a localhost canned-response provider, fake
+credentials, isolated state, and an upstream-blocking proxy to assert that the
+actual model request contains zero tools and that the task arrives on stdin.
+No GitHub model inference or AI-credit usage is involved. A future CLI adding
+tools fails this contract until the explicit exclusion list is reviewed.
+To run it locally with an already installed exact CLI:
+
+```powershell
+.\gradlew.bat -p .github\learning test --tests "*CopilotProtocolTest" "-PcopilotExecutable=C:\path\to\copilot.exe" "-PcopilotModel=gpt-6.1-sol"
+```
+
 The tooling has an aggregate JaCoCo LINE coverage gate of 80%.
 For workflow linting, actionlint 1.7.12 has a stale permission-scope table and
 does not recognize the documented `copilot-requests` scope. Keep the scope:
@@ -338,8 +362,10 @@ requires it. Until actionlint supports that field, narrowly ignore only
 remain failures. This exception is not proof of organization policy or
 host-level availability, which must still be verified before enabling the job.
 
-Tests use an in-memory repository and fake model. They do not invoke Copilot,
-create GitHub branches/PRs, alter authentication, or enable production jobs.
+Ordinary tests use an in-memory repository and fake model. The opt-in real-CLI
+protocol test invokes only a localhost canned-response provider, not a model.
+Tests do not create GitHub branches/PRs, alter authentication, or enable
+production jobs.
 The executable commands are `inspect`, `prepare`, and `publish`, each accepting
 a publication-bundle path; workflow environment variables supply policy,
 repository, runtime, and token. Do not run credentialed publication as a local

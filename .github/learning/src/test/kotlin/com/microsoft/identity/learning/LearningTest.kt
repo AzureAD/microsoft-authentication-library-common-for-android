@@ -355,14 +355,18 @@ internal class LearningTest {
     }
 
     @Test fun synthesisCommandCannotGrantToolsOrUseAnUnboundedAutoModel() {
-        val args = CopilotEngine("copilot", "approved-model", "2", "unused-test-token").arguments()
-        assertTrue(args.contains("--deny-tool=*"))
-        assertEquals("--available-tools", args.last())
+        val args = CopilotEngine("copilot", "approved-model", "30", "unused-test-token").arguments()
+        assertTrue(args.contains("--deny-tool=read,write,shell,url,memory"))
+        assertFalse(args.contains("--deny-tool=*"))
+        assertFalse(args.contains("--deny-url=*"))
+        assertTrue(args.last().startsWith("--excluded-tools="))
+        assertTrue(args.last().substringAfter('=').split(',').containsAll(listOf("powershell", "bash", "apply_patch", "task", "skill", "sql")))
         assertTrue(args.contains("--no-custom-instructions"))
         assertTrue(args.contains("--max-ai-credits"))
         assertFalse(args.contains("--allow-all"))
-        fails { CopilotEngine("copilot", "auto", "2", "unused").arguments() }
+        fails { CopilotEngine("copilot", "auto", "30", "unused").arguments() }
         fails { CopilotEngine("copilot", "approved-model", "0", "unused").arguments() }
+        fails { CopilotEngine("copilot", "approved-model", "29", "unused").arguments() }
     }
 
     @Test fun failedDraftCreationReusesOnlyTheUnchangedOrphanBranch() = runBlocking {

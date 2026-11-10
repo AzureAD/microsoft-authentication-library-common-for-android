@@ -53,6 +53,12 @@ application {
 
 tasks.test {
     useJUnit()
+    providers.gradleProperty("copilotExecutable").orNull?.let {
+        systemProperty("reviewLearning.copilotExecutable", it)
+    }
+    providers.gradleProperty("copilotModel").orNull?.let {
+        systemProperty("reviewLearning.copilotModel", it)
+    }
 }
 
 jacoco {

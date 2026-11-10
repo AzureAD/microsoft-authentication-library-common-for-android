@@ -41,15 +41,21 @@ internal class CopilotEngine(
     private val executable: String,
     private val model: String,
     private val credits: String,
-    private val token: String
+    private val token: String,
+    private val startProcess: (ProcessBuilder) -> Process = { it.start() }
 ) : Engine {
     fun arguments(): List<String> {
         ensure(model.matches(Regex("[A-Za-z0-9_.-]+")) && model != "auto", "An explicitly approved model is required")
-        ensure(credits.toBigDecimalOrNull()?.signum() == 1, "An owner-approved positive AI-credit ceiling is required")
+        ensure(credits.toBigDecimalOrNull()?.let { it >= 30.toBigDecimal() } == true,
+            "An owner-approved AI-credit ceiling of at least 30 is required")
         return listOf(executable, "-s", "--model", model, "--max-ai-credits", credits,
             "--no-auto-update", "--no-custom-instructions", "--no-ask-user", "--no-color",
             "--disable-builtin-mcps", "--sync-session=off", "--log-level", "none",
-            "--deny-tool=*", "--deny-url=*", "--available-tools")
+            "--deny-tool=read,write,shell,url,memory",
+            "--excluded-tools=bash,read_bash,write_bash,stop_bash,list_bash,shell,powershell,read_powershell," +
+                "stop_powershell,list_powershell,apply_patch,view,fetch_copilot_cli_documentation,skill," +
+                "run_dynamic_workflow,dynamic_workflows_manage,sql,session_store_sql,read_agent,list_agents," +
+                "write_agent,rg,glob,task")
     }
 
     override suspend fun generate(prompt: String): String = withContext(Dispatchers.IO) {
@@ -57,10 +63,10 @@ internal class CopilotEngine(
         val home = Files.createTempDirectory("review-learning-synthesis-")
         try {
             val args = arguments()
-            val help = execute(listOf(executable, "--help"), "", home)
-            ensure(listOf("--max-ai-credits", "--no-custom-instructions", "--available-tools", "--sync-session")
+            val help = execute(listOf(executable, "--help"), "", home, "help preflight")
+            ensure(listOf("--max-ai-credits", "--no-custom-instructions", "--excluded-tools", "--sync-session")
                 .all { it in help }, "Pinned Copilot CLI does not support the required isolation/credit controls")
-            execute(args, prompt, home)
+            execute(args, prompt, home, "synthesis")
         } finally {
             Files.walk(home).use { paths ->
                 paths.sorted(Comparator.reverseOrder()).forEach { Files.delete(it) }
@@ -68,7 +74,7 @@ internal class CopilotEngine(
         }
     }
 
-    private suspend fun execute(args: List<String>, input: String, home: Path): String = coroutineScope {
+    private suspend fun execute(args: List<String>, input: String, home: Path, stage: String): String = coroutineScope {
         val builder = ProcessBuilder(args).directory(home.toFile())
         val path = builder.environment()["PATH"]
         val systemRoot = builder.environment()["SystemRoot"]
@@ -81,19 +87,46 @@ internal class CopilotEngine(
         builder.environment()["TEMP"] = home.toString()
         builder.environment()["TMP"] = home.toString()
         builder.environment()["GITHUB_TOKEN"] = token
-        val process = builder.start()
+        val process = try {
+            startProcess(builder)
+        } catch (_: IOException) {
+            throw LearningFailure("Copilot CLI $stage could not start; check the pinned executable installation")
+        }
         try {
             val output = async(Dispatchers.IO) { readBounded(process.inputStream, 256_000) }
             val error = async(Dispatchers.IO) { readBounded(process.errorStream, 16_000) }
             process.outputStream.use { it.write(input.toByteArray(Charsets.UTF_8)) }
-            ensure(process.waitFor(240, TimeUnit.SECONDS), "Synthesis process timed out")
+            ensure(process.waitFor(240, TimeUnit.SECONDS), "Copilot CLI $stage timed out")
             val result = output.await()
-            error.await()
-            ensure(process.exitValue() == 0, "Copilot CLI failed; raw diagnostics are withheld")
+            val diagnostics = error.await()
+            val exit = process.exitValue()
+            ensure(exit == 0, failure(stage, exit, diagnostics))
             result
         } finally {
             if (process.isAlive) process.destroyForcibly()
         }
+    }
+
+    private fun failure(stage: String, exit: Int, diagnostics: String): String {
+        val text = diagnostics.lowercase()
+        val (category, hint) = when {
+            listOf("invalid --", "unknown option", "unrecognized option", "invalid rule format",
+                "requires an argument").any { it in text } ->
+                "invalid_arguments" to "Check the adapter flags against the pinned CLI"
+            listOf("max-ai-credits", "credit limit", "credit budget", "quota exceeded", "budget exceeded").any { it in text } ->
+                "credit_limit" to "Check the approved session limit and organization budget"
+            listOf("unauthorized", "not authenticated", "authentication failed", "forbidden", "http 401", "http 403",
+                "copilot is disabled", "policy is disabled", "copilot requests permission").any { it in text } ->
+                "authentication_or_policy" to "Check organization-billed CLI policy and GITHUB_TOKEN permissions; do not use a PAT fallback"
+            listOf("econnrefused", "enotfound", "failed to connect", "could not connect", "connect error",
+                "proxy connect", "certificate", "timed out").any { it in text } ->
+                "network" to "Check runner connectivity and TLS/proxy configuration"
+            listOf("unknown model", "invalid model", "model not found", "model is not available",
+                "model is not supported").any { it in text } ->
+                "model_access" to "Check the exact model ID and organization model policy"
+            else -> "unclassified" to "No recognized diagnostic; raw subprocess output remains withheld"
+        }
+        return "Copilot CLI $stage failed (exit=$exit, category=$category). $hint"
     }
 
     private fun readBounded(stream: InputStream, limit: Int): String =
