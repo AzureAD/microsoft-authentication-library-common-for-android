@@ -201,26 +201,27 @@ internal class Command(
             "Usage: review-learning inspect|prepare|publish <bundle-path>")
         if (environment["REVIEW_LEARNING_ENABLED"] != "true") return mapOf("status" to "disabled", "hasSignal" to false)
         val preview = environment["GITHUB_EVENT_NAME"] == "pull_request"
-        ensure(!preview || args[0] != "publish", "Publication is never allowed from a PR event")
         val policy = Policy.parse(required("REVIEW_LEARNING_POLICY"))
         ensure(policy.repository == required("GITHUB_REPOSITORY"), "Workflow repository does not match approved policy")
-        if (args[0] == "publish") {
+        val publicationTest = if (preview) {
+            val eventPath = Paths.get(required("GITHUB_EVENT_PATH"))
+            ensure(Files.size(eventPath) <= 2_000_000, "Preview event exceeds the input limit")
+            authorizePreview(policy, environment["REVIEW_LEARNING_PREVIEW_SHA"].orEmpty(),
+                String(Files.readAllBytes(eventPath), Charsets.UTF_8),
+                environment["REVIEW_LEARNING_PUBLISH_TEST_SHA"].orEmpty(), args[0] == "publish")
+        } else false
+        if (args[0] == "publish" || publicationTest) {
             ensure(environment["REVIEW_LEARNING_PUBLISH_APPROVED"] == "true", "Publication is disabled")
             ensure(environment["REVIEW_LEARNING_PROTECTION_VERIFIED"] == "true",
                 "A repository owner must verify review protection and Actions bot non-bypass before publication")
             ensure(policy.host == "github.com" && environment["GITHUB_SERVER_URL"] == "https://github.com",
                 "Publication requires the verified GitHub.com Actions adapter")
-            ensure(environment["GITHUB_ACTIONS"] == "true" && environment["GITHUB_EVENT_NAME"] == "workflow_dispatch" &&
-                environment["GITHUB_REF"] == "refs/heads/${policy.base}",
-                "Publication requires a manual Actions dispatch on the approved base")
+            val baseDispatch = environment["GITHUB_EVENT_NAME"] == "workflow_dispatch" &&
+                environment["GITHUB_REF"] == "refs/heads/${policy.base}"
+            ensure(environment["GITHUB_ACTIONS"] == "true" && (baseDispatch || publicationTest),
+                "Publication requires a base-branch dispatch or an explicitly approved PR publication test")
             ensure(GITHUB_ACTIONS_BOT_ID in policy.automationIds,
                 "Register the verified GitHub Actions bot ID in automationIds before publication")
-        }
-        if (preview) {
-            val eventPath = Paths.get(required("GITHUB_EVENT_PATH"))
-            ensure(Files.size(eventPath) <= 2_000_000, "Preview event exceeds the input limit")
-            authorizePreview(policy, required("REVIEW_LEARNING_PREVIEW_SHA"),
-                String(Files.readAllBytes(eventPath), Charsets.UTF_8))
         }
         val repository = createRepository(policy, required("GITHUB_TOKEN"))
         val now = clock()

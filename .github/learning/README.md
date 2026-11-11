@@ -33,7 +33,8 @@ The runtime does not depend on the product Common library.
 
 ## Default-off operation
 
-Learning runs only on manual dispatch or an explicitly approved PR preview.
+Learning runs only on manual dispatch, an explicitly approved PR preview,
+or a separately approved pre-merge publication test.
 There is no scheduled trigger in the initial pilot.
 Without `REVIEW_LEARNING_ENABLED=true`, no extraction, CLI installation,
 synthesis, checkpoint write, or guidance publication job runs. The offline
@@ -41,7 +42,8 @@ verification job can still run.
 
 The dispatch defaults to `dry-run`, which produces a short-lived, validated
 proposal artifact but writes no GitHub branches or PRs. Publication additionally
-requires dispatch mode `propose` and
+requires either dispatch mode `propose` on `dev` or the explicit pre-merge
+publication-test authorization described below. Both require
 `REVIEW_LEARNING_PUBLISH_APPROVED=true`, plus the explicit owner confirmation
 `REVIEW_LEARNING_PROTECTION_VERIFIED=true`. These variables are not provisioned
 by this change. Enabling learning does not disable or alter native Copilot reviews.
@@ -96,11 +98,12 @@ billable; this is an explicit-event gate, not a one-use credit reservation.
 
 The PR preparation job has only read permissions plus `copilot-requests: write`.
 No write token is supplied to synthesis. The CLI repeats preview admission
-checks before API/model initialization and rejects `publish` on PR events,
-even if publication is otherwise enabled. The writer remains restricted to
-manual `propose` dispatch on `dev` with separate publication approval.
-Test a full write-path E2E before merge only in an explicitly approved,
-isolated organization-owned sandbox with a repository-scoped Actions token.
+checks before API/model initialization and rejects `publish` for the
+`learning-live-preview` event, even if publication is otherwise enabled.
+Read-only preview approval is never authorization to publish.
+To test the writer before merging the tooling, use the separate
+[`learning-publish-test` procedure](#test-publishing-before-merging-the-tooling)
+below, with its independent SHA approval.
 
 ## Evidence policy
 
@@ -181,6 +184,7 @@ Use repository variables, not secrets or tracked credentials, for these values:
 | `REVIEW_LEARNING_MODEL` | An explicitly approved model identifier; `auto` is rejected. |
 | `REVIEW_LEARNING_MAX_AI_CREDITS` | An owner-approved CLI credit ceiling of at least 30; there is no inferred budget. |
 | `REVIEW_LEARNING_PREVIEW_SHA` | Optional, full approved PR head SHA for a pre-merge preview; never a branch name. |
+| `REVIEW_LEARNING_PUBLISH_TEST_SHA` | Optional, independently approved full PR head SHA for a pre-merge publication test; unset disables this write path. |
 | `REVIEW_LEARNING_PUBLISH_APPROVED` | Separately enables draft/checkpoint publication. |
 | `REVIEW_LEARNING_PROTECTION_VERIFIED` | Explicit owner confirmation of the review/non-bypass prerequisites below; unset is unverified. |
 
@@ -226,7 +230,7 @@ focused `.github/skills/code-review/references/*.md` topics. The learner cannot
 create skill routes, rewrite product code, or add catch-all insight diaries.
 Start with the smallest owner-approved topic allowlist.
 
-### Owner protection confirmation and first publishing test
+### Owner protection confirmation
 
 Before setting `REVIEW_LEARNING_PROTECTION_VERIFIED=true`, a repository owner
 must verify the applicable `dev` branch rules require a PR with at least one
@@ -240,9 +244,13 @@ inspect every bypass actor. Owners must clear the confirmation if these
 conditions change and reconfirm them after correcting the configuration.
 No rules or permissions are changed automatically.
 
-To test publishing in Common:
+### Test publishing before merging the tooling
 
-1. Merge the reviewed tooling into `dev` through the normal PR process.
+No tooling merge, separately provisioned App, PAT, or secret is required.
+This tests the real draft-PR publisher in Common, not a sandbox simulation.
+
+1. Review the tooling's exact commit on an open, same-repository PR targeting
+   `dev`. Untrusted PR code must never receive this authorization.
    Keep `REVIEW_LEARNING_PUBLISH_APPROVED=false` until setup is complete.
 2. Verify the protection prerequisites above and add `41898282` to the existing
    policy's `automationIds`, preserving other approved identities.
@@ -251,15 +259,48 @@ To test publishing in Common:
    policy permits. This tooling only creates draft PRs; it never submits
    approvals. Do not enable a globally writable token default: the writer
    permissions are scoped to the `publish` job in YAML.
-4. Set `REVIEW_LEARNING_PROTECTION_VERIFIED=true` and then
-   `REVIEW_LEARNING_PUBLISH_APPROVED=true`. Keep the approved model/credit cap.
-5. In **Actions > Review guidance learning > Run workflow**, select branch
-   `dev` and mode `propose`. This generates and revalidates a fresh proposal;
-   it does not blindly publish an earlier preview artifact.
+4. After the owner confirmation, set `REVIEW_LEARNING_PROTECTION_VERIFIED=true`.
+   Set `REVIEW_LEARNING_PUBLISH_TEST_SHA` to the reviewed PR's full 40-character
+   head SHA. This is separate from the read-only `REVIEW_LEARNING_PREVIEW_SHA`;
+   setting the latter alone cannot enable publishing.
+5. Set `REVIEW_LEARNING_PUBLISH_APPROVED=true`. An approved human owner in the
+   policy's `ownerIds` then applies **`learning-publish-test`** to the tooling PR.
+   Create that label first if needed. This explicit label event starts a new
+   run using the exact approved head commit for verification, generation, and
+   the separate publisher. Open **Actions > Review guidance learning** and
+   select that labeled-event run; do not use **Run workflow** before merge.
+   Keep the existing approved model/credit cap. The run performs fresh synthesis
+   when usable evidence exists; it does not blindly publish an old artifact.
 6. With a valid nonempty proposal, expect one draft guidance PR and the
    metadata-only checkpoint branch. Review its exact files, citations, and
    independent evidence. Leave the PR unmerged if only testing publication.
-   Set publication approval back to `false` after the test.
+   Then clear `REVIEW_LEARNING_PUBLISH_TEST_SHA` and set
+   `REVIEW_LEARNING_PUBLISH_APPROVED=false`.
+
+The test creates persistent, real branches and an active draft; it does not
+delete them or merge anything. The guidance branch is built from the current
+`dev` commit with only validated guidance edits and the provenance manifest,
+not from the unmerged tooling branch. Subsequent runs queue evidence behind
+that draft rather than create duplicates or overwrite it. Empty/no-signal
+proposals can checkpoint without opening a PR and do not prove PR creation.
+
+Only the separate publisher job receives Contents/Pull requests write.
+The same-repository, open-PR, target-`dev`, registered human owner, exact
+publication-test SHA, protection-confirmation, and publication-enable gates
+are repeated in workflow admission and the CLI before API initialization.
+Forks, other labels, pushes while the label remains, closed PR events, and
+unapproved SHAs cannot enter this test write path. New commits require fresh
+SHA approval and removal/reapplication of the publication-test label.
+Re-running an old event never approves a newer commit. These gates are not a
+sandbox for malicious edits by repository writers; review the authorized code.
+
+### Publishing after the tooling merge
+
+Once normal review has merged the tooling into `dev`, production publication
+still uses **Actions > Review guidance learning > Run workflow > branch `dev` >
+mode `propose`**, with the same owner prerequisites and enablement flags.
+This does not require the publication-test label or SHA. Ordinary pushes and
+the read-only preview label cannot publish. No scheduled run is added here.
 
 For CI on each generated PR, a user with write access must select
 **Approve workflows to run** in the PR banner. This is GitHub's approval gate
@@ -348,8 +389,9 @@ failure rather than an overwrite. No branches or historic reviews are deleted.
 
 The CLI rejects publication before client initialization unless owner
 confirmation and publication approval are both explicitly true, the Actions
-context is a manual GitHub.com dispatch on `dev`, and the verified Actions bot
-is registered. It then checks ordinary branch metadata to confirm `dev` remains
+context is either a manual GitHub.com dispatch on `dev` or the separately
+authorized exact-revision PR publication-test event, and the verified Actions
+bot is registered. It then checks ordinary branch metadata to confirm `dev` remains
 protected. Errors, a missing branch, or unprotected metadata fail before writes.
 
 The normal Actions token cannot request Administration read. Accordingly,
