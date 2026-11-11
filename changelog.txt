@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 25.1.0-RC1
+Version 25.1.0
 ----------
 - [PATCH] Remove the unused Native Auth V2 sign-in-start InvalidCredentials command result. Password submission continues to return IncorrectPassword; V1 is unchanged.
 - [PATCH] Align Native Auth V2 structured user/password error classification and exact OAuth browser fallback with iOS, preserving diagnostics through typed errors and credential/MFA remapping.
