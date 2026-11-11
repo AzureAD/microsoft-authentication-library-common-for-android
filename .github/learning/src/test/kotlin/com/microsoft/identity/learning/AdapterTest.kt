@@ -44,6 +44,15 @@ internal class StubCall(private val value: Request, private val status: Int, pri
 }
 
 internal class AdapterTest {
+    private val publicationContext = mapOf(
+        "REVIEW_LEARNING_PUBLISH_APPROVED" to "true",
+        "REVIEW_LEARNING_PROTECTION_VERIFIED" to "true",
+        "GITHUB_ACTIONS" to "true",
+        "GITHUB_EVENT_NAME" to "workflow_dispatch",
+        "GITHUB_REF" to "refs/heads/dev",
+        "GITHUB_SERVER_URL" to "https://github.com"
+    )
+
     private fun pullRecords(count: Int, paddingFrom: Int = 1, olderFrom: Int = Int.MAX_VALUE): List<Map<String, Any?>> =
         (1..count).map { number ->
             mapOf("number" to number, "user" to mapOf("id" to 3, "type" to "User"),
@@ -197,24 +206,30 @@ internal class AdapterTest {
         assertEquals(count, requests.size)
     }
 
-    @Test fun legacyProtectionRequiresFreshApprovalsAndNoPublishingAppBypass() = runBlocking {
-        val good = """{"required_pull_request_reviews":{"required_approving_review_count":1,"dismiss_stale_reviews":true,
-            "bypass_pull_request_allowances":{"users":[],"teams":[],"apps":[]}},"enforce_admins":{"enabled":true}}"""
-        var response = Response(200, good)
-        val github = GitHub(policy, Transport { _, _, _ -> response }, publisherAppId = 99)
+    @Test fun actionsPublisherRequiresProtectedBaseWithoutAdministrationRead() = runBlocking {
+        val requests = mutableListOf<String>()
+        var response = Response(200, """{"name":"dev","protected":true}""")
+        val github = GitHub(policy, Transport { method, path, body ->
+            assertEquals("GET", method)
+            assertNull(body)
+            requests.add(path)
+            response
+        })
         github.verifyPublicationPolicy()
         for (invalid in listOf(
-            good.replace("review_count\":1", "review_count\":0"),
-            good.replace("dismiss_stale_reviews\":true", "dismiss_stale_reviews\":false"),
-            good.replace("\"apps\":[]", "\"apps\":[{\"id\":99}]")
+            """{"name":"dev","protected":false}""",
+            """{"name":"master","protected":true}""",
+            """{"name":"dev"}""",
+            """{"name":"dev","protected":"true"}"""
         )) {
             response = Response(200, invalid)
             fails { runBlocking { github.verifyPublicationPolicy() } }
         }
-        response = Response(404, "")
-        fails { runBlocking { github.verifyPublicationPolicy() } }
-        response = Response(200, good.replace("enabled\":true", "enabled\":false").replace("\"apps\":[]", "\"apps\":[{\"id\":100}]"))
-        github.verifyPublicationPolicy()
+        for (status in listOf(401, 403, 404)) {
+            response = Response(status, "private diagnostic")
+            fails { runBlocking { github.verifyPublicationPolicy() } }
+        }
+        assertTrue(requests.all { it == "/repos/${policy.repository}/branches/dev" })
     }
 
     @Test fun policyAndCheckpointCodecsRejectConflictsOverflowAndInvalidMetadata() {
@@ -261,7 +276,7 @@ internal class AdapterTest {
             fails { runBlocking { Command(environment + ("GITHUB_REPOSITORY" to "other/repo"), { _, _ -> repository })
                 .run(arrayOf("inspect", output.toString())) } }
             fails { runBlocking { Command(mapOf("REVIEW_LEARNING_ENABLED" to "true")).run(arrayOf("inspect", output.toString())) } }
-            val publish = Command(environment + ("REVIEW_LEARNING_PUBLISH_APPROVED" to "true"), { _, _ -> repository }, clock = { now })
+            val publish = Command(environment + publicationContext, { _, _ -> repository }, clock = { now })
             assertEquals("draft_created", publish.run(arrayOf("publish", output.toString()))["status"])
         } finally {
             Files.delete(output)
@@ -327,27 +342,49 @@ internal class AdapterTest {
         assertFalse(github.matchesCommit(commit, parent, mapOf(topic to "new")))
     }
 
-    @Test fun inheritedRulesetsSupportLastPushApprovalButNeverAssumeRedactedBypassIsSafe() = runBlocking {
-        var bypass: Any? = emptyList<Any>()
-        val github = GitHub(policy, Transport { _, path, _ ->
-            when {
-                path.endsWith("/protection") -> Response(404, "")
-                path.contains("/rules/branches/") -> Response(200, """[
-                    {"type":"non_fast_forward","ruleset_id":1},
-                    {"type":"pull_request","ruleset_id":1,"parameters":{"required_approving_review_count":1,
-                    "dismiss_stale_reviews_on_push":false,"require_last_push_approval":true}}]""")
-                else -> {
-                    assertTrue(path.endsWith("?includes_parents=true"))
-                    Response(200, Json.encode(mapOf("enforcement" to "active", "target" to "branch", "bypass_actors" to bypass)))
-                }
+    @Test fun unverifiedPublisherHostOrBotCannotInitializePublicationApi() = runBlocking {
+        var requests = 0
+        val transport = Transport { _, _, _ -> requests++; throw AssertionError("Unverified publisher API") }
+        for (invalid in listOf(policy.copy(host = "msft.ghe.com"), policy.copy(automationIds = setOf(99)))) {
+            fails { runBlocking { GitHub(invalid, transport).verifyPublicationPolicy() } }
+        }
+        assertEquals(0, requests)
+    }
+
+    @Test fun publicationAdmissionRejectsMissingAttestationWrongEventsAndBotRegistryBeforeClientInitialization() = runBlocking {
+        val contract = Json.encode(mapOf("version" to 1, "host" to policy.host, "repository" to policy.repository,
+            "base" to policy.base, "humanIds" to policy.humanIds, "ownerIds" to policy.ownerIds,
+            "automationIds" to policy.automationIds, "guidancePaths" to policy.guidancePaths))
+        val environment = mapOf("REVIEW_LEARNING_POLICY" to contract, "GITHUB_REPOSITORY" to policy.repository,
+            "REVIEW_LEARNING_ENABLED" to "true", "GITHUB_TOKEN" to "unused") + publicationContext
+        val invalid = listOf(
+            mapOf("REVIEW_LEARNING_PUBLISH_APPROVED" to ""),
+            mapOf("REVIEW_LEARNING_PUBLISH_APPROVED" to "false"),
+            mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to ""),
+            mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to "false"),
+            mapOf("GITHUB_ACTIONS" to "false"),
+            mapOf("GITHUB_EVENT_NAME" to "push"),
+            mapOf("GITHUB_EVENT_NAME" to "pull_request"),
+            mapOf("GITHUB_EVENT_NAME" to "pull_request_target"),
+            mapOf("GITHUB_REF" to "refs/heads/feature"),
+            mapOf("GITHUB_SERVER_URL" to "https://msft.ghe.com"),
+            mapOf("REVIEW_LEARNING_POLICY" to contract.replace("\"github.com\"", "\"msft.ghe.com\"")),
+            mapOf("REVIEW_LEARNING_POLICY" to Json.parse(contract).obj().also {
+                it.add("automationIds", Json.parse("[99]"))
+            }.toString())
+        )
+        var clients = 0
+        val output = Files.createTempFile("publication-admission-fixture-", ".json")
+        try {
+            for (changes in invalid) {
+                val command = Command(environment + changes,
+                    { _, _ -> clients++; throw AssertionError("Denied publication client") })
+                fails { runBlocking { command.run(arrayOf("publish", output.toString())) } }
             }
-        }, publisherAppId = 99)
-        github.verifyPublicationPolicy()
-        bypass = listOf(mapOf("actor_type" to "Integration", "actor_id" to 100))
-        github.verifyPublicationPolicy()
-        bypass = listOf(mapOf("actor_type" to "Integration", "actor_id" to 99))
-        fails { runBlocking { github.verifyPublicationPolicy() } }
-        bypass = null
-        fails { runBlocking { github.verifyPublicationPolicy() } }
+            assertEquals(0, clients)
+            assertEquals(0L, Files.size(output))
+        } finally {
+            Files.delete(output)
+        }
     }
 }

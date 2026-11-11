@@ -29,7 +29,7 @@ import java.util.Base64
 internal val now: Instant = Instant.parse("2026-11-08T00:00:00Z")
 internal const val topic = ".github/skills/code-review/references/correctness-api-compatibility.md"
 internal val policy = Policy("github.com", "AzureAD/microsoft-authentication-library-common-for-android",
-    "dev", setOf(1, 2, 3), setOf(2), setOf(99), setOf(topic))
+    "dev", setOf(1, 2, 3), setOf(2), setOf(99, GITHUB_ACTIONS_BOT_ID), setOf(topic))
 
 internal class MemoryRepository : Repository {
     override val policy: Policy = com.microsoft.identity.learning.policy
@@ -90,7 +90,7 @@ internal class MemoryRepository : Repository {
     override suspend fun createDraft(branch: String, body: String): Long {
         if (failDraft) throw LearningFailure("Injected draft failure")
         val number = ++counter
-        pulls[number] = Pull(number, Actor(99, "Bot"), policy.base, branch, now, false, true, branches.getValue(branch),
+        pulls[number] = Pull(number, Actor(GITHUB_ACTIONS_BOT_ID, "Bot"), policy.base, branch, now, false, true, branches.getValue(branch),
             "${policy.web}/pull/$number")
         return number
     }

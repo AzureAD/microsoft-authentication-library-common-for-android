@@ -186,7 +186,7 @@ internal class Learner(private val repository: Repository, private val now: Inst
 internal class Command(
     private val environment: Map<String, String>,
     private val createRepository: (Policy, String) -> Repository = { policy, token ->
-        GitHub(policy, HttpTransport(policy, token), environment["REVIEW_LEARNING_PUBLISH_APP_ID"]?.toLongOrNull())
+        GitHub(policy, HttpTransport(policy, token))
     },
     private val createEngine: (String, String, String) -> Engine = { model, credits, token ->
         CopilotEngine(environment["REVIEW_LEARNING_COPILOT_EXECUTABLE"] ?: "copilot", model, credits, token)
@@ -204,6 +204,18 @@ internal class Command(
         ensure(!preview || args[0] != "publish", "Publication is never allowed from a PR event")
         val policy = Policy.parse(required("REVIEW_LEARNING_POLICY"))
         ensure(policy.repository == required("GITHUB_REPOSITORY"), "Workflow repository does not match approved policy")
+        if (args[0] == "publish") {
+            ensure(environment["REVIEW_LEARNING_PUBLISH_APPROVED"] == "true", "Publication is disabled")
+            ensure(environment["REVIEW_LEARNING_PROTECTION_VERIFIED"] == "true",
+                "A repository owner must verify review protection and Actions bot non-bypass before publication")
+            ensure(policy.host == "github.com" && environment["GITHUB_SERVER_URL"] == "https://github.com",
+                "Publication requires the verified GitHub.com Actions adapter")
+            ensure(environment["GITHUB_ACTIONS"] == "true" && environment["GITHUB_EVENT_NAME"] == "workflow_dispatch" &&
+                environment["GITHUB_REF"] == "refs/heads/${policy.base}",
+                "Publication requires a manual Actions dispatch on the approved base")
+            ensure(GITHUB_ACTIONS_BOT_ID in policy.automationIds,
+                "Register the verified GitHub Actions bot ID in automationIds before publication")
+        }
         if (preview) {
             val eventPath = Paths.get(required("GITHUB_EVENT_PATH"))
             ensure(Files.size(eventPath) <= 2_000_000, "Preview event exceeds the input limit")
@@ -230,7 +242,6 @@ internal class Command(
             Files.write(file, Json.encode(output).toByteArray(Charsets.UTF_8))
             result
         } else {
-            ensure(required("REVIEW_LEARNING_PUBLISH_APPROVED") == "true", "Publication is disabled")
             mapOf("status" to Publisher(repository, now).publish(bundle(String(Files.readAllBytes(file), Charsets.UTF_8))))
         }
         environment["GITHUB_OUTPUT"]?.let { output ->

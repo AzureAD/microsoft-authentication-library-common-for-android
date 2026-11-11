@@ -35,6 +35,7 @@ import java.time.Instant
 
 internal open class LearningFailure(message: String) : RuntimeException(message)
 internal class SourceTooLarge : LearningFailure("Source file exceeds the limit")
+internal const val GITHUB_ACTIONS_BOT_ID = 41898282L
 
 internal fun ensure(condition: Boolean, message: String) {
     if (!condition) throw LearningFailure(message)

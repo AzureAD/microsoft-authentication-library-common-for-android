@@ -92,7 +92,7 @@ internal interface Repository {
     suspend fun verifyPublicationPolicy()
 }
 
-internal class GitHub(override val policy: Policy, private val transport: Transport, private val publisherAppId: Long? = null) : Repository {
+internal class GitHub(override val policy: Policy, private val transport: Transport) : Repository {
     private val repo = "/repos/${policy.repository}"
     private fun encoded(value: String): String = URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
@@ -295,39 +295,10 @@ internal class GitHub(override val policy: Policy, private val transport: Transp
     }
 
     override suspend fun verifyPublicationPolicy() {
-        val appId = publisherAppId ?: throw LearningFailure("An owner-approved publishing GitHub App ID is required")
-        ensure(appId > 0, "Invalid publishing GitHub App ID")
-        val protection = request("GET", "$repo/branches/${encoded(policy.base)}/protection", missing = true)?.obj()
-        val reviews = protection?.get("required_pull_request_reviews")?.takeUnless { it.isJsonNull }?.obj()
-        if (reviews != null && reviews.number("required_approving_review_count") >= 1 && reviews.flag("dismiss_stale_reviews")) {
-            val bypass = reviews.get("bypass_pull_request_allowances")?.takeUnless { it.isJsonNull }?.obj()
-            if (bypass?.get("apps")?.isJsonArray == true && bypass.list("apps").none { it.obj().number("id") == appId }) return
-        }
-        val effective = request("GET", "$repo/rules/branches/${encoded(policy.base)}")!!
-        ensure(effective.isJsonArray, "Invalid effective branch rules")
-        val candidates = effective.asJsonArray.map { it.obj() }.filter { rule ->
-            if (rule.text("type") != "pull_request") false else {
-                val parameters = rule.get("parameters")?.takeUnless { it.isJsonNull }?.obj()
-                parameters != null && parameters.number("required_approving_review_count") >= 1 &&
-                    ((parameters.has("dismiss_stale_reviews_on_push") && parameters.flag("dismiss_stale_reviews_on_push")) ||
-                        (parameters.has("require_last_push_approval") && parameters.flag("require_last_push_approval")))
-            }
-        }
-        ensure(candidates.isNotEmpty(), "Fresh PR approval must be enforced by an existing branch rule")
-        var redacted = false
-        for (rule in candidates) {
-            val detail = request("GET", "$repo/rulesets/${rule.number("ruleset_id")}?includes_parents=true")!!.obj()
-            ensure(detail.text("enforcement") == "active" && detail.text("target") == "branch", "Branch rule is not active")
-            val bypass = detail.get("bypass_actors")
-            if (bypass == null || !bypass.isJsonArray) { redacted = true; continue }
-            val canBypass = bypass.asJsonArray.any {
-                val actor = it.obj()
-                actor.text("actor_type") == "Integration" &&
-                    (actor.get("actor_id")?.isJsonNull != false || actor.number("actor_id") == appId)
-            }
-            if (!canBypass) return
-        }
-        throw LearningFailure(if (redacted) "Ruleset bypass metadata is redacted; owner-approved administration-read access must be verified"
-            else "Publishing app can bypass the required PR-approval rules")
+        ensure(policy.host == "github.com" && GITHUB_ACTIONS_BOT_ID in policy.automationIds,
+            "Publication requires the verified GitHub.com Actions bot registry")
+        val branch = request("GET", "$repo/branches/${encoded(policy.base)}")!!.obj()
+        ensure(branch.text("name") == policy.base && branch.flag("protected"),
+            "The publication target must remain a protected branch")
     }
 }

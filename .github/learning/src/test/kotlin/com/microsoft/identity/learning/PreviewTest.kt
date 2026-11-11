@@ -165,8 +165,18 @@ internal class PreviewTest {
         assertFalse(preparation.contains("pull-requests: write"))
         assertTrue(preparation.contains("copilot-requests: write"))
         for (gate in listOf("github.event_name == 'workflow_dispatch'", "github.ref == 'refs/heads/dev'",
-            "inputs.mode == 'propose'", "vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true'")) {
+            "inputs.mode == 'propose'", "vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true'",
+            "vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true'")) {
             assertTrue("Missing publication gate: $gate", publishing.substringBefore("    runs-on:").contains(gate))
         }
+        assertFalse(workflow.contains("create-github-app-token"))
+        assertFalse(workflow.contains("REVIEW_LEARNING_PUBLISH_APP_ID"))
+        assertFalse(workflow.contains("REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY"))
+        assertFalse(publishing.contains("secrets."))
+        assertFalse(publishing.contains("administration"))
+        assertFalse(publishing.contains("copilot-requests: write"))
+        assertTrue(publishing.contains("contents: write"))
+        assertTrue(publishing.contains("pull-requests: write"))
+        assertTrue(publishing.contains("GITHUB_TOKEN: \${{ github.token }}"))
     }
 }
