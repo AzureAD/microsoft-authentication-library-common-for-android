@@ -101,6 +101,10 @@ public enum SpanName {
      */
     DRSNonceRequest,
     /**
+     * DRS endpoint discovery, including the HTTP request and metadata deserialization.
+     */
+    DRSDiscoveryRequest,
+    /**
      * Span name for Device POP crypto operations.
      */
     DevicePopCryptoOperation,
