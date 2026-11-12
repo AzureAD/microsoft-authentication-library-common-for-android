@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.controllers.BaseController
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult
@@ -302,6 +303,10 @@ abstract class BaseNativeAuthController : BaseController() {
             tag = javaClass.simpleName,
             correlationId = parametersWithScopes.getCorrelationId(),
             methodName = "${javaClass.simpleName}.saveAndReturnTokens"
+        )
+        AgeAssuranceTargetValidator.validate(
+            parametersWithScopes.claimsRequestJson,
+            tokenApiResult.tokenResponse.idToken
         )
         val records: List<ICacheRecord> = saveTokens(
             oAuth2Strategy,

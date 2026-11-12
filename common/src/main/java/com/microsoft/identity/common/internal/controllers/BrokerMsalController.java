@@ -111,6 +111,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -402,22 +403,29 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        final AcquireTokenResult result;
+        AcquireTokenResult result = null;
         try {
             //Get the broker interactive parameters intent
             final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
             final Bundle resultBundle = acquireTokenInternal(parameters, interactiveRequestIntent);
             final String negotiatedBrokerProtocolVersion = resultBundle.getString(NEGOTIATED_BP_VERSION_KEY);
+            if (AgeAssuranceTargetValidator.requiresValidation(parameters.getClaimsRequestJson())) {
+                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
+            }
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
             // MSAL needs to save this account locally for future token calls.
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
             // If the request is from MSALCPP , OAuth2TokenCache will be null.
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache(),
+                        parameters.getClaimsRequestJson());
             }
-
-            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+            if (result == null) {
+                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+            }
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
@@ -688,6 +696,8 @@ public class BrokerMsalController extends BaseController {
                                     "Attempting to sleep thread during Device Code Flow token polling...");
                             return acquireDeviceCodeFlowToken(authorizationResult, parameters);
                         } else {
+                            AgeAssuranceTargetValidator.validateResult(
+                                    parameters.getClaimsRequestJson(), acquireTokenResult);
                             return acquireTokenResult;
                         }
                     }
@@ -754,7 +764,10 @@ public class BrokerMsalController extends BaseController {
                         }
 
                         verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                        final AcquireTokenResult result =
+                                mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                        AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
+                        return result;
                     }
 
                     @Override
@@ -1581,13 +1594,15 @@ public class BrokerMsalController extends BaseController {
      * Checks if the account returns is a MSA Account and sets single on state in cache
      */
     private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
-                                       @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache) throws BaseException {
+                                       @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache,
+                                       final @Nullable String claimsRequestJson) throws BaseException {
         final String methodTag = TAG + ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
+            AgeAssuranceTargetValidator.validate(claimsRequestJson, brokerResult.getIdToken());
             Logger.info(methodTag, "Result returned for MSA Account, saving to cache");
 
             if (StringUtil.isNullOrEmpty(brokerResult.getClientInfo())) {

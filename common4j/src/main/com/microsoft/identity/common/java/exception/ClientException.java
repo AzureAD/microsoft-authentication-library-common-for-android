@@ -24,6 +24,11 @@ package com.microsoft.identity.common.java.exception;
 
 public class ClientException extends BaseException {
 
+    /**
+     * An ID token's age-assurance target receipt does not match the explicit requested targets.
+     */
+    public static final String AGE_ASSURANCE_TARGET_MISMATCH = "age_assurance_target_mismatch";
+
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
     // When MSAL converts the result bundle it looks for this value to know about exception type
     // We moved the exception class to a new package with refactoring work,
