@@ -47,6 +47,8 @@ internal class AdapterTest {
     private val publicationContext = mapOf(
         "REVIEW_LEARNING_PUBLISH_APPROVED" to "true",
         "REVIEW_LEARNING_PROTECTION_VERIFIED" to "true",
+        "REVIEW_LEARNING_PUBLISH_APP_ID" to testPublisherAppId.toString(),
+        "REVIEW_LEARNING_PUBLISH_BOT_ID" to testPublisherBotId.toString(),
         "GITHUB_ACTIONS" to "true",
         "GITHUB_EVENT_NAME" to "workflow_dispatch",
         "GITHUB_REF" to "refs/heads/dev",
@@ -214,7 +216,7 @@ internal class AdapterTest {
             assertNull(body)
             requests.add(path)
             response
-        })
+        }, testPublisherAppId, testPublisherBotId)
         github.verifyPublicationPolicy()
         for (invalid in listOf(
             """{"name":"dev","protected":false}""",
@@ -345,8 +347,12 @@ internal class AdapterTest {
     @Test fun unverifiedPublisherHostOrBotCannotInitializePublicationApi() = runBlocking {
         var requests = 0
         val transport = Transport { _, _, _ -> requests++; throw AssertionError("Unverified publisher API") }
+        fails { runBlocking { GitHub(policy, transport, null, testPublisherBotId).verifyPublicationPolicy() } }
+        fails { runBlocking { GitHub(policy, transport, testPublisherAppId, null).verifyPublicationPolicy() } }
+        fails { runBlocking { GitHub(policy, transport, 0, testPublisherBotId).verifyPublicationPolicy() } }
+        fails { runBlocking { GitHub(policy, transport, testPublisherAppId, 0).verifyPublicationPolicy() } }
         for (invalid in listOf(policy.copy(host = "msft.ghe.com"), policy.copy(automationIds = setOf(99)))) {
-            fails { runBlocking { GitHub(invalid, transport).verifyPublicationPolicy() } }
+            fails { runBlocking { GitHub(invalid, transport, testPublisherAppId, testPublisherBotId).verifyPublicationPolicy() } }
         }
         assertEquals(0, requests)
     }
@@ -362,6 +368,12 @@ internal class AdapterTest {
             mapOf("REVIEW_LEARNING_PUBLISH_APPROVED" to "false"),
             mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to ""),
             mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to "false"),
+            mapOf("REVIEW_LEARNING_PUBLISH_APP_ID" to ""),
+            mapOf("REVIEW_LEARNING_PUBLISH_APP_ID" to "0"),
+            mapOf("REVIEW_LEARNING_PUBLISH_APP_ID" to "invalid"),
+            mapOf("REVIEW_LEARNING_PUBLISH_BOT_ID" to ""),
+            mapOf("REVIEW_LEARNING_PUBLISH_BOT_ID" to "0"),
+            mapOf("REVIEW_LEARNING_PUBLISH_BOT_ID" to "invalid"),
             mapOf("GITHUB_ACTIONS" to "false"),
             mapOf("GITHUB_EVENT_NAME" to "push"),
             mapOf("GITHUB_EVENT_NAME" to "pull_request"),

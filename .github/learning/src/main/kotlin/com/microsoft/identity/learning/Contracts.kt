@@ -35,7 +35,10 @@ import java.time.Instant
 
 internal open class LearningFailure(message: String) : RuntimeException(message)
 internal class SourceTooLarge : LearningFailure("Source file exceeds the limit")
-internal const val GITHUB_ACTIONS_BOT_ID = 41898282L
+
+internal fun positiveId(value: String?, label: String): Long =
+    value?.trim()?.takeIf { it.isNotEmpty() && it.all(Char::isDigit) }?.toLongOrNull()?.takeIf { it > 0 }
+        ?: throw LearningFailure("Invalid $label")
 
 internal fun ensure(condition: Boolean, message: String) {
     if (!condition) throw LearningFailure(message)

@@ -47,6 +47,8 @@ internal class PreviewTest {
         "REVIEW_LEARNING_PUBLISH_TEST_SHA" to approvedSha,
         "REVIEW_LEARNING_PUBLISH_APPROVED" to "true",
         "REVIEW_LEARNING_PROTECTION_VERIFIED" to "true",
+        "REVIEW_LEARNING_PUBLISH_APP_ID" to testPublisherAppId.toString(),
+        "REVIEW_LEARNING_PUBLISH_BOT_ID" to testPublisherBotId.toString(),
         "GITHUB_ACTIONS" to "true",
         "GITHUB_SERVER_URL" to "https://github.com",
         "GITHUB_REF" to "refs/pull/123/merge"
@@ -191,7 +193,7 @@ internal class PreviewTest {
             { _, _, _ -> throw AssertionError("Publisher must not construct a model client") }, clock = { now })
         assertEquals("draft_created", writer.run(arrayOf("publish", output.toString()))["status"])
         val draft = repository.openLearningPulls().single()
-        assertEquals(GITHUB_ACTIONS_BOT_ID, draft.author.id)
+        assertEquals(testPublisherBotId, draft.author.id)
         assertEquals("dev", draft.base)
         assertEquals(setOf(repository.policy.stateBranch, draft.head), repository.writes.toSet())
         val edits = repository.files.filter { (key, value) ->
@@ -216,7 +218,7 @@ internal class PreviewTest {
             event(label = PUBLISH_TEST_LABEL, actor = Actor(1, "User")) to emptyMap(),
             event(label = PUBLISH_TEST_LABEL, actor = Actor(777, "User")) to emptyMap(),
             event(label = PUBLISH_TEST_LABEL, actor = Actor(2, "Bot")) to emptyMap(),
-            event(label = PUBLISH_TEST_LABEL, actor = Actor(GITHUB_ACTIONS_BOT_ID, "Bot")) to emptyMap(),
+            event(label = PUBLISH_TEST_LABEL, actor = Actor(testPublisherBotId, "Bot")) to emptyMap(),
             event(label = PUBLISH_TEST_LABEL, headRepository = "fork/repo") to emptyMap(),
             event(label = PUBLISH_TEST_LABEL, baseRepository = "fork/repo") to emptyMap(),
             event(label = PUBLISH_TEST_LABEL, repository = "other/repo") to emptyMap(),
@@ -230,6 +232,10 @@ internal class PreviewTest {
             valid to mapOf("REVIEW_LEARNING_PUBLISH_APPROVED" to "false"),
             valid to mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to ""),
             valid to mapOf("REVIEW_LEARNING_PROTECTION_VERIFIED" to "false"),
+            valid to mapOf("REVIEW_LEARNING_PUBLISH_APP_ID" to ""),
+            valid to mapOf("REVIEW_LEARNING_PUBLISH_APP_ID" to "0"),
+            valid to mapOf("REVIEW_LEARNING_PUBLISH_BOT_ID" to ""),
+            valid to mapOf("REVIEW_LEARNING_PUBLISH_BOT_ID" to "0"),
             valid to mapOf("GITHUB_ACTIONS" to "false"),
             valid to mapOf("GITHUB_SERVER_URL" to "https://msft.ghe.com"),
             valid to mapOf("REVIEW_LEARNING_POLICY" to Json.parse(environment.getValue("REVIEW_LEARNING_POLICY"))
@@ -282,7 +288,7 @@ internal class PreviewTest {
         )) assertTrue("Missing preview admission gate: $gate", preparation.substringBefore("    runs-on:").contains(gate))
         assertTrue(preparation.contains("ref: \${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"))
         assertFalse(preparation.contains("secrets."))
-        assertFalse(preparation.contains("REVIEW_LEARNING_PUBLISH_APP_ID"))
+        assertFalse(preparation.contains("REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY"))
         assertFalse(preparation.contains("contents: write"))
         assertFalse(preparation.contains("pull-requests: write"))
         assertTrue(preparation.contains("copilot-requests: write"))
@@ -294,7 +300,9 @@ internal class PreviewTest {
             "github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PUBLISH_TEST_SHA",
             "contains(fromJSON(vars.REVIEW_LEARNING_POLICY).ownerIds, github.event.sender.id)",
             "!contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, github.event.sender.id)",
-            "contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, 41898282)",
+            "vars.REVIEW_LEARNING_PUBLISH_APP_ID != ''",
+            "vars.REVIEW_LEARNING_PUBLISH_BOT_ID != ''",
+            "contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, fromJSON(vars.REVIEW_LEARNING_PUBLISH_BOT_ID))",
             "vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true'",
             "vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true'")) {
             assertTrue("Missing preparation test gate: $gate", preparation.substringBefore("    runs-on:").contains(gate))
@@ -302,18 +310,21 @@ internal class PreviewTest {
         }
         for (gate in listOf("github.event_name == 'workflow_dispatch'", "github.ref == 'refs/heads/dev'",
             "inputs.mode == 'propose'", "vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true'",
-            "vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true'")) {
+            "vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true'",
+            "vars.REVIEW_LEARNING_PUBLISH_APP_ID != ''",
+            "vars.REVIEW_LEARNING_PUBLISH_BOT_ID != ''")) {
             assertTrue("Missing publication gate: $gate", publishing.substringBefore("    runs-on:").contains(gate))
         }
-        assertFalse(workflow.contains("create-github-app-token"))
-        assertFalse(workflow.contains("REVIEW_LEARNING_PUBLISH_APP_ID"))
-        assertFalse(workflow.contains("REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY"))
-        assertFalse(publishing.contains("secrets."))
+        assertTrue(publishing.contains("actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349"))
+        assertTrue(publishing.contains("app-id: \${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}"))
+        assertTrue(publishing.contains("private-key: \${{ secrets.REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY }}"))
+        assertTrue(publishing.contains("permission-contents: write"))
+        assertTrue(publishing.contains("permission-pull-requests: write"))
         assertFalse(publishing.contains("administration"))
         assertFalse(publishing.contains("copilot-requests: write"))
-        assertTrue(publishing.contains("contents: write"))
-        assertTrue(publishing.contains("pull-requests: write"))
-        assertTrue(publishing.contains("GITHUB_TOKEN: \${{ github.token }}"))
+        assertFalse(publishing.contains("\n      contents: write"))
+        assertFalse(publishing.contains("\n      pull-requests: write"))
+        assertTrue(publishing.contains("GITHUB_TOKEN: \${{ steps.app-token.outputs.token }}"))
         assertFalse(publishing.contains("github.event.label.name == '$PREVIEW_LABEL'"))
         val checkout = "ref: \${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
         assertTrue(publishing.contains(checkout))

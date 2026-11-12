@@ -186,7 +186,12 @@ internal class Learner(private val repository: Repository, private val now: Inst
 internal class Command(
     private val environment: Map<String, String>,
     private val createRepository: (Policy, String) -> Repository = { policy, token ->
-        GitHub(policy, HttpTransport(policy, token))
+        GitHub(
+            policy,
+            HttpTransport(policy, token),
+            environment["REVIEW_LEARNING_PUBLISH_APP_ID"]?.trim()?.toLongOrNull(),
+            environment["REVIEW_LEARNING_PUBLISH_BOT_ID"]?.trim()?.toLongOrNull()
+        )
     },
     private val createEngine: (String, String, String) -> Engine = { model, credits, token ->
         CopilotEngine(environment["REVIEW_LEARNING_COPILOT_EXECUTABLE"] ?: "copilot", model, credits, token)
@@ -213,15 +218,17 @@ internal class Command(
         if (args[0] == "publish" || publicationTest) {
             ensure(environment["REVIEW_LEARNING_PUBLISH_APPROVED"] == "true", "Publication is disabled")
             ensure(environment["REVIEW_LEARNING_PROTECTION_VERIFIED"] == "true",
-                "A repository owner must verify review protection and Actions bot non-bypass before publication")
+                "A repository owner must verify review protection and publishing App non-bypass before publication")
             ensure(policy.host == "github.com" && environment["GITHUB_SERVER_URL"] == "https://github.com",
                 "Publication requires the verified GitHub.com Actions adapter")
             val baseDispatch = environment["GITHUB_EVENT_NAME"] == "workflow_dispatch" &&
                 environment["GITHUB_REF"] == "refs/heads/${policy.base}"
             ensure(environment["GITHUB_ACTIONS"] == "true" && (baseDispatch || publicationTest),
                 "Publication requires a base-branch dispatch or an explicitly approved PR publication test")
-            ensure(GITHUB_ACTIONS_BOT_ID in policy.automationIds,
-                "Register the verified GitHub Actions bot ID in automationIds before publication")
+            val appId = positiveId(environment["REVIEW_LEARNING_PUBLISH_APP_ID"], "publishing GitHub App ID")
+            val botId = positiveId(environment["REVIEW_LEARNING_PUBLISH_BOT_ID"], "publishing bot ID")
+            ensure(appId > 0 && botId in policy.automationIds,
+                "Register the verified publishing App bot ID in automationIds before publication")
         }
         val repository = createRepository(policy, required("GITHUB_TOKEN"))
         val now = clock()

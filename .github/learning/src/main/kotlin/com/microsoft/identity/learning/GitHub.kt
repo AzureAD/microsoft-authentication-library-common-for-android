@@ -92,7 +92,12 @@ internal interface Repository {
     suspend fun verifyPublicationPolicy()
 }
 
-internal class GitHub(override val policy: Policy, private val transport: Transport) : Repository {
+internal class GitHub(
+    override val policy: Policy,
+    private val transport: Transport,
+    private val publisherAppId: Long? = null,
+    private val publisherBotId: Long? = null
+) : Repository {
     private val repo = "/repos/${policy.repository}"
     private fun encoded(value: String): String = URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
@@ -295,8 +300,11 @@ internal class GitHub(override val policy: Policy, private val transport: Transp
     }
 
     override suspend fun verifyPublicationPolicy() {
-        ensure(policy.host == "github.com" && GITHUB_ACTIONS_BOT_ID in policy.automationIds,
-            "Publication requires the verified GitHub.com Actions bot registry")
+        val appId = publisherAppId ?: throw LearningFailure("An owner-approved publishing GitHub App ID is required")
+        val botId = publisherBotId ?: throw LearningFailure("An owner-approved publishing bot ID is required")
+        ensure(appId > 0 && botId > 0, "Invalid publishing GitHub App identity")
+        ensure(policy.host == "github.com" && botId in policy.automationIds,
+            "Publication requires the verified GitHub.com publishing bot registry")
         val branch = request("GET", "$repo/branches/${encoded(policy.base)}")!!.obj()
         ensure(branch.text("name") == policy.base && branch.flag("protected"),
             "The publication target must remain a protected branch")

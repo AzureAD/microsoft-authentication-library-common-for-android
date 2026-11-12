@@ -117,7 +117,9 @@ jobs:
               github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PUBLISH_TEST_SHA &&
               vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true' &&
               vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true' &&
-              contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, 41898282)
+              vars.REVIEW_LEARNING_PUBLISH_APP_ID != '' &&
+              vars.REVIEW_LEARNING_PUBLISH_BOT_ID != '' &&
+              contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, fromJSON(vars.REVIEW_LEARNING_PUBLISH_BOT_ID))
             )
           )
         )
@@ -150,6 +152,8 @@ jobs:
           REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
           REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
           REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -188,6 +192,8 @@ jobs:
           REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
           REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
           REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
           REVIEW_LEARNING_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
           REVIEW_LEARNING_MAX_AI_CREDITS: ${{ vars.REVIEW_LEARNING_MAX_AI_CREDITS }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -208,6 +214,10 @@ jobs:
       vars.REVIEW_LEARNING_ENABLED == 'true' &&
       vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true' &&
       vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true' &&
+      vars.REVIEW_LEARNING_PUBLISH_APP_ID != '' &&
+      vars.REVIEW_LEARNING_PUBLISH_BOT_ID != '' &&
+      vars.REVIEW_LEARNING_POLICY != '' &&
+      contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, fromJSON(vars.REVIEW_LEARNING_PUBLISH_BOT_ID)) &&
       (
         (
           github.event_name == 'workflow_dispatch' &&
@@ -225,18 +235,14 @@ jobs:
           github.event.sender.type == 'User' &&
           vars.REVIEW_LEARNING_PUBLISH_TEST_SHA != '' &&
           github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PUBLISH_TEST_SHA &&
-          vars.REVIEW_LEARNING_POLICY != '' &&
           contains(fromJSON(vars.REVIEW_LEARNING_POLICY).ownerIds, github.event.sender.id) &&
-          !contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, github.event.sender.id) &&
-          contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, 41898282)
+          !contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, github.event.sender.id)
         )
       )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write
-      pull-requests: write
-      issues: read
+      contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -253,14 +259,26 @@ jobs:
         with:
           name: review-learning-proposal
           path: ${{ runner.temp }}/review-learning-publication
+      - name: Mint a repository-scoped token for the approved publishing app
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          private-key: ${{ secrets.REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
       - name: Reverify live evidence and protected base, then publish only a draft
         env:
           REVIEW_LEARNING_ENABLED: ${{ vars.REVIEW_LEARNING_ENABLED }}
           REVIEW_LEARNING_POLICY: ${{ vars.REVIEW_LEARNING_POLICY }}
           REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
           REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
           REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           .github/learning/build/install/review-learning/bin/review-learning \

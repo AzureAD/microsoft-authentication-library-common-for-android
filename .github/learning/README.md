@@ -187,12 +187,17 @@ Use repository variables, not secrets or tracked credentials, for these values:
 | `REVIEW_LEARNING_PUBLISH_TEST_SHA` | Optional, independently approved full PR head SHA for a pre-merge publication test; unset disables this write path. |
 | `REVIEW_LEARNING_PUBLISH_APPROVED` | Separately enables draft/checkpoint publication. |
 | `REVIEW_LEARNING_PROTECTION_VERIFIED` | Explicit owner confirmation of the review/non-bypass prerequisites below; unset is unverified. |
+| `REVIEW_LEARNING_PUBLISH_APP_ID` | Numeric App ID of the repository-scoped publishing GitHub App (for `android-auth-review-learning`, `5721098`). |
+| `REVIEW_LEARNING_PUBLISH_BOT_ID` | Verified numeric `[bot]` user ID of the publishing GitHub App (for `android-auth-review-learning[bot]`, `355590207`); must also be in `automationIds`. |
 
-No separately provisioned GitHub App, private key, or PAT is required.
-GitHub creates a fresh repository-scoped `GITHUB_TOKEN` for each job.
-Only the separate `publish` job requests Contents write and Pull requests write;
-the synthesis job retains a read-only repository token. Neither job can approve
-or merge guidance through this tooling.
+Store the publishing GitHub App's private key in the repository Actions secret
+`REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY`. Only the separate `publish` job can
+read that secret and mint a short-lived repository-scoped installation token
+with `Contents: Read and write` and `Pull requests: Read and write` (no
+`Administration` or organization permissions, so repository admins can install
+the App directly on Common without organization-owner approval and without
+requiring Actions `GITHUB_TOKEN` PR creation). The synthesis job retains a
+read-only repository token and never receives the App private key or write token.
 
 Policy template:
 
@@ -204,7 +209,7 @@ Policy template:
   "base": "dev",
   "humanIds": [],
   "ownerIds": [],
-  "automationIds": [41898282],
+  "automationIds": [355590207],
   "guidancePaths": [
     ".github/skills/code-review/references/correctness-api-compatibility.md",
     ".github/skills/code-review/references/false-positive-suppression.md"
@@ -218,12 +223,11 @@ Empty human/owner registries intentionally fail validation. Obtain IDs through
 approved host API discovery and have repository owners approve the registry.
 Record known Copilot/custom reviewer/service identities, including User-typed
 service accounts, in `automationIds`, so they cannot become primary evidence.
-Register the publisher's verified Bot ID so interrupted publications can be recovered.
-For this GitHub.com adapter the publisher is
-[`github-actions[bot]`](https://api.github.com/users/github-actions%5Bbot%5D),
-whose immutable ID is `41898282`. This verified ID must be in `automationIds`
-before publication; a display-name match is insufficient. Do not copy a
-GitHub.com numeric identity into a GHE registry. The GHE publisher is not enabled.
+Register the publisher's verified Bot ID (`REVIEW_LEARNING_PUBLISH_BOT_ID`) in
+`automationIds` before publication so interrupted publications can be recovered
+and bot-authored drafts are never treated as human evidence; a display-name
+match is insufficient. Do not copy a GitHub.com numeric identity into a GHE
+registry. The GHE publisher is not enabled.
 
 Paths must refer to existing `.github/copilot-instructions.md` or existing
 focused `.github/skills/code-review/references/*.md` topics. The learner cannot
@@ -235,7 +239,7 @@ Start with the smallest owner-approved topic allowlist.
 Before setting `REVIEW_LEARNING_PROTECTION_VERIFIED=true`, a repository owner
 must verify the applicable `dev` branch rules require a PR with at least one
 approval and either stale-approval dismissal or approval after the last push.
-The GitHub Actions identity must not bypass those requirements. Keep required
+The publishing GitHub App must not bypass those requirements. Keep required
 checks and human merge review in place, and protect the checkpoint/proposal
 branch namespaces against unrelated writers.
 
@@ -246,19 +250,22 @@ No rules or permissions are changed automatically.
 
 ### Test publishing before merging the tooling
 
-No tooling merge, separately provisioned App, PAT, or secret is required.
-This tests the real draft-PR publisher in Common, not a sandbox simulation.
+No tooling merge, PAT, personal OAuth credential, or organization-owner Actions
+policy toggle is required. This tests the real draft-PR publisher in Common
+using the repository-scoped publishing GitHub App.
 
 1. Review the tooling's exact commit on an open, same-repository PR targeting
    `dev`. Untrusted PR code must never receive this authorization.
    Keep `REVIEW_LEARNING_PUBLISH_APPROVED=false` until setup is complete.
-2. Verify the protection prerequisites above and add `41898282` to the existing
-   policy's `automationIds`, preserving other approved identities.
-3. Under **Settings > Actions > General > Workflow permissions**, enable
-   **Allow GitHub Actions to create and approve pull requests**, if organization
-   policy permits. This tooling only creates draft PRs; it never submits
-   approvals. Do not enable a globally writable token default: the writer
-   permissions are scoped to the `publish` job in YAML.
+2. Install the 2-permission publishing GitHub App (`Contents: Read & write`,
+   `Pull requests: Read & write` only; webhook disabled) on **Only select
+   repositories** -> `microsoft-authentication-library-common-for-android`,
+   and save its `.pem` key in the repository Actions secret
+   `REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY`.
+3. Verify the protection prerequisites above, set
+   `REVIEW_LEARNING_PUBLISH_APP_ID` (e.g. `5721098`) and
+   `REVIEW_LEARNING_PUBLISH_BOT_ID` (e.g. `355590207`), and add that bot ID to
+   `REVIEW_LEARNING_POLICY`'s `automationIds`.
 4. After the owner confirmation, set `REVIEW_LEARNING_PROTECTION_VERIFIED=true`.
    Set `REVIEW_LEARNING_PUBLISH_TEST_SHA` to the reviewed PR's full 40-character
    head SHA. This is separate from the read-only `REVIEW_LEARNING_PREVIEW_SHA`;
@@ -271,11 +278,11 @@ This tests the real draft-PR publisher in Common, not a sandbox simulation.
    select that labeled-event run; do not use **Run workflow** before merge.
    Keep the existing approved model/credit cap. The run performs fresh synthesis
    when usable evidence exists; it does not blindly publish an old artifact.
-6. With a valid nonempty proposal, expect one draft guidance PR and the
-   metadata-only checkpoint branch. Review its exact files, citations, and
-   independent evidence. Leave the PR unmerged if only testing publication.
-   Then clear `REVIEW_LEARNING_PUBLISH_TEST_SHA` and set
-   `REVIEW_LEARNING_PUBLISH_APPROVED=false`.
+6. With a valid nonempty proposal, expect one draft guidance PR authored by the
+   publishing App `[bot]` and the metadata-only checkpoint branch. Review its
+   exact files, citations, and independent evidence. Leave the PR unmerged if
+   only testing publication. Then clear `REVIEW_LEARNING_PUBLISH_TEST_SHA` and
+   set `REVIEW_LEARNING_PUBLISH_APPROVED=false`.
 
 The test creates persistent, real branches and an active draft; it does not
 delete them or merge anything. The guidance branch is built from the current
@@ -284,10 +291,13 @@ not from the unmerged tooling branch. Subsequent runs queue evidence behind
 that draft rather than create duplicates or overwrite it. Empty/no-signal
 proposals can checkpoint without opening a PR and do not prove PR creation.
 
-Only the separate publisher job receives Contents/Pull requests write.
+Only the separate publisher job receives the publishing App private key and
+mints a short-lived repository-scoped installation token (`Contents` +
+`Pull requests` write).
 The same-repository, open-PR, target-`dev`, registered human owner, exact
-publication-test SHA, protection-confirmation, and publication-enable gates
-are repeated in workflow admission and the CLI before API initialization.
+publication-test SHA, protection-confirmation, App/bot registration, and
+publication-enable gates are repeated in workflow admission and the CLI before
+API initialization.
 Forks, other labels, pushes while the label remains, closed PR events, and
 unapproved SHAs cannot enter this test write path. New commits require fresh
 SHA approval and removal/reapplication of the publication-test label.
@@ -302,12 +312,10 @@ mode `propose`**, with the same owner prerequisites and enablement flags.
 This does not require the publication-test label or SHA. Ordinary pushes and
 the read-only preview label cannot publish. No scheduled run is added here.
 
-For CI on each generated PR, a user with write access must select
-**Approve workflows to run** in the PR banner. This is GitHub's approval gate
-for PR events created by `GITHUB_TOKEN`, not an approval gate on the learning
-workflow itself. Human review/approval of the proposed guidance is separate.
-Native Copilot review and other required provider checks must also be arranged
-under repository policy; CI approval alone does not prove they ran.
+Because draft PRs are opened by the dedicated publishing GitHub App rather than
+the built-in `GITHUB_TOKEN`, standard `pull_request` CI workflows trigger
+normally without manual banner approval. Human review/approval of the proposed
+guidance remains required before merge.
 
 ## Supported synthesis and isolation
 
@@ -390,19 +398,18 @@ failure rather than an overwrite. No branches or historic reviews are deleted.
 The CLI rejects publication before client initialization unless owner
 confirmation and publication approval are both explicitly true, the Actions
 context is either a manual GitHub.com dispatch on `dev` or the separately
-authorized exact-revision PR publication-test event, and the verified Actions
-bot is registered. It then checks ordinary branch metadata to confirm `dev` remains
-protected. Errors, a missing branch, or unprotected metadata fail before writes.
+authorized exact-revision PR publication-test event, and the publishing App ID
+plus verified `[bot]` user ID (`REVIEW_LEARNING_PUBLISH_BOT_ID` in
+`automationIds`) are configured. It then checks ordinary branch metadata to
+confirm `dev` remains protected. Errors, a missing branch, or unprotected
+metadata fail before writes.
 
-The normal Actions token cannot request Administration read. Accordingly,
+Because the publishing GitHub App deliberately omits `Administration: Read` (so
+repository admins can install it directly without organization-owner approval),
 the detailed review-rule/non-bypass check is owner-verified setup, not an
 automatic per-run audit. The protected-branch metadata check is a narrower
 runtime check and does not replace that owner prerequisite.
 
-GitHub-token-created PRs' `opened`, `synchronize`, and `reopened` events create
-approval-required Actions runs. A writer must approve those CI workflows;
-other token-generated events generally do not start workflows.
-See [GitHub's token event rules](https://docs.github.com/en/actions/concepts/security/github_token#when-github_token-triggers-workflow-runs).
 Common's existing AB-ID workflow rewrites referenced work items to closing
 references; generated guidance PRs therefore do not reference the implementation
 PBI with `AB#`. Owners must use the approved guidance-only AB-check policy
