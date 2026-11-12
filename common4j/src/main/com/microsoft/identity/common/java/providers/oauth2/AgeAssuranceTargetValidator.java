@@ -21,6 +21,10 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * Binds an ID-token age-assurance target receipt to explicit targets in that operation's claims.
  * This does not interpret age-assurance status or outcome signs, authorize API access, or inspect
  * access tokens. Target names are opaque; "all" is a literal identity, not a wildcard.
+ * Matching ignores identity case and order, but requires a plus or minus sign on every returned
+ * identity. Missing, malformed, duplicate, or extra receipt entries are rejected regardless of
+ * status, including unknown status (TU0). A matching negative entry is a valid receipt, not
+ * evidence of adult authorization.
  */
 public final class AgeAssuranceTargetValidator {
     private static final String TARGET_PREFIX = "target-";
