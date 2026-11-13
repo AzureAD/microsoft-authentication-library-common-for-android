@@ -25,13 +25,12 @@ package com.microsoft.identity.common.java.controllers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.authorities.Authority;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
@@ -53,6 +52,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -63,6 +63,7 @@ import org.junit.runners.JUnit4;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -374,5 +375,65 @@ public class ExceptionAdapterTests {
         final ClientException clientException = ExceptionAdapter.clientExceptionFromException(serviceException);
 
         Assert.assertNull(clientException.getClientDataInfo());
+    }
+
+    @Test
+    public void testExceptionFromTokenResult_bodylessSuppressed400InvalidGrant_preservesStatusHeadersNullBodyAndSuppressionFlag() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setStatusCode(400);
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setSubError(OAuth2SubErrorCode.BAD_TOKEN);
+        errorResponse.setErrorDescription("Request throttled by service. retryAfterSeconds=45");
+        errorResponse.setResponseBody(null);
+        errorResponse.setResponseHeadersJson(
+                HeaderSerializationUtil.toJson(
+                        Collections.singletonMap("Retry-After", Collections.singletonList("45"))
+                )
+        );
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        tokenResult.setLocallySuppressedThrottle(true);
+
+        final ServiceException adapted = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+        assertTrue(adapted instanceof UiRequiredException);
+        assertEquals(400, adapted.getHttpStatusCode());
+        assertEquals(Collections.singletonList("45"), adapted.getHttpResponseHeaders().get("Retry-After"));
+        assertNull(adapted.getHttpResponseBody());
+        assertTrue(adapted.isLocallySuppressedThrottle());
+
+        final ServiceException convertedNativeAuth = ExceptionAdapter.convertToNativeAuthException(adapted);
+        assertEquals(400, convertedNativeAuth.getHttpStatusCode());
+        assertEquals(Collections.singletonList("45"), convertedNativeAuth.getHttpResponseHeaders().get("Retry-After"));
+        assertNull(convertedNativeAuth.getHttpResponseBody());
+        assertTrue(convertedNativeAuth.isLocallySuppressedThrottle());
+    }
+
+    @Test
+    public void testExceptionFromTokenResult_bodylessMalformedHeaders_preservesStatusCodeAndNullBody() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setStatusCode(429);
+        errorResponse.setError(ServiceException.REQUEST_THROTTLED_AT_ESTS_GATEWAY);
+        errorResponse.setErrorDescription("Request throttled by service.");
+        errorResponse.setResponseBody(null);
+        errorResponse.setResponseHeadersJson("not-valid-json");
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        final ServiceException adapted = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+        assertEquals(429, adapted.getHttpStatusCode());
+        assertNull(adapted.getHttpResponseHeaders());
+        assertNull(adapted.getHttpResponseBody());
+        assertFalse(adapted.isLocallySuppressedThrottle());
+
+        final TokenErrorResponse defaultStatusMalformed = new TokenErrorResponse();
+        defaultStatusMalformed.setError(ServiceException.UNKNOWN_ERROR);
+        defaultStatusMalformed.setResponseBody(null);
+        defaultStatusMalformed.setResponseHeadersJson("not-valid-json");
+        final ServiceException defaultAdapted = ExceptionAdapter.exceptionFromTokenResult(
+                new TokenResult(null, defaultStatusMalformed),
+                null
+        );
+        assertEquals(ServiceException.DEFAULT_STATUS_CODE, defaultAdapted.getHttpStatusCode());
+        assertNull(defaultAdapted.getHttpResponseHeaders());
+        assertNull(defaultAdapted.getHttpResponseBody());
     }
 }

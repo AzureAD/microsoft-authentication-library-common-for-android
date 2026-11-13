@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.opentelemetry;
 
 import com.microsoft.identity.common.java.logging.Logger;
 
+import java.util.concurrent.Callable;
+
 import javax.annotation.Nullable;
 
 import io.opentelemetry.context.Context;
@@ -65,6 +67,27 @@ public class OtelContextExtension {
                     error
             );
             return runnable;
+        }
+    }
+
+    /**
+     * Returns a Callable that makes this the current context and then invokes the input Callable.
+     * See {@link Context#wrap(Callable)}
+     *
+     * @param callable the callable to wrap
+     * @param <T>      the result type of method {@code call}
+     * @return the wrapped callable
+     */
+    public static <T> Callable<T> wrap(final Callable<T> callable) {
+        try {
+            return Context.current().wrap(callable);
+        } catch (final NoSuchMethodError error) {
+            Logger.error(
+                    TAG + ":wrapCallableWithCurrentTelemetryContext",
+                    error.getMessage(),
+                    error
+            );
+            return callable;
         }
     }
 

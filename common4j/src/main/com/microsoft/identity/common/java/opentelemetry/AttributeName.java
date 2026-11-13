@@ -1116,4 +1116,54 @@ public enum AttributeName {
     pkeyauth_challenging_origin_source,
 
     //endregion
+
+    //region Broker server-directed token throttling
+
+    /**
+     * Outcome of Broker server-directed token endpoint throttling evaluation:
+     * {@code not_throttled}, {@code fresh_server_throttle}, or {@code locally_suppressed}.
+     * DataClassification: SystemMetadata.
+     */
+    throttle_outcome,
+
+    /**
+     * Isolation scope category for a throttled or locally suppressed token request:
+     * {@code BROKER_PRT}, {@code AT_OR_RT}, {@code DEVICE_TOKEN}, or {@code FOCI_PROBE}.
+     * DataClassification: SystemMetadata.
+     */
+    throttle_scope_type,
+
+    /**
+     * HTTP status code associated with a throttled or locally suppressed token request (Long).
+     * DataClassification: SystemMetadata.
+     */
+    throttle_http_status,
+
+    /**
+     * Computed server backoff duration (on {@code fresh_server_throttle}) or remaining backoff
+     * duration (on {@code locally_suppressed}) in milliseconds (Long).
+     * DataClassification: SystemMetadata.
+     */
+    throttle_retry_after_ms,
+
+    /**
+     * Source of the backoff duration on {@code fresh_server_throttle}:
+     * {@code delta_seconds}, {@code http_date}, {@code default_429}, {@code default_5xx},
+     * or {@code clamped_max}. DataClassification: SystemMetadata.
+     */
+    throttle_retry_after_source,
+
+    /**
+     * Non-PII 8-character lowercase hexadecimal prefix of the SHA-256 {@code TokenThrottleKey}.
+     * DataClassification: SystemMetadata.
+     */
+    throttle_key_prefix,
+
+    /**
+     * Current number of active entries in the bounded {@code ServerThrottleManager} cache (Long).
+     * DataClassification: SystemMetadata.
+     */
+    throttle_cache_size,
+
+    //endregion
 }

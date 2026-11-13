@@ -53,6 +53,8 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
+import com.microsoft.identity.common.java.throttling.ServerThrottleManager;
+import com.microsoft.identity.common.java.throttling.TokenThrottleContext;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
@@ -187,7 +189,38 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
-        final GenericTokenResult result = tokenResponseHandler.handleTokenResponse(response);
+        final GenericTokenResult result;
+        try {
+            result = tokenResponseHandler.handleTokenResponse(response);
+        } catch (final ClientException | RuntimeException e) {
+            if (response != null && response.getStatusCode() >= HttpsURLConnection.HTTP_MULT_CHOICE) {
+                final TokenThrottleContext throttleContext = ServerThrottleManager.isServerThrottlingActive()
+                        ? TokenThrottleContext.current()
+                        : null;
+                ServerThrottleManager.getInstance().onHttpResponse(
+                        throttleContext,
+                        response,
+                        null,
+                        null
+                );
+            }
+            throw e;
+        }
+        if (result == null) {
+            return null;
+        }
+        if (response != null
+                && (!result.getSuccess() || response.getStatusCode() >= HttpsURLConnection.HTTP_MULT_CHOICE)) {
+            final TokenThrottleContext throttleContext = ServerThrottleManager.isServerThrottlingActive()
+                    ? TokenThrottleContext.current()
+                    : null;
+            ServerThrottleManager.getInstance().onHttpResponse(
+                    throttleContext,
+                    response,
+                    result.getErrorResponse(),
+                    result.getCliTelemInfo()
+            );
+        }
         if (result.getTokenResponse() != null) {
             result.getTokenResponse().setAuthority(mTokenEndpoint);
         }
