@@ -122,4 +122,10 @@ public class MicrosoftRefreshToken extends RefreshToken {
     public ClientInfo getClientInfo() {
         return mClientInfo;
     }
+
+    @Override
+    public void clearSensitiveData() {
+        super.clearSensitiveData();
+        mClientInfo = null;
+    }
 }
