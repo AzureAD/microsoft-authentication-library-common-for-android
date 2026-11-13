@@ -68,6 +68,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigu
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.throttling.ServerThrottleManager;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -534,6 +535,13 @@ public class MicrosoftStsOAuth2Strategy
         if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
                 && response.getHeaders() != null
                 && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
+            if (ServerThrottleManager.shouldSuppressRetry(response)) {
+                Logger.info(
+                        TAG + methodName,
+                        "Skipping device certificate challenge request due to server Retry-After directive."
+                );
+                return response;
+            }
             // Received the device certificate challenge request. It is sent in 401 header.
             // This is triggered whenever we're trying to redeem an AT with an RT without deviceid claim,
             // and the AT requires device auth.

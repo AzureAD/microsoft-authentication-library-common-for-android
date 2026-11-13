@@ -392,7 +392,39 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Default is false.
      */
-    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false),
+
+    /**
+     * Master kill-switch for Broker server-directed token endpoint throttling.
+     * Defaults to {@code false} in {@code CommonFlight} so brokerless client processes remain
+     * completely unaffected; overridden in {@code BrokerFlight} for Broker rollout.
+     */
+    ENABLE_BROKER_SERVER_THROTTLING("EnableBrokerServerThrottling", false),
+
+    /**
+     * Default backoff duration in seconds for HTTP 429 /token responses without a valid Retry-After header.
+     */
+    BROKER_THROTTLE_DEFAULT_429_SECONDS("BrokerThrottleDefault429Seconds", 60),
+
+    /**
+     * Default backoff duration in seconds for HTTP 5xx /token responses without a valid Retry-After header.
+     */
+    BROKER_THROTTLE_DEFAULT_5XX_SECONDS("BrokerThrottleDefault5xxSeconds", 120),
+
+    /**
+     * Maximum allowed backoff duration in seconds when clamping server Retry-After directives.
+     */
+    BROKER_THROTTLE_MAX_RETRY_AFTER_SECONDS("BrokerThrottleMaxRetryAfterSeconds", 3600),
+
+    /**
+     * Maximum number of active in-memory ThrottleRecord entries retained by ServerThrottleManager.
+     */
+    BROKER_THROTTLE_CACHE_MAX_ENTRIES("BrokerThrottleCacheMaxEntries", 512),
+
+    /**
+     * Dark-shipped flight gating advertisement of any future x-ms-lib-capability token-throttling capability.
+     */
+    ENABLE_ESTS_THROTTLE_LIB_CAPABILITY("EnableEstsThrottleLibCapability", false);
 
     private String key;
     private Object defaultValue;

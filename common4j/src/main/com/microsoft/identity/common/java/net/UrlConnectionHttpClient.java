@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
+import com.microsoft.identity.common.java.throttling.ServerThrottleManager;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Consumer;
 import com.microsoft.identity.common.java.util.ported.Function;
@@ -268,9 +269,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                 }
                             })
                             .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                            .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
+                            .isRetryable(new BiFunction<HttpResponse, Integer, Boolean>() {
                                 public Boolean apply(HttpResponse response, Integer attemptNumber) {
-                                    return response != null && isRetryableError(response.getStatusCode());
+                                    return response != null
+                                            && isRetryableError(response.getStatusCode())
+                                            && !ServerThrottleManager.shouldSuppressRetry(response);
                                 }
                             })
                             .isRetryableException(new Function<Exception, Boolean>() {
