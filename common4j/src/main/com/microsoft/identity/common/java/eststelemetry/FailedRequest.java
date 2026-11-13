@@ -22,28 +22,63 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
+import java.util.Objects;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 class FailedRequest {
 
+    private static final char DELIMITER_REPLACEMENT = '_';
+
+    @Nullable
     private final String mApiId;
+
+    @Nullable
     private final String mCorrelationId;
+
+    @Nullable
     private final String mError;
 
-    public FailedRequest(String mApiId, String mCorrelationId, String error) {
+    public FailedRequest(@Nullable final String mApiId,
+                         @Nullable final String mCorrelationId,
+                         @Nullable final String error) {
         this.mApiId = mApiId;
         this.mCorrelationId = mCorrelationId;
         this.mError = error;
     }
 
+    @NonNull
     public String toApiIdCorrelationString() {
-        return mApiId + ',' + mCorrelationId;
+        return sanitizeSegmentValue(mApiId)
+                + SchemaConstants.SEPARATOR_COMMA
+                + sanitizeSegmentValue(mCorrelationId);
     }
 
+    @NonNull
     public String toErrorCodeString() {
-        return mError;
+        return sanitizeSegmentValue(mError);
+    }
+
+    @NonNull
+    private static String sanitizeSegmentValue(@Nullable final String value) {
+        if (value == null || value.isEmpty()) {
+            return SchemaConstants.Value.EMPTY;
+        }
+        if (value.indexOf('|') < 0 && value.indexOf(',') < 0) {
+            return value;
+        }
+        final char[] chars = value.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == '|' || chars[i] == ',') {
+                chars[i] = DELIMITER_REPLACEMENT;
+            }
+        }
+        return new String(chars);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -51,12 +86,12 @@ class FailedRequest {
             return false;
         }
 
-        FailedRequest that = (FailedRequest) o;
-        return mCorrelationId.equals(that.mCorrelationId);
+        final FailedRequest that = (FailedRequest) o;
+        return Objects.equals(mCorrelationId, that.mCorrelationId);
     }
 
     @Override
     public int hashCode() {
-        return mCorrelationId.hashCode();
+        return Objects.hashCode(mCorrelationId);
     }
 }

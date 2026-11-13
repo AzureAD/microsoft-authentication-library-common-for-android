@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
@@ -58,6 +59,9 @@ public class LastRequestTelemetry extends RequestTelemetry {
      * @return an unmodifiable list of {@link FailedRequest} objects
      */
     /* package */ List<FailedRequest> getFailedRequests() {
+        if (failedRequests == null) {
+            return Collections.emptyList();
+        }
         return Collections.unmodifiableList(failedRequests);
     }
 
@@ -86,28 +90,48 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
 
+    private void ensureMutableFlatArrayList() {
+        if (failedRequests == null) {
+            failedRequests = new ArrayList<>();
+        } else if (failedRequests.getClass() != ArrayList.class) {
+            failedRequests = new ArrayList<>(failedRequests);
+        }
+    }
+
     void appendFailedRequest(final String apiId, final String correlationId, final String error) {
         appendFailedRequest(new FailedRequest(apiId, correlationId, error));
     }
 
-    void appendFailedRequest(final FailedRequest failedRequest) {
-        // this should usually not be greater than - at most should be equal to the cap
-        // because the only we to add to this list is via this append method.
+    void appendFailedRequest(@Nullable final FailedRequest failedRequest) {
+        if (failedRequest == null) {
+            return;
+        }
+
+        ensureMutableFlatArrayList();
+
+        // This should usually not be greater than - at most should be equal to the cap
+        // because the only way to add to this list is via this append method.
         // The only time this could be greater than the cap is for some existing devices that may
         // have caught themselves in a bad state after accumulating too much telemetry in
-        // Shared Preferences. (of course prior to the cap being put in place).
-        // So will just take the last (most recent) 100 items here to get those out of the bad state,
-        // and also to avoid having too much telemetry in the cache going forward.
-        if (failedRequests.size() >= FAILED_REQUEST_CAP) {
+        // Shared Preferences (prior to the cap being put in place).
+        // Copy the most recent (FAILED_REQUEST_CAP - 1) items into a fresh ArrayList so we never
+        // retain nested List.subList(...) views, or remove index 0 in-place when at capacity.
+        if (failedRequests.size() > FAILED_REQUEST_CAP) {
             final int beginIndex = failedRequests.size() - FAILED_REQUEST_CAP + 1;
             final int endIndex = failedRequests.size();
-            failedRequests = failedRequests.subList(beginIndex, endIndex);
+            final List<FailedRequest> trimmed = new ArrayList<>(FAILED_REQUEST_CAP);
+            trimmed.addAll(failedRequests.subList(beginIndex, endIndex));
+            failedRequests = trimmed;
+        } else if (failedRequests.size() == FAILED_REQUEST_CAP) {
+            failedRequests.remove(0);
         }
+
         failedRequests.add(failedRequest);
     }
 
-    void wipeFailedRequestAndErrorForSubList(Collection<FailedRequest> failedRequestsToRemove) {
-        if (failedRequestsToRemove != null) {
+    void wipeFailedRequestAndErrorForSubList(@Nullable final Collection<FailedRequest> failedRequestsToRemove) {
+        if (failedRequestsToRemove != null && failedRequests != null) {
+            ensureMutableFlatArrayList();
             failedRequests.removeAll(failedRequestsToRemove);
         }
     }
@@ -134,15 +158,20 @@ public class LastRequestTelemetry extends RequestTelemetry {
 
         final StringBuilder apiIdCorrelationIdSegmentBuilder = new StringBuilder();
         final StringBuilder errorSegmentBuilder = new StringBuilder();
+        boolean hasAppendedEntry = false;
 
         for (int i = 0; i < failedRequestsArray.length; i++) {
             final FailedRequest failedRequest = failedRequestsArray[i];
+            if (failedRequest == null) {
+                continue;
+            }
+            if (hasAppendedEntry) {
+                apiIdCorrelationIdSegmentBuilder.append(SchemaConstants.SEPARATOR_COMMA);
+                errorSegmentBuilder.append(SchemaConstants.SEPARATOR_COMMA);
+            }
             apiIdCorrelationIdSegmentBuilder.append(failedRequest.toApiIdCorrelationString());
             errorSegmentBuilder.append(failedRequest.toErrorCodeString());
-            if (i != failedRequestsArray.length - 1) {
-                apiIdCorrelationIdSegmentBuilder.append(',');
-                errorSegmentBuilder.append(',');
-            }
+            hasAppendedEntry = true;
         }
 
         return new AbstractMap.SimpleEntry<>(apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
