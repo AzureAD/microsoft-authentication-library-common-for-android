@@ -42,7 +42,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +61,8 @@ public final class ServerThrottleManager {
     private static final String TAG = ServerThrottleManager.class.getSimpleName();
     private static final String X_MS_CLITELEM_HEADER = "x-ms-clitelem";
     private static final String DEFAULT_THROTTLED_DESCRIPTION = "Request throttled by service.";
+    private static final String SERVICE_UNAVAILABLE_DESCRIPTION = "Service temporarily unavailable.";
+    private static final String TOO_MANY_REQUESTS_DESCRIPTION = "Too many requests.";
 
     private static final long DEFAULT_429_SECONDS_FALLBACK = 60L;
     private static final long DEFAULT_5XX_SECONDS_FALLBACK = 120L;
@@ -69,7 +70,6 @@ public final class ServerThrottleManager {
     private static final int DEFAULT_CACHE_MAX_ENTRIES = 512;
     private static final int MIN_CACHE_MAX_ENTRIES = 64;
     private static final int MAX_CACHE_MAX_ENTRIES = 4096;
-    private static final int MAX_SANITIZED_DESCRIPTION_LENGTH = 200;
     private static final long NANOS_PER_MILLI = 1_000_000L;
     private static final long NANOS_MILLI_CEILING_ROUNDING = 999_999L;
 
@@ -666,9 +666,14 @@ public final class ServerThrottleManager {
         return null;
     }
 
+    /**
+     * Selects a static, non-PII throttling guidance string from a bounded allowlist rather than
+     * retaining arbitrary server descriptions that could embed user/account/tenant GUIDs or other
+     * identifiers.
+     */
     @NonNull
     static String sanitizeErrorDescription(@Nullable final String rawDescription) {
-        if (StringUtil.isNullOrEmpty(rawDescription)) {
+        if (rawDescription == null || StringUtil.isNullOrEmpty(rawDescription)) {
             return DEFAULT_THROTTLED_DESCRIPTION;
         }
         String candidate = rawDescription.trim();
@@ -676,40 +681,20 @@ public final class ServerThrottleManager {
         if (suffixIdx >= 0) {
             candidate = candidate.substring(0, suffixIdx).trim();
         }
-        if (candidate.isEmpty() || containsPotentialSecretOrMarkup(candidate)) {
+        while (candidate.endsWith(".")) {
+            candidate = candidate.substring(0, candidate.length() - 1).trim();
+        }
+        if ("request throttled by service".equalsIgnoreCase(candidate)) {
             return DEFAULT_THROTTLED_DESCRIPTION;
         }
-        final StringBuilder collapsed = new StringBuilder(Math.min(candidate.length(), MAX_SANITIZED_DESCRIPTION_LENGTH));
-        boolean previousSpace = false;
-        for (int i = 0; i < candidate.length() && collapsed.length() < MAX_SANITIZED_DESCRIPTION_LENGTH; i++) {
-            final char ch = candidate.charAt(i);
-            if (Character.isWhitespace(ch) || Character.isISOControl(ch)) {
-                if (!previousSpace && collapsed.length() > 0) {
-                    collapsed.append(' ');
-                    previousSpace = true;
-                }
-            } else {
-                collapsed.append(ch);
-                previousSpace = false;
-            }
+        if ("service temporarily unavailable".equalsIgnoreCase(candidate)
+                || "temporarily unavailable".equalsIgnoreCase(candidate)) {
+            return SERVICE_UNAVAILABLE_DESCRIPTION;
         }
-        final String normalized = collapsed.toString().trim();
-        return normalized.isEmpty() ? DEFAULT_THROTTLED_DESCRIPTION : normalized;
-    }
-
-    private static boolean containsPotentialSecretOrMarkup(@NonNull final String candidate) {
-        if (candidate.indexOf('<') >= 0 || candidate.indexOf('>') >= 0 || candidate.indexOf('@') >= 0) {
-            return true;
+        if ("too many requests".equalsIgnoreCase(candidate)) {
+            return TOO_MANY_REQUESTS_DESCRIPTION;
         }
-        final String lower = candidate.toLowerCase(Locale.ROOT);
-        return lower.contains("eyj")
-                || lower.contains("bearer ")
-                || lower.contains("refresh_token")
-                || lower.contains("access_token")
-                || lower.contains("assertion")
-                || lower.contains("password")
-                || lower.contains("secret")
-                || lower.contains("\tat ");
+        return DEFAULT_THROTTLED_DESCRIPTION;
     }
 
     private static long computeCeilingMillis(final long remainingNanos) {

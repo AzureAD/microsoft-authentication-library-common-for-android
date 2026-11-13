@@ -67,6 +67,8 @@ public final class TokenThrottleKey {
     private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
     private static final int KEY_PREFIX_LENGTH = 8;
     private static final String ACCOUNT_TAG_PREFIX = "acct:";
+    private static final String DCF_SESSION_PREFIX = "dcf:";
+    private static final String HASHED_FALLBACK_PREFIX = "fallback_sha256:";
     private static final Gson CANONICAL_JSON_GSON = new GsonBuilder()
             .serializeNulls()
             .disableHtmlEscaping()
@@ -139,7 +141,8 @@ public final class TokenThrottleKey {
      * @param parameters                 token command parameters.
      * @param authorityOverride          optional authority URL override.
      * @param fallbackAccountOrSessionId optional session fallback (e.g., {@code "dcf:" + deviceCode});
-     *                                   excluded from {@link #getAccountTagHashes()} unless also in {@code extraRawAccountIds}.
+     *                                   hashed before account lowercasing and excluded from
+     *                                   {@link #getAccountTagHashes()} unless also in {@code extraRawAccountIds}.
      * @param extraRawAccountIds         optional extra user account identifiers for eviction tagging.
      * @return canonical {@link TokenThrottleKey}.
      */
@@ -168,7 +171,7 @@ public final class TokenThrottleKey {
                         ? ((RopcTokenCommandParameters) parameters).getUsername()
                         : null;
 
-        final String primaryAccountId = firstNonEmpty(
+        final String resolvedUserAccountId = firstNonEmpty(
                 brokerParams != null ? brokerParams.getHomeAccountId() : null,
                 accountRecord != null ? accountRecord.getHomeAccountId() : null,
                 brokerParams != null ? brokerParams.getLocalAccountId() : null,
@@ -176,9 +179,16 @@ public final class TokenThrottleKey {
                 brokerAccount != null ? brokerAccount.getUsername() : null,
                 accountRecord != null ? accountRecord.getUsername() : null,
                 ropcUsername,
-                parameters.getLoginHint(),
-                fallbackAccountOrSessionId
+                parameters.getLoginHint()
         );
+        final String primaryAccountId;
+        if (!resolvedUserAccountId.isEmpty()) {
+            primaryAccountId = resolvedUserAccountId;
+        } else if (fallbackAccountOrSessionId != null && !StringUtil.isNullOrEmpty(fallbackAccountOrSessionId)) {
+            primaryAccountId = hashFallbackSessionId(fallbackAccountOrSessionId);
+        } else {
+            primaryAccountId = "";
+        }
 
         final List<String> userAccountIds = new ArrayList<>();
         if (brokerParams != null) {
@@ -201,7 +211,7 @@ public final class TokenThrottleKey {
             }
         }
 
-        final TokenThrottleKey delegated = forAtOrRt(
+        return forAtOrRt(
                 authorityUrl,
                 effectiveClientId,
                 parameters.getScopes(),
@@ -211,11 +221,6 @@ public final class TokenThrottleKey {
                 mamEnrollmentId,
                 brokerRequestTypeName,
                 userAccountIds
-        );
-        return new TokenThrottleKey(
-                ThrottleScopeType.AT_OR_RT,
-                delegated.getSha256Hex(),
-                buildAccountTagSet(null, userAccountIds)
         );
     }
 
@@ -248,7 +253,7 @@ public final class TokenThrottleKey {
         final String canonicalClientId = canonicalizeIdentifier(effectiveClientId);
         final String canonicalScopes = canonicalizeScopesCollection(scopes);
         final String claimsHash = sha256Hex(canonicalizeClaimsJson(claimsRequestJson));
-        final String canonicalPrimaryAccount = canonicalizeAccountId(primaryAccountId);
+        final String canonicalPrimaryAccount = canonicalizePrimaryAccountOrSessionId(primaryAccountId);
         final String normalizedScheme = trimOrEmpty(authSchemeName);
         final String normalizedMamId = trimOrEmpty(mamEnrollmentId);
         final String normalizedRequestType = !StringUtil.isNullOrEmpty(brokerRequestTypeName)
@@ -429,9 +434,11 @@ public final class TokenThrottleKey {
             @Nullable final String primaryAccountId,
             @Nullable final Collection<String> rawAccountIds) {
         final Set<String> tags = new LinkedHashSet<>();
-        final String primaryTag = hashAccountTag(primaryAccountId);
-        if (primaryTag != null) {
-            tags.add(primaryTag);
+        if (!isFallbackSessionMarker(primaryAccountId)) {
+            final String primaryTag = hashAccountTag(primaryAccountId);
+            if (primaryTag != null) {
+                tags.add(primaryTag);
+            }
         }
         if (rawAccountIds != null) {
             for (final String rawId : rawAccountIds) {
@@ -442,6 +449,45 @@ public final class TokenThrottleKey {
             }
         }
         return tags;
+    }
+
+    private static boolean isFallbackSessionMarker(@Nullable final String value) {
+        if (value == null || StringUtil.isNullOrEmpty(value)) {
+            return false;
+        }
+        final String trimmed = value.trim();
+        return trimmed.startsWith(HASHED_FALLBACK_PREFIX)
+                || (trimmed.length() >= DCF_SESSION_PREFIX.length()
+                && trimmed.regionMatches(true, 0, DCF_SESSION_PREFIX, 0, DCF_SESSION_PREFIX.length()));
+    }
+
+    @NonNull
+    private static String hashFallbackSessionId(@NonNull final String rawFallback) {
+        final String trimmed = rawFallback.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        if (trimmed.startsWith(HASHED_FALLBACK_PREFIX)) {
+            return trimmed;
+        }
+        if (trimmed.length() >= DCF_SESSION_PREFIX.length()
+                && trimmed.regionMatches(true, 0, DCF_SESSION_PREFIX, 0, DCF_SESSION_PREFIX.length())) {
+            return HASHED_FALLBACK_PREFIX
+                    + sha256Hex(DCF_SESSION_PREFIX + trimmed.substring(DCF_SESSION_PREFIX.length()));
+        }
+        return HASHED_FALLBACK_PREFIX + sha256Hex(trimmed);
+    }
+
+    @NonNull
+    private static String canonicalizePrimaryAccountOrSessionId(@Nullable final String value) {
+        if (value == null || StringUtil.isNullOrEmpty(value)) {
+            return "";
+        }
+        final String trimmed = value.trim();
+        if (isFallbackSessionMarker(trimmed)) {
+            return hashFallbackSessionId(trimmed);
+        }
+        return canonicalizeAccountId(trimmed);
     }
 
     @NonNull

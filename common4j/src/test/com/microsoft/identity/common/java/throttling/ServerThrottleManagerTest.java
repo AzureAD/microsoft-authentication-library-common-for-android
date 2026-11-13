@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -61,7 +62,6 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 
 import org.junit.After;
@@ -279,8 +279,9 @@ public class ServerThrottleManagerTest {
         assertFalse(key1.toString().contains("alice"));
         assertFalse(key1.toString().contains("uid-1"));
 
-        // Reordered scopes, reordered JSON claims keys, and trailing slash/case in authority produce identical hash
+        // Reordered scopes, reordered JSON claims keys, case-only actual account ID, and trailing slash/case in authority produce identical hash
         final BrokerSilentTokenCommandParameters equivalentParams = baseBrokerParams.toBuilder()
+                .homeAccountId("uid-1.utid-1")
                 .scopes(new HashSet<>(Arrays.asList("user.read  mail.read")))
                 .claimsRequestJson("{\"access_token\":{\"acrs\":{\"essential\":true}},\"id_token\":null}")
                 .build();
@@ -321,7 +322,7 @@ public class ServerThrottleManagerTest {
                 baseBrokerParams.toBuilder().requestType(BrokerRequestType.BROKER_RT_REQUEST).build(),
                 null, null, null));
 
-        // RopcTokenCommandParameters.getUsername() fallback & user account tag inclusion
+        // RopcTokenCommandParameters.getUsername() fallback (case-insensitive for actual user accounts) & user account tag inclusion
         final RopcTokenCommandParameters ropcParams = RopcTokenCommandParameters.builder()
                 .platformComponents(mock(IPlatformComponents.class))
                 .authority(authorityA)
@@ -332,12 +333,16 @@ public class ServerThrottleManagerTest {
                 .build();
         final TokenThrottleKey ropcKey = TokenThrottleKey.forAtOrRt(ropcParams, null, null, null);
         assertFalse(ropcKey.getAccountTagHashes().isEmpty());
+        final RopcTokenCommandParameters upperRopcParams = ropcParams.toBuilder()
+                .username("ROPC.USER@CONTOSO.COM")
+                .build();
+        assertEquals(ropcKey, TokenThrottleKey.forAtOrRt(upperRopcParams, null, null, null));
         final RopcTokenCommandParameters otherRopcParams = ropcParams.toBuilder()
                 .username("other.user@contoso.com")
                 .build();
         assertNotEquals(ropcKey, TokenThrottleKey.forAtOrRt(otherRopcParams, null, null, null));
 
-        // DCF fallbackAccountOrSessionId isolates device codes WITHOUT polluting user accountTagHashes
+        // DCF fallbackAccountOrSessionId isolates device codes (including case-only differences) WITHOUT polluting user accountTagHashes
         final TokenCommandParameters dcfParams = TokenCommandParameters.builder()
                 .platformComponents(mock(IPlatformComponents.class))
                 .authority(authorityA)
@@ -348,6 +353,42 @@ public class ServerThrottleManagerTest {
         final TokenThrottleKey dcfKey2 = TokenThrottleKey.forAtOrRt(dcfParams, null, "dcf:code-222", null);
         assertNotEquals(dcfKey1, dcfKey2);
         assertTrue("DCF session fallback must not pollute user accountTagHashes", dcfKey1.getAccountTagHashes().isEmpty());
+
+        final TokenThrottleKey dcfMixedCase = TokenThrottleKey.forAtOrRt(dcfParams, null, "dcf:AbC", null);
+        final TokenThrottleKey dcfLowerCase = TokenThrottleKey.forAtOrRt(dcfParams, null, "dcf:abc", null);
+        assertNotEquals("Case-distinct DCF device codes must produce distinct throttle keys", dcfMixedCase, dcfLowerCase);
+        assertTrue(dcfMixedCase.getAccountTagHashes().isEmpty());
+
+        final TokenThrottleKey direct9ArgMixed = TokenThrottleKey.forAtOrRt(
+                "https://login.microsoftonline.com/tenant-a",
+                "dcf-client",
+                Collections.singleton("User.Read"),
+                null,
+                "dcf:AbC",
+                "",
+                null,
+                BrokerRequestType.REGULAR.name(),
+                null
+        );
+        final TokenThrottleKey direct9ArgLower = TokenThrottleKey.forAtOrRt(
+                "https://login.microsoftonline.com/tenant-a",
+                "dcf-client",
+                Collections.singleton("User.Read"),
+                null,
+                "dcf:abc",
+                "",
+                null,
+                BrokerRequestType.REGULAR.name(),
+                null
+        );
+        assertEquals(dcfMixedCase, direct9ArgMixed);
+        assertNotEquals(direct9ArgMixed, direct9ArgLower);
+        assertTrue(direct9ArgMixed.getAccountTagHashes().isEmpty());
+
+        final TokenThrottleKey opaqueFallbackUpper = TokenThrottleKey.forAtOrRt(dcfParams, null, "SessionTokenAbC", null);
+        final TokenThrottleKey opaqueFallbackLower = TokenThrottleKey.forAtOrRt(dcfParams, null, "sessiontokenabc", null);
+        assertNotEquals(opaqueFallbackUpper, opaqueFallbackLower);
+        assertTrue(opaqueFallbackUpper.getAccountTagHashes().isEmpty());
 
         final TokenThrottleKey dcfWithExplicitExtra = TokenThrottleKey.forAtOrRt(
                 dcfParams, null, "dcf:code-111", Collections.singletonList("user@contoso.com")
@@ -453,6 +494,27 @@ public class ServerThrottleManagerTest {
         assertTrue(liveResult.getErrorResponse().getErrorDescription().contains("retryAfterSeconds=45"));
         assertTrue(liveResult.getErrorResponse().getErrorDescription().contains("correlationId=corr-live"));
         assertEquals("ring4", liveResult.getCliTelemInfo().getSpeRing());
+
+        // Round-trip bodyless LiveThrottleCapture.toTokenResult() through ExceptionAdapter preserves status, headers, null body, and classification
+        final ServiceException adaptedLiveEx = ExceptionAdapter.exceptionFromTokenResult(liveResult, null);
+        assertEquals(400, adaptedLiveEx.getHttpStatusCode());
+        assertEquals(Collections.singletonList("45"), adaptedLiveEx.getHttpResponseHeaders().get("Retry-After"));
+        assertNull(adaptedLiveEx.getHttpResponseBody());
+        assertFalse(adaptedLiveEx.isLocallySuppressedThrottle());
+        assertTrue(ServerThrottleManager.isThrottledServiceException(adaptedLiveEx));
+
+        // Round-trip bodyless ThrottleRecord.toSuppressedTokenResult() through ExceptionAdapter preserves status, headers, null body, and suppression flag
+        try (TokenThrottleContext.TokenThrottleScope scope = TokenThrottleContext.open(key, false, "corr-suppressed-400")) {
+            final TokenResult suppressed400 = mManager.checkPreFlight(scope.context());
+            assertNotNull(suppressed400);
+            assertNull(suppressed400.getErrorResponse().getResponseBody());
+            final ServiceException adaptedSuppressedEx = ExceptionAdapter.exceptionFromTokenResult(suppressed400, null);
+            assertEquals(400, adaptedSuppressedEx.getHttpStatusCode());
+            assertEquals(Collections.singletonList("45"), adaptedSuppressedEx.getHttpResponseHeaders().get("Retry-After"));
+            assertNull(adaptedSuppressedEx.getHttpResponseBody());
+            assertTrue(adaptedSuppressedEx.isLocallySuppressedThrottle());
+            assertTrue(ServerThrottleManager.isThrottledServiceException(adaptedSuppressedEx));
+        }
 
         final ServiceException defaultEx = capture.toServiceException(null);
         assertFalse(defaultEx.isLocallySuppressedThrottle());
@@ -653,6 +715,7 @@ public class ServerThrottleManagerTest {
                 "Bearer eyJhbGciOiJSUzI1NiJ9.secret",
                 "Invalid refresh_token supplied",
                 "User alice@contoso.com failed password check",
+                "User 11111111-2222-3333-4444-555555555555 cannot sign in.",
                 "<html><body>503 Gateway Error</body></html>"
         };
         for (final String unsafe : unsafeDescriptions) {
@@ -677,6 +740,23 @@ public class ServerThrottleManagerTest {
                 assertSanitized(suppressed.getErrorResponse().getErrorDescription());
             }
         }
+
+        // Bounded static allowlist phrases are preserved canonically and idempotently
+        assertEquals(
+                "Request throttled by service. retryAfterSeconds=60; correlationId=corr-a",
+                ServerThrottleManager.formatThrottledErrorMessage(
+                        "Request throttled by service. retryAfterSeconds=99", 60L, "corr-a")
+        );
+        assertEquals(
+                "Service temporarily unavailable. retryAfterSeconds=120",
+                ServerThrottleManager.formatThrottledErrorMessage(
+                        "Temporarily unavailable", 120L, null)
+        );
+        assertEquals(
+                "Too many requests. retryAfterSeconds=30",
+                ServerThrottleManager.formatThrottledErrorMessage(
+                        "Too many requests.", 30L, null)
+        );
     }
 
     @Test
@@ -911,6 +991,7 @@ public class ServerThrottleManagerTest {
         assertFalse(description.contains("refresh_token"));
         assertFalse(description.contains("password"));
         assertFalse(description.contains("alice@contoso.com"));
+        assertFalse(description.contains("11111111-2222-3333-4444-555555555555"));
         assertFalse(description.contains("<"));
         assertFalse(description.contains("rt-secret-xyz"));
     }
