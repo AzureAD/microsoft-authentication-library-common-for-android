@@ -22,20 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.opentelemetry.api.trace.Span;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -224,5 +228,266 @@ public class ClientDataInfoTest {
                     AttributeName.server_error.name(),
                     expected256.toString());
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Input bounds, bounded splitting, and segment sanitization tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void fromPipeDelimited_exceedsMaxRawLength2048_logsWarnAndReturnsNull() {
+        final String oversizedSubError = repeatChar('A', 2035);
+        final String oversizedPayload = "m|AADSTS50058|" + oversizedSubError;
+        assertEquals(2049, oversizedPayload.length());
+
+        final Span mockSpan = mock(Span.class);
+        try (MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class);
+             MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            assertNull(ClientDataInfo.fromPipeDelimited(oversizedPayload));
+
+            final ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+            mockedLogger.verify(() -> Logger.warn(Mockito.anyString(), messageCaptor.capture()));
+            final String warnMessage = messageCaptor.getValue();
+            assertTrue(warnMessage.contains("2048"));
+            assertFalse(warnMessage.contains(oversizedSubError));
+            assertFalse(warnMessage.contains("AADSTS50058"));
+            verify(mockSpan, never()).setAttribute(Mockito.anyString(), Mockito.anyString());
+        }
+
+        final String oversizedWhitespace = repeatChar(' ', 2049);
+        assertEquals(2049, oversizedWhitespace.length());
+        try (MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class)) {
+            assertNull(ClientDataInfo.fromPipeDelimited(oversizedWhitespace));
+
+            final ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+            mockedLogger.verify(() -> Logger.warn(Mockito.anyString(), messageCaptor.capture()));
+            final String warnMessage = messageCaptor.getValue();
+            assertTrue(warnMessage.contains("2048"));
+            assertFalse(warnMessage.contains(oversizedWhitespace));
+        }
+    }
+
+    @Test
+    public void fromPipeDelimited_exactMaxRawLength2048_parsedAndRawPreserved() {
+        final String longSubError = repeatChar('A', 2034);
+        final String exactMaxPayload = "m|AADSTS50058|" + longSubError;
+        assertEquals(2048, exactMaxPayload.length());
+
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(exactMaxPayload);
+        assertNotNull(info);
+        assertEquals(exactMaxPayload, info.getRaw());
+        assertEquals(2048, info.getRaw().length());
+        assertEquals("m", info.getAccountType());
+        assertEquals("AADSTS50058", info.getError());
+        assertEquals(longSubError, info.getSubError());
+        assertEquals(2034, info.getSubError().length());
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            info.emitToSpan();
+
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "MSA");
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(mockSpan).setAttribute(AttributeName.server_sub_error.name(), repeatChar('A', 256));
+        }
+    }
+
+    @Test
+    public void fromPipeDelimited_moreThanFiveSegments_boundsSplitAndPreservesFifthFieldAndRaw() {
+        final String rawSix = "m|AADSTS50058|login_required|us|public|ext1";
+        final ClientDataInfo infoSix = ClientDataInfo.fromPipeDelimited(rawSix);
+        assertNotNull(infoSix);
+        assertEquals("m", infoSix.getAccountType());
+        assertEquals("AADSTS50058", infoSix.getError());
+        assertEquals("login_required", infoSix.getSubError());
+        assertEquals("us", infoSix.getCallerDataBoundary());
+        assertEquals("public", infoSix.getCloudInstance());
+        assertEquals(rawSix, infoSix.getRaw());
+
+        final String rawTrailingEmptySixth = "m|AADSTS50058|login_required|us|public|";
+        final ClientDataInfo infoTrailing = ClientDataInfo.fromPipeDelimited(rawTrailingEmptySixth);
+        assertNotNull(infoTrailing);
+        assertEquals("public", infoTrailing.getCloudInstance());
+        assertEquals(rawTrailingEmptySixth, infoTrailing.getRaw());
+
+        final String rawEight = "e|err|sub|eu| sovereign |ext1|ext2|ext3";
+        final ClientDataInfo infoEight = ClientDataInfo.fromPipeDelimited(rawEight);
+        assertNotNull(infoEight);
+        assertEquals("e", infoEight.getAccountType());
+        assertEquals("err", infoEight.getError());
+        assertEquals("sub", infoEight.getSubError());
+        assertEquals("eu", infoEight.getCallerDataBoundary());
+        assertEquals("sovereign", infoEight.getCloudInstance());
+        assertEquals(rawEight, infoEight.getRaw());
+    }
+
+    @Test
+    public void fromPipeDelimited_fourSegments_callerDataBoundarySetAndCloudInstanceNull() {
+        final String raw = "e|AADSTS50058|login_required| eu ";
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(raw);
+
+        assertNotNull(info);
+        assertEquals("e", info.getAccountType());
+        assertEquals("AADSTS50058", info.getError());
+        assertEquals("login_required", info.getSubError());
+        assertEquals("eu", info.getCallerDataBoundary());
+        assertNull(info.getCloudInstance());
+        assertEquals(raw, info.getRaw());
+    }
+
+    @Test
+    public void fromPipeDelimited_paddedAndCrlfSegments_normalizedAndMappedWithoutUnknownWarn() {
+        final String aadRaw = " e | AADSTS50058\r\n | login_required ";
+        final ClientDataInfo aadInfo = ClientDataInfo.fromPipeDelimited(aadRaw);
+        assertNotNull(aadInfo);
+        assertEquals("e", aadInfo.getAccountType());
+        assertEquals("AADSTS50058", aadInfo.getError());
+        assertEquals("login_required", aadInfo.getSubError());
+        assertNull(aadInfo.getCallerDataBoundary());
+        assertNull(aadInfo.getCloudInstance());
+        assertEquals(aadRaw, aadInfo.getRaw());
+
+        final Span aadSpan = mock(Span.class);
+        when(aadSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(aadSpan);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class);
+             MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(aadSpan);
+
+            aadInfo.emitToSpan();
+
+            verify(aadSpan).setAttribute(AttributeName.account_type.name(), "AAD");
+            verify(aadSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(aadSpan).setAttribute(AttributeName.server_sub_error.name(), "login_required");
+            mockedLogger.verify(() -> Logger.warn(Mockito.anyString(), Mockito.contains("UNKNOWN")), never());
+        }
+
+        final String msaRaw = " \tm\r\n | AADSTS50058 | sub ";
+        final ClientDataInfo msaInfo = ClientDataInfo.fromPipeDelimited(msaRaw);
+        assertNotNull(msaInfo);
+        assertEquals("m", msaInfo.getAccountType());
+        assertEquals("AADSTS50058", msaInfo.getError());
+        assertEquals("sub", msaInfo.getSubError());
+        assertEquals(msaRaw, msaInfo.getRaw());
+
+        final Span msaSpan = mock(Span.class);
+        when(msaSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(msaSpan);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class);
+             MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(msaSpan);
+
+            msaInfo.emitToSpan();
+
+            verify(msaSpan).setAttribute(AttributeName.account_type.name(), "MSA");
+            verify(msaSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(msaSpan).setAttribute(AttributeName.server_sub_error.name(), "sub");
+            mockedLogger.verify(() -> Logger.warn(Mockito.anyString(), Mockito.contains("UNKNOWN")), never());
+        }
+    }
+
+    @Test
+    public void fromPipeDelimited_asciiControlCharsAcrossRange_strippedCleanly() {
+        final String raw = " \u0000e\u007f |"
+                + "\u001bAAD\u0000STS\u001f50058\r\n|"
+                + " \tsub\u000b\f \u007ferror\n |"
+                + "\u0000 u\ts \u001b|"
+                + " \u007fpub\rlic\u001f ";
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(raw);
+
+        assertNotNull(info);
+        assertEquals("e", info.getAccountType());
+        assertEquals("AADSTS50058", info.getError());
+        assertEquals("sub error", info.getSubError());
+        assertEquals("us", info.getCallerDataBoundary());
+        assertEquals("public", info.getCloudInstance());
+        assertEquals(raw, info.getRaw());
+    }
+
+    @Test
+    public void emitToSpan_whitespaceOnlyAndControlCharOnlySegments_omittedFromSpan() {
+        final String raw = "   | \t\r\n | \u0000\u001f | \u007f |  \u007f\r\n  ";
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(raw);
+
+        assertNotNull(info);
+        assertNull(info.getAccountType());
+        assertNull(info.getError());
+        assertNull(info.getSubError());
+        assertNull(info.getCallerDataBoundary());
+        assertNull(info.getCloudInstance());
+        assertEquals(raw, info.getRaw());
+
+        final Span mockSpan = mock(Span.class);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            info.emitToSpan();
+
+            verify(mockSpan, never()).setAttribute(Mockito.anyString(), Mockito.anyString());
+        }
+    }
+
+    @Test
+    public void fromPipeDelimited_whitespaceOrControlOnlyRawWithoutThreeSegments_returnsNull() {
+        assertNull(ClientDataInfo.fromPipeDelimited("   "));
+        assertNull(ClientDataInfo.fromPipeDelimited("\t\r\n"));
+        assertNull(ClientDataInfo.fromPipeDelimited("\u0000\u001f"));
+        assertNull(ClientDataInfo.fromPipeDelimited("\u007f"));
+        assertNull(ClientDataInfo.fromPipeDelimited(" \u007f "));
+        assertNull(ClientDataInfo.fromPipeDelimited(" | \u007f "));
+    }
+
+    @Test
+    public void fromPipeDelimited_twoPipesEmptySegments_preservesRawAndNullFields() {
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("||");
+
+        assertNotNull(info);
+        assertNull(info.getAccountType());
+        assertNull(info.getError());
+        assertNull(info.getSubError());
+        assertNull(info.getCallerDataBoundary());
+        assertNull(info.getCloudInstance());
+        assertEquals("||", info.getRaw());
+
+        final Span mockSpan = mock(Span.class);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            info.emitToSpan();
+
+            verify(mockSpan, never()).setAttribute(Mockito.anyString(), Mockito.anyString());
+        }
+    }
+
+    @Test
+    public void emitToSpan_unknownAccountType_emitsUnknown() {
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("x|AADSTS50058|login_required");
+        assertNotNull(info);
+        assertEquals("x", info.getAccountType());
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class);
+             MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            info.emitToSpan();
+
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "UNKNOWN");
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(mockSpan).setAttribute(AttributeName.server_sub_error.name(), "login_required");
+            mockedLogger.verify(() -> Logger.warn(Mockito.anyString(), Mockito.contains("UNKNOWN")));
+        }
+    }
+
+    private static String repeatChar(final char ch, final int count) {
+        final StringBuilder sb = new StringBuilder(count);
+        for (int i = 0; i < count; i++) {
+            sb.append(ch);
+        }
+        return sb.toString();
     }
 }
