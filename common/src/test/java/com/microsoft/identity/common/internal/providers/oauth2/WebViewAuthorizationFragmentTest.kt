@@ -22,19 +22,161 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.app.Activity
+import android.webkit.WebBackForwardList
+import android.webkit.WebHistoryItem
+import android.webkit.WebView
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.testing.TestLifecycleOwner
+import androidx.test.core.app.ApplicationProvider
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory
+import com.microsoft.identity.common.internal.fido.IFidoManager
+import com.microsoft.identity.common.internal.fido.IFidoManagerProvider
+import com.microsoft.identity.common.internal.fido.TestFidoManager
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
+import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
 import com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.IS_SWITCH_BROWSER_FLOW
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightConfig
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback
+import org.junit.After
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.mockito.kotlin.whenever
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class WebViewAuthorizationFragmentTest {
+
+    companion object {
+        private const val TEST_REDIRECT_URI = "msauth://com.microsoft.test/callback"
+        private const val TEST_PASSKEY_REDIRECT_URL =
+            "urn:http-auth:PassKey?challenge=T1xCsnxM2DNL2KdK5CLa6fMhD7OBqho6syzInk_n-Uo" +
+                "&version=1.0" +
+                "&submitUrl=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Ffido%2Fget" +
+                "&context=ctx%20flowToken" +
+                "&relyingPartyIdentifier=login.microsoft.com" +
+                "&allowedCredentials=user"
+    }
+
+    private lateinit var testLifecycleOwner: LifecycleOwner
+
+    @Before
+    fun setUp() {
+        testLifecycleOwner = TestLifecycleOwner()
+        CommonFlightsManager.resetFlightsManager()
+        FidoManagerFactory.setProvider(ApplicationProvider.getApplicationContext(), null)
+        FidoManagerFactory.isBrokerHosted = { true }
+    }
+
+    @After
+    fun tearDown() {
+        CommonFlightsManager.resetFlightsManager()
+        FidoManagerFactory.setProvider(ApplicationProvider.getApplicationContext(), null)
+    }
+
+    private fun configureSkipPasskeyFlight(enabled: Boolean) {
+        val mockFlightsProvider = mock(IFlightsProvider::class.java)
+        whenever(mockFlightsProvider.isFlightEnabled(any(IFlightConfig::class.java))).thenAnswer { invocation ->
+            val config = invocation.getArgument<IFlightConfig>(0)
+            if (config == CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK) {
+                enabled
+            } else {
+                (config.defaultValue as? Boolean) ?: false
+            }
+        }
+        val mockFlightsManager = object : IFlightsManager {
+            override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider =
+                mockFlightsProvider
+
+            override fun getFlightsProviderForTenant(
+                tenantId: String,
+                waitForConfigsWithTimeoutInMs: Long
+            ): IFlightsProvider = mockFlightsProvider
+        }
+        CommonFlightsManager.initializeCommonFlightsManager(mockFlightsManager)
+    }
+
+    private fun registerTestFidoManager(challengeOverrideManager: IFidoManager = TestFidoManager()) {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        FidoManagerFactory.setProvider(
+            context,
+            object : IFidoManagerProvider {
+                override fun getFidoManager(activity: Activity): IFidoManager = challengeOverrideManager
+            }
+        )
+    }
+
+    private fun buildHistory(urls: List<String>, currentIndex: Int): WebBackForwardList {
+        val list = mock(WebBackForwardList::class.java)
+        whenever(list.size).thenReturn(urls.size)
+        whenever(list.currentIndex).thenReturn(currentIndex)
+        urls.forEachIndexed { index, url ->
+            val item = mock(WebHistoryItem::class.java)
+            whenever(item.url).thenReturn(url)
+            whenever(item.originalUrl).thenReturn(url)
+            whenever(list.getItemAtIndex(index)).thenReturn(item)
+        }
+        return list
+    }
+
+    private fun createClient(activity: Activity): AzureActiveDirectoryWebViewClient {
+        return AzureActiveDirectoryWebViewClient(
+            activity,
+            object : IAuthorizationCompletionCallback {
+                override fun onChallengeResponseReceived(response: RawAuthorizationResult) = Unit
+                override fun setPKeyAuthStatus(status: Boolean) = Unit
+            },
+            OnPageLoadedCallback { },
+            TEST_REDIRECT_URI,
+            mock(SwitchBrowserProtocolCoordinator::class.java),
+            "utid",
+            false
+        )
+    }
+
+    private fun stubBackForwardList(webView: WebView, urls: List<String>, currentIndex: Int) {
+        val history = buildHistory(urls = urls, currentIndex = currentIndex)
+        whenever(webView.copyBackForwardList()).thenReturn(history)
+    }
+
+    private fun createMockWebView(activity: Activity): WebView {
+        val webView = mock(WebView::class.java)
+        whenever(webView.context).thenReturn(activity)
+        val tags = mutableMapOf<Int, Any?>()
+        doAnswer { invocation ->
+            tags[invocation.getArgument(0)] = invocation.getArgument(1)
+            null
+        }.`when`(webView).setTag(anyInt(), any())
+        whenever(webView.getTag(anyInt())).thenAnswer { invocation ->
+            tags[invocation.getArgument(0)]
+        }
+        whenever(webView.post(any())).thenAnswer { invocation ->
+            invocation.getArgument<Runnable?>(0)?.run()
+            true
+        }
+        webView.setViewTreeLifecycleOwner(testLifecycleOwner)
+        return webView
+    }
 
     private fun createFragment(): WebViewAuthorizationFragment {
         return WebViewAuthorizationFragment()
@@ -75,5 +217,144 @@ class WebViewAuthorizationFragmentTest {
         val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
 
         assertNull(propertyBag.get<Boolean>(IS_SWITCH_BROWSER_FLOW))
+    }
+
+    @Test
+    fun handleBackButtonPressed_flightDisabled_preservesLegacyGoBackWithZeroHistoryInspection() {
+        configureSkipPasskeyFlight(enabled = false)
+        registerTestFidoManager()
+
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val client = createClient(activity)
+        val webView = createMockWebView(activity)
+        val fragment = spy(createFragment())
+        doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
+        fragment.setWebViewForTesting(webView)
+        fragment.setAADWebViewClientForTesting(client)
+
+        assertTrue(client.shouldOverrideUrlLoading(webView, TEST_PASSKEY_REDIRECT_URL))
+
+        whenever(webView.canGoBack()).thenReturn(true)
+        fragment.handleBackButtonPressed()
+
+        verify(webView).goBack()
+        verify(webView, never()).copyBackForwardList()
+        verify(fragment, never()).cancelAuthorization(anyBoolean())
+    }
+
+    @Test
+    fun handleBackButtonPressed_flightDisabledAndCannotGoBack_cancelsAuthorization() {
+        configureSkipPasskeyFlight(enabled = false)
+
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val client = createClient(activity)
+        val webView = createMockWebView(activity)
+        val fragment = spy(createFragment())
+        doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
+        fragment.setWebViewForTesting(webView)
+        fragment.setAADWebViewClientForTesting(client)
+
+        whenever(webView.canGoBack()).thenReturn(false)
+        fragment.handleBackButtonPressed()
+
+        verify(webView, never()).goBack()
+        verify(webView, never()).copyBackForwardList()
+        verify(fragment).cancelAuthorization(true)
+    }
+
+    @Test
+    fun handleBackButtonPressed_flightEnabledAndInitialPasskeyChallengeAtIndexZero_cancelsAuthInsteadOfLooping() {
+        configureSkipPasskeyFlight(enabled = true)
+        registerTestFidoManager()
+
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val client = createClient(activity)
+        val webView = createMockWebView(activity)
+        val fragment = spy(createFragment())
+        doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
+        fragment.setWebViewForTesting(webView)
+        fragment.setAADWebViewClientForTesting(client)
+
+        val challengeUrl = "https://login.live.com/oauth20_authorize.srf?login_hint=user%40outlook.com"
+        val fallbackUrl = "https://login.live.com/ppsecure/post.srf?contextid=123"
+
+        // History #0 is active when passkey challenge fires and submits to submitUrl.
+        stubBackForwardList(webView = webView, urls = listOf(challengeUrl), currentIndex = 0)
+        assertTrue(client.shouldOverrideUrlLoading(webView, TEST_PASSKEY_REDIRECT_URL))
+
+        // After submitUrl redirects to "Sign in another way" (#1), Back skips #0 and cancels auth.
+        stubBackForwardList(
+            webView = webView,
+            urls = listOf(challengeUrl, fallbackUrl),
+            currentIndex = 1
+        )
+        whenever(webView.canGoBack()).thenReturn(true)
+
+        fragment.handleBackButtonPressed()
+
+        verify(webView, never()).goBack()
+        verify(webView, never()).goBackOrForward(anyInt())
+        verify(fragment).cancelAuthorization(true)
+    }
+
+    @Test
+    fun handleBackButtonPressed_flightEnabledAndPrePasskeyEmailPageExists_jumpsTwoStepsBack() {
+        configureSkipPasskeyFlight(enabled = true)
+        registerTestFidoManager()
+
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val client = createClient(activity)
+        val webView = createMockWebView(activity)
+        val fragment = spy(createFragment())
+        doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
+        fragment.setWebViewForTesting(webView)
+        fragment.setAADWebViewClientForTesting(client)
+
+        val emailEntryUrl = "https://login.live.com/oauth20_authorize.srf"
+        val passkeyChallengeUrl = "https://login.live.com/ppsecure/post.srf?opid=111"
+        val fallbackUrl = "https://login.live.com/ppsecure/post.srf?opid=222"
+
+        stubBackForwardList(
+            webView = webView,
+            urls = listOf(emailEntryUrl, passkeyChallengeUrl),
+            currentIndex = 1
+        )
+        assertTrue(client.shouldOverrideUrlLoading(webView, TEST_PASSKEY_REDIRECT_URL))
+
+        stubBackForwardList(
+            webView = webView,
+            urls = listOf(emailEntryUrl, passkeyChallengeUrl, fallbackUrl),
+            currentIndex = 2
+        )
+        whenever(webView.canGoBackOrForward(-2)).thenReturn(true)
+
+        fragment.handleBackButtonPressed()
+
+        verify(webView).goBackOrForward(-2)
+        verify(webView, never()).goBack()
+        verify(fragment, never()).cancelAuthorization(anyBoolean())
+    }
+
+    @Test
+    fun handleBackButtonPressed_flightEnabledWithoutPasskeyChallenge_usesSingleStepBackOrCancels() {
+        configureSkipPasskeyFlight(enabled = true)
+
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val client = createClient(activity)
+        val webView = createMockWebView(activity)
+        val fragment = spy(createFragment())
+        doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
+        fragment.setWebViewForTesting(webView)
+        fragment.setAADWebViewClientForTesting(client)
+
+        whenever(webView.canGoBack()).thenReturn(true)
+        fragment.handleBackButtonPressed()
+        verify(webView).goBack()
+        verify(webView, never()).copyBackForwardList()
+        verify(fragment, never()).cancelAuthorization(anyBoolean())
+
+        whenever(webView.canGoBack()).thenReturn(false)
+        fragment.handleBackButtonPressed()
+        verify(fragment).cancelAuthorization(true)
     }
 }

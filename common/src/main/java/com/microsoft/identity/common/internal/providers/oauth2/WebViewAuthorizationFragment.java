@@ -192,6 +192,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mSwitchBrowserProtocolCoordinator = coordinator;
     }
 
+    @VisibleForTesting
+    void setWebViewForTesting(@Nullable final WebView webView) {
+        mWebView = webView;
+    }
+
+    @VisibleForTesting
+    void setAADWebViewClientForTesting(@Nullable final AzureActiveDirectoryWebViewClient client) {
+        mAADWebViewClient = client;
+    }
+
     private boolean isBrokerRequest = false;
 
     private static final AtomicReference<Bundle> sSwitchBrowserBundle = new AtomicReference<>();
@@ -415,6 +425,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void handleBackButtonPressed() {
         final String methodTag = TAG + ":handleBackButtonPressed";
         Logger.info(methodTag, "Back button is pressed");
+
+        if (mAADWebViewClient != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK)) {
+            if (!mAADWebViewClient.navigateBackSkippingSupersededFidoEntries(mWebView)) {
+                cancelAuthorization(true);
+            }
+            return;
+        }
 
         if (mWebView.canGoBack()) {
             mWebView.goBack();

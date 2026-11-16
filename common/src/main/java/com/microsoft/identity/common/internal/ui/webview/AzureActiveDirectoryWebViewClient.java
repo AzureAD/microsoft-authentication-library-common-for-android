@@ -249,6 +249,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private final IUrlLoadTracker mUrlLoadTracker;
 
+    /**
+     * Lazy-initialized tracker for superseded FIDO challenge WebView history entries.
+     * Allocated only on the UI thread when {@link CommonFlight#SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK}
+     * is enabled and a passkey challenge is encountered; remains {@code null} when the flight is off.
+     */
+    @Nullable
+    private FidoChallengeHistoryTracker mFidoChallengeHistoryTracker;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -666,6 +674,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
+     * Navigates backward in {@code webView} while skipping any {@link android.webkit.WebBackForwardList}
+     * entries marked as superseded FIDO/passkey challenge pages.
+     *
+     * @param webView The authentication {@link WebView}, or {@code null} if unavailable.
+     * @return {@code true} if WebView navigated backward; {@code false} if no valid earlier page
+     * exists and authorization should be cancelled.
+     */
+    public boolean navigateBackSkippingSupersededFidoEntries(@Nullable final WebView webView) {
+        if (mFidoChallengeHistoryTracker != null) {
+            return mFidoChallengeHistoryTracker.navigateBackSkippingSupersededEntries(webView);
+        }
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+            return true;
+        }
+        return false;
+    }
+
+    @NonNull
+    private FidoChallengeHistoryTracker getOrCreateFidoChallengeHistoryTracker() {
+        if (mFidoChallengeHistoryTracker == null) {
+            mFidoChallengeHistoryTracker = new FidoChallengeHistoryTracker();
+        }
+        return mFidoChallengeHistoryTracker;
+    }
+
+    /**
      * Interpret and take action on a redirect url.
      * This function will return true in every case save 1.  That is, when the URL is none of:
      * <ul><li>A urn containing an authorization challenge (starts with "urn:http-auth:PKeyAuth")</li>
@@ -710,12 +745,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 : null;
                 final IFidoManager fidoManager =
                         FidoManagerFactory.getFidoManager(currentActivity, legacyManager);
-                final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
-                        fidoManager,
-                        view,
-                        oTelContext,
-                        ViewTreeLifecycleOwner.get(view),
-                        getFlowCorrelationId());
+                final boolean skipPasskeyChallengeOnBack =
+                        CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK);
+                final AuthFidoChallengeHandler challengeHandler = skipPasskeyChallengeOnBack
+                        ? new AuthFidoChallengeHandler(
+                                fidoManager,
+                                view,
+                                oTelContext,
+                                ViewTreeLifecycleOwner.get(view),
+                                getFlowCorrelationId(),
+                                () -> getOrCreateFidoChallengeHistoryTracker().recordSupersededCurrentEntry(view))
+                        : new AuthFidoChallengeHandler(
+                                fidoManager,
+                                view,
+                                oTelContext,
+                                ViewTreeLifecycleOwner.get(view),
+                                getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
