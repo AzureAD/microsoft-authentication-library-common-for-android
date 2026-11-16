@@ -58,14 +58,20 @@ object OnboardingTelemetryConstants {
 
     // Broker Installation
     const val STEP_BROKER_INSTALL_PROMPTED = "BrokerInstallPrompted"
+    /** Error-derived MAM broker-install prompt marker; does not confirm prompt display. */
+    const val STEP_BROKER_INSTALL_PROMPTED_FOR_MAM = "BrokerInstallPromptedForMAM"
     const val STEP_BROKER_INSTALL_PROMPTED_FOR_MDM = "BrokerInstallPromptedForMDM"
 
     // Device Registration (WPJ)
+    /** Error-derived device-registration requirement marker. */
+    const val STEP_DEVICE_REGISTRATION_REQUIRED = "DeviceRegistrationRequired"
     const val STEP_DEVICE_REGISTRATION_STARTED = "DeviceRegistrationStarted"
     const val STEP_DEVICE_REGISTRATION_COMPLETED = "DeviceRegistrationCompleted"
     const val STEP_DEVICE_REGISTRATION_UPGRADE_STARTED = "DeviceRegistrationUpgradeStarted"
 
     // MDM Enrollment (PP → WP transition)
+    /** Error-derived MDM enrollment requirement marker; not an enrollment-start event. */
+    const val STEP_MDM_ENROLLMENT_REQUIRED = "MDMEnrollmentRequired"
     const val STEP_MDM_ENROLLMENT_STARTED = "MDMEnrollmentStarted"
     const val STEP_COMPANY_PORTAL_LAUNCHED = "CompanyPortalLaunched"
     const val STEP_WEB_CP_ENROLLMENT_STARTED = "WebCpEnrollmentStarted"
@@ -75,6 +81,8 @@ object OnboardingTelemetryConstants {
     const val STEP_INTUNE_APP_PROTECTION_REQUIRED = "IntuneAppProtectionRequired"
 
     // Compliance Remediation
+    /** Error-derived device noncompliance marker; not a completed remediation. */
+    const val STEP_DEVICE_NOT_COMPLIANT = "DeviceNotCompliant"
     const val STEP_COMPLIANCE_REMEDIATION_STARTED = "ComplianceRemediationStarted"
     const val STEP_COMPLIANCE_REMEDIATION_COMPLETED = "ComplianceRemediationCompleted"
 
@@ -86,6 +94,19 @@ object OnboardingTelemetryConstants {
     // Termination (Non-Success)
     const val STEP_USER_CANCELED = "UserCanceled"
     const val STEP_AUTHORIZATION_TIMED_OUT = "AuthorizationTimedOut"
+
+    const val STEP_BROKER_INSTALLATION_TRIGGERED = "BrokerInstallTriggered"
+
+    // Auth UX server error codes used for onboarding step classification
+    const val AUTH_UX_ERROR_MAM_BROKER_REQUIRED = "50127"
+    const val AUTH_UX_ERROR_BROKER_REQUIRED = "501271"
+    const val AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED = "50129"
+    const val AUTH_UX_ERROR_DEVICE_REGISTRATION_REQUIRED_ALTERNATE = "501291"
+    const val AUTH_UX_ERROR_STRONG_AUTH_SETUP_REQUIRED = "50079"
+    const val AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED = "53000"
+    const val AUTH_UX_ERROR_MDM_ENROLLMENT_REQUIRED_ALTERNATE = "530003"
+    const val AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT = "530001"
+    const val AUTH_UX_ERROR_DEVICE_NOT_COMPLIANT_ALTERNATE = "530002"
 
     // Blocking error values — must match C++ hardcoded strings in InteractiveRequest.cpp
     const val BLOCKING_ERROR_BROKER_INSTALL = "BROKER_INSTALLATION_TRIGGERED"

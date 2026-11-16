@@ -27,6 +27,8 @@
 -keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *; }
 -keep class * extends com.microsoft.identity.deviceregistration.java.protocol.IDeviceRegistrationProtocol { *; }
 -keep class * extends com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord { *; }
+# Moshi constructs and populates this nested result reflectively.
+-keep class com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult { *; }
 
 # Keep WebView JS bridge methods annotated with @JavascriptInterface
 -keepclassmembers class com.microsoft.identity.** {

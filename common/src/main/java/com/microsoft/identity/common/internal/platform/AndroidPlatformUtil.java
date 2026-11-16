@@ -62,6 +62,8 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -163,9 +165,51 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
+    public boolean isValidCallingApp(@NonNull final String redirectUri,
+                                     @NonNull final String packageName,
+                                     final int callingUid) throws ClientException {
+        // SECURITY (AB#3687466): enforce the OS-attested caller ownership BEFORE the redirect-URI check
+        // (and before any debug redirect bypass inside the two-argument overload), so caller-spoofing
+        // rejection can never be short-circuited. Only if the caller owns the attested uid do we fall
+        // through to the redirect-URI validation and return its boolean result.
+        validateCallerOwnedByUid(callingUid, packageName);
+        return isValidCallingApp(redirectUri, packageName);
+    }
+
+    @Override
     public void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException {
         // This operation is not supported in non-broker contexts.
         throw new UnsupportedOperationException("WebApp APIs are not functional in non-broker scenarios.");
+    }
+
+    /**
+     * Asserts that {@code callerPackageName} (self-reported, from the untrusted request bundle) is owned by
+     * the app that owns the kernel-attested {@code callingUid}, rejecting request-bundle caller spoofing
+     * (AB#3687466) fail-closed. See {@link #isValidCallingApp(String, String, int)} for the wiring.
+     *
+     * @throws ClientException with {@code unknown_caller} if the package does not match the uid's packages,
+     *                         or the uid resolves to no package.
+     */
+    private void validateCallerOwnedByUid(final int callingUid,
+                                          @NonNull final String callerPackageName) throws ClientException {
+        final String methodTag = TAG + ":validateCallerOwnedByUid";
+        final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
+        final List<String> ownedPackages =
+                uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);
+        if (ownedPackages.isEmpty()) {
+            Logger.error(methodTag,
+                    "No package could be resolved for the OS-attested calling uid. Rejecting request.",
+                    null);
+            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
+                    "Unable to resolve the calling package from the OS-attested calling uid.");
+        }
+        if (!ownedPackages.contains(callerPackageName)) {
+            Logger.error(methodTag,
+                    "Caller package in request bundle is not owned by the OS-attested calling uid. "
+                            + "Rejecting potential impersonation.", null);
+            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
+                    "Caller package does not match the OS-attested calling app.");
+        }
     }
     @Override
     @Nullable

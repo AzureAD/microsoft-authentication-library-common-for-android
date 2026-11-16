@@ -32,8 +32,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.microsoft.identity.common.R
 import com.microsoft.identity.common.internal.broker.SdmQrPinManager
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 
 /**
  * Class responsible for handling camera permission requests.
@@ -46,6 +51,30 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
         private const val TAG = "CameraPermissionRequestHandler"
         private const val MICROSOFT_CLOUD_URL: String = "https://login.microsoftonline.com/"
         private val cameraResource = arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE)
+
+        // Values for the `camera_permission_flow` telemetry attribute — the decision path taken
+        // for a WebView camera permission request.
+
+        /** QR+PIN request; app already holds CAMERA and admin consent-suppression is on — granted with no UI. */
+        private const val FLOW_QRPIN_SILENT_GRANT = "qrpin_silent_grant"
+
+        /** QR+PIN request; app already holds CAMERA but consent is not suppressed — our QR+PIN rationale dialog is shown. */
+        private const val FLOW_QRPIN_RATIONALE = "qrpin_rationale"
+
+        /** QR+PIN request; app does not hold CAMERA — the OS runtime permission prompt is shown. */
+        private const val FLOW_QRPIN_OS_PROMPT = "qrpin_os_prompt"
+
+        /** Non-QR camera request; app already holds CAMERA — granted with no UI. */
+        private const val FLOW_DEFAULT_SILENT_GRANT = "default_silent_grant"
+
+        /** Non-QR camera request; app does not hold CAMERA — the OS runtime permission prompt is shown. */
+        private const val FLOW_DEFAULT_OS_PROMPT = "default_os_prompt"
+
+        private const val RESULT_GRANTED = "granted"
+        private const val RESULT_DENIED = "denied"
+        private const val RESULT_SUPERSEDED = "superseded"
+        private const val RESULT_ERROR = "error"
+        private const val RESULT_ABANDONED = "abandoned"
     }
 
     private val activityResultLauncher: ActivityResultLauncher<String> =
@@ -62,6 +91,12 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
     private var currentPermissionRequest : PermissionRequest? = null
 
     /**
+     * Telemetry span for the in-flight camera permission request. Device dimensions are attached
+     * automatically by the span exporter, so this lets us chart camera requests by device / OS.
+     */
+    private var span: Span? = null
+
+    /**
      * Keeps track of the camera permission request state.
      */
     private var isGranted = false
@@ -75,19 +110,31 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
      * @param request The permission request to handle.
      */
     fun handle(request: PermissionRequest, context: Context) {
-        val  methodTag = "$TAG:handle"
         // Check if the request is valid.
         if (isValid(request)) {
             currentPermissionRequest = request
             isGranted = false
         } else {
-            Logger.warn(methodTag, "Permission request is not valid, returning.")
+            // isValid() already logged the reason and handled the request (deny / repeated grant); return without extra noise.
             return
         }
-        if(isQrPinRequest()) {
-            qrPinHandler(context)
-        } else {
-            defaultHandler(context)
+        // End any span left in-flight by a prior, still-pending request so it isn't orphaned.
+        if (span != null) {
+            endSpanWithError(RESULT_SUPERSEDED)
+        }
+        span = OTelUtility.createSpan(SpanName.CameraPermissionRequest.name)
+        span?.setAttribute(AttributeName.has_camera_hardware.name, deviceHasCameraHardware(context))
+        try {
+            if (isQrPinRequest()) {
+                qrPinHandler(context)
+            } else {
+                defaultHandler(context)
+            }
+        } catch (t: Throwable) {
+            // Unexpected failure while dispatching; end the span so it isn't leaked, then rethrow.
+            span?.recordException(t)
+            endSpanWithError(RESULT_ERROR)
+            throw t
         }
     }
 
@@ -100,6 +147,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             it.grant(cameraResource)
             isGranted = true
         }
+        endSpan(RESULT_GRANTED)
     }
 
     /**
@@ -110,6 +158,45 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             it.deny()
             isGranted = false
         }
+        endSpan(RESULT_DENIED)
+    }
+
+    /** Ends telemetry for an in-flight permission request. */
+    fun cancel() {
+        endSpanWithError(RESULT_ABANDONED)
+    }
+
+    /**
+     * Records the decision path taken (e.g. "qrpin_os_prompt") on the camera permission span.
+     */
+    private fun setFlow(flow: String) {
+        span?.setAttribute(AttributeName.camera_permission_flow.name, flow)
+    }
+
+    /**
+     * Records the outcome on the camera permission span (if any) and ends it.
+     * Grant and deny are both successful completions of the request flow.
+     */
+    private fun endSpan(result: String) {
+        span?.let {
+            it.setAttribute(AttributeName.camera_permission_result.name, result)
+            it.setStatus(StatusCode.OK)
+            it.end()
+        }
+        span = null
+    }
+
+    /**
+     * Ends the span for an unexpected failure (dispatch exception or a superseded, orphaned request),
+     * so ERROR stays a real health signal rather than tracking normal user denials.
+     */
+    private fun endSpanWithError(result: String) {
+        span?.let {
+            it.setAttribute(AttributeName.camera_permission_result.name, result)
+            it.setStatus(StatusCode.ERROR)
+            it.end()
+        }
+        span = null
     }
 
     /**
@@ -170,8 +257,10 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
         val methodTag = "$TAG:defaultHandler"
         if (appHasCameraPermission(context)) {
             Logger.info(methodTag, "App level camera permission already granted, silent grant.")
+            setFlow(FLOW_DEFAULT_SILENT_GRANT)
             grant()
         } else {
+            setFlow(FLOW_DEFAULT_OS_PROMPT)
             requestCameraPermission()
         }
     }
@@ -188,12 +277,15 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             Logger.info(methodTag, "App level camera permission already granted.")
             if (SdmQrPinManager.isCameraConsentSuppressed()) {
                 Logger.info(methodTag, "Camera consent suppress is enabled.")
+                setFlow(FLOW_QRPIN_SILENT_GRANT)
                 grant()
             } else {
                 Logger.info(methodTag, "Camera consent suppress is not enabled.")
+                setFlow(FLOW_QRPIN_RATIONALE)
                 showQrPinCameraRationale(context)
             }
         } else {
+            setFlow(FLOW_QRPIN_OS_PROMPT)
             requestCameraPermission()
         }
     }
@@ -206,6 +298,13 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
     private fun appHasCameraPermission(context: Context): Boolean {
         return (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED)
+    }
+
+    /**
+     * Whether the device has any camera hardware. QR+PIN cannot work without one.
+     */
+    private fun deviceHasCameraHardware(context: Context): Boolean {
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
     }
 
     /**

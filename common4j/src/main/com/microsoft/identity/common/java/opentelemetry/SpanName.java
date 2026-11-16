@@ -28,6 +28,7 @@ public enum SpanName {
     AcquireTokenSilent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
+    FociCallerAccessDecision,
     RemoveAccount,
     WorkplaceJoin,
     ATIInteractively,
@@ -67,6 +68,7 @@ public enum SpanName {
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
+    ProcessDeviceCaRequest,
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
@@ -76,6 +78,19 @@ public enum SpanName {
     ProcessOpenIdVcRequest,
     PasskeyWebListener,
     InstallCertOnWpj,
+
+    /**
+     * Span name for a launch of the broker's exported {@code InstallCertActivity}, covering caller
+     * validation through to the terminal outcome. Distinct from {@link #InstallCertOnWpj}, which
+     * covers the DRS request that installs the certificate rather than the activity that hosts it.
+     */
+    InstallCertActivity,
+
+    /**
+     * Span name for caller attribution at the legacy install-certificate deep-link route.
+     */
+    InstallCertDeepLinkActivity,
+
     /**
      * Span name for fetching initial ECS flight configurations.
      */
@@ -85,6 +100,10 @@ public enum SpanName {
      * Span name for DRS (Device Registration Service) nonce request operations.
      */
     DRSNonceRequest,
+    /**
+     * DRS endpoint discovery, including the HTTP request and metadata deserialization.
+     */
+    DRSDiscoveryRequest,
     /**
      * Span name for Device POP crypto operations.
      */
@@ -114,6 +133,10 @@ public enum SpanName {
      */
     WebViewFileUpload,
     /**
+     * Span name for a WebView camera permission request (e.g. QR + PIN scanning).
+     */
+    CameraPermissionRequest,
+    /**
      * Span name for switching browser flow operations.
      */
     SwitchBrowserFlow,
@@ -128,5 +151,25 @@ public enum SpanName {
      * when the {@code EnableHttpAuthOriginDisplay} flight is on; used to confirm the flighted path is
      * executing successfully in dashboards after the flight is ramped.
      */
-    HttpAuthOriginDisplay
+    HttpAuthOriginDisplay,
+
+    /**
+     * Span name for processing a PKeyAuth challenge delivered via a WebView redirect
+     * ({@code urn:http-auth:PKeyAuth}). Wraps SubmitUrl origin validation so its telemetry — whether
+     * the challenge arrived on the main frame, where the challenging origin was derived from, and the
+     * origin-validation verdict — attaches to a real recording span instead of the non-recording
+     * default span. Emitted only when the {@code EnablePKeyAuthSubmitUrlOriginValidation} flight is
+     * on (AB#3706623).
+     */
+    ProcessPKeyAuthChallenge,
+
+    /**
+     * Span name for original-caller assessment during legacy broker account enumeration.
+     */
+    LegacyBrokerUsersCallerEvaluation,
+
+    /**
+     * Broker Auth UX bridge lifetime guardrails, not authentication outcome or latency.
+     */
+    AuthUxBridge
 }

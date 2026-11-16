@@ -42,7 +42,7 @@ import com.microsoft.identity.common.java.nativeauth.util.isUserNotFound
  * Note: mainly used for representing error cases from the /token endpoint. Successful responses are otherwise mapped to MicrosoftStsTokenResponse instead.
  * @see com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
  */
-class SignInTokenApiResponse(
+class SignInTokenApiResponse @JvmOverloads constructor(
     @Expose override var statusCode: Int,
     correlationId: String,
     @SerializedName("continuation_token") override val continuationToken: String?,
@@ -51,6 +51,8 @@ class SignInTokenApiResponse(
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("suberror") val subError: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("trace_id") val traceId: String? = null,
+    @SerializedName("timestamp") val timestamp: String? = null,
 ): INativeAuthApiResponse(statusCode, correlationId, continuationToken, error = error, errorDescription = errorDescription) {
 
     override fun toUnsanitizedString(): String {
@@ -69,9 +71,12 @@ class SignInTokenApiResponse(
 
     /**
      * Maps potential errors returned from the server response.
+     * @param diagnosticErrorCodes codes exposed to callers, without changing classification based
+     * on the original [errorCodes]. V2 may supply codes extracted from the message as a fallback.
      * @see com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
      */
-    fun toErrorResult(): SignInTokenApiResult {
+    @JvmOverloads
+    fun toErrorResult(diagnosticErrorCodes: List<Int>? = errorCodes): SignInTokenApiResult {
         return when {
             error.isInvalidRequest() -> {
                 when {
@@ -79,7 +84,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -89,7 +97,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = customDescription,
-                            errorCodes = errorCodes,
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -97,7 +108,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -109,7 +123,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.InvalidCredentials(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -121,11 +138,16 @@ class SignInTokenApiResponse(
                             return SignInTokenApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "oauth/v2.0/token did not return a continuation token",
-                                errorCodes = errorCodes.orEmpty(),
+                                errorCodes = diagnosticErrorCodes.orEmpty(),
+                                subError = subError,
+                                traceId = traceId,
+                                timestamp = timestamp,
                                 correlationId = correlationId
                             ),
                             subError = subError.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -137,11 +159,16 @@ class SignInTokenApiResponse(
                             return SignInTokenApiResult.UnknownError(
                                 error = ApiErrorResult.INVALID_STATE,
                                 errorDescription = "oauth/v2.0/token did not return a continuation token",
-                                errorCodes = errorCodes.orEmpty(),
+                                errorCodes = diagnosticErrorCodes.orEmpty(),
+                                subError = subError,
+                                traceId = traceId,
+                                timestamp = timestamp,
                                 correlationId = correlationId
                             ),
                             subError = subError.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -149,8 +176,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.CodeIncorrect(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
                             subError = subError.orEmpty(),
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -158,7 +187,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.InvalidAuthenticationType(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes,
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -166,7 +198,10 @@ class SignInTokenApiResponse(
                         SignInTokenApiResult.UnknownError(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),
-                            errorCodes = errorCodes.orEmpty(),
+                            errorCodes = diagnosticErrorCodes.orEmpty(),
+                            subError = subError,
+                            traceId = traceId,
+                            timestamp = timestamp,
                             correlationId = correlationId
                         )
                     }
@@ -176,7 +211,10 @@ class SignInTokenApiResponse(
                 SignInTokenApiResult.UserNotFound(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty(),
+                    errorCodes = diagnosticErrorCodes.orEmpty(),
+                    subError = subError,
+                    traceId = traceId,
+                    timestamp = timestamp,
                     correlationId = correlationId
                 )
             }
@@ -184,7 +222,10 @@ class SignInTokenApiResponse(
                 SignInTokenApiResult.UnknownError(
                     error = error.orEmpty(),
                     errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty(),
+                    errorCodes = diagnosticErrorCodes.orEmpty(),
+                    subError = subError,
+                    traceId = traceId,
+                    timestamp = timestamp,
                     correlationId = correlationId
                 )
             }

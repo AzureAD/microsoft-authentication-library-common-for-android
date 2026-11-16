@@ -24,15 +24,22 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -42,6 +49,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -49,6 +57,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Looper;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -57,15 +66,34 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.JavaScriptReplyProxy;
+import androidx.webkit.WebMessageCompat;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxRequestCapabilities;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeSession;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeMeasurements;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxOriginPolicy;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxWebMessageListener;
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxTransportMode;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
+import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -73,9 +101,12 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.shadows.ShadowProcessUtil;
 
 import org.junit.After;
@@ -85,15 +116,42 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 
 /**
  * Tests for {@link AzureActiveDirectoryWebViewClient}.
@@ -102,8 +160,11 @@ import io.opentelemetry.api.trace.Span;
 public class AzureActiveDirectoryWebViewClientTest {
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
+    private HashMap<String, String> mRequestHeaders;
     private Context mContext;
     private Activity mActivity;
+    private final Map<AzureActiveDirectoryWebViewClient, DeviceCaRequestRouter> mDeviceCaRequestRouters =
+            new IdentityHashMap<>();
     private static final String TEST_REDIRECT_URI = "msauth://com.example.app/somehash=";
 
     // Test strings initialized.
@@ -159,16 +220,23 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
             "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
-    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
-
-    private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz&ismdmurl=1";
-    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
-    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
+        private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING = "browser://abcxyz/xyz&ismdmurl=1";
+        private static final String TEST_PARSED_BROWSER_DEVICE_CA_URL = "browser://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_PARSED_HTTPS_DEVICE_CA_URL = "https://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
+    private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
+            "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
+    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
+    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%40somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
     private static final String TEST_PLAYSTORE_FOR_BROKER_APP_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
     private static final String TEST_INVALID_URL = "https://some.invalid.url";
+    // Sentinel returned by the mocked WebView.getUrl() so that origin-tracking tests can distinguish
+    // "the recorded main-frame URL was used" from "we fell back to view.getUrl()" (AB#3706623).
+    private static final String FALLBACK_ORIGIN_URL = "https://fallback.contoso.com/authorize";
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
 
@@ -182,12 +250,59 @@ public class AzureActiveDirectoryWebViewClientTest {
     // used to verify the post-parse validation step.
     private static final String TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE = "intent://play.google.com/store/apps/details?referrer=;package=com.android.vending;&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.example.unrelatedapp;end";
     private static final String TEST_INTENT_WITH_EXPLICIT_COMPONENT = "intent://play.google.com/store/apps/details?id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;component=com.example.unrelatedapp/.SampleActivity;end";
+
+        private static final String TEST_INTENT_WITH_COMPONENT_AND_EXTRAS = "intent://example.com#Intent;scheme=https;package=com.android.vending;component=com.example.hostapp/.SampleActivity;action=com.example.action.OPEN;S.exampleLink=https://example.com/item;S.id=com.azure.authenticator;end";
+        private static final String TEST_INTENT_WITH_NON_BROKER_APP_ID = "intent://play.google.com/store/apps/details?id=com.example.unrelatedapp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;S.id=com.azure.authenticator;end";
+    /** A market: operation that is not an app listing. */
+    private static final String TEST_INTENT_MARKET_SEARCH = "intent://search?q=foo&id=com.azure.authenticator#Intent;scheme=market;action=android.intent.action.VIEW;package=com.android.vending;end";
+        private static final String TEST_INTENT_PLAY_STORE_REDEEM = "intent://play.google.com/redeem?code=example-code&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
+    // ---------------------------------------------------------------------------
+    // MAM Conditional Access broker-install fixtures.
+    //
+    // All four are the same msauth://wpj broker-install redirect; they differ only in whether the
+    // server marked the install as MAM-CA (intuneAppProtection=1) and whether the app_link already
+    // names an install referrer. The app_link is percent-encoded exactly as it arrives on the wire.
+    // ---------------------------------------------------------------------------
+
+    /** Play link for Company Portal with no referrer of its own; the client-side decoration applies. */
+    private static final String SERVER_SUPPLIED_REFERRER = "com.contoso.serverpicked";
+    private static final String ENCODED_CP_APP_LINK =
+            "https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+    /** The same link, but the server already named an install referrer on it. */
+    private static final String ENCODED_CP_APP_LINK_WITH_SERVER_REFERRER =
+            ENCODED_CP_APP_LINK + "%26referrer%3d" + SERVER_SUPPLIED_REFERRER;
+    /** The same link delivered over the browser:// extension prefix, which the allowlist rejects. */
+    private static final String ENCODED_CP_APP_LINK_BROWSER_PREFIX =
+            "browser%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+
+    private static final String MAM_CA_REDIRECT_PREFIX =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&intuneAppProtection=1&app_link=";
+
+    /** MAM-CA install: marked by the server, app_link carries no referrer. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK;
+    /** MAM-CA install where the server already picked the referrer. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK_WITH_SERVER_REFERRER;
+    /** MAM-CA install whose app_link arrives over the browser:// extension prefix. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK_BROWSER_PREFIX;
+    /** Ordinary device-registration install: no MAM-CA marker, so it must keep its existing behavior. */
+    private static final String TEST_PLAIN_INSTALL_REQUEST_URL =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&app_link=" + ENCODED_CP_APP_LINK;
+
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
     private static final String TEST_OPENID_VC_URL = "openid-vc://credential-offer?credential_issuer=https%3A%2F%2Fexample.com&credential_configuration_ids=VerifiedEmployee";
+    private static final String TEST_BROKER_EXTERNAL_BROWSER_URL =
+            "https://issuer.example/issuance?tokenId=example-token"
+                    + "&broker_webview_external_browser=1&other=value#credential";
+    private static final String TEST_BROKER_EXTERNAL_BROWSER_DISABLED_URL =
+            "https://issuer.example/issuance?broker_webview_external_browser=true";
 
     // Authenticator activation app link test URLs
     private static final String TEST_AUTHENTICATOR_ACTIVATION_GLOBAL =
@@ -203,6 +318,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Before
     public void setup() throws ClientException {
+        DiagnosticContext.INSTANCE.clear();
         mContext = ApplicationProvider.getApplicationContext();
         mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();
@@ -229,9 +345,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
-        HashMap<String, String> dummyHeaders = new HashMap<>();
-        dummyHeaders.put("key", "value");
-        mWebViewClient.setRequestHeaders(dummyHeaders);
+        mRequestHeaders = new HashMap<>();
+        mRequestHeaders.put("key", "value");
+        mWebViewClient.setRequestHeaders(mRequestHeaders);
         mWebViewClient.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
         AzureActiveDirectory.ensureCloudDiscovery();
     }
@@ -239,14 +355,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
-        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
-        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
-        if (mContext != null) {
-            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
-                    .save("");
-        }
+        // Round 15 (mohitc1): the reworked PKeyAuth telemetry tests inject a capturing span factory via
+        // OTelUtility.setSpanFactory, which mutates a JVM-global @Volatile with no getter to restore. Reset
+        // it to the production default after every test so a leaked test factory cannot corrupt later tests.
+        OTelUtility.setSpanFactory(new DefaultOTelSpanFactory());
+        // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
+        // stay set for every later test running on this thread.
+        DiagnosticContext.INSTANCE.clear();
     }
-
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, ""));
@@ -270,6 +386,997 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testPageStarted_withoutManagedSession_doesNotInstallLegacyBridge() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(ProcessUtil.isRunningOnAuthService(mContext));
+        assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX));
+        assertTrue(AuthUxJavaScriptInterface.Companion
+                .isValidUriForInterface(TEST_PUBLIC_CLOUD_REDIRECT_URL));
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+        Mockito.verify(webView, never()).removeJavascriptInterface(anyString());
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_closesBeforeInstallingRealLegacyReplacement() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final Object[] activeProcessor = {null};
+        final List<String> operations = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            assertNull(activeProcessor[0]);
+            activeProcessor[0] = invocation.getArgument(0);
+            operations.add("add");
+            return null;
+        }).when(webView).addJavascriptInterface(any(), eq("broker"));
+        Mockito.doAnswer(invocation -> {
+            assertNotNull(activeProcessor[0]);
+            activeProcessor[0] = null;
+            operations.add("remove");
+            return null;
+        }).when(webView).removeJavascriptInterface("broker");
+
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession firstSession = mWebViewClient.mAuthUxBridgeSession;
+        final Object firstProcessor = activeProcessor[0];
+        assertNotNull(firstProcessor);
+        final int[] factoryCalls = {0};
+        mWebViewClient.replaceAuthUxBridgeSession(() -> {
+            factoryCalls[0]++;
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            assertNull(activeProcessor[0]);
+            return AuthUxBridgeSession.create(
+                    webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false);
+        });
+
+        final Object replacementProcessor = activeProcessor[0];
+        assertNotNull(replacementProcessor);
+        assertNotSame(firstProcessor, replacementProcessor);
+        assertEquals(1, factoryCalls[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        firstSession.onPageStarted(webView, "https://federated.example.com");
+        firstSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        firstSession.onPageFinished(webView);
+        firstSession.close();
+        assertSame(replacementProcessor, activeProcessor[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        mWebViewClient.mAuthUxBridgeSession.onPageFinished(webView);
+        assertSame(replacementProcessor, activeProcessor[0]);
+        assertEquals(Arrays.asList("add", "remove", "add"), operations);
+        Mockito.verify(webView).evaluateJavascript(anyString(), any());
+        mWebViewClient.closeAuthUxBridgeSession();
+        assertNull(activeProcessor[0]);
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        assertEquals(Arrays.asList("add", "remove", "add", "remove"), operations);
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_factoryFailureLeavesOldLegacyBridgeClosed() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession oldSession = mWebViewClient.mAuthUxBridgeSession;
+        final IllegalStateException failure = new IllegalStateException("Factory failed");
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.replaceAuthUxBridgeSession(() -> {
+                    assertNull(mWebViewClient.mAuthUxBridgeSession);
+                    Mockito.verify(webView).removeJavascriptInterface("broker");
+                    throw failure;
+                })));
+
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        oldSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        Mockito.verify(webView, Mockito.times(1)).addJavascriptInterface(any(), eq("broker"));
+    }
+
+    @Test
+    public void testReplaceAuthUxBridgeSession_closeFailureDoesNotInvokeFactory() {
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> session);
+        final IllegalStateException failure = new IllegalStateException("Close failed");
+        Mockito.doThrow(failure).when(session).close();
+        final int[] factoryCalls = {0};
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.replaceAuthUxBridgeSession(() -> {
+                    factoryCalls[0]++;
+                    return Mockito.mock(AuthUxBridgeSession.class);
+                })));
+
+        assertEquals(0, factoryCalls[0]);
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        Mockito.verify(session).close();
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_defaultTransportFlightUsesLegacy() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[true], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[true], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(webView).addJavascriptInterface(any(), eq("broker"));
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_setupOwnershipAndCapturedFlights() {
+        for (final String scenario : Arrays.asList("active", "disabled", "master_failure",
+                "transport_failure", "install_failure")) {
+            final IFlightsProvider flights = Mockito.mock(IFlightsProvider.class);
+            when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                    .thenReturn(!"disabled".equals(scenario));
+            final IllegalStateException failure = new IllegalStateException("original");
+            if ("master_failure".equals(scenario)) {
+                when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenThrow(failure);
+            }
+            if ("transport_failure".equals(scenario)) {
+                when(flights.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                        .thenThrow(failure);
+            }
+            final MockCommonFlightsManager manager = new MockCommonFlightsManager();
+            manager.setMockCommonFlightsProvider(flights);
+            CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+            final WebView view = Mockito.mock(WebView.class);
+            if ("install_failure".equals(scenario)) {
+                Mockito.doThrow(failure).when(view).addJavascriptInterface(any(), eq("broker"));
+            }
+            final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+                final boolean failed = "master_failure".equals(scenario) || "install_failure".equals(scenario);
+                if (failed) {
+                    assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                            mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+                } else {
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                }
+                if (!failed && !"disabled".equals(scenario)) {
+                    Mockito.verify(span, never()).end();
+                } else {
+                    Mockito.verify(span).end();
+                }
+                mWebViewClient.closeAuthUxBridgeSession();
+                mWebViewClient.closeAuthUxBridgeSession();
+                Mockito.verify(span).end();
+                Mockito.verify(span, never()).setAttribute(eq("authux_setup_completed"), Mockito.anyLong());
+                Mockito.verify(span).setAttribute("authux_setup_failed", failed ? 1L : 0L);
+                Mockito.verify(span).setAttribute("authux_transport",
+                        failed ? "not_selected" : "disabled".equals(scenario) ? "disabled" : "javascript_interface");
+                Mockito.verify(span).setAttribute("authux_bridge_flight", "master_failure".equals(scenario)
+                        ? "lookup_failed" : "disabled".equals(scenario) ? "off" : "on");
+                Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "transport_failure".equals(scenario)
+                        ? "lookup_failed" : ("master_failure".equals(scenario) || "disabled".equals(scenario))
+                        ? "not_evaluated" : "off");
+                Mockito.verify(flights).isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                Mockito.verify(flights, Mockito.times("master_failure".equals(scenario)
+                        || "disabled".equals(scenario) ? 0 : 1))
+                        .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_usesHostContextAndRequestCorrelationPrecedence() {
+        configureAuthUxTransportFlight(false);
+        for (final String source : Arrays.asList("request", "baggage", "diagnostic")) {
+            final RequestContext diagnostic = new RequestContext();
+            diagnostic.put(DiagnosticContext.CORRELATION_ID, "diagnostic-cid");
+            DiagnosticContext.INSTANCE.setRequestContext(diagnostic);
+            final AuthorizationActivity host = Mockito.mock(AuthorizationActivity.class);
+            when(host.getApplicationContext()).thenReturn(mContext);
+            final SpanContext parent = Mockito.mock(SpanContext.class);
+            when(host.getSpanContext()).thenReturn(parent);
+            final io.opentelemetry.api.baggage.BaggageBuilder baggage = Baggage.builder()
+                    .put(AttributeName.calling_package_name.name(), "com.example.caller");
+            if (!"diagnostic".equals(source)) {
+                baggage.put(AttributeName.correlation_id.name(), "baggage-cid");
+            }
+            when(host.getOtelContext()).thenReturn(baggage.build().storeInContext(
+                    io.opentelemetry.context.Context.root()));
+            final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                    host, Mockito.mock(IAuthorizationCompletionCallback.class), url -> {},
+                    TEST_REDIRECT_URI, Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                    "tenant-id", false, false, null, "request".equals(source) ? "request-cid" : null);
+            final Span span = Mockito.mock(Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(
+                        AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller")).thenReturn(span);
+                client.initializeAuthUxJavaScriptApi(Mockito.mock(WebView.class), TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                factory.verify(() -> OTelUtility.createSpanFromParent(
+                        AuthUxBridgeMeasurements.SPAN_NAME, parent, "com.example.caller"));
+                factory.verifyNoMoreInteractions();
+                Mockito.verify(span).setAttribute("tenant_id", "tenant-id");
+                Mockito.verify(span).setAttribute("correlation_id", source + "-cid");
+                Mockito.verify(span, never()).end();
+                client.closeAuthUxBridgeSession();
+                Mockito.verify(span).end();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_contextExtractionFailureDoesNotPreventSetup() {
+        configureAuthUxTransportFlight(false);
+        final AuthorizationActivity host = Mockito.mock(AuthorizationActivity.class);
+        when(host.getApplicationContext()).thenReturn(mContext);
+        when(host.getOtelContext()).thenThrow(new AssertionError("context"));
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                host, Mockito.mock(IAuthorizationCompletionCallback.class), url -> {},
+                TEST_REDIRECT_URI, Mockito.mock(SwitchBrowserProtocolCoordinator.class), null, false);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            client.initializeAuthUxJavaScriptApi(Mockito.mock(WebView.class), TEST_PUBLIC_CLOUD_REDIRECT_URL);
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, client.mAuthUxBridgeSession.getMode());
+            client.closeAuthUxBridgeSession();
+            factory.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void testAuthUxBridgeMeasurements_nonBrokerAndFailedOldCloseCreateNoObservation() {
+        final AuthUxBridgeSession old = Mockito.mock(AuthUxBridgeSession.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> old);
+        final IllegalStateException failure = new IllegalStateException("old close");
+        Mockito.doThrow(failure).when(old).close();
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+             MockedStatic<ProcessUtil> process = Mockito.mockStatic(ProcessUtil.class)) {
+            assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                    mWebViewClient.initializeAuthUxJavaScriptApi(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+            process.verifyNoInteractions();
+            factory.verifyNoInteractions();
+            process.when(() -> ProcessUtil.isRunningOnAuthService(any())).thenReturn(false);
+            mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+            try (MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class)) {
+                mWebViewClient.initializeAuthUxJavaScriptApi(mMockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+            factory.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_modernSetupAndPrerequisiteFallback() {
+        configureAuthUxTransportFlight(true);
+        for (final String scenario : Arrays.asList("modern", "listener_unavailable", "script_unavailable")) {
+            final boolean modern = "modern".equals(scenario);
+            final WebView view = Mockito.mock(WebView.class);
+            final ScriptHandler script = Mockito.mock(ScriptHandler.class);
+            final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+                 MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+                 MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+                factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+                features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                        .thenReturn(!"listener_unavailable".equals(scenario));
+                features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                        .thenReturn(!"script_unavailable".equals(scenario));
+                webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(eq(view), anyString(), any()))
+                        .thenReturn(script);
+                try {
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                    assertEquals(modern ? AuthUxTransportMode.WEB_MESSAGE_LISTENER
+                            : AuthUxTransportMode.JAVASCRIPT_INTERFACE, mWebViewClient.mAuthUxBridgeSession.getMode());
+                    Mockito.verify(span, never()).end();
+                    mWebViewClient.closeAuthUxBridgeSession();
+
+                    Mockito.verify(span).setAttribute("authux_bridge_flight", "on");
+                    Mockito.verify(span).setAttribute("authux_web_message_listener_flight", "on");
+                    Mockito.verify(span).setAttribute("authux_transport",
+                            modern ? "web_message_listener" : "javascript_interface");
+                    Mockito.verify(span).setAttribute("authux_transport_selection_reason", modern
+                            ? "web_message_listener_installed" : "web_message_listener_prerequisites_not_met");
+                    Mockito.verify(span).setAttribute("authux_install_attempts", 1L);
+                    Mockito.verify(span).setAttribute("authux_install_failed", 0L);
+                    Mockito.verify(span).setAttribute("authux_setup_failed", 0L);
+                    Mockito.verify(span).setAttribute("authux_rollback_complete", 0L);
+                    Mockito.verify(span).setAttribute("authux_legacy_installed", modern ? 0L : 1L);
+                    Mockito.verify(span).end();
+                    webKit.verify(() -> WebViewCompat.addWebMessageListener(
+                            eq(view), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()),
+                            Mockito.times(modern ? 1 : 0));
+                    webKit.verify(() -> WebViewCompat.addDocumentStartJavaScript(eq(view), anyString(), any()),
+                            Mockito.times(modern ? 1 : 0));
+                    Mockito.verify(view, Mockito.times(modern ? 0 : 1)).addJavascriptInterface(any(), eq("broker"));
+                    Mockito.verify(script, Mockito.times(modern ? 1 : 0)).remove();
+                } finally {
+                    mWebViewClient.closeAuthUxBridgeSession();
+                }
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_completedRollbackSurvivesLegacyInstallationFailure() {
+        configureAuthUxTransportFlight(true);
+        final WebView view = Mockito.mock(WebView.class);
+        final IllegalStateException failure = new IllegalStateException("legacy installation");
+        Mockito.doThrow(failure).when(view).addJavascriptInterface(any(), eq("broker"));
+        final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class);
+             MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(view), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()))
+                    .thenThrow(new IllegalStateException("listener registration"));
+
+            assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                    mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL)));
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            mWebViewClient.closeAuthUxBridgeSession();
+            webKit.verify(() -> WebViewCompat.removeWebMessageListener(view, AuthUxBridgeSession.PRIVATE_OBJECT_NAME));
+            webKit.verify(() -> WebViewCompat.addDocumentStartJavaScript(any(), anyString(), any()), never());
+            Mockito.verify(view).addJavascriptInterface(any(), eq("broker"));
+            Mockito.verify(span).setAttribute("authux_install_attempts", 2L);
+            Mockito.verify(span).setAttribute("authux_install_failed", 2L);
+            Mockito.verify(span).setAttribute("authux_rollback_complete", 1L);
+            Mockito.verify(span).setAttribute("authux_legacy_installed", 0L);
+            Mockito.verify(span).setAttribute("authux_setup_failed", 1L);
+            Mockito.verify(span).setAttribute("authux_transport", "not_selected");
+            Mockito.verify(span).setAttribute("authux_transport_selection_reason", "bridge_setup_failed");
+            Mockito.verify(span).end();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_replacementSeparatesRealOwnersAndLateCallbacks() {
+        configureAuthUxTransportFlight(false);
+        final WebView view = Mockito.mock(WebView.class);
+        final io.opentelemetry.api.trace.Span firstSpan = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        final io.opentelemetry.api.trace.Span secondSpan = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null))
+                    .thenReturn(firstSpan, secondSpan);
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final ArgumentCaptor<AuthUxJavaScriptInterface> captured =
+                        ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+                Mockito.verify(view).addJavascriptInterface(captured.capture(), eq("broker"));
+                final AuthUxJavaScriptInterface first = captured.getValue();
+                first.process("{");
+                Mockito.verify(firstSpan, never()).end();
+
+                mWebViewClient.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                Mockito.verify(firstSpan).end();
+                final int firstExportCalls = Mockito.mockingDetails(firstSpan).getInvocations().size();
+                Mockito.verify(view, Mockito.times(2)).addJavascriptInterface(captured.capture(), eq("broker"));
+                final AuthUxJavaScriptInterface second = captured.getValue();
+                assertNotSame(first, second);
+                final int secondSetupCalls = Mockito.mockingDetails(secondSpan).getInvocations().size();
+                final String unsupported = "{\"correlationID\":\"cid\",\"action_name\":\"unknown\","
+                        + "\"action_component\":\"host\",\"params\":{\"operation\":\"unknown\"}}";
+                first.process("{");
+                first.process(unsupported);
+                assertEquals(secondSetupCalls, Mockito.mockingDetails(secondSpan).getInvocations().size());
+                second.process(unsupported);
+                second.process(unsupported);
+                Mockito.verify(secondSpan, never()).end();
+                mWebViewClient.closeAuthUxBridgeSession();
+                mWebViewClient.closeAuthUxBridgeSession();
+
+                assertEquals(firstExportCalls, Mockito.mockingDetails(firstSpan).getInvocations().size());
+                Mockito.verify(firstSpan).setAttribute("authux_received", 1L);
+                Mockito.verify(firstSpan).setAttribute("authux_rejected_malformed", 1L);
+                Mockito.verify(firstSpan).setAttribute("authux_rejected_unsupported", 0L);
+                Mockito.verify(secondSpan).setAttribute("authux_received", 2L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_malformed", 0L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_unsupported", 2L);
+                Mockito.verify(secondSpan).setAttribute("authux_rejected_closed", 0L);
+                Mockito.verify(firstSpan).end();
+                Mockito.verify(secondSpan).end();
+                factory.verify(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null), Mockito.times(2));
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    private void configureAuthUxTransportFlight(final boolean enabled) {
+        final IFlightsProvider flights = Mockito.mock(IFlightsProvider.class);
+        when(flights.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flights.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(enabled);
+        final MockCommonFlightsManager manager = new MockCommonFlightsManager();
+        manager.setMockCommonFlightsProvider(flights);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testAuthUxBridgeMeasurements_recorderDispositionsAndLaterSpanFailure() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        final OnboardingTelemetryRecorder recorder = Mockito.spy(newAuthUxOnboardingRecorder());
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView view = Mockito.mock(WebView.class);
+        final io.opentelemetry.api.trace.Span span = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+        try (MockedStatic<OTelUtility> factory = Mockito.mockStatic(OTelUtility.class)) {
+            factory.when(() -> OTelUtility.createSpanFromParent(AuthUxBridgeMeasurements.SPAN_NAME, null)).thenReturn(span);
+            client.initializeAuthUxJavaScriptApi(view, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+            final ArgumentCaptor<AuthUxJavaScriptInterface> captured =
+                    ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+            Mockito.verify(view).addJavascriptInterface(captured.capture(), eq("broker"));
+            final AuthUxJavaScriptInterface processor = captured.getValue();
+            processor.process(authUxPayload("other-id", "50127"));
+            processor.process(authUxPayload("request-id", "50058"));
+            Mockito.doThrow(new IllegalStateException("append")).when(recorder).addBlockingError("50127");
+            processor.process(authUxPayload("request-id", "50127"));
+            Mockito.doCallRealMethod().when(recorder).addBlockingError("50127");
+            Mockito.doThrow(new IllegalStateException("step")).when(recorder).addStep("BrokerInstallPromptedForMAM");
+            processor.process(authUxPayload("request-id", "50127"));
+            Mockito.doCallRealMethod().when(recorder).addStep("BrokerInstallPromptedForMAM");
+            final io.opentelemetry.api.trace.Span legacy = Mockito.mock(io.opentelemetry.api.trace.Span.class);
+            when(legacy.setAttribute("authux_js_error_code", "50127")).thenThrow(new IllegalStateException("old span"));
+            try (MockedStatic<com.microsoft.identity.common.java.opentelemetry.SpanExtension> current =
+                         Mockito.mockStatic(com.microsoft.identity.common.java.opentelemetry.SpanExtension.class)) {
+                current.when(com.microsoft.identity.common.java.opentelemetry.SpanExtension::current).thenReturn(legacy);
+                processor.process(authUxPayload("request-id", "50127"));
+            }
+            client.closeAuthUxBridgeSession();
+            for (final String disposition : Arrays.asList("written", "excluded_cid", "excluded_policy", "failed", "partial")) {
+                Mockito.verify(span).setAttribute("authux_recorder_" + disposition, 1L);
+            }
+            Mockito.verify(span).setAttribute("authux_rejected_processing", 3L);
+            Mockito.verify(span).setAttribute("authux_received", 5L);
+            Mockito.verify(span).end();
+            Mockito.verify(recorder, Mockito.times(3)).addBlockingError("50127");
+            Mockito.verify(recorder, Mockito.times(2)).addStep("BrokerInstallPromptedForMAM");
+        } finally {
+            client.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_transportFlightOffPreservesRecorderTelemetry()
+            throws Exception {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenReturn(false);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            client.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                    client.mAuthUxBridgeSession.getMode());
+            final ArgumentCaptor<AuthUxJavaScriptInterface> processor =
+                    ArgumentCaptor.forClass(AuthUxJavaScriptInterface.class);
+            Mockito.verify(webView).addJavascriptInterface(processor.capture(), eq("broker"));
+            final String payload = "{\"correlationID\":\"correlation-id\","
+                    + "\"action_name\":\"log_telemetry\",\"action_component\":\"host\","
+                    + "\"params\":{\"errorCode\":\"53003\"}}";
+            processor.getValue().process(payload);
+            processor.getValue().process(payload);
+            processor.getValue().process(payload.replace("53003", "50058"));
+
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("53003", errors.getString(1));
+            features.verifyNoInteractions();
+            webKit.verifyNoInteractions();
+        } finally {
+            client.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_masterOffSkipsTransportFlight() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(false);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[true], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[false], "
+                                + "brokerAuthUxBridgeGateApplied=[true], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."),
+                        never());
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(flightsProvider, never()).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verify(webView, never()).evaluateJavascript(anyString(), any());
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_transportLookupFailureUsesLegacy() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenThrow(new IllegalStateException("Flight provider unavailable"));
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+            assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                    mWebViewClient.mAuthUxBridgeSession.getMode());
+            Mockito.verify(webView).addJavascriptInterface(any(), eq("broker"));
+            features.verifyNoInteractions();
+            webKit.verifyNoInteractions();
+            mWebViewClient.closeAuthUxBridgeSession();
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_masterLookupFailureDoesNotEnableBridge() {
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> AuthUxBridgeSession.create(
+                webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, true, null, true, false));
+        final AuthUxBridgeSession oldSession = mWebViewClient.mAuthUxBridgeSession;
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                .thenAnswer(invocation -> {
+                    assertNull(mWebViewClient.mAuthUxBridgeSession);
+                    Mockito.verify(webView).removeJavascriptInterface("broker");
+                    throw new IllegalStateException("Master flight unavailable");
+                });
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        assertThrows(IllegalStateException.class, () ->
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL));
+
+        assertNull(mWebViewClient.mAuthUxBridgeSession);
+        Mockito.verify(flightsProvider, never()).isFlightEnabled(
+                CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+        oldSession.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        Mockito.verify(webView, Mockito.times(1)).addJavascriptInterface(any(), eq("broker"));
+    }
+
+    @Test
+    public void testInitializeAuthUxJavaScriptApi_nonBrokerUsesRecorderWithoutBrokerFlights() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class);
+             final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class);
+             final MockedStatic<Logger> logger = Mockito.mockStatic(Logger.class)) {
+            processUtil.when(() -> ProcessUtil.isRunningOnAuthService(any(Context.class)))
+                    .thenReturn(false);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(any(), anyString(), any()))
+                    .thenReturn(Mockito.mock(ScriptHandler.class));
+
+            try {
+                final WebView unseededWebView = Mockito.mock(WebView.class);
+                mWebViewClient.initializeAuthUxJavaScriptApi(unseededWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[false], "
+                                + "hasTelemetrySink=[false], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[false], preferWebMessageListener=[false]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                Mockito.verify(unseededWebView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verify(unseededWebView, never()).evaluateJavascript(anyString(), any());
+                features.verifyNoInteractions();
+                webKit.verifyNoInteractions();
+                logger.clearInvocations();
+
+                final WebView seededWebView = Mockito.mock(WebView.class);
+                mWebViewClient.setOnboardingTelemetryRecorder(Mockito.mock(OnboardingTelemetryRecorder.class));
+                mWebViewClient.initializeAuthUxJavaScriptApi(seededWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                logger.verify(() -> Logger.info(
+                        "AzureActiveDirectoryWebViewClient:initializeAuthUxJavaScriptApi",
+                        "Initializing the Auth UX bridge session. isBrokerAuthProcess=[false], "
+                                + "hasTelemetrySink=[true], brokerAuthUxBridgeEnabled=[true], "
+                                + "brokerAuthUxBridgeGateApplied=[false], preferWebMessageListener=[true]."));
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled for this Broker request because "
+                                + "brokerAuthUxBridgeEnabled is false."), never());
+                logger.verify(() -> Logger.info("AuthUxBridgeSession",
+                        "Auth UX bridge disabled because no onboarding telemetry recorder is available."),
+                        never());
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                webKit.verify(() -> WebViewCompat.addWebMessageListener(
+                        eq(seededWebView), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()));
+                Mockito.verify(seededWebView, never()).addJavascriptInterface(any(), anyString());
+                Mockito.verifyNoInteractions(flightsProvider);
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testInitializeAuthUxJavaScriptApi_twiceReleasesResourcesBeforeRegistration() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT))
+                .thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final WebView webView = Mockito.mock(WebView.class);
+        final Set<String> activeListeners = new HashSet<>();
+        final List<ScriptHandler> activeScripts = new ArrayList<>();
+        final List<String> operations = new ArrayList<>();
+        final boolean[] legacyInterfaceAdded = {false};
+        Mockito.doAnswer(invocation -> {
+            assertFalse(legacyInterfaceAdded[0]);
+            assertTrue(activeListeners.isEmpty());
+            assertTrue(activeScripts.isEmpty());
+            legacyInterfaceAdded[0] = true;
+            operations.add("addLegacy");
+            return null;
+        }).when(webView).addJavascriptInterface(any(), eq("broker"));
+        Mockito.doAnswer(invocation -> {
+            assertTrue(legacyInterfaceAdded[0]);
+            legacyInterfaceAdded[0] = false;
+            operations.add("removeLegacy");
+            return null;
+        }).when(webView).removeJavascriptInterface("broker");
+
+        try (final MockedStatic<WebViewFeature> features = Mockito.mockStatic(WebViewFeature.class);
+             final MockedStatic<WebViewCompat> webKit = Mockito.mockStatic(WebViewCompat.class)) {
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+                    .thenReturn(true);
+            features.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT))
+                    .thenReturn(true);
+            webKit.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(webView), eq(AuthUxBridgeSession.PRIVATE_OBJECT_NAME), any(), any()))
+                    .thenAnswer(invocation -> {
+                        assertFalse(legacyInterfaceAdded[0]);
+                        if (!activeListeners.add(AuthUxBridgeSession.PRIVATE_OBJECT_NAME)) {
+                            throw new IllegalStateException("Duplicate Auth UX listener registration.");
+                        }
+                        operations.add("addListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.removeWebMessageListener(
+                    webView, AuthUxBridgeSession.PRIVATE_OBJECT_NAME))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeListeners.remove(AuthUxBridgeSession.PRIVATE_OBJECT_NAME));
+                        operations.add("removeListener");
+                        return null;
+                    });
+            webKit.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(webView), anyString(), any()))
+                    .thenAnswer(invocation -> {
+                        assertTrue(activeScripts.isEmpty());
+                        final ScriptHandler handler = Mockito.mock(ScriptHandler.class);
+                        activeScripts.add(handler);
+                        operations.add("addScript");
+                        Mockito.doAnswer(removal -> {
+                            assertTrue(activeScripts.remove(handler));
+                            operations.add("removeScript");
+                            return null;
+                        }).when(handler).remove();
+                        return handler;
+                    });
+
+            try {
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final AuthUxBridgeSession firstSession = mWebViewClient.mAuthUxBridgeSession;
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, firstSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+                assertNotSame(firstSession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertEquals(1, activeListeners.size());
+                assertEquals(1, activeScripts.size());
+                assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                        "removeListener", "addListener", "addScript"), operations);
+                Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(false);
+                final AuthUxBridgeSession modernSession = mWebViewClient.mAuthUxBridgeSession;
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+                modernSession.onPageFinished(webView);
+                assertSame(modernSession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER, modernSession.getMode());
+                Mockito.verify(flightsProvider, Mockito.times(2)).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                final AuthUxBridgeSession legacySession = mWebViewClient.mAuthUxBridgeSession;
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, legacySession.getMode());
+                assertTrue(activeListeners.isEmpty());
+                assertTrue(activeScripts.isEmpty());
+                assertTrue(legacyInterfaceAdded[0]);
+
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(true);
+                mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+                legacySession.onPageFinished(webView);
+                assertSame(legacySession, mWebViewClient.mAuthUxBridgeSession);
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE, legacySession.getMode());
+                Mockito.verify(flightsProvider, Mockito.times(3)).isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.WEB_MESSAGE_LISTENER,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertTrue(activeListeners.isEmpty());
+                assertTrue(activeScripts.isEmpty());
+                assertFalse(legacyInterfaceAdded[0]);
+
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(true);
+                when(flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT)).thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.JAVASCRIPT_INTERFACE,
+                        mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertTrue(legacyInterfaceAdded[0]);
+                when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                        .thenReturn(false);
+                mWebViewClient.initializeAuthUxJavaScriptApi(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+                assertEquals(AuthUxTransportMode.DISABLED, mWebViewClient.mAuthUxBridgeSession.getMode());
+                assertFalse(legacyInterfaceAdded[0]);
+                Mockito.verify(flightsProvider, Mockito.times(7))
+                        .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+                Mockito.verify(flightsProvider, Mockito.times(5))
+                        .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT);
+            } finally {
+                mWebViewClient.closeAuthUxBridgeSession();
+            }
+
+            mWebViewClient.closeAuthUxBridgeSession();
+            assertNull(mWebViewClient.mAuthUxBridgeSession);
+            assertTrue(activeListeners.isEmpty());
+            assertTrue(activeScripts.isEmpty());
+            assertFalse(legacyInterfaceAdded[0]);
+            assertEquals(Arrays.asList("addListener", "addScript", "removeScript",
+                    "removeListener", "addListener", "addScript", "removeScript",
+                    "removeListener", "addLegacy", "removeLegacy", "addListener",
+                    "addScript", "removeScript", "removeListener", "addLegacy",
+                    "removeLegacy"), operations);
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testCloseAuthUxBridgeSession_lateApprovedNavigationDoesNotRecreateBridge() {
+        final IFlightsProvider flightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX)).thenReturn(true);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+        final AuthUxBridgeSession session = Mockito.mock(AuthUxBridgeSession.class);
+        final WebView webView = Mockito.mock(WebView.class);
+        mWebViewClient.replaceAuthUxBridgeSession(() -> session);
+
+        mWebViewClient.closeAuthUxBridgeSession();
+        mWebViewClient.onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+
+        Mockito.verify(session).close();
+        Mockito.verify(session, never()).onPageStarted(webView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        Mockito.verify(webView, never()).addJavascriptInterface(any(), anyString());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideMarkedBrokerExternalBrowserUrl_preservesUrlAndSession() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        callback,
+                        url -> { },
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false);
+        final Intent browserIntent =
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_BROKER_EXTERNAL_BROWSER_URL))
+                        .addCategory(Intent.CATEGORY_BROWSABLE);
+        final ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.packageName = "com.example.browser";
+        resolveInfo.activityInfo.name = "com.example.browser.BrowserActivity";
+        Shadows.shadowOf(mActivity.getPackageManager())
+                .addResolveInfoForIntent(browserIntent, resolveInfo);
+        final WebView webView = Mockito.mock(WebView.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        assertTrue(webViewClient.shouldOverrideUrlLoading(
+                webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+
+        Mockito.verify(webView).stopLoading();
+        Mockito.verify(callback, never())
+                .onChallengeResponseReceived(Mockito.any(RawAuthorizationResult.class));
+        final Intent startedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull(startedIntent);
+        assertEquals(TEST_BROKER_EXTERNAL_BROWSER_URL, startedIntent.getDataString());
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.is_redirect_url_opened_in_browser.name()));
+        assertEquals("broker_external_browser_launched",
+                span.attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.OK, span.statusCode());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideExternalBrowserMarkerRequiresLiteralOne() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_DISABLED_URL));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testMarkedExternalBrowserUrlWithFlightDisabled_isNotIntercepted() {
+        setBrokerWebViewExternalBrowserRedirectFlight(false);
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+    }
+
+    @Test
+    public void testMarkedExternalBrowserUrlOutsideBroker_isIntercepted() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
+        try (final MockedStatic<ProcessUtil> processUtil = Mockito.mockStatic(ProcessUtil.class)) {
+            processUtil.when(() -> ProcessUtil.isRunningOnAuthService(Mockito.any(Context.class)))
+                    .thenReturn(false);
+
+            assertTrue(mWebViewClient.isBrokerExternalBrowserRedirect(
+                    TEST_BROKER_EXTERNAL_BROWSER_URL));
+        }
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testUrlOverrideMarkedBrokerExternalBrowserUrlWithoutBrowser_loadsInWebView() {
+        enableBrokerWebViewExternalBrowserRedirectFlight();
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        callback,
+                        url -> { },
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false);
+        final WebView webView = Mockito.mock(WebView.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        assertFalse(webViewClient.shouldOverrideUrlLoading(
+                webView, TEST_BROKER_EXTERNAL_BROWSER_URL));
+
+        Mockito.verify(webView, never()).stopLoading();
+        Mockito.verify(callback, never())
+                .onChallengeResponseReceived(Mockito.any(RawAuthorizationResult.class));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.FALSE,
+                span.attribute(AttributeName.is_redirect_url_opened_in_browser.name()));
+        assertEquals("broker_external_browser_launch_failed",
+                span.attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.ERROR, span.statusCode());
+    }
+
+    private void enableBrokerWebViewExternalBrowserRedirectFlight() {
+        setBrokerWebViewExternalBrowserRedirectFlight(true);
+    }
+
+    private void setBrokerWebViewExternalBrowserRedirectFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT)).thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    @Test
     public void testUrlOverrideHandlesOpenIdVcUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL));
     }
@@ -280,6 +1387,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Arrange: the return-to-caller flight is on, and Microsoft Authenticator is the resolved handler...
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         // ...and it passes BrokerValidator signature-pinning.
         try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
@@ -296,6 +1405,11 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals(Arrays.asList("authenticator_lookup", "wallet_verification", "return_to_caller"),
+                telemetry.captured().mEventNames);
+        assertEquals("found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
+        assertEquals("verified", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals("attached", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
     }
 
     @Test
@@ -304,6 +1418,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Arrange: the return-to-caller flight is on, but a non-Authenticator app claims the scheme.
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler("com.example.malicious");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         // Act: the untrusted package fails the Authenticator check before BrokerValidator is even consulted.
         final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
@@ -314,6 +1430,10 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertNotNull("Expected the openid-vc handler to be started", started);
         assertFalse("Untrusted handler must NOT receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals("not_found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
+        assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
     }
 
     @Test
@@ -325,6 +1445,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // gate (not just the package-name check) must prevent both package-pinning and attaching.
         enableOpenIdVcReturnToCallerFlight();
         registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
 
         try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
                 BrokerValidator.class,
@@ -341,6 +1463,35 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+        assertEquals("rejected", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_verificationThrows_retainsFailureAfterLaunchAccepted() {
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString()))
+                        .thenThrow(new SecurityException("sensitive-query")))) {
+            assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+        }
+
+        assertEquals("failed", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
+        assertEquals("SecurityException", telemetry.captured().eventAttribute("wallet_verification", AttributeName.error_type));
+        assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull(started);
+        assertFalse(started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     @Test
@@ -473,6 +1624,191 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testOpenIdVcDispatch_returnsTrueOnlyWhenLaunchAccepted() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertTrue(telemetry.captured().mEventNames.isEmpty());
+        assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_reusesWithoutCreatingOrEndingSpan() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+        final Span previousSpan = SpanExtension.current();
+
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.OK, span.mStatusCode);
+        assertEquals(true, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        assertTrue(span.mEventNames.isEmpty());
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_noHandler_preservesErrorAndCallerOwnership() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.ERROR, span.mStatusCode);
+        assertEquals("No handler found for openid-vc:// URI", span.mStatusDescription);
+        assertEquals(false, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        Mockito.verify(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        Mockito.verify(webView, Mockito.never()).loadUrl(anyString());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_noHandler_returnsFalseWithExplicitError() {
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertFalse(client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(ErrorStrings.ACTIVITY_NOT_FOUND, ((ClientException) result.getValue().getException()).getErrorCode());
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals("No handler found for openid-vc:// URI", telemetry.captured().mStatusDescription);
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
+        assertEquals(false, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_securityException_returnsFalseWithExplicitError() {
+        verifyWalletDispatchFailure(new SecurityException("sensitive-query"), ErrorStrings.UNKNOWN_ERROR);
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_activityDisappears_returnsFalseWithExplicitError() {
+        verifyWalletDispatchFailure(new ActivityNotFoundException("sensitive-query"), ErrorStrings.ACTIVITY_NOT_FOUND);
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_error_propagatesWithoutErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final OutOfMemoryError failure = new OutOfMemoryError();
+        Mockito.doThrow(failure).when(activity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(OutOfMemoryError.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL)));
+
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(telemetry.captured().mRecordedException);
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_successTelemetryFails_doesNotDeliverErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final RecordingSpan span = Mockito.spy(new RecordingSpan());
+        final IllegalStateException failure = new IllegalStateException("Telemetry failed");
+        Mockito.doThrow(failure).when(span).setStatus(StatusCode.OK);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span)));
+
+        Mockito.verify(activity).startActivity(any(Intent.class));
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(span.mRecordedException);
+        assertEquals(0, span.mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    private void verifyWalletDispatchFailure(final Throwable exception, final String errorCode) {
+        registerOpenIdVcHandler("com.example.wallet");
+        final WebView webView = Mockito.mock(WebView.class);
+        final Activity failingActivity = Mockito.spy(mActivity);
+        Mockito.doThrow(exception).when(failingActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                failingActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
+        assertNull(telemetry.captured().mRecordedException);
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals("Failed to launch handler for openid-vc:// URI",
+                telemetry.captured().mStatusDescription);
+        assertEquals("failed", telemetry.captured().eventAttribute("vc_dispatch", AttributeName.operation_outcome));
+        assertEquals(exception.getClass().getSimpleName(),
+                telemetry.captured().eventAttribute("vc_dispatch", AttributeName.error_type));
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
+        assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
+        assertNull(telemetry.captured().attribute(AttributeName.error_type.name()));
+        assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+        assertFalse(telemetry.captured().mAttributes.values().toString().contains("sensitive-query"));
+        assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
+        Mockito.verify(webView, never()).loadUrl(anyString());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_callbackThrows_doesNotDeliverTwice() {
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final IllegalStateException failure = new IllegalStateException("Callback failed");
+        Mockito.doThrow(failure).when(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+
+        try {
+            client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL);
+            Assert.fail("Expected callback exception");
+        } catch (final IllegalStateException e) {
+            assertEquals(failure, e);
+        }
+        Mockito.verify(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+    }
+
+    @Test
     public void testUrlOverrideHandlesOpenIdVcUrl_FlightDisabled() {
         // When the flight is disabled, the openid-vc:// URL bypasses the VC handler
         // and is caught by the SSL protection check instead (non-https URL).
@@ -517,11 +1853,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlOverrideHandlesHttpsDeviceCARequestUrl() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF)).thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL));
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
@@ -531,11 +1870,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlHandlesHttpsDeviceCARequestUrlFlightOff() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(false);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF)).thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL));
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
@@ -902,17 +2244,26 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * Reads the finalized onboarding blob and reports whether the broker-install step was recorded.
-     * processInstallRequest records this step; processRedirectUrl and processSwitchBrowserRequest do
-     * not, so its presence distinguishes which routing path handleUrl took.
+     * Reports whether either a broker-install prompt or installation-triggered step was recorded,
+     * so negative routing assertions reject both kinds of unintended broker-install telemetry.
      */
     private static boolean onboardingHasBrokerInstallStep(final OnboardingTelemetryRecorder recorder)
+            throws org.json.JSONException {
+        return onboardingHasStep(recorder,
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_BROKER_INSTALL_PROMPTED)
+                || onboardingHasStep(recorder,
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_BROKER_INSTALLATION_TRIGGERED);
+    }
+
+    private static boolean onboardingHasStep(final OnboardingTelemetryRecorder recorder,
+                                             final String expectedStep)
             throws org.json.JSONException {
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
         for (int i = 0; i < steps.length(); i++) {
-            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+            if (expectedStep.equals(steps.getJSONObject(i).getString("step_id"))) {
                 return true;
             }
         }
@@ -948,6 +2299,18 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testUrlOverrideDefersMyAccountUrlToWebView() {
+        final String url = "https://myaccount.microsoft.com/";
+
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, url));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, mockNavigationRequest(url, true)));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, mockNavigationRequest(url, false)));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+    }
+
+    @Test
     public void testUrlOverrideHandlesHeaderForwardingRequiredUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_POSITIVE_URL));
         assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL));
@@ -962,6 +2325,759 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlOverrideHandlesCrossCloudRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_CROSS_CLOUD_REDIRECT_URL));
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // CWE-918: caller-side (catch(Throwable)) fallback gate in processNonceAndReAttachHeaders.
+    //
+    // The 7 NonceRedirectHandlerTest cases cover the handler's PRIMARY gate. The tests below cover
+    // the MIRRORED gate that lives in this class: when NonceRedirectHandler.processChallenge throws
+    // mid-processing, the catch(Throwable) fallback still navigates and must apply the same trust
+    // check so the PRT credential header (x-ms-RefreshTokenCredential) is not forwarded to an
+    // untrusted or cleartext host. NonceRedirectHandler construction is mocked so processChallenge
+    // throws, deterministically forcing the fallback branch, and the header map handed to
+    // WebView.loadUrl is captured to assert whether the credential survived.
+    // ---------------------------------------------------------------------------------------------
+
+    private static final String CWE918_TRUSTED_NONCE_HOST = "trusted.contoso.example";
+    private static final String CWE918_UNTRUSTED_NONCE_HOST = "malicious.contoso.example";
+    private static final String CWE918_NON_CREDENTIAL_HEADER_KEY = "x-ms-PasskeyProtocol";
+    private static final String CWE918_NON_CREDENTIAL_HEADER_VALUE = "passkey-protocol-v1";
+    private static final String CWE918_PRT_HEADER_VALUE = "original-aad-bound-prt-credential";
+
+    /**
+     * @param credentialHeaderValidationEnabled value returned for
+     *                                          {@link CommonFlight#ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION}.
+     *                                          The attach-nonce feature flight is always stubbed on so
+     *                                          the isNonceRedirect branch in handleUrl is reached.
+     */
+    private void installNonceRedirectFlights(final boolean credentialHeaderValidationEnabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION))
+                .thenReturn(credentialHeaderValidationEnabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    // ===== PKeyAuth SubmitUrl same-origin: challenging-origin tracking (AB#3706623) =====
+    // These tests pin the WebView-side derivation of the "challenging origin" that the factory
+    // validates a PKeyAuth SubmitUrl against. They intercept the factory construction and capture the
+    // second argument (the derived origin) rather than driving the full signing path, so they observe
+    // exactly which navigation became the origin. They cover both the shouldOverrideUrlLoading path
+    // and the onPageStarted path (the sole origin source pre-API-24 and for redirect targets that
+    // never commit), with the origin-validation flight both on and off.
+
+    /**
+     * Turns on the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch so the
+     * WebView-side origin recording/derivation added for AB#3706623 actually runs. {@code @After}
+     * {@link #cleanUp()} resets the flights manager.
+     */
+    private void enablePKeyAuthOriginValidationFlight() {
+        setPKeyAuthOriginValidationFlight(true);
+    }
+
+    /**
+     * Turns the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch off so we
+     * can assert the WebView-side origin recording/derivation is a complete no-op with the flight off.
+     */
+    private void disablePKeyAuthOriginValidationFlight() {
+        setPKeyAuthOriginValidationFlight(false);
+    }
+
+    private void setPKeyAuthOriginValidationFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION))
+                .thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    private HashMap<String, String> nonceRequestHeadersWithPrt() {
+        final HashMap<String, String> headers = new HashMap<>();
+        headers.put(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER, CWE918_PRT_HEADER_VALUE);
+        headers.put(CWE918_NON_CREDENTIAL_HEADER_KEY, CWE918_NON_CREDENTIAL_HEADER_VALUE);
+        return headers;
+    }
+
+    /**
+     * Drives shouldOverrideUrlLoading with an sso_nonce redirect while forcing
+     * NonceRedirectHandler.processChallenge to throw, and returns the header map that the
+     * catch(Throwable) fallback passes to WebView.loadUrl for the given url.
+     */
+    private Map<String, String> captureFallbackLoadUrlHeaders(final String url) throws Exception {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        try (final MockedConstruction<NonceRedirectHandler> ignored = mockConstruction(
+                NonceRedirectHandler.class,
+                (mock, ctx) -> when(mock.processChallenge(any(URL.class)))
+                        .thenThrow(new RuntimeException("forced failure to exercise catch(Throwable)")))) {
+            mWebViewClient.shouldOverrideUrlLoading(mockWebView, url);
+        }
+
+        final ArgumentCaptor<Map> headersCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(mockWebView).loadUrl(eq(url), headersCaptor.capture());
+        //noinspection unchecked
+        return headersCaptor.getValue();
+    }
+
+    @Test
+    public void testNonceFallbackStripsPrtForUntrustedHostWhenFlightOn() throws Exception {
+        installNonceRedirectFlights(true);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "https://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        assertFalse("PRT credential header must be stripped on the untrusted fallback path",
+                loadedHeaders.containsKey(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals("Non-credential headers must survive the strip",
+                CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    @Test
+    public void testNonceFallbackForwardsPrtForUntrustedHostWhenFlightOff() throws Exception {
+        installNonceRedirectFlights(false);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "http://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        // Kill-switch off is a complete revert to pre-fix behavior: the full header map, PRT included,
+        // is forwarded even to an untrusted cleartext host. This proves the flight short-circuits the
+        // trust check (the right operand of the || is never evaluated).
+        assertEquals("Flight-off must forward the original PRT credential header unchanged",
+                CWE918_PRT_HEADER_VALUE,
+                loadedHeaders.get(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals(CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    @Test
+    public void testNonceFallbackForwardsPrtForTrustedHostWhenFlightOn() throws Exception {
+        // Seed a synthetic validated cloud host so isValidCloudHost runs for real (not mocked). A
+        // test-only host is used deliberately: putCloud writes into the JVM-global sAadClouds, so a
+        // real production host would stay validated for the rest of the module's tests.
+        AzureActiveDirectory.putCloud(CWE918_TRUSTED_NONCE_HOST, new AzureActiveDirectoryCloud(true));
+        installNonceRedirectFlights(true);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "https://" + CWE918_TRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        assertEquals("Trusted HTTPS AAD host must keep the PRT credential header",
+                CWE918_PRT_HEADER_VALUE,
+                loadedHeaders.get(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals(CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    /**
+     * CWE-918 (Finding A): the sso_nonce branch in handleUrl is evaluated before the SSL hard block,
+     * and isNonceRedirect is a bare substring match, so a cleartext URL merely containing "sso_nonce"
+     * used to take the nonce branch and never reach the SSL check. With enforcement on, a non-HTTPS
+     * nonce URL must instead fall through every intermediate branch to processSSLProtectionCheck,
+     * which hard-blocks it (stopLoading + WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED). This proves the
+     * cleartext URL is not swallowed by any intermediate branch and never reaches the credential sink.
+     */
+    @Test
+    public void testCleartextNonceUrlIsSslBlockedWhenFlightOn() {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false
+        );
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        installNonceRedirectFlights(true);
+        final String url = "http://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final boolean result = webViewClient.shouldOverrideUrlLoading(mockWebView, url);
+
+        assertTrue("shouldOverrideUrlLoading must return true (intercepted by SSL check)", result);
+        // The nonce branch must NOT be taken: the cleartext URL falls through to the SSL hard block.
+        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals("Cleartext sso_nonce URL must be rejected by the SSL protection check",
+                ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED,
+                ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+        // And it must never reach the credential-bearing loadUrl path.
+        Mockito.verify(mockWebView, Mockito.never())
+                .loadUrl(Mockito.anyString(), Mockito.anyMap());
+    }
+
+    private WebResourceRequest mockNavigationRequest(final String url, final boolean isForMainFrame) {
+        final WebResourceRequest request = Mockito.mock(WebResourceRequest.class);
+        when(request.getUrl()).thenReturn(Uri.parse(url));
+        when(request.isForMainFrame()).thenReturn(isForMainFrame);
+        return request;
+    }
+
+    /**
+     * The realistic main-frame sequence: an https navigation is deferred to the WebView (returns
+     * {@code false}), the WebView then actually loads it (firing {@code onPageStarted}), and a
+     * subsequent PKeyAuth challenge validates its SubmitUrl against that committed URL — taking
+     * precedence over {@link WebView#getUrl()}. {@code onPageStarted} is the single source of truth
+     * for the challenging origin; the deferral itself records nothing.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_MainFrameHttpsNavigation_BecomesChallengingOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame https navigation deferred to the WebView...
+            assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_INVALID_URL, true)));
+            // ...then the WebView actually loads it, which is what records the challenging origin.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            // Subsequent PKeyAuth challenge derives its challenging origin from the committed URL.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("Committed main-frame https URL must be the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * Coverage for the gap mohitc1 surfaced: URLs that an override branch loads via
+     * {@code view.loadUrl(...)} never pass through {@code handleUrl}'s defer branch, yet
+     * {@code onPageStarted} still fires for them. So even when a main-frame URL is overridden
+     * (handled, {@code shouldOverrideUrlLoading} returns {@code true}), the https target the WebView
+     * subsequently loads is recorded via {@code onPageStarted} and becomes the challenging origin.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OverrideBranchLoadUrlTarget_RecordedViaOnPageStarted() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame URL that is overridden (header-forwarding branch, returns true) -> the defer
+            // branch never runs, so it records nothing on its own.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_MSA_HEADER_FORWARDING_POSITIVE_URL, true)));
+            // The https target that override loads via view.loadUrl(...) is caught by onPageStarted.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("A loadUrl target caught by onPageStarted must become the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A subframe https navigation must NOT become the challenging origin (subframe poisoning guard).
+     * With nothing recorded, the factory receives the {@link WebView#getUrl()} fallback instead.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_SubframeHttpsNavigation_DoesNotBecomeOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Subframe navigation (isForMainFrame == false) must not be recorded.
+            mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_INVALID_URL, false));
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("Subframe navigation must not become the challenging origin; expected view.getUrl() fallback",
+                    FALLBACK_ORIGIN_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A main-frame https URL that we OVERRIDE (handled, returns {@code true}) must NOT be recorded,
+     * because the WebView never actually loads it. Recording it would false-reject the next legitimate
+     * challenge on the real page. Here the derived origin falls back to {@link WebView#getUrl()}.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OverriddenMainFrameUrl_DoesNotBecomeOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame https URL we override (header-forwarding branch, returns true) -> not recorded.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_MSA_HEADER_FORWARDING_POSITIVE_URL, true)));
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("An overridden (never-loaded) URL must not become the challenging origin; expected view.getUrl() fallback",
+                    FALLBACK_ORIGIN_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * onPageStarted is the sole origin source on pre-API-24 devices (the deprecated String overload
+     * of shouldOverrideUrlLoading carries no frame info) and for redirect targets that never commit
+     * via shouldOverrideUrlLoading. An https URL delivered through onPageStarted must be recorded as
+     * the challenging origin and take precedence over {@link WebView#getUrl()}.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedHttpsRedirect_BecomesChallengingOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Redirect target delivered via onPageStarted (main-frame-only by Android contract).
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("onPageStarted https URL must be recorded as the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A non-https onPageStarted callback must NOT replace an already-recorded https origin (pins the
+     * https-only recording from round 4). A cleartext detour cannot demote the trusted origin.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedNonHttps_DoesNotReplaceOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // First an https page is recorded, then a cleartext page must not overwrite it.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+            mWebViewClient.onPageStarted(mockWebView, TEST_SSL_PROTECTION_HTTP_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("A non-https onPageStarted must not replace the recorded https origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * With the flight off, onPageStarted recording and challenging-origin derivation are a complete
+     * no-op: the factory receives {@code null} regardless of what onPageStarted saw.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedFlightOff_NoOp() throws ClientException {
+        disablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertNull("With the flight off, no challenging origin is derived",
+                    originCaptor.getValue());
+        }
+    }
+    // ===== PKeyAuth SubmitUrl same-origin: navigation-context telemetry (AB#3706623, round 8) =====
+    // The WebView client annotates the current span with two non-PII navigation-context attributes it
+    // alone knows: whether the challenge is on the main frame, and where the challenging origin was
+    // derived from (recorded https URL vs a view.getUrl() fallback vs none). These are set only when
+    // the master flight is on.
+    //
+    // Round 15 (mohitc1): these two tests previously stubbed SpanExtension.current() and
+    // makeCurrentSpan() independently via MockedStatic, so current() returned a mock span
+    // unconditionally and verify(makeCurrentSpan(any())) only proved *some* span was made current.
+    // That could not detect production making span A current but writing the attributes to span B -
+    // exactly the wrong-span class of bug melissaahn originally caught in round 12. We now inject a
+    // capturing IOTelSpanFactory through the existing OTelUtility.setSpanFactory seam and let
+    // makeCurrentSpan()/current() round-trip through real OTel context (no MockedStatic<SpanExtension>),
+    // then assert the attributes landed on the *captured* span - the same object the production code
+    // created and made current. The OTel context round-trip works without an SDK (it is the pure
+    // opentelemetry-context ThreadLocal), and the factory/handler stay mocked so no signing occurs.
+
+    /**
+     * A main-frame PKeyAuth challenge with a recorded https origin annotates the current span with
+     * {@code pkeyauth_challenge_is_main_frame=true} and {@code pkeyauth_challenging_origin_source=recorded}.
+     * The attributes are asserted on the span captured from the injected factory, proving they land on
+     * the exact span the production code made current (round 15, mohitc1).
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_MainFrameRecordedOrigin_Emitted() {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Record an https main-frame origin, then dispatch a main-frame PKeyAuth challenge.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            // handleUrl creates a ProcessPKeyAuthChallenge span and makes it current before the two
+            // telemetry sites run. Because current()/makeCurrentSpan() round-trip for real, current()
+            // inside the scope resolves to exactly the captured span - so a wrong-span write would
+            // leave this captured span empty and fail the assertions below.
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.TRUE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("recorded",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
+        }
+    }
+
+    /**
+     * A subframe PKeyAuth challenge with nothing recorded annotates the span with
+     * {@code pkeyauth_challenge_is_main_frame=false} and {@code pkeyauth_challenging_origin_source=webview_url}
+     * (the {@link WebView#getUrl()} fallback). Validation is not relaxed for subframes; only the
+     * main-frame flag is recorded so a cross-origin iframe challenge can be measured. Asserted on the
+     * captured span for the same wrong-span reason as the main-frame case (round 15, mohitc1).
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_SubframeFallbackOrigin_Emitted() {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, false)));
+
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.FALSE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("webview_url",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
+        }
+    }
+
+    /**
+     * A capturing {@link IOTelSpanFactory} that intercepts the {@code ProcessPKeyAuthChallenge} span
+     * the production code creates and returns a real {@link RecordingSpan}, delegating every other span
+     * to {@link DefaultOTelSpanFactory}. Injected via {@link OTelUtility#setSpanFactory} and restored to
+     * the production default in {@link #cleanUp()}. Used to assert PKeyAuth navigation-context
+     * attributes land on the exact span made current (round 15, mohitc1).
+     */
+    private static final class CapturingSpanFactory implements IOTelSpanFactory {
+        private final String mTargetName;
+        private final IOTelSpanFactory mDelegate = new DefaultOTelSpanFactory();
+        private RecordingSpan mCaptured;
+
+        CapturingSpanFactory(final String targetName) {
+            mTargetName = targetName;
+        }
+
+        /** The recording span captured for the target name, or {@code null} if it was never created. */
+        RecordingSpan captured() {
+            return mCaptured;
+        }
+
+        @Override
+        public Span createSpan(final String name) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name);
+        }
+
+        @Override
+        public Span createSpan(final String name, final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name, callingPackageName);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext,
+                                         final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext, callingPackageName);
+        }
+    }
+
+    /**
+     * A minimal real {@link Span} implementation (NOT a Mockito mock) that records the attributes set
+     * on it. It deliberately does not override {@link Span#makeCurrent()}, so the default OTel context
+     * round-trip runs: making this span current stores it under the span key and
+     * {@link SpanExtension#current()} resolves back to this same instance. That is what lets the two
+     * telemetry tests prove the attributes landed on the span that was actually made current, rather
+     * than on an independently-stubbed mock (round 15, mohitc1).
+     */
+    private static final class RecordingSpan implements Span {
+        private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
+        private final List<String> mEventNames = new ArrayList<>();
+        private final List<Attributes> mEvents = new ArrayList<>();
+        private StatusCode mStatusCode = StatusCode.UNSET;
+        private String mStatusDescription = "";
+        private int mEndCount;
+        private Throwable mRecordedException;
+        private int mRecordedExceptionCount;
+
+        Object eventAttribute(final String eventName, final AttributeName attribute) {
+            final int index = mEventNames.indexOf(eventName);
+            return index < 0 ? null : mEvents.get(index).get(AttributeKey.stringKey(attribute.name()));
+        }
+
+        /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
+        Object attribute(final String keyName) {
+            for (final Map.Entry<AttributeKey<?>, Object> entry : mAttributes.entrySet()) {
+                if (entry.getKey().getKey().equals(keyName)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
+
+                int recordedExceptionCount() {
+                        return mRecordedExceptionCount;
+                }
+
+                StatusCode statusCode() {
+                        return mStatusCode;
+                }
+
+        @Override
+        public <T> Span setAttribute(final AttributeKey<T> key, final T value) {
+            mAttributes.put(key, value);
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes) {
+            mEventNames.add(name);
+            mEvents.add(attributes);
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes, final long timestamp,
+                             final TimeUnit unit) {
+            return addEvent(name, attributes);
+        }
+
+        @Override
+        public Span setStatus(final StatusCode statusCode, final String description) {
+            mStatusCode = statusCode;
+            mStatusDescription = description;
+            return this;
+        }
+
+        @Override
+        public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
+            mRecordedException = exception;
+            mRecordedExceptionCount++;
+            return this;
+        }
+
+        @Override
+        public Span updateName(final String name) {
+            return this;
+        }
+
+        @Override
+        public void end() {
+            mEndCount++;
+        }
+
+        @Override
+        public void end(final long timestamp, final TimeUnit unit) {
+            end();
+        }
+
+        @Override
+        public SpanContext getSpanContext() {
+            return SpanContext.getInvalid();
+        }
+
+        @Override
+        public boolean isRecording() {
+            return true;
+        }
+    }
+
+    /**
+     * With the master flight off, no navigation-context telemetry is emitted — the span is never
+     * touched, matching the end-to-end no-op guarantee.
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_FlightOff_NotEmitted() {
+        disablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final Span mockSpan = Mockito.mock(Span.class);
+
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
+             final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            // Flight off: no recording span is established and no attribute is emitted — a true
+            // end-to-end no-op relative to pre-fix behavior (AB#3706623, round 12).
+            spanExtension.verify(() -> SpanExtension.makeCurrentSpan(any()), Mockito.never());
+            Mockito.verifyNoInteractions(mockSpan);
+        }
+    }
+
+    /**
+     * When origin validation rejects a cross-origin {@code SubmitUrl}, the factory throws a
+     * {@link ClientException}. That exception is thrown from inside the round-12 recording-span
+     * scope; it must be rethrown (not swallowed) so handleUrl's outer catch runs the rejection path:
+     * surface the error to the completion callback, stop the WebView, and never reach the
+     * credential-bearing {@code loadUrl}. This pins the Finding-1 hard constraint that wrapping the
+     * dispatch in a span did not alter the rejection semantics (AB#3706623, round 12).
+     */
+    @Test
+    public void testPKeyAuthValidationRejected_SurfacesErrorStopsLoadingAndNeverLoadsUrl() {
+        enablePKeyAuthOriginValidationFlight();
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        // Exception telemetry can call a mocked DiagnosticContext; construct it before stubbing.
+        final ClientException validationException = new ClientException(
+                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                "SubmitUrl host is not same-origin with the challenging origin.");
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
+                PKeyAuthChallengeFactory.class,
+                (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
+                        .thenThrow(validationException))) {
+
+            final boolean result = webViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
+
+            assertTrue("shouldOverrideUrlLoading must return true (challenge intercepted and rejected)",
+                    result);
+            Mockito.verify(mockWebView).stopLoading();
+            Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+            assertEquals("A rejected SubmitUrl must surface the device-cert-request-invalid error",
+                    ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                    ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+            // The device-key-signed assertion must never be delivered to any URL.
+            Mockito.verify(mockWebView, Mockito.never())
+                    .loadUrl(Mockito.anyString(), Mockito.anyMap());
+        }
+    }
+
 
     @Test
     @Config(shadows = {
@@ -999,97 +3115,1151 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {
             ShadowProcessUtil.class})
-    public void testLoadDeviceCaUrlInWebView() {
-        // Mocks
-        final WebView mockWebview = Mockito.mock(WebView.class);
-        final AzureActiveDirectoryWebViewClient mockWebViewClient = Mockito.spy(mWebViewClient);
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
-
-        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
-        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+    public void testDeviceCaAuthorizeOnlyFlightConfiguration() {
+        assertEquals("EnableDeviceCaAuthorizeOnlyCredentialForwarding",
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getKey());
+        assertEquals(Boolean.FALSE,
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getDefaultValue());
     }
 
     @Test
     @Config(shadows = {
             ShadowProcessUtil.class})
-    public void testLoadDeviceCaUrlInBrowser() {
-        // Mocks
-        final WebView mockWebview = Mockito.mock(WebView.class);
-        final AzureActiveDirectoryWebViewClient mockWebViewClient = Mockito.spy(mWebViewClient);
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(false);
-
-        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
-        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString(), Mockito.any());
-    }
-
-    @Test
-    public void testLoadDeviceCaUrlInBrowserInBrokelessFlow() {
-        // Mocks
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyDisabledUsesOriginalHeaders() {
         final WebView mockWebview = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient mockWebViewClient = Mockito.spy(mWebViewClient);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
-        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString(), Mockito.any());
+
+        final Map<String, String> headersBeforeLoad = new HashMap<>(mRequestHeaders);
+        final RecordingSpan span = new RecordingSpan();
+
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            mockWebViewClient.createDeviceCaRequestRouter().loadInWebViewOrBrowser(
+                    TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        }
+
+        Mockito.verify(mockWebview).loadUrl(
+                eq(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                Mockito.same(mRequestHeaders));
+        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString());
+        assertEquals(headersBeforeLoad, mRequestHeaders);
+        assertEquals(Boolean.FALSE,
+                span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertNull(span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
     }
 
     @Test
-    public void testLoadDeviceCaUrlInWebviewInBrokelessFlow() {
-        // Mocks
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyEnabledSkipsHeadersForAllUrls() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final String[][] urls = {
+                {TEST_PARSED_HTTPS_DEVICE_CA_URL,
+                        TEST_PARSED_HTTPS_DEVICE_CA_URL},
+                {"https://login.microsoftonline.com/common/authorize?ismdmurl=1",
+                        "https://login.microsoftonline.com/common/authorize?ismdmurl=1"},
+                {TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                        TEST_PARSED_HTTPS_DEVICE_CA_URL},
+                {"https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1",
+                        "https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1"},
+                {"not a parsed URL&ismdmurl=1",
+                        "not a parsed URL&ismdmurl=1"}
+        };
+        final Map<String, String> headersBeforeLoad = new HashMap<>(mRequestHeaders);
+
+        for (final String[] url : urls) {
+            final WebView mockWebview = Mockito.mock(WebView.class);
+            mWebViewClient.createDeviceCaRequestRouter().loadInWebViewOrBrowser(
+                    url[0], mockWebview);
+
+            Mockito.verify(mockWebview).loadUrl(url[1]);
+            Mockito.verify(mockWebview, Mockito.never())
+                    .loadUrl(Mockito.anyString(), Mockito.anyMap());
+        }
+        assertEquals(headersBeforeLoad, mRequestHeaders);
+    }
+
+    @Test
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyEnabledEmitsDecisionTelemetry() {
         final WebView mockWebview = Mockito.mock(WebView.class);
-        final AzureActiveDirectoryWebViewClient mockWebViewClient  = new AzureActiveDirectoryWebViewClient(
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        final RecordingSpan span = new RecordingSpan();
+
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            mWebViewClient.createDeviceCaRequestRouter().loadInWebViewOrBrowser(
+                    TEST_PARSED_HTTPS_DEVICE_CA_URL, mockWebview);
+        }
+
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
+    }
+
+        @Test
+        public void testIsDeviceCaRequest_ParsesQueryParameterInAnyPositionRegardlessOfFlight() {
+                setNativeDeviceCaManagementAppHandoffFlight(false);
+
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
+        assertTrue(mWebViewClient.isDeviceCaRequest(TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER));
+        assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?ismdmurl=0"));
+        assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?notismdmurl=1"));
+
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER));
+        }
+
+        @Test
+        public void testIsDeviceCaRequest_RejectsMalformedLegacySubstringRegardlessOfFlight() {
+                setNativeDeviceCaManagementAppHandoffFlight(false);
+                assertFalse(mWebViewClient.isDeviceCaRequest(TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING));
+
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+                assertFalse(mWebViewClient.isDeviceCaRequest(TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING));
+        }
+
+        @Test
+        public void testIsDeviceCaRequest_StrictParserFailureUsesLegacyParserAndEmitsTelemetry() {
+                final RecordingSpan span = new RecordingSpan();
+
+                try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+                        assertTrue(mWebViewClient.isDeviceCaRequest("urn:test&ismdmurl=1"));
+                }
+
+                assertEquals(Boolean.TRUE, span.attribute(
+                                AttributeName.device_ca_legacy_marker_parser_fallback_used.name()));
+        }
+
+        @Test
+        public void testIsDeviceCaRequest_StrictParserFalseDoesNotUseLegacyParser() {
+                final RecordingSpan span = new RecordingSpan();
+
+                try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+                        assertFalse(mWebViewClient.isDeviceCaRequest(
+                                        "browser://abcxyz/xyz?notismdmurl=1&value=ismdmurl=1"));
+                }
+
+                assertNull(span.attribute(
+                                AttributeName.device_ca_legacy_marker_parser_fallback_used.name()));
+        }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+        public void testHttpsDeviceCaRequest_RecordsNativeHandoffOnProcessDeviceCaRequest() {
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+        final String flowCorrelationId = "11111111-1111-4111-8111-111111111111";
+        final CapturingSpanFactory spanFactory =
+                                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                newClientWithCorrelationId(flowCorrelationId));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doNothing().when(routerFor(webViewClient)).launchReWpjManagementApp(anyString());
+
+        webViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL);
+
+        Mockito.verify(routerFor(webViewClient)).launchReWpjManagementApp(INTUNE_APP_PACKAGE_NAME);
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_native_device_ca_management_app_handoff_enabled.name()));
+        assertEquals("native_handoff_succeeded", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(flowCorrelationId, spanFactory.captured().attribute(
+                AttributeName.correlation_id.name()));
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testHttpsDeviceCaRequest_RuntimeFailure_ReturnsStandardErrorOnce() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doThrow(new IllegalStateException())
+                .when(routerFor(webViewClient)).resolveDeviceManagementAppPackage();
+
+        webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL);
+
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
+                resultCaptor.getValue().getResultCode());
+        assertTrue(resultCaptor.getValue().getException().getMessage()
+                .contains(IllegalStateException.class.getSimpleName()));
+        Mockito.verify(mockWebView, Mockito.atLeastOnce()).stopLoading();
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+        assertEquals("unexpected_routing_failure", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_BrowserLaunchFailure_ReturnsStandardErrorOnce() {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mActivity, callback));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        Mockito.doReturn(false).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doThrow(new ActivityNotFoundException("No browser"))
+                .when(webViewClient).openLinkInBrowser(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(callback, Mockito.times(1)).onChallengeResponseReceived(any());
+        Mockito.verify(mockWebView, Mockito.atLeastOnce()).stopLoading();
+        assertEquals("browser_launch_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_CompanyPortalLaunchPrecedesRoutingGates() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(mWebViewClient);
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        Mockito.verify(mockFlightsProvider, never()).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+        Mockito.verify(routerFor(webViewClient), never()).resolveDeviceManagementAppPackage();
+        Mockito.verify(routerFor(webViewClient), never()).launchReWpjManagementApp(anyString());
+        assertNull(spanFactory.captured().attribute(AttributeName.is_webcp_in_webview_enabled.name()));
+        assertNull(spanFactory.captured().attribute(
+                AttributeName.is_native_device_ca_management_app_handoff_enabled.name()));
+        assertEquals("not_evaluated", spanFactory.captured().attribute(
+                AttributeName.device_ca_management_owner.name()));
+        assertEquals("legacy_company_portal_launch_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+    }
+
+    @Test
+    public void testDeviceCaEnrollmentStepIsIsolatedBetweenWebViewClients()
+            throws org.json.JSONException {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final String enrollmentUrl =
+                "browser://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1";
+        final OnboardingTelemetryRecorder firstRecorder = newOnboardingRecorder();
+        final OnboardingTelemetryRecorder nextRecorder = newOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient firstClient = Mockito.spy(
+                createWebViewClient(mActivity));
+        firstClient.setOnboardingTelemetryRecorder(firstRecorder);
+        Mockito.doReturn(true).when(firstClient).isWebCpInWebviewFeatureEnabled(anyString());
+        final WebView firstView = Mockito.mock(WebView.class);
+
+        firstClient.processWebsiteRequest(firstView, enrollmentUrl);
+
+        assertTrue(onboardingHasStep(firstRecorder, STEP_MDM_ENROLLMENT_STARTED));
+        assertFalse(onboardingHasStep(nextRecorder, STEP_MDM_ENROLLMENT_STARTED));
+        Mockito.verify(firstView).loadUrl(
+                eq("https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1"), any());
+
+        final AzureActiveDirectoryWebViewClient nextClient = Mockito.spy(
+                createWebViewClient(mActivity));
+        nextClient.setOnboardingTelemetryRecorder(nextRecorder);
+        Mockito.doReturn(true).when(nextClient).isWebCpInWebviewFeatureEnabled(anyString());
+        final WebView nextView = Mockito.mock(WebView.class);
+
+        nextClient.processWebsiteRequest(nextView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final org.json.JSONArray firstSteps =
+                new org.json.JSONObject(firstRecorder.finalizeBlob()).getJSONArray("steps_list");
+        final org.json.JSONArray nextSteps =
+                new org.json.JSONObject(nextRecorder.finalizeBlob()).getJSONArray("steps_list");
+        assertEquals(1, firstSteps.length());
+        assertEquals(STEP_MDM_ENROLLMENT_STARTED,
+                firstSteps.getJSONObject(0).getString("step_id"));
+        assertEquals(0, nextSteps.length());
+        Mockito.verify(nextView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_FlightOff_UsesLegacyFlow() {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity));
+        final OnboardingTelemetryRecorder onboardingTelemetryRecorder =
+                Mockito.mock(OnboardingTelemetryRecorder.class);
+        webViewClient.setOnboardingTelemetryRecorder(onboardingTelemetryRecorder);
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(DeviceCaRequestRouter.RoutingResult.Completed.INSTANCE)
+                .when(routerFor(webViewClient)).loadInWebViewOrBrowser(anyString(), any());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(onboardingTelemetryRecorder, never()).addStep(STEP_MDM_ENROLLMENT_STARTED);
+        Mockito.verify(routerFor(webViewClient), never()).resolveDeviceManagementAppPackage();
+        Mockito.verify(routerFor(webViewClient), never()).launchReWpjManagementApp(anyString());
+        Mockito.verify(routerFor(webViewClient)).loadInWebViewOrBrowser(
+                TEST_PARSED_BROWSER_DEVICE_CA_URL, mockWebView);
+        assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
+                AttributeName.is_native_device_ca_management_app_handoff_enabled.name()));
+        assertEquals("not_evaluated", spanFactory.captured().attribute(
+                AttributeName.device_ca_management_owner.name()));
+        assertNull(spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_FlightOff_CompanyPortalLaunchTelemetry() {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            mWebViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        assertEquals("legacy_company_portal_launch_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(0, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_FlightOff_CompanyPortalFailureTelemetry() {
+        setNativeDeviceCaManagementAppHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = mockActivityThatThrowsOnLaunch();
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity));
+        Mockito.doReturn(DeviceCaRequestRouter.RoutingResult.Completed.INSTANCE)
+                .when(routerFor(webViewClient)).loadInWebViewOrBrowser(anyString(), any());
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        assertNull(spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+        public void testProcessDeviceCaRequest_CompanyPortalLaunchPrecedesNativeRouting() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(mWebViewClient);
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(null).when(routerFor(webViewClient)).resolveDeviceManagementAppPackage();
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        Mockito.verify(routerFor(webViewClient), never()).resolveDeviceManagementAppPackage();
+        assertEquals("legacy_company_portal_launch_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(0, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+        public void testProcessDeviceCaRequest_CompanyPortalFailureContinuesNativeRouting() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = mockActivityThatThrowsOnLaunch();
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(null).when(routerFor(webViewClient)).resolveDeviceManagementAppPackage();
+        Mockito.doReturn(DeviceCaRequestRouter.RoutingResult.Completed.INSTANCE)
+                .when(routerFor(webViewClient)).loadInWebViewOrBrowser(anyString(), any());
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        Mockito.verify(routerFor(webViewClient)).resolveDeviceManagementAppPackage();
+        assertNull(spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
                 mActivity,
-                new IAuthorizationCompletionCallback() {
-                    @Override
-                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doAnswer(invocation -> {
+            final Intent intent = invocation.getArgument(0);
+            if (INTUNE_APP_PACKAGE_NAME.equals(intent.getPackage())) {
+                throw new ActivityNotFoundException();
+            }
+            return null;
+        }).when(mockActivity).startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
 
-                    }
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
-                    @Override
-                    public void setPKeyAuthStatus(boolean status) {
-                        return;
-                    }
-                },
-                new OnPageLoadedCallback() {
-                    @Override
-                    public void onPageLoaded(final String url) {
-                        return;
-                    }
-                },
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockActivity, Mockito.times(2)).startActivity(intentCaptor.capture());
+        final Intent launchedIntent = intentCaptor.getAllValues().get(1);
+        assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
+        assertEquals(TEST_PARSED_HTTPS_DEVICE_CA_URL,
+                launchedIntent.getDataString());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
+        assertEquals("native_handoff_app_link_failed_generic_https_fallback_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals("launch_succeeded", spanFactory.captured().attribute(
+                AttributeName.device_ca_generic_https_launch_outcome.name()));
+        assertEquals("launch_failed",
+                spanFactory.captured().attribute(
+                        AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals(2, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_NativeLaunchFails_AppLinkLaunchesTargetPackage() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                INTUNE_APP_PACKAGE_NAME,
+                INTUNE_APP_PACKAGE_NAME + ".ReWpjActivity");
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
+        assertEquals(TEST_PARSED_HTTPS_DEVICE_CA_URL, launchedIntent.getDataString());
+        assertEquals(INTUNE_APP_PACKAGE_NAME, launchedIntent.getPackage());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+        assertEquals("launch_succeeded",
+                spanFactory.captured().attribute(
+                        AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals("native_handoff_failed_app_link_fallback_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_AppLinkLaunchFails_GenericHttpsFallbackSucceeds() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                INTUNE_APP_PACKAGE_NAME,
+                INTUNE_APP_PACKAGE_NAME + ".ReWpjActivity");
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doAnswer(invocation -> {
+            final Intent intent = invocation.getArgument(0);
+            if (INTUNE_APP_PACKAGE_NAME.equals(intent.getPackage())) {
+                throw new SecurityException("App Link launch denied by policy");
+            }
+            return null;
+        }).when(mockActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockActivity, Mockito.times(2)).startActivity(intentCaptor.capture());
+        assertEquals(INTUNE_APP_PACKAGE_NAME, intentCaptor.getAllValues().get(0).getPackage());
+        assertNull(intentCaptor.getAllValues().get(1).getPackage());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(any());
+        assertEquals("launch_failed",
+                spanFactory.captured().attribute(
+                        AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals("native_handoff_app_link_failed_generic_https_fallback_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(2, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_AppLinkRuntimeFailure_DoesNotFallback() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                INTUNE_APP_PACKAGE_NAME,
+                INTUNE_APP_PACKAGE_NAME + ".ReWpjActivity");
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new IllegalStateException("Unexpected App Link launch failure"))
+                .when(mockActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockActivity, Mockito.times(1)).startActivity(intentCaptor.capture());
+        assertEquals(INTUNE_APP_PACKAGE_NAME, intentCaptor.getValue().getPackage());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(any());
+        assertEquals("unexpected_routing_failure", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_TargetedLaunchPolicyDenied_BrowserFallbackCompletesOnce() {
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new SecurityException("Native launch denied by policy"))
+                .when(routerFor(webViewClient)).launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
+        assertEquals(TEST_PARSED_HTTPS_DEVICE_CA_URL, launchedIntent.getDataString());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_NoBrowser_LoadsHttpsUrlInWebView() {
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockActivity).startActivity(any(Intent.class));
+        assertEquals("webview_load_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals("handler_not_found", spanFactory.captured().attribute(
+                AttributeName.device_ca_generic_https_launch_outcome.name()));
+        assertEquals("load_succeeded", spanFactory.captured().attribute(
+                AttributeName.device_ca_webview_load_outcome.name()));
+        assertEquals("launch_failed",
+                spanFactory.captured().attribute(
+                        AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals(2, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_WebViewFallback_InitializesWebCpFlow() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+        Mockito.doNothing().when(webViewClient).openLinkInBrowser(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_WEBSITE_REQUEST_URL);
+
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_WebViewLoadFails_RecordsTerminalFailure() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        Mockito.doThrow(new RuntimeException("WebView load failed"))
+                .when(mockWebView).loadUrl(anyString(), any());
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        webViewClient.setRequestHeaders(new HashMap<>());
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
+                resultCaptor.getValue().getResultCode());
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+        assertEquals("webview_load_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals("load_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_webview_load_outcome.name()));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_AuthorizeOnlyWebViewLoadFails_RecordsTerminalFailure() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING)).thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        Mockito.doThrow(new RuntimeException("Authorize-only WebView load failed"))
+                .when(mockWebView).loadUrl(anyString());
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockWebView).loadUrl(TEST_PARSED_HTTPS_DEVICE_CA_URL);
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(any());
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertEquals("webview_load_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testHttpsDeviceCaRequest_NativeLaunchAndWebViewLoadFail_ReturnsStandardErrorOnce() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        Mockito.doThrow(new RuntimeException("WebView load failed"))
+                .when(mockWebView).loadUrl(anyString(), any());
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        webViewClient.setRequestHeaders(new HashMap<>());
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL);
+
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
+                resultCaptor.getValue().getResultCode());
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+        assertEquals("webview_load_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_TargetedLaunchAndBrowserFail_LoadsHttpsUrlInWebView() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                new AzureActiveDirectoryWebViewClient(
+                        mockActivity,
+                        Mockito.mock(IAuthorizationCompletionCallback.class),
+                        url -> {},
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false));
+        webViewClient.setRequestHeaders(new HashMap<>());
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+        assertEquals("webview_load_succeeded",
+                spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
+        assertEquals("launch_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_generic_https_launch_outcome.name()));
+        assertEquals("load_succeeded", spanFactory.captured().attribute(
+                AttributeName.device_ca_webview_load_outcome.name()));
+        assertEquals("launch_failed",
+                spanFactory.captured().attribute(
+                        AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals(3, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_GenericHttpsRuntimeFailure_DoesNotFallback() {
+        setNativeDeviceCaManagementAppHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doAnswer(invocation -> {
+            final Intent intent = invocation.getArgument(0);
+            if (INTUNE_APP_PACKAGE_NAME.equals(intent.getPackage())) {
+                throw new ActivityNotFoundException();
+            }
+            throw new IllegalStateException("Unexpected generic HTTPS launch failure");
+        }).when(mockActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockActivity, Mockito.times(2)).startActivity(intentCaptor.capture());
+        assertNull(intentCaptor.getAllValues().get(1).getPackage());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(any());
+        assertEquals("launch_failed", spanFactory.captured().attribute(
+                AttributeName.device_ca_management_app_link_outcome.name()));
+        assertEquals("unexpected_routing_failure", spanFactory.captured().attribute(
+                AttributeName.device_ca_routing_outcome.name()));
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+    }
+
+    @Test
+        @Config(shadows = {ShadowProcessUtil.class})
+    public void testProcessDeviceCaRequest_BrowserLaunchPolicyDenied_WebViewFallbackDoesNotComplete() {
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new SecurityException("Browser launch denied by policy"))
+                .when(mockActivity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
+                createWebViewClient(mockActivity, mockCallback));
+        webViewClient.setRequestHeaders(new HashMap<>());
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(routerFor(webViewClient))
+                .resolveDeviceManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(routerFor(webViewClient))
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockActivity, Mockito.times(2)).startActivity(intentCaptor.capture());
+        assertEquals(TEST_PARSED_HTTPS_DEVICE_CA_URL,
+                intentCaptor.getAllValues().get(1).getDataString());
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+        Mockito.verifyNoInteractions(mockCallback);
+    }
+
+    @Test
+    public void testGetDeviceManagementAppPackage_CompanyPortalProfileOwnerTelemetry() {
+        assertManagementOwnerTelemetry(true, false, false,
+                COMPANY_PORTAL_APP_PACKAGE_NAME, "company_portal_profile_owner");
+    }
+
+    @Test
+    public void testGetDeviceManagementAppPackage_GoogleDpcProfileOwnerTelemetry() {
+        assertManagementOwnerTelemetry(false, true, false,
+                INTUNE_APP_PACKAGE_NAME, "google_dpc_profile_owner");
+    }
+
+    @Test
+    public void testGetDeviceManagementAppPackage_GoogleDpcDeviceOwnerTelemetry() {
+        assertManagementOwnerTelemetry(false, false, true,
+                INTUNE_APP_PACKAGE_NAME, "google_dpc_device_owner");
+    }
+
+    @Test
+    public void testGetDeviceManagementAppPackage_NoOwnerTelemetry() {
+        assertManagementOwnerTelemetry(false, false, false, null, "none");
+    }
+
+    @Test
+    public void testGetDeviceManagementAppPackage_NoDevicePolicyManagerTelemetry() {
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        final RecordingSpan span = new RecordingSpan();
+        final AzureActiveDirectoryWebViewClient webViewClient = createWebViewClient(mockActivity);
+
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            assertNull(webViewClient.createDeviceCaRequestRouter()
+                    .resolveDeviceManagementAppPackage());
+        }
+
+        assertEquals("device_policy_manager_unavailable",
+                span.attribute(AttributeName.device_ca_management_owner.name()));
+    }
+
+    private void assertManagementOwnerTelemetry(final boolean isCompanyPortalProfileOwner,
+                                                final boolean isGoogleDpcProfileOwner,
+                                                final boolean isGoogleDpcDeviceOwner,
+                                                final String expectedPackage,
+                                                @NonNull final String expectedOwner) {
+        final DevicePolicyManager devicePolicyManager = Mockito.mock(DevicePolicyManager.class);
+        when(devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME))
+                .thenReturn(isCompanyPortalProfileOwner);
+        when(devicePolicyManager.isProfileOwnerApp("com.google.android.apps.work.clouddpc"))
+                .thenReturn(isGoogleDpcProfileOwner);
+        when(devicePolicyManager.isDeviceOwnerApp("com.google.android.apps.work.clouddpc"))
+                .thenReturn(isGoogleDpcDeviceOwner);
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getSystemService(Activity.DEVICE_POLICY_SERVICE))
+                .thenReturn(devicePolicyManager);
+        final RecordingSpan span = new RecordingSpan();
+        final AzureActiveDirectoryWebViewClient webViewClient = createWebViewClient(mockActivity);
+
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            assertEquals(expectedPackage, webViewClient.createDeviceCaRequestRouter()
+                    .resolveDeviceManagementAppPackage());
+        }
+
+        assertEquals(expectedOwner,
+                span.attribute(AttributeName.device_ca_management_owner.name()));
+    }
+
+    private MockedConstruction<PackageHelper> mockCompanyPortalCompatibilityConditions() {
+        return mockConstruction(PackageHelper.class, (packageHelper, context) -> {
+            when(packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME))
+                    .thenReturn(true);
+            when(packageHelper.getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
+                    .thenReturn(IPPHONE_APP_SHA512_RELEASE_SIGNATURE);
+            when(packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME))
+                    .thenReturn(true);
+        });
+    }
+
+    private Activity mockActivityThatThrowsOnLaunch() {
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        return mockActivity;
+    }
+
+    private DeviceCaRequestRouter routerFor(
+            @NonNull final AzureActiveDirectoryWebViewClient webViewClient) {
+                return mDeviceCaRequestRouters.computeIfAbsent(webViewClient, client -> {
+                        final DeviceCaRequestRouter router = Mockito.spy(
+                                        client.createDeviceCaRequestRouter());
+                        Mockito.doReturn(router).when(client).createDeviceCaRequestRouter();
+                        return router;
+                });
+        }
+
+        private AzureActiveDirectoryWebViewClient spyWithRouter(
+                        @NonNull final AzureActiveDirectoryWebViewClient webViewClient) {
+                final AzureActiveDirectoryWebViewClient spy = Mockito.spy(webViewClient);
+                routerFor(spy);
+                return spy;
+    }
+
+    private AzureActiveDirectoryWebViewClient createWebViewClient(@NonNull final Activity activity) {
+        return createWebViewClient(
+                activity, Mockito.mock(IAuthorizationCompletionCallback.class));
+    }
+
+    private AzureActiveDirectoryWebViewClient createWebViewClient(
+                @NonNull final Activity activity,
+                @NonNull final IAuthorizationCompletionCallback callback) {
+        return new AzureActiveDirectoryWebViewClient(
+                activity,
+                callback,
+                url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
-                true);
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+                false);
+    }
 
+    private void setNativeDeviceCaManagementAppHandoffFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF))
+                .thenReturn(enabled);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(false);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
-        Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
     }
 
     @Test
@@ -1118,7 +4288,6 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesIntentRedirectUrl() {
-        setBrokerInstallIntentValidationFlight(true);
         final Context mockContext = Mockito.mock(Context.class);
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getContext()).thenReturn(mockContext);
@@ -1127,112 +4296,181 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
         Mockito.verify(mockContext).startActivity(intentCaptor.capture());
-        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
-        assertNull(intentCaptor.getValue().getComponent());
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final Intent launched = intentCaptor.getValue();
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, launched.getPackage());
+        assertNull(launched.getComponent());
+        // Play install attribution travels in the data URI's query string, not in extras, so it
+        // survives the rebuild intact.
+        assertEquals("com.azure.authenticator", launched.getData().getQueryParameter("id"));
+        assertTrue(launched.getData().getQueryParameter("referrer").contains("utm_source"));
+        assertEquals("web_auto_redirect", launched.getData().getQueryParameter("pcampaignid"));
+        assertNull(launched.getExtras());
     }
 
     @Test
-    public void testIntentToInstallBroker_blocksNonAllowlistedPackage_whenValidationEnabled() {
-        setBrokerInstallIntentValidationFlight(true);
+    public void testIntentToInstallBroker_blocksNonAllowlistedPackage() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE);
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksExplicitComponent() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_EXPLICIT_COMPONENT);
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_COMPONENT_AND_EXTRAS);
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksNonBrokerAppListing() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_NON_BROKER_APP_ID);
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksDuplicateAppIds() throws URISyntaxException {
+        final String[] queries = {
+                "id=com.azure.authenticator&id=com.example.unrelatedapp",
+                "id=com.example.unrelatedapp&id=com.azure.authenticator",
+                "id=com.azure.authenticator&id=com.azure.authenticator"
+        };
+        for (final String query : queries) {
+            for (final String scheme : new String[]{"https", "market"}) {
+                final String listing = "https".equals(scheme)
+                        ? "play.google.com/store/apps/details" : "details";
+                final String intentUrl = "intent://" + listing + "?" + query
+                        + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                        Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                assertIntentUrlIsNotLaunched(intentUrl);
+            }
+        }
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksEncodedDuplicateAppIds() throws URISyntaxException {
+        final String[] queries = {
+                "id=com.azure.authenticator&%69d=com.example.unrelatedapp",
+                "%69d=com.example.unrelatedapp&id=com.azure.authenticator",
+                "id=com.azure.authenticator&i%64=com.example.unrelatedapp",
+                "i%64=com.example.unrelatedapp&id=com.azure.authenticator",
+                "id=com.azure.authenticator&%69%64=com.example.unrelatedapp",
+                "%69%64=com.example.unrelatedapp&id=com.azure.authenticator"
+        };
+        for (final String query : queries) {
+            for (final String scheme : new String[]{"https", "market"}) {
+                final String listing = "https".equals(scheme)
+                        ? "play.google.com/store/apps/details" : "details";
+                final String intentUrl = "intent://" + listing + "?" + query
+                        + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                        Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                assertIntentUrlIsNotLaunched(intentUrl);
+            }
+        }
+    }
+
+    @Test
+    public void testIntentToInstallBroker_preservesEncodedAttribution() throws URISyntaxException {
+        final String intentUrl =
+                "intent://play.google.com/store/apps/details?id=com.azure.authenticator"
+                        + "&referrer=utm_source%3Dexample%26id%3Dcampaign&pcampaignid=example"
+                        + "#Intent;scheme=https;package=com.android.vending;end";
+        final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
         final Context mockContext = Mockito.mock(Context.class);
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getContext()).thenReturn(mockContext);
 
-        // The request passes the install-intent gate (so it is "handled") ...
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
-        // ... but a parsed target package that is not on the allow-list must not be launched.
-        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
-    @Test
-    public void testIntentToInstallBroker_clearsExplicitComponent_whenValidationEnabled() {
-        setBrokerInstallIntentValidationFlight(true);
-        final Context mockContext = Mockito.mock(Context.class);
-        final WebView mockWebView = Mockito.mock(WebView.class);
-        when(mockWebView.getContext()).thenReturn(mockContext);
-
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_EXPLICIT_COMPONENT));
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, intentUrl));
 
         final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
         Mockito.verify(mockContext).startActivity(intentCaptor.capture());
-        // Any explicit component is cleared; only the allow-listed package remains.
-        assertNull(intentCaptor.getValue().getComponent());
-        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        assertEquals(parsedIntent.getData(), intentCaptor.getValue().getData());
+    }
+
+    /** Only the app-details operation is a store listing; market://search is not. */
+    @Test
+    public void testIntentToInstallBroker_blocksNonDetailsMarketOperation() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_MARKET_SEARCH);
+    }
+
+    /** Same constraint on the https side: a broker id in the query doesn't make /redeem a listing. */
+    @Test
+    public void testIntentToInstallBroker_blocksNonListingPlayStorePath() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_PLAY_STORE_REDEEM);
     }
 
     @Test
-    public void testIntentToInstallBroker_legacyBehavior_whenValidationDisabled() {
+    public void testIntentToInstallBroker_dropsExtrasAndFlags() throws URISyntaxException {
+        final String intentUrl = "intent://play.google.com/store/apps/details?id=com.azure.authenticator"
+                + "#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;"
+                + "launchFlags=0x18000000;S.exampleExtra=value;end";
+
+        final Intent result = mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME));
+
+        assertNotNull(result);
+        assertNull(result.getExtras());
+        assertEquals(0, result.getFlags());
+        assertEquals(Intent.ACTION_VIEW, result.getAction());
+        assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
+    }
+
+    /** A {@code market://details} listing for a known broker is an equally valid request shape. */
+    @Test
+    public void testIntentToInstallBroker_allowsMarketDetailsUri() throws URISyntaxException {
+        final String intentUrl = "intent://details?id=com.azure.authenticator"
+                + "#Intent;scheme=market;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+        assertNotNull(mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+    }
+
+    /** A trailing slash on the listing path is tolerated; a different path still is not. */
+    @Test
+    public void testIntentToInstallBroker_allowsTrailingSlashOnListingPath() throws URISyntaxException {
+        final String intentUrl = "intent://play.google.com/store/apps/details/?id=com.azure.authenticator"
+                + "#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+        assertNotNull(mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+        assertIntentUrlIsNotLaunched(TEST_INTENT_PLAY_STORE_REDEEM);
+    }
+
+        /** A selector and a top-level package are mutually exclusive. */
+    @Test
+    public void testBuildBrokerInstallIntent_blocksSelector() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=com.azure.authenticator"));
+        final Intent selector = new Intent(Intent.ACTION_VIEW);
+        selector.setPackage("com.example.unrelatedapp");
+        intent.setSelector(selector);
+
+        assertNull(mWebViewClient.buildBrokerInstallIntent(intent));
+    }
+
+    @Test
+    public void testIntentToInstallBroker_killSwitchOffRestoresLegacyLaunch() {
         setBrokerInstallIntentValidationFlight(false);
+        try {
+            final Context mockContext = Mockito.mock(Context.class);
+            final WebView mockWebView = Mockito.mock(WebView.class);
+            when(mockWebView.getContext()).thenReturn(mockContext);
+
+            mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_COMPONENT_AND_EXTRAS);
+
+            final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+            Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+            assertNotNull(intentCaptor.getValue().getComponent());
+        } finally {
+            CommonFlightsManager.INSTANCE.resetFlightsManager();
+        }
+    }
+
+    /** An intent:// URL we refuse to launch is handled, but nothing is started. */
+    private void assertIntentUrlIsNotLaunched(final String intentUrl) {
         final Context mockContext = Mockito.mock(Context.class);
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getContext()).thenReturn(mockContext);
 
-        // With the validation flight off, the legacy launch behavior is preserved (rollback switch).
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
-        Mockito.verify(mockContext).startActivity(any(Intent.class));
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
-    /**
-     * A selector cannot be injected through the {@code intent://} URL scheme (Android does not
-     * (de)serialize a selector via parseUri/toUri), so the selector-clearing defense is exercised
-     * directly on the sanitizer. On Android a top-level package and a selector are mutually
-     * exclusive, so an intent that smuggles the store package inside a selector has a {@code null}
-     * top-level package: the sanitizer nulls the selector (verified on the mutated intent) and then
-     * blocks the intent because the validated package is null.
-     */
-    @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_clearsSelectorAndBlocks() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        final Intent selector = new Intent(Intent.ACTION_VIEW);
-        selector.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
-        intent.setSelector(selector);
-
-        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
-
-        assertNull(result);
-        // The selector was cleared before the null-package block, so it can never redirect resolution.
-        assertNull(intent.getSelector());
-    }
-
-    /**
-     * When the validated (top-level) package is not allow-listed, the intent must be blocked
-     * (returns {@code null}) so it is never launched.
-     */
-    @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_returnsNullForNonAllowlistedPackage() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setPackage("com.example.unrelatedapp");
-
-        assertNull(mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent));
-    }
-
-    /**
-     * For an allow-listed target, URI-permission grant flags are stripped and CATEGORY_BROWSABLE is
-     * added, while unrelated flags (e.g. FLAG_ACTIVITY_NEW_TASK) are preserved.
-     */
-    @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_stripsGrantFlagsAndAddsBrowsable() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
-                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
-                | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
-
-        assertNotNull(result);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        assertNotEquals(0, result.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
-        assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
+        mWebViewClient.shouldOverrideUrlLoading(mockWebView, intentUrl);
+        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
     }
 
     private void setBrokerInstallIntentValidationFlight(final boolean enabled) {
@@ -1255,6 +4493,73 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     public void setTestPasskeyRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    /**
+     * With no host provider registered the client must still handle the challenge itself.
+     */
+    @Test
+    public void testPasskeyChallengeFallsBackWhenNoProviderRegistered() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    /**
+     * The ceremony has to run under the id this flow was started with. DiagnosticContext is thread
+     * local and another flow on the UI thread can replace it, so the captured value wins.
+     */
+    @Test
+    public void testGetFlowCorrelationId_prefersTheFlowsOwnIdOverDiagnosticContext() {
+        final String flowCorrelationId = "11111111-1111-4111-8111-111111111111";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, "22222222-2222-4222-8222-222222222222");
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        assertEquals(flowCorrelationId,
+                newClientWithCorrelationId(flowCorrelationId).getFlowCorrelationId());
+    }
+
+    /**
+     * A flow started without a correlation id must still be joinable, so the thread local remains the
+     * fallback rather than being dropped.
+     *
+     * Both fallback tests use a separate Robolectric instrumentation configuration because Native
+     * Auth's MockApiUtils replaces DiagnosticContext.INSTANCE with a mock in the default sandbox.
+     * Clearing the thread local cannot undo that replacement.
+     */
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
+        final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
+        final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
+    }
+
+    private AzureActiveDirectoryWebViewClient newClientWithCorrelationId(final String correlationId) {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                Mockito.mock(IAuthorizationCompletionCallback.class),
+                url -> { },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false,
+                false,
+                null,
+                correlationId);
     }
 
     @Test
@@ -1402,6 +4707,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private void testProcessWebsiteRequest_DeviceCaRequest() {
         // Arrange
+                setNativeDeviceCaManagementAppHandoffFlight(false);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
         final ArgumentCaptor<RawAuthorizationResult> resultCaptor = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(new AzureActiveDirectoryWebViewClient(
@@ -1420,11 +4726,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.doNothing().when(webViewClient).openLinkInBrowser(any());
 
         // Act
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
         // Assert
         Mockito.verify(mockWebView).stopLoading();
-        Mockito.verify(webViewClient).openLinkInBrowser(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        Mockito.verify(webViewClient).openLinkInBrowser(TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
         // Capture and verify the specific result received in the callback
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
@@ -1709,6 +5015,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         info.activityInfo.packageName = packageName;
         info.activityInfo.name = activityClass;
         shadowPm.addResolveInfoForIntent(intent, info);
+                shadowPm.addResolveInfoForIntent(new Intent(intent).setPackage(packageName), info);
     }
 
     @Test
@@ -1808,15 +5115,44 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Onboarding telemetry hooks
     // -----------------------------------------------------------------------
 
+    @Test
+    public void testProcessInstallRequest_registrationOnly_doesNotRecordBrokerInstall()
+            throws Exception {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        final OnboardingTelemetryRecorder recorder = new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"abc-123\","
+                        + "\"onboarding_mode\":\"brokered\"}",
+                "client-id", "scope1", mContext);
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView webView = Mockito.mock(WebView.class);
+
+        assertTrue(client.shouldOverrideUrlLoading(
+                webView, TEST_DEVICE_REGISTRATION_URL));
+
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.DEVICE_REGISTRATION_REQUIRED,
+                result.getValue().getResultCode());
+        Mockito.verify(webView).stopLoading();
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
+    }
+
     /**
      * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
      * a broker install request URL produces a populated blob containing the
-     * {@code BrokerInstallPrompted} step. We construct a recorder with a synthetic seed
+     * {@code BrokerInstallTriggered} step. We construct a recorder with a synthetic seed
      * containing a session correlation id and a blocking error so {@code finalizeBlob}
      * returns non-empty.
      */
     @Test
-    public void testProcessInstallRequest_RecordsBrokerInstallPromptedStep() throws Exception {
+    public void testProcessInstallRequest_RecordsBrokerInstallTriggeredStep() throws Exception {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","
                 + "\"onboarding_mode\":\"non-brokered\"}";
@@ -1827,22 +5163,37 @@ public class AzureActiveDirectoryWebViewClientTest {
         recorder.addBlockingError(
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
 
-        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        client.setOnboardingTelemetryRecorder(recorder);
 
         // Trigger a broker install URL through the WebView client (delegates to processInstallRequest).
-        mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL);
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final ArgumentCaptor<RawAuthorizationResult> result =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(callback).onChallengeResponseReceived(result.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED,
+                result.getValue().getResultCode());
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        assertNotNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
         boolean foundStep = false;
         for (int i = 0; i < steps.length(); i++) {
             if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+                    .STEP_BROKER_INSTALLATION_TRIGGERED.equals(steps.getJSONObject(i).getString("step_id"))) {
                 foundStep = true;
                 break;
             }
         }
-        assertTrue("Expected BrokerInstallPrompted step in onboarding blob", foundStep);
+        assertTrue("Expected BrokerInstallTriggered step in onboarding blob", foundStep);
+        assertFalse("Install navigation must not record a broker-install prompt",
+                onboardingHasStep(recorder,
+                        com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                                .STEP_BROKER_INSTALL_PROMPTED));
     }
 
     /**
@@ -1852,6 +5203,677 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testProcessInstallRequest_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ForwardsEveryOccurrence() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent event =
+                new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                        "correlation-id",
+                        "53003",
+                        null,
+                        null,
+                        null,
+                        null
+                );
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(event));
+
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(2, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertEquals("53003", errors.getString(1));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_ExcludesNonOnboardingErrors() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"excluded-session\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder(
+                        seedJson,
+                        "excluded-client",
+                        "excluded-scope",
+                        mContext
+                );
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("correlation-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+
+        final com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink sink =
+                client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        for (final String errorCode : Arrays.asList("0", "50058", "50097", "50126")) {
+            assertTrue(
+                    sink.tryConsumeAuthUxTelemetry(
+                            new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                                    "correlation-id",
+                                    errorCode,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                            )
+                    )
+            );
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(0, blob.getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    public void testAuthUxOnboarding_AllMappingsThroughBothTransports() throws Exception {
+        final String[][] mappings = {
+                {"50127", "BrokerInstallPromptedForMAM"},
+                {"501271", "BrokerInstallPrompted"},
+                {"50129", "DeviceRegistrationRequired"},
+                {"501291", "DeviceRegistrationRequired"},
+                {"50079", "StrongAuthSetupStarted"},
+                {"53000", "MDMEnrollmentRequired"},
+                {"530003", "MDMEnrollmentRequired"},
+                {"530001", "DeviceNotCompliant"},
+                {"530002", "DeviceNotCompliant"}
+        };
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean quoted : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                try {
+                    for (int i = 0; i < mappings.length; i++) {
+                        final String code = mappings[i][0];
+                        deliverAuthUxPayload(processor, useListener,
+                                authUxPayload("request-id", quoted ? "\"" + code + "\"" : code));
+                        order.verify(recorder).addBlockingError(code);
+                        order.verify(recorder).addStep(mappings[i][1]);
+                        final org.json.JSONObject blob =
+                                new org.json.JSONObject(recorder.finalizeBlob());
+                        assertEquals(i + 1, blob.getJSONArray("blocking_errors").length());
+                        assertEquals(code, blob.getJSONArray("blocking_errors").getString(i));
+                        assertEquals(i + 1, blob.getJSONArray("steps_list").length());
+                        final org.json.JSONObject step =
+                                blob.getJSONArray("steps_list").getJSONObject(i);
+                        assertEquals(mappings[i][1], step.getString("step_id"));
+                        assertTrue(step.getString("ts").matches(
+                                "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z"));
+                        assertEquals(mappings[i][1], blob.getString("last_completed_step"));
+                        assertEquals(code, blob.getString("last_blocking_error"));
+                        assertEquals("seed-session", blob.getString("session_correlation_id"));
+                        assertEquals("1.0.0", blob.getString("schema_version"));
+                        assertEquals("non-brokered", blob.getString("onboarding_mode"));
+                    }
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UnmappedErrorsRemainBlockingErrors() throws Exception {
+        final List<String> codes = Arrays.asList(
+                "53003", "abc", "AADSTS50127", "501270", "5012710", "050127", "true");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                for (final String code : codes) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"" + code + "\""));
+                }
+                // Existing Gson boolean-to-string coercion is not changed by the mapping.
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "true"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+                assertFalse(blob.has("last_completed_step"));
+                assertEquals(codes.size() + 1, blob.getJSONArray("blocking_errors").length());
+                for (int i = 0; i < codes.size(); i++) {
+                    assertEquals(codes.get(i), blob.getJSONArray("blocking_errors").getString(i));
+                }
+                assertEquals("true", blob.getString("last_blocking_error"));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RejectedPayloadsDoNotSuppressLaterMappedOccurrence()
+            throws Exception {
+        final List<String> rejected = Arrays.asList(
+                "0", "50058", "50097", "50126", "null", "\"\"", "\" 50127\"",
+                "\"50127\\n\"", "\"123456789012345678901234567890123\"",
+                "{}", "[]", "50127.0");
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            try {
+                int accepted = 0;
+                for (final String errorJson : rejected) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", errorJson));
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "\"50127\""));
+                    accepted++;
+                    final org.json.JSONObject blob =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(accepted, blob.getJSONArray("blocking_errors").length());
+                    assertEquals(accepted, blob.getJSONArray("steps_list").length());
+                }
+                for (final String payload : Arrays.asList(
+                        "{", "{\"correlationID\":\"request-id\",\"action_name\":\"log_telemetry\","
+                                + "\"action_component\":\"page\",\"params\":{}}",
+                        authUxPayload("request-id", "50127").replace("log_telemetry", "unknown"),
+                        authUxPayload("request-id", "50127").replace(
+                                "\"action_component\":\"page\",", ""))) {
+                    final String before = recorder.finalizeBlob();
+                    deliverAuthUxPayload(processor, useListener, payload);
+                    assertEquals(before, recorder.finalizeBlob());
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    accepted++;
+                    assertEquals(accepted, new org.json.JSONObject(recorder.finalizeBlob())
+                            .getJSONArray("steps_list").length());
+                }
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_MappedCorrelationRejectionPreservesStateAndHandledAttribute()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxJavaScriptInterface processor =
+                    new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+            final RecordingSpan span = new RecordingSpan();
+            try (final Scope ignored = span.makeCurrent()) {
+                final String before = recorder.finalizeBlob();
+                for (final String correlationId : Arrays.asList("other-request", "seed-session")) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload(correlationId, "50127"));
+                    assertEquals(before, recorder.finalizeBlob());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                }
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50127"));
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(1, blob.getJSONArray("blocking_errors").length());
+                assertEquals("BrokerInstallPromptedForMAM",
+                        blob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+                final String accepted = recorder.finalizeBlob();
+                deliverAuthUxPayload(processor, useListener, authUxPayload("request-id", "50058"));
+                assertEquals(accepted, recorder.finalizeBlob());
+                assertEquals("50058", span.attribute(AttributeName.authux_js_error_code.name()));
+            } finally {
+                processor.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_UsesCapturedRecorderAfterReplacementAndDetach() throws Exception {
+        final OnboardingTelemetryRecorder original = newAuthUxOnboardingRecorder();
+        final OnboardingTelemetryRecorder replacement = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(original);
+        final AuthUxTelemetrySink originalSink = client.createAuthUxTelemetrySink();
+        assertNotNull(originalSink);
+        client.setOnboardingTelemetryRecorder(replacement);
+        final AuthUxTelemetrySink replacementSink = client.createAuthUxTelemetrySink();
+        assertNotNull(replacementSink);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        client.setOnboardingTelemetryRecorder(null);
+        assertTrue(originalSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "530001")));
+        assertTrue(replacementSink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50129")));
+        final org.json.JSONObject originalBlob = new org.json.JSONObject(original.finalizeBlob());
+        assertEquals(2, originalBlob.getJSONArray("blocking_errors").length());
+        assertEquals(2, originalBlob.getJSONArray("steps_list").length());
+        assertEquals("BrokerInstallPromptedForMAM",
+                originalBlob.getJSONArray("steps_list").getJSONObject(0).getString("step_id"));
+        assertEquals("DeviceNotCompliant", originalBlob.getString("last_completed_step"));
+        final org.json.JSONObject replacementBlob =
+                new org.json.JSONObject(replacement.finalizeBlob());
+        assertEquals(1, replacementBlob.getJSONArray("blocking_errors").length());
+        assertEquals(1, replacementBlob.getJSONArray("steps_list").length());
+        assertEquals("DeviceRegistrationRequired", replacementBlob.getString("last_completed_step"));
+        assertNull(client.createAuthUxTelemetrySink());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testAuthUxOnboarding_MappedErrorsRequireCapturedUsableHostId() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID, "request-id")) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            DiagnosticContext.INSTANCE.getRequestContext().put(
+                    DiagnosticContext.CORRELATION_ID, "other-request");
+            final String before = recorder.finalizeBlob();
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "50127")));
+            assertEquals(before, recorder.finalizeBlob());
+            if (hostId != null && !"request-id".equals(hostId)) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "50127")));
+                assertEquals(before, recorder.finalizeBlob());
+            }
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+            final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+            final int expected = "request-id".equals(hostId) ? 1 : 0;
+            assertEquals(expected, blob.getJSONArray("blocking_errors").length());
+            assertEquals(expected, blob.getJSONArray("steps_list").length());
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_ListenerRejectsUntrustedCallbacksBeforeMapping() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxJavaScriptInterface processor =
+                new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+        final AuthUxWebMessageListener listener =
+                new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+        final JavaScriptReplyProxy reply = Mockito.mock(JavaScriptReplyProxy.class);
+        final String payload = authUxPayload("request-id", "50127");
+        final String before = recorder.finalizeBlob();
+        try {
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://untrusted.example"), true, reply);
+            listener.onPostMessage(mMockWebView, new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"), false, reply);
+            final WebMessageCompat binary = Mockito.mock(WebMessageCompat.class);
+            when(binary.getType()).thenReturn(WebMessageCompat.TYPE_ARRAY_BUFFER);
+            listener.onPostMessage(mMockWebView, binary,
+                    Uri.parse("https://login.microsoftonline.com"), true, reply);
+            assertEquals(before, recorder.finalizeBlob());
+            deliverAuthUxPayload(processor, true, payload);
+            assertEquals(1, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("steps_list").length());
+        } finally {
+            processor.close();
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DuplicatesAndNavigationRemainIndependent() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        for (final String code : Arrays.asList("501271", "501271", "530002")) {
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", code)));
+        }
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        assertEquals(4, steps.length());
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(0).getString("step_id"));
+        assertEquals("BrokerInstallPrompted", steps.getJSONObject(1).getString("step_id"));
+        assertEquals("DeviceNotCompliant", steps.getJSONObject(2).getString("step_id"));
+        assertEquals("BrokerInstallTriggered", steps.getJSONObject(3).getString("step_id"));
+        assertEquals("BrokerInstallTriggered", blob.getString("last_completed_step"));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(0));
+        assertEquals("501271", blob.getJSONArray("blocking_errors").getString(1));
+        assertEquals("530002", blob.getJSONArray("blocking_errors").getString(2));
+    }
+
+    @Test
+    public void testAuthUxOnboarding_RecorderFailuresPreserveErrorFirstAndLaterEligibility()
+            throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            for (final boolean failStep : Arrays.asList(false, true)) {
+                final OnboardingTelemetryRecorder recorder =
+                        Mockito.spy(newAuthUxOnboardingRecorder());
+                final AzureActiveDirectoryWebViewClient client =
+                        newClientWithCorrelationId("request-id");
+                client.setOnboardingTelemetryRecorder(recorder);
+                if (failStep) {
+                    Mockito.doThrow(new IllegalStateException("step failure"))
+                            .when(recorder).addStep("BrokerInstallPromptedForMAM");
+                } else {
+                    Mockito.doThrow(new IllegalStateException("error failure"))
+                            .when(recorder).addBlockingError("50127");
+                }
+                final AuthUxJavaScriptInterface processor =
+                        new AuthUxJavaScriptInterface(client.createAuthUxTelemetrySink());
+                final RecordingSpan span = new RecordingSpan();
+                try (final Scope ignored = span.makeCurrent()) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject failed =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 1 : 0,
+                            failed.getJSONArray("blocking_errors").length());
+                    assertEquals(0, failed.getJSONArray("steps_list").length());
+                    assertNull(span.attribute(AttributeName.authux_js_error_code.name()));
+                    if (!failStep) {
+                        Mockito.verify(recorder, never()).addStep(anyString());
+                    }
+                    span.setAttribute(AttributeKey.stringKey(
+                            AttributeName.authux_js_error_code.name()), "previous");
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    assertEquals("previous", span.attribute(
+                            AttributeName.authux_js_error_code.name()));
+                    Mockito.doCallRealMethod().when(recorder).addBlockingError("50127");
+                    Mockito.doCallRealMethod().when(recorder)
+                            .addStep("BrokerInstallPromptedForMAM");
+                    Mockito.clearInvocations(recorder);
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                    final org.json.JSONObject recovered =
+                            new org.json.JSONObject(recorder.finalizeBlob());
+                    assertEquals(failStep ? 3 : 1,
+                            recovered.getJSONArray("blocking_errors").length());
+                    assertEquals(1, recovered.getJSONArray("steps_list").length());
+                    assertEquals("50127", span.attribute(AttributeName.authux_js_error_code.name()));
+                    final org.mockito.InOrder order = Mockito.inOrder(recorder);
+                    order.verify(recorder).addBlockingError("50127");
+                    order.verify(recorder).addStep("BrokerInstallPromptedForMAM");
+                } finally {
+                    processor.close();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_DisabledClosedAndMissingRecorderDoNotRecord() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxOnboardingRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            final AuthUxJavaScriptInterface disabled = new AuthUxJavaScriptInterface(
+                    sink, new AuthUxRequestCapabilities(false, true));
+            final AuthUxJavaScriptInterface closed = new AuthUxJavaScriptInterface(sink);
+            final AuthUxJavaScriptInterface missing = new AuthUxJavaScriptInterface(
+                    newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+            closed.close();
+            try {
+                for (final AuthUxJavaScriptInterface processor : Arrays.asList(
+                        disabled, closed, missing)) {
+                    deliverAuthUxPayload(processor, useListener,
+                            authUxPayload("request-id", "50127"));
+                }
+                final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+                assertEquals(0, blob.getJSONArray("blocking_errors").length());
+                assertEquals(0, blob.getJSONArray("steps_list").length());
+            } finally {
+                disabled.close();
+                closed.close();
+                missing.close();
+            }
+        }
+    }
+
+    @Test
+    public void testAuthUxOnboarding_EmptySeedStillSuppressesFinalizedBlob() {
+        final OnboardingTelemetryRecorder recorder =
+                new OnboardingTelemetryRecorder("{}", "client", "scope", mContext);
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "50127")));
+        assertEquals("", recorder.finalizeBlob());
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchDoesNotPersistAndMatchingEventStillAppends()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("seed-session", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("53003", errors.getString(0));
+        assertNoAuthUxCorrelationCacheEntry();
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_MismatchPreservesExistingBlobAndCache()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        final String cacheKey = "com.microsoft.oneauth.session_correlation_cache";
+        final android.content.SharedPreferences preferences =
+                mContext.getSharedPreferences(cacheKey, Context.MODE_PRIVATE);
+        final String originalCache = preferences.getString(cacheKey, null);
+        final String seededCache = new org.json.JSONObject().put(
+                "correlation-test-client\u0001correlation-test-scope",
+                new org.json.JSONObject().put("id", "native-session").put("ts", 123456789L))
+                .toString();
+
+        try {
+            assertTrue(preferences.edit().putString(cacheKey, seededCache).commit());
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            final String initialBlob = recorder.finalizeBlob();
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53004")));
+            assertEquals(initialBlob, recorder.finalizeBlob());
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+            final org.json.JSONArray errors =
+                    new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+            assertEquals(2, errors.length());
+            assertEquals("53003", errors.getString(0));
+            assertEquals("abc", errors.getString(1));
+            assertEquals(seededCache, preferences.getString(cacheKey, null));
+        } finally {
+            assertTrue(preferences.edit().putString(cacheKey, originalCache).commit());
+        }
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_UnusableHostCorrelationRejectsEvents() throws Exception {
+        for (final String hostId : Arrays.asList(
+                null, "", " \t\r\n", DiagnosticContext.UNSET_CORRELATION_ID)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(hostId);
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+
+            assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "53003")));
+            if (hostId != null) {
+                assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent(hostId, "53003")));
+            }
+            assertNoAuthUxCorrelationCacheEntry();
+            assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                    .getJSONArray("blocking_errors").length());
+        }
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_DoesNotFallBackToDiagnosticContext() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId(null);
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "thread-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("thread-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertEquals(0, new org.json.JSONObject(recorder.finalizeBlob())
+                .getJSONArray("blocking_errors").length());
+    }
+
+    @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
+    public void testCreateAuthUxTelemetrySink_KeepsCapturedRequestWhenDiagnosticContextChanges()
+            throws Exception {
+        final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+        final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+        assertNotNull(sink);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, "other-request");
+
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("other-request", "53003")));
+        assertNoAuthUxCorrelationCacheEntry();
+        assertTrue(sink.tryConsumeAuthUxTelemetry(authUxEvent("request-id", "abc")));
+        final org.json.JSONArray errors =
+                new org.json.JSONObject(recorder.finalizeBlob()).getJSONArray("blocking_errors");
+        assertEquals(1, errors.length());
+        assertEquals("abc", errors.getString(0));
+    }
+
+    @Test
+    public void testCreateAuthUxTelemetrySink_NoRecorderReturnsNull() {
+        assertNull(newClientWithCorrelationId("request-id").createAuthUxTelemetrySink());
+    }
+
+    @Test
+    public void testAuthUxCorrelation_RawEnvelopesThroughLegacyAndListenerCallbacks() throws Exception {
+        for (final boolean useListener : Arrays.asList(false, true)) {
+            final OnboardingTelemetryRecorder recorder = newAuthUxCorrelationRecorder();
+            final AzureActiveDirectoryWebViewClient client = newClientWithCorrelationId("request-id");
+            client.setOnboardingTelemetryRecorder(recorder);
+            final AuthUxTelemetrySink sink = client.createAuthUxTelemetrySink();
+            assertNotNull(sink);
+            final AuthUxJavaScriptInterface processor = new AuthUxJavaScriptInterface(sink);
+            final AuthUxWebMessageListener listener =
+                    new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy());
+            final JavaScriptReplyProxy replyProxy = Mockito.mock(JavaScriptReplyProxy.class);
+            try {
+                for (final String correlationId : Arrays.asList("other-request", "request-id")) {
+                    final String payload = "{\"correlationID\":\"" + correlationId
+                            + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                            + "\"params\":{\"errorCode\":\"abc\"}}";
+                    if (useListener) {
+                        listener.onPostMessage(
+                                mMockWebView,
+                                new WebMessageCompat(payload),
+                                Uri.parse("https://login.microsoftonline.com"),
+                                true,
+                                replyProxy
+                        );
+                    } else {
+                        processor.receiveAuthUxMessage(payload);
+                    }
+                    if ("other-request".equals(correlationId)) {
+                        assertNoAuthUxCorrelationCacheEntry();
+                    }
+                }
+                final org.json.JSONArray errors = new org.json.JSONObject(recorder.finalizeBlob())
+                        .getJSONArray("blocking_errors");
+                assertEquals(1, errors.length());
+                assertEquals("abc", errors.getString(0));
+            } finally {
+                processor.close();
+                mContext.getSharedPreferences(
+                        "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                        .edit().clear().commit();
+            }
+        }
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxCorrelationRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "correlation-test-client",
+                "correlation-test-scope",
+                mContext
+        );
+    }
+
+    private OnboardingTelemetryRecorder newAuthUxOnboardingRecorder() {
+        return new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"seed-session\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "onboarding-test-client",
+                "onboarding-test-scope",
+                mContext
+        );
+    }
+
+    private AuthUxTelemetryEvent authUxEvent(final String correlationId, final String errorCode) {
+        return new AuthUxTelemetryEvent(correlationId, errorCode, null, null, null, null);
+    }
+
+    private void assertNoAuthUxCorrelationCacheEntry() {
+        final String cache = mContext.getSharedPreferences(
+                "com.microsoft.oneauth.session_correlation_cache", Context.MODE_PRIVATE)
+                .getString("com.microsoft.oneauth.session_correlation_cache", "");
+        assertTrue("Auth UX telemetry must not create a session-correlation cache document.",
+                cache == null || cache.isEmpty());
+    }
+
+    private String authUxPayload(final String correlationId, final String errorJson) {
+        return "{\"correlationID\":\"" + correlationId
+                + "\",\"action_name\":\"log_telemetry\",\"action_component\":\"page\","
+                + "\"params\":{\"errorCode\":" + errorJson + "}}";
+    }
+
+    private void deliverAuthUxPayload(final AuthUxJavaScriptInterface processor,
+                                     final boolean useListener,
+                                     final String payload) {
+        if (useListener) {
+            new AuthUxWebMessageListener(processor, new AuthUxOriginPolicy()).onPostMessage(
+                    mMockWebView,
+                    new WebMessageCompat(payload),
+                    Uri.parse("https://login.microsoftonline.com"),
+                    true,
+                    Mockito.mock(JavaScriptReplyProxy.class));
+        } else {
+            processor.receiveAuthUxMessage(payload);
+        }
     }
 
     /**
@@ -1900,5 +5922,154 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse("blank URL should not produce a last_loaded_domain entry",
                 blob.has("last_loaded_domain"));
     }
-}
 
+    // -----------------------------------------------------------------------
+    // MAM Conditional Access: install-referrer decoration on the broker install
+    // -----------------------------------------------------------------------
+
+    /**
+     * @param mamCaInstallReferrerEnabled whether the host has opted this client in to MAM-CA
+     *                                    install-referrer decoration.
+     * @return a client configured exactly like {@link #mWebViewClient} apart from the opt-in.
+     */
+    private AzureActiveDirectoryWebViewClient mamCaWebViewClient(
+            final boolean mamCaInstallReferrerEnabled) {
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                new IAuthorizationCompletionCallback() {
+                    @Override
+                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+                    }
+
+                    @Override
+                    public void setPKeyAuthStatus(boolean status) {
+                    }
+                },
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                    }
+                },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false,
+                mamCaInstallReferrerEnabled,
+                null,
+                null);
+        client.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        return client;
+    }
+
+    /**
+     * Drives a broker-install redirect and returns the install {@link Intent} that was launched.
+     * <p>
+     * The launch is deliberately posted a second out so the calling activity can register its
+     * broker-result receiver first, so the main looper has to be advanced past that delay before
+     * the intent exists. Robolectric pauses the looper by default, which is what makes this
+     * observable at all.
+     *
+     * @param client             the WebView client to drive.
+     * @param installRedirectUrl the {@code msauth://wpj} redirect to feed the WebView client.
+     * @return the launched install intent, or null if none was launched.
+     */
+    private Intent launchInstallAndCaptureIntent(final AzureActiveDirectoryWebViewClient client,
+                                                 final String installRedirectUrl) {
+        assertTrue("A broker-install redirect must be handled by the WebView client",
+                client.shouldOverrideUrlLoading(mMockWebView, installRedirectUrl));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        return Shadows.shadowOf(mActivity).getNextStartedActivity();
+    }
+
+    /**
+     * The feature itself: a server-marked MAM-CA install is launched with the calling app named as
+     * the Play install referrer, which is what lets Company Portal skip its own sign-in UX and
+     * redirect back here after install.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_tagsCallingAppAsInstallReferrer() {
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("Expected the Company Portal install link to be launched", launched);
+        assertEquals(Intent.ACTION_VIEW, launched.getAction());
+        assertTrue("A MAM-CA install must name the calling app as the install referrer, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
+    }
+
+    /**
+     * The host opt-in is a complete kill switch: without it the install link is launched
+     * byte-for-byte as the server sent it. This is also what every host that never sets it - MSAL,
+     * and the broker process - gets.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_hostDidNotOptIn_leavesLinkUnchanged() {
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(false), TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("The install must still be launched without the opt-in", launched);
+        assertFalse("Without the opt-in nothing may be appended to the install link, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
+    }
+
+    /**
+     * The same broker-install redirect also drives ordinary device-registration installs. Without
+     * the server's MAM-CA marker those must keep their existing, undecorated behavior.
+     */
+    @Test
+    public void testProcessInstallRequest_notMamCaInstall_leavesLinkUnchanged() {
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_PLAIN_INSTALL_REQUEST_URL);
+
+        assertNotNull("A device-registration install must still be launched", launched);
+        assertFalse("An unmarked install must not be tagged as MAM-CA, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
+    }
+
+    /**
+     * The decoration is a fallback, not an override. The server names the calling app directly,
+     * whereas the client can only ever name the process hosting the sign-in UI, so where the two
+     * disagree the server wins.
+     */
+    @Test
+    public void testProcessInstallRequest_serverSuppliedReferrer_isNotOverridden() {
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER);
+
+        assertNotNull(launched);
+        final String launchedLink = launched.getDataString();
+        assertTrue("A referrer the server already set must be preserved, but was: " + launchedLink,
+                launchedLink.contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + SERVER_SUPPLIED_REFERRER));
+        assertFalse("The client must not add a second referrer, but was: " + launchedLink,
+                launchedLink.contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
+    }
+
+    /**
+     * A {@code browser://}-prefixed app_link never reaches the install launch at all:
+     * {@code BrokerInstallLinkValidator} requires the scheme to be exactly https, so the redirect is
+     * not classified as a broker install and nothing is started. This pins the allowlist as the gate
+     * in front of the install launch, and makes the {@code browser://} rewrite further down
+     * demonstrably unreachable for app_links.
+     */
+    @Test
+    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist()
+            throws Exception {
+        final AzureActiveDirectoryWebViewClient client = mamCaWebViewClient(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        recorder.addBlockingError("DEVICE_REGISTRATION_NEEDED");
+        client.setOnboardingTelemetryRecorder(recorder);
+        final Intent launched = launchInstallAndCaptureIntent(
+                client, TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
+
+        assertNull("An app_link that is not https must never be launched, but was: "
+                        + (launched == null ? "" : launched.getDataString()),
+                launched);
+        assertFalse(onboardingHasBrokerInstallStep(recorder));
+    }
+}

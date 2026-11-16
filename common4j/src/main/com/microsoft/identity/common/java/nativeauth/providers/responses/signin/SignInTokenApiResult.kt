@@ -33,9 +33,12 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
  */
 sealed interface SignInTokenApiResult: ApiResult, ILoggable {
 
-    data class Redirect(
+    data class Redirect @JvmOverloads constructor(
         override val correlationId: String,
-        val redirectReason: String
+        val redirectReason: String,
+        val errorCodes: List<Int>? = null,
+        val traceId: String? = null,
+        val timestamp: String? = null
     ) : SignInTokenApiResult {
         override fun toUnsanitizedString(): String {
             return "Redirect(correlationId=$correlationId, redirectReason=$redirectReason)"
@@ -55,13 +58,15 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = toUnsanitizedString()
     }
 
-    data class MFARequired(
+    data class MFARequired @JvmOverloads constructor(
         override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val subError: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -75,13 +80,15 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "MFARequired(correlationId=$correlationId)"
     }
 
-    data class JITRequired(
+    data class JITRequired @JvmOverloads constructor(
         override val correlationId: String,
         val continuationToken: String,
         override val error: String,
         override val subError: String,
         override val errorDescription: String,
-        override val errorCodes: List<Int>
+        override val errorCodes: List<Int>,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -95,15 +102,19 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "JITRequired(correlationId=$correlationId)"
     }
 
-    data class UserNotFound(
+    data class UserNotFound @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val subError: String? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
+        subError = subError,
         correlationId = correlationId
     ), SignInTokenApiResult {
         override fun toUnsanitizedString() = "UserNotFound(correlationId=$correlationId, " +
@@ -112,15 +123,19 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "UserNotFound(correlationId=$correlationId)"
     }
 
-    data class InvalidCredentials(
+    data class InvalidCredentials @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val subError: String? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
+        subError = subError,
         correlationId = correlationId
     ), SignInTokenApiResult {
         override fun toUnsanitizedString() = "InvalidCredentials(correlationId=$correlationId, " +
@@ -129,12 +144,14 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "InvalidCredentials(correlationId=$correlationId)"
     }
 
-    data class CodeIncorrect(
+    data class CodeIncorrect @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
         override val subError: String,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
@@ -148,15 +165,19 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "CodeIncorrect(correlationId=$correlationId)"
     }
 
-    data class InvalidAuthenticationType(
+    data class InvalidAuthenticationType @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val subError: String? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
+        subError = subError,
         correlationId = correlationId
     ), SignInTokenApiResult {
         override fun toUnsanitizedString() = "InvalidAuthenticationType(correlationId=$correlationId, " +
@@ -165,15 +186,19 @@ sealed interface SignInTokenApiResult: ApiResult, ILoggable {
         override fun toString(): String = "InvalidAuthenticationType(correlationId=$correlationId)"
     }
 
-    data class UnknownError(
+    data class UnknownError @JvmOverloads constructor(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val errorCodes: List<Int>,
+        override val subError: String? = null,
+        override val traceId: String? = null,
+        override val timestamp: String? = null
     ) : ApiErrorResult(
         error = error,
         errorDescription = errorDescription,
         errorCodes = errorCodes,
+        subError = subError,
         correlationId = correlationId
     ), SignInTokenApiResult {
         override fun toUnsanitizedString() = "UnknownError(correlationId=$correlationId, " +

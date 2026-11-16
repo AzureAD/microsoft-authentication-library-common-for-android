@@ -180,8 +180,13 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         switch (data.getResultCode()){
             case BROKER_INSTALLATION_TRIGGERED:
                 final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
+                // Reaching this case means the redirect carried an app_link that passed the
+                // broker-install allowlist, so it is non-blank here and the decorator returns the
+                // caller's link unchanged whenever it declines to tag it. Uri.parse therefore never
+                // sees null. See RawAuthorizationResult#fromRedirectUri.
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
-                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+                        decorateInstallLinkWithReferrer(appLink, urlQueryParameters)));
                 startActivity(browserIntent);
                 break;
 

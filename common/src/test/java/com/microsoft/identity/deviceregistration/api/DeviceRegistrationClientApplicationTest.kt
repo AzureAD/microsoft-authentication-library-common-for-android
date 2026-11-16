@@ -29,29 +29,43 @@ import com.microsoft.identity.common.internal.activebrokerdiscovery.IBrokerDisco
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
+import com.microsoft.identity.common.logging.Logger
 import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
+import com.microsoft.identity.deviceregistration.java.DrsDiscoveryEndpoint
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord
+import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreprovisioningBlobV1Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.PreprovisioningBlobV1Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.request.SdkType
+import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
@@ -59,7 +73,7 @@ import java.util.UUID
 /**
  * Unit tests for [DeviceRegistrationClientApplication].
  * Uses mock IPC strategy to verify DRCA methods call the controller
- * with correct V0 params and return correctly parsed responses.
+ * with correct protocol parameters and return correctly parsed responses.
  */
 @RunWith(RobolectricTestRunner::class)
 class DeviceRegistrationClientApplicationTest {
@@ -98,6 +112,14 @@ class DeviceRegistrationClientApplicationTest {
         return strategy
     }
 
+    private fun captureProtocolData(strategy: IIpcStrategy, protocolName: String): ByteArray {
+        val requestCaptor = argumentCaptor<BrokerOperationBundle>()
+        verify(strategy).communicateToBroker(requestCaptor.capture())
+        val bundle = requireNotNull(requestCaptor.firstValue.bundle)
+        Assert.assertEquals(protocolName, bundle.getString("protocol.name"))
+        return requireNotNull(bundle.getByteArray("protocol.data"))
+    }
+
     @Test
     fun getPreProvisionedBlob_returnsJws() {
         val expectedJws = "test.jws.blob"
@@ -108,6 +130,206 @@ class DeviceRegistrationClientApplicationTest {
 
 
         Assert.assertEquals(expectedJws, result)
+    }
+
+    @Test
+    fun getPreprovisioningBlob_withResourceAccount_packsParametersAndReturnsJws() {
+        val correlationId = UUID.randomUUID()
+        val expectedJws = "signed.preprovisioning.blob"
+        val response = PreprovisioningBlobV1Response(correlationId, expectedJws)
+        val strategy = successStrategy(packer.pack(response))
+        val drca = createDrca(strategy)
+
+        val result = drca.getPreprovisioningBlob(
+            "test-tenant", "test-resource-account", correlationId, DrsDiscoveryEndpoint.PPE
+        )
+
+        val parameters = PreprovisioningBlobV1Parameters.create(
+            captureProtocolData(strategy, "protocol.get.pre.provisioned.blob.v1")
+        )
+        Assert.assertEquals(correlationId, parameters.correlationId)
+        Assert.assertEquals("test-tenant", parameters.tenantId)
+        Assert.assertEquals("test-resource-account", parameters.resourceAccountId)
+        Assert.assertEquals("PPE", parameters.discoveryEndpointName)
+        Assert.assertEquals(expectedJws, result)
+    }
+
+    @Test
+    fun getPreprovisioningBlob_withoutResourceAccount_packsDefaultParametersAndReturnsJws() {
+        val correlationId = UUID.randomUUID()
+        val expectedJws = "signed.device.blob"
+        val response = PreprovisioningBlobV1Response(correlationId, expectedJws)
+        val strategy = successStrategy(packer.pack(response))
+        val drca = createDrca(strategy)
+
+        val result = drca.getPreprovisioningBlob("test-tenant", correlationId = correlationId)
+
+        val parameters = PreprovisioningBlobV1Parameters.create(
+            captureProtocolData(strategy, "protocol.get.pre.provisioned.blob.v1")
+        )
+        Assert.assertEquals(correlationId, parameters.correlationId)
+        Assert.assertEquals("test-tenant", parameters.tenantId)
+        Assert.assertNull(parameters.resourceAccountId)
+        Assert.assertEquals("PROD", parameters.discoveryEndpointName)
+        Assert.assertEquals(expectedJws, result)
+    }
+
+    @Test
+    fun getPreprovisioningBlob_rejectsMissingOrBlankJws() {
+        val correlationId = UUID.randomUUID()
+        val response = PreprovisioningBlobV1Response(correlationId, "signed.valid.blob")
+        val serializedResponse = String(response.serialize(), Charsets.UTF_8)
+        val invalidPayloads = listOf(null, JSONObject.NULL, "", " ", "\t\r\n")
+            .map { invalidJws -> JSONObject(serializedResponse).put("mJws", invalidJws) } + JSONObject()
+
+        for (payload in invalidPayloads) {
+            val responseBundle = packer.pack(response).apply {
+                putByteArray("protocol.data", payload.toString().toByteArray(Charsets.UTF_8))
+            }
+            val drca = createDrca(successStrategy(responseBundle))
+
+            val exception = Assert.assertThrows(ClientException::class.java) {
+                drca.getPreprovisioningBlob("test-tenant", correlationId = correlationId)
+            }
+
+            Assert.assertEquals(ClientException.INVALID_BROKER_BUNDLE, exception.errorCode)
+        }
+    }
+
+    @Test
+    fun getPreprovisioningBlob_javaOverloads_supportOptionalResourceAccount() {
+        for (resourceAccountId in listOf(null, "test-resource-account")) {
+            val correlationId = UUID.randomUUID()
+            val expectedJws = "signed.java.blob"
+            val response = PreprovisioningBlobV1Response(correlationId, expectedJws)
+            val strategy = successStrategy(packer.pack(response))
+            val drca = createDrca(strategy)
+
+            val result = if (resourceAccountId == null) {
+                DeviceRegistrationClientApplication::class.java.getMethod(
+                    "getPreprovisioningBlob", String::class.java, UUID::class.java
+                ).invoke(drca, "test-tenant", correlationId)
+            } else {
+                DeviceRegistrationClientApplication::class.java.getMethod(
+                    "getPreprovisioningBlob", String::class.java, String::class.java, UUID::class.java
+                ).invoke(drca, "test-tenant", resourceAccountId, correlationId)
+            }
+
+            val parameters = PreprovisioningBlobV1Parameters.create(
+                captureProtocolData(strategy, "protocol.get.pre.provisioned.blob.v1")
+            )
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("test-tenant", parameters.tenantId)
+            Assert.assertEquals(resourceAccountId, parameters.resourceAccountId)
+            Assert.assertEquals("PROD", parameters.discoveryEndpointName)
+            Assert.assertEquals(expectedJws, result)
+        }
+    }
+
+    @Test
+    fun registerDeviceAndResourceAccountWithPreauthorizedChallenge_packsParametersAndReturnsBothRecords() {
+        val correlationId = UUID.randomUUID()
+        val deviceRecord = DeviceRegistrationRecord("test-tenant", "ra@test.com", "device-123", true, true)
+        val accountRecord = AccountRecord().apply {
+            homeAccountId = "test-resource-account.test-tenant"
+            localAccountId = "test-resource-account"
+            username = "ra@test.com"
+            environment = "login.windows-ppe.net"
+            realm = "test-tenant"
+        }
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
+            correlationId, deviceRecord, accountRecord
+        )
+        val strategy = successStrategy(packer.pack(response))
+        val drca = createDrca(strategy)
+
+        val result = drca.registerDeviceAndResourceAccountWithPreauthorizedChallenge(
+            "test-tenant", "test-resource-account", "encrypted-challenge", true,
+            correlationId, SdkType.MSAL, "4.2.0", DrsDiscoveryEndpoint.PPE
+        )
+
+        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(
+            captureProtocolData(strategy, "protocol.register.device.and.resource.account.with.preauthorized.challenge.v0")
+        )
+        Assert.assertEquals(correlationId, parameters.correlationId)
+        Assert.assertEquals("test-tenant", parameters.tenantId)
+        Assert.assertEquals("test-resource-account", parameters.resourceAccountId)
+        Assert.assertEquals("encrypted-challenge", parameters.encryptedPreAuthorizedToken)
+        Assert.assertTrue(parameters.isRegisterAsSharedDevice)
+        Assert.assertEquals("MSAL", parameters.sdkType)
+        Assert.assertEquals("4.2.0", parameters.sdkVersion)
+        Assert.assertEquals("PPE", parameters.discoveryEndpointName)
+        Assert.assertEquals(deviceRecord.javaClass, result.deviceRegistrationRecord.javaClass)
+        Assert.assertEquals(deviceRecord.tenantId, result.deviceRegistrationRecord.tenantId)
+        Assert.assertEquals(deviceRecord.upn, result.deviceRegistrationRecord.upn)
+        Assert.assertEquals(deviceRecord.deviceId, result.deviceRegistrationRecord.deviceId)
+        Assert.assertEquals(accountRecord, result.resourceAccountRecord)
+    }
+
+    @Test
+    fun registerDeviceAndResourceAccountWithPreauthorizedChallenge_defaultsToProd() {
+        val correlationId = UUID.randomUUID()
+        val deviceRecord = DeviceRegistrationRecord("test-tenant", "ra@test.com", "device-123", false, true)
+        val accountRecord = AccountRecord().apply { localAccountId = "test-resource-account" }
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
+            correlationId, deviceRecord, accountRecord
+        )
+        val strategy = successStrategy(packer.pack(response))
+        val drca = createDrca(strategy)
+
+        val result = drca.registerDeviceAndResourceAccountWithPreauthorizedChallenge(
+            "test-tenant", "test-resource-account", "encrypted-challenge", false,
+            correlationId, SdkType.MSAL, "4.2.0"
+        )
+
+        val parameters = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Parameters.create(
+            captureProtocolData(strategy, "protocol.register.device.and.resource.account.with.preauthorized.challenge.v0")
+        )
+        Assert.assertEquals(correlationId, parameters.correlationId)
+        Assert.assertEquals("test-tenant", parameters.tenantId)
+        Assert.assertEquals("test-resource-account", parameters.resourceAccountId)
+        Assert.assertEquals("encrypted-challenge", parameters.encryptedPreAuthorizedToken)
+        Assert.assertFalse(parameters.isRegisterAsSharedDevice)
+        Assert.assertEquals("MSAL", parameters.sdkType)
+        Assert.assertEquals("4.2.0", parameters.sdkVersion)
+        Assert.assertEquals("PROD", parameters.discoveryEndpointName)
+        Assert.assertEquals(deviceRecord.deviceId, result.deviceRegistrationRecord.deviceId)
+        Assert.assertEquals(accountRecord, result.resourceAccountRecord)
+    }
+
+    @Test
+    fun registerDeviceAndResourceAccountWithPreauthorizedChallenge_rejectsMissingRecords() {
+        val correlationId = UUID.randomUUID()
+        val deviceRecord = DeviceRegistrationRecord("test-tenant", "ra@test.com", "device-123", false, true)
+        val accountRecord = AccountRecord().apply { username = "ra@test.com" }
+        val response = RegisterDeviceAndResourceAccountWithPreauthorizedChallengeV0Response(
+            correlationId, deviceRecord, accountRecord
+        )
+        val serializedResponse = String(response.serialize(), Charsets.UTF_8)
+        val invalidPayloads = listOf("mDeviceRegistrationRecord", "mResourceAccountRecord").flatMap { fieldName ->
+            listOf(
+                JSONObject(serializedResponse).apply { remove(fieldName) },
+                JSONObject(serializedResponse).put(fieldName, JSONObject.NULL)
+            )
+        } + JSONObject()
+
+        for (payload in invalidPayloads) {
+            val responseBundle = packer.pack(response).apply {
+                putByteArray("protocol.data", payload.toString().toByteArray(Charsets.UTF_8))
+            }
+            val drca = createDrca(successStrategy(responseBundle))
+
+            val exception = Assert.assertThrows(ClientException::class.java) {
+                drca.registerDeviceAndResourceAccountWithPreauthorizedChallenge(
+                    "test-tenant", "test-resource-account", "encrypted-challenge", false,
+                    correlationId, SdkType.MSAL, "4.2.0"
+                )
+            }
+
+            Assert.assertEquals(ClientException.INVALID_BROKER_BUNDLE, exception.errorCode)
+            Assert.assertFalse(exception.message.orEmpty().contains("ra@test.com"))
+            Assert.assertFalse(exception.message.orEmpty().contains("encrypted-challenge"))
+        }
     }
 
     @Test
@@ -246,5 +468,246 @@ class DeviceRegistrationClientApplicationTest {
 
         val drca = createDrca(strategy)
         drca.provisionResourceAccountCredentials("test-tenant", "test-ra-oid", correlationId, SdkType.MSAL, "1.0.0")
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_returnsAllResultFields() {
+        val expected = DeviceTokenResult.builder()
+            .accessToken("device.token.jwt")
+            .deviceInfo("device.info.jwt")
+            .tokenType("Bearer")
+            .resource("https://resource.example.com")
+            .expiresIn(3599L)
+            .extExpiresIn(3599L)
+            .expiresOn(1782373775L)
+            .notBefore(1782369875L)
+            .build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceTokenResult(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id",
+            "msauth://com.test.app/callback"
+        )
+
+        Assert.assertEquals("device.token.jwt", result.accessToken)
+        Assert.assertEquals("device.info.jwt", result.deviceInfo)
+        Assert.assertEquals("Bearer", result.tokenType)
+        Assert.assertEquals("https://resource.example.com", result.resource)
+        Assert.assertEquals(3599L, result.expiresIn!!)
+        Assert.assertEquals(3599L, result.extExpiresIn!!)
+        Assert.assertEquals(1782373775L, result.expiresOn!!)
+        Assert.assertEquals(1782369875L, result.notBefore!!)
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_optionalFieldsAbsent_returnsNulls() {
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceTokenResult(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id",
+            "msauth://com.test.app/callback"
+        )
+
+        Assert.assertEquals("device.token.jwt", result.accessToken)
+        Assert.assertNull(result.deviceInfo)
+        Assert.assertNull(result.tokenType)
+        Assert.assertNull(result.resource)
+        Assert.assertNull(result.expiresIn)
+        Assert.assertNull(result.extExpiresIn)
+        Assert.assertNull(result.expiresOn)
+        Assert.assertNull(result.notBefore)
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_validResult_logsSuccess() {
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            val result = drca.getDeviceTokenResult(
+                DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                "https://resource.example.com",
+                UUID.randomUUID(),
+                "test-client-id",
+                "msauth://com.test.app/callback"
+            )
+
+            Assert.assertEquals("device.token.jwt", result.accessToken)
+            logger.verify {
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }
+        }
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_malformedResponse_doesNotLogSuccess() {
+        val response = Bundle().apply {
+            putByteArray("protocol.data", "{".toByteArray(Charsets.UTF_8))
+        }
+        val drca = createDrca(successStrategy(response))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            val exception = Assert.assertThrows(ClientException::class.java) {
+                drca.getDeviceTokenResult(
+                    DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                    "https://resource.example.com",
+                    UUID.randomUUID(),
+                    "test-client-id",
+                    "msauth://com.test.app/callback"
+                )
+            }
+
+            Assert.assertEquals(ClientException.JSON_PARSE_FAILURE, exception.errorCode)
+            logger.verify({
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }, Mockito.never())
+        }
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_nullResult_doesNotLogSuccess() {
+        val response = Bundle().apply {
+            putByteArray(
+                "protocol.data",
+                """{"mDeviceTokenResult":null}""".toByteArray(Charsets.UTF_8)
+            )
+        }
+        val drca = createDrca(successStrategy(response))
+
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            Assert.assertThrows(NullPointerException::class.java) {
+                drca.getDeviceTokenResult(
+                    DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+                    "https://resource.example.com",
+                    UUID.randomUUID(),
+                    "test-client-id",
+                    "msauth://com.test.app/callback"
+                )
+            }
+
+            logger.verify({
+                Logger.info(
+                    "DeviceRegistrationClientApplication:getDeviceTokenResult",
+                    "Get device token ended successfully."
+                )
+            }, Mockito.never())
+        }
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_withScope_returnsDeviceToken() {
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt.scoped").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceTokenResult(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id",
+            "msauth://com.test.app/callback",
+            "openid profile"
+        )
+
+        Assert.assertEquals("device.token.jwt.scoped", result.accessToken)
+    }
+
+    @Test
+    fun getDeviceTokenResult_v1_passesClientIdToIpc() {
+        val correlationId = UUID.randomUUID()
+        val response = GetDeviceTokenV1Response(
+            UUID.randomUUID(),
+            DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        )
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            Assert.assertEquals("protocol.get.device.token.v1", bundle?.getString("protocol.name"))
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
+            val parameters = GetDeviceTokenV1Parameters.create(protocolData)
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("https://resource.example.com", parameters.resources)
+            Assert.assertEquals("test-client-id", parameters.clientId)
+            Assert.assertEquals("msauth://com.test.app/callback", parameters.redirectUri)
+            Assert.assertEquals("openid", parameters.scope)
+            Assert.assertEquals("tenant", parameters.deviceRegistrationRecord.tenantId)
+            packer.pack(response)
+        }
+
+        val drca = createDrca(strategy)
+        drca.getDeviceTokenResult(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            correlationId,
+            "test-client-id",
+            "msauth://com.test.app/callback",
+            "openid"
+        )
+    }
+
+    @Test
+    fun getDeviceToken_v0_stillWorks() {
+        val expectedToken = "device.token.v0"
+        val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(
+            UUID.randomUUID(), expectedToken
+        )
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            null
+        )
+
+        Assert.assertEquals(expectedToken, result)
+    }
+
+    @Test
+    fun getDeviceToken_v0_usesV0Protocol() {
+        val correlationId = UUID.randomUUID()
+        val expectedToken = "device.token.v0"
+        val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(
+            UUID.randomUUID(), expectedToken
+        )
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            val protocolName = bundle?.getString("protocol.name")
+            Assert.assertEquals("protocol.get.device.token.v0", protocolName)
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
+            val parameters = GetDeviceTokenV0Parameters.create(protocolData)
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("https://resource.example.com", parameters.resources)
+            packer.pack(response)
+        }
+
+        val drca = createDrca(strategy)
+        drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            correlationId,
+            null
+        )
     }
 }

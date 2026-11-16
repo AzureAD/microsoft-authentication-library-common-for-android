@@ -243,4 +243,13 @@ public class AcquireTokenResultTest {
         result.setOnboardingBlob(null);
         Assert.assertNull(result.getOnboardingBlob());
     }
+
+    @Test
+    public void powerOptimizationSettings_RoundTripsThroughSetter() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+
+        result.setPowerOptimizationSettings("NOT_EXEMPT");
+
+        Assert.assertEquals("NOT_EXEMPT", result.getPowerOptimizationSettings());
+    }
 }

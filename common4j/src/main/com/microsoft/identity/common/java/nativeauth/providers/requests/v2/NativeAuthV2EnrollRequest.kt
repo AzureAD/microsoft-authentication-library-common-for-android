@@ -20,20 +20,28 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
+import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
+import java.net.URL
 
-import com.google.gson.annotations.SerializedName
+/** Channel-specific enrollment body. Contact and token are never included in either log string. */
+class NativeAuthV2EnrollRequest internal constructor(
+    override var requestUrl: URL,
+    override var headers: Map<String, String?>,
+    override val parameters: EnrollmentParameters
+) : NativeAuthRequest() {
+    /** Contains only the continuation token and the selected channel's contact fields. */
+    class EnrollmentParameters internal constructor(
+        val continuationToken: String,
+        val email: String? = null,
+        val phoneNumber: String? = null,
+        val channel: String? = null
+    ) : NativeAuthRequestParameters() {
+        override fun toString(): String = "EnrollmentParameters(<redacted>)"
+        override fun toUnsanitizedString(): String = toString()
+    }
 
-/**
- *
- */
-data class EmailContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String, // TODO make DateTimeObject
-    @SerializedName("body") val body: String,
-    @SerializedName("textBody") val textBody: String,
-    @SerializedName("htmlBody") val htmlBody: String,
-)
+    override fun toString(): String = "NativeAuthV2EnrollRequest(<redacted>)"
+    override fun toUnsanitizedString(): String = toString()
+}

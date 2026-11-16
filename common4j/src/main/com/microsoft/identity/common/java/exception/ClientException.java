@@ -49,6 +49,11 @@ public class ClientException extends BaseException {
     public static final String TOKEN_CACHE_ITEM_NOT_FOUND = "token_cache_item_not_found";
 
     /**
+     * Indicates that saving tokens did not produce the cache record required for the result.
+     */
+    public static final String TOKEN_CACHE_SAVE_FAILED = "token_cache_save_failed";
+
+    /**
      * Deserialization error loading the token shared library item.
      */
     public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";
@@ -202,6 +207,12 @@ public class ClientException extends BaseException {
      * Used when base exception is not categorizable into any of the current error codes.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
+
+    /**
+     * Native PSI recovery may have been dispatched, but its final outcome could not be established.
+     * This error does not authorize replaying the assertion or imply server-side rollback.
+     */
+    public static final String NATIVE_PSI_PRT_RECOVERY_OUTCOME_UNKNOWN = "native_psi_prt_recovery_outcome_unknown";
 
     /**
      * An unknown error that happens in the crypto layer.

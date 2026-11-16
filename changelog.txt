@@ -1,10 +1,96 @@
 vNext
 ----------
+- [MINOR] Upgrade both active build entrypoints to Gradle 9.3.1, Android Gradle Plugin 9.1.1, compileSdk/buildToolsVersion 37, targetSdk 36, Kotlin 2.2.21 and JDK 21 for SDK 36 tests; retain minSdk 24 and Kotlin language/API 1.9 compatibility, use Robolectric 4.16.1, and align SpotBugs 6.x and JaCoCo 0.8.10 configuration (#3186).
+
+Version 25.1.0
+----------
+- [PATCH] Remove the unused Native Auth V2 sign-in-start InvalidCredentials command result. Password submission continues to return IncorrectPassword; V1 is unchanged.
+- [PATCH] Align Native Auth V2 structured user/password error classification and exact OAuth browser fallback with iOS, preserving diagnostics through typed errors and credential/MFA remapping.
+- [PATCH] Remove upfront password parameters from Native Auth V2 sign-in; select among offered first-factor methods and submit passwords only from the password-required continuation.
+- [PATCH] Add shared authentication-method selection for password reset and existing-account sign-up.
+- [PATCH] Send the Native Auth V2 sign-up username at start and defer profile attributes until collection.
+- [PATCH] Remove upfront password parameters and pending-password retention from Native Auth V2 sign-up.
+- [MINOR] Add native PSI PRT recovery IPC declarations with host protocol 6.0 and positive HELLO handler capability, with opt-in bounded, strict UTF-8, non-redirecting HTTP transport and redacted IO errors
+- [PATCH] Refine onboarding telemetry by allowing per-invocation recorder lookup suppression without changing authentication correlation IDs or default lookup behavior for existing callers, and recording MDM enrollment start only for the enrollment fwlink destination; URL classification failures skip the telemetry step without changing Device-CA routing
+- [PATCH] Validate page-reported Auth UX error correlation IDs against the host request before appending onboarding blocking errors (#3322)
+- [MINOR] Add request-scoped Auth UX WebMessageListener transport with origin isolation, default-off Broker transport flighting, and managed legacy JavaScript-interface fallback (AB#3688632) (#3316)
+- [MINOR] Add a process-local, correlation-ID-keyed onboarding recorder handoff for Common WebView authorization, including identity-safe registry lifecycle, fragment correlation restoration, and recorder-backed Auth UX telemetry forwarding across brokered and non-brokered flows
+- [PATCH] Update Native Auth V2 error mapping and MFA routing, Fixes AB#3808200 (#3342)
+- [PATCH] Remove password from sign-in parameters, Fixes AB#3808198 (#3341)
+- [PATCH] Update Native Auth V2 sign-up and authentication-method selection, Fixes AB#3803937 (#3336)
+- [MINOR] AB#3805163: Add bridge-local Auth UX transport telemetry for Broker, Fixes AB#3805163 (#3339)
+- [PATCH] Fix broker-install onboarding telemetry for registration redirects, Fixes AB#3803513 (#3335)
+- [MINOR] Add native PSI PRT recovery prerequisites (AB#3751396), Fixes AB#3751396 (#3337)
+- [MINOR] Throttle repeated shared-device sign-out notifications, Fixes AB#3801751 (#3334)
+- [MINOR] Fixes AB#3533732: [ATS reliability] Add bounded retries for ce_no_network (#3327)
+- [PATCH] [common] Isolate onboarding recorder lookup and refine MDM enrollment telemetry, Fixes AB#3783247 (#3333)
+- [MINOR] [common] Record onboarding steps from correlated Auth UX errors, AB#3800818, Fixes AB#3800818 (#3332)
+- [MINOR] Add Native Auth V2 SMS and email JIT enrollment, Fixes AB#3797291 (#3315)
+- [MINOR] [common] Add request-scoped onboarding recorder handoff, Fixes AB#3688632 (#3318)
+- [MINOR] Fixes AB#3797297 [ATS Perf] [common] Update PR review skills to prevent performance regressions (#3321)
+
+Version 25.0.0
+----------
+- [MAJOR] Replace AppRegistry.BROWSER_SSO_AUTHORIZED_APPS with getBrowserSsoAuthorizedApps(), which evaluates default-off EnableIslandBrowserSso per request and preserves Chrome/debug-trusted MSAL test-app support alongside eligible Island production identities (AB#3780783) (#3298)
+- [MINOR] Add the InstallCertDeepLinkActivity span name for Broker's legacy install-certificate deep-link caller telemetry (AB#3771034) (#3293)
+- [PATCH] Default authorize-only Device-CA credential forwarding to off for gradual ECS rollout
+- [PATCH] Enforce authorize-only Device-CA credential forwarding by withholding original request headers from Device-CA WebView loads by default, with explicit ECS disablement as the rollback path (AB#3766458)
+- [PATCH] Preserve every valid Auth UX `log_telemetry` occurrence in arrival order by removing per-page attempt limits, distinct-code limits, and duplicate suppression from the JavaScript bridge while keeping Number Matching behavior unchanged (#3294)
+- [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
+- [MINOR] Move native ATS caller validation to Broker ingress, AB#3751475, Fixes AB#3751475 (#3311)
+- [MINOR] Add broker external browser redirect premortem, Fixes AB#3781149 (#3313)
+- [MINOR] Handle marked broker WebView redirects in external browser, Fixes AB#3785260 (#3304)
+- [PATCH] Make Device-CA authorize-only forwarding default-off, Fixes AB#3766458 (#3312)
+- [MINOR] Add Common preprovisioning and combined registration APIs, Fixes AB#3784684 (#3306)
+- [MINOR] Handle OpenID VC target-blank navigation, Fixes AB#3782580 (#3299)
+- [PATCH] Preserve device token results during R8 shrinking, Fixes AB#3784571 (#3305)
+- [MINOR] Allow Boot Menu and MDEP ZTE Service for device registration and tokens, Fixes AB#3782992 (#3301)
+- [MINOR] Harden Device CA routing for native Re-WPJ recovery, Fixes AB#3779482 (#3290)
+- [PATCH] Enforce authorize-only Device-CA credential forwarding AB#3766458, Fixes AB#3766458 (#3287)
+- [MINOR] Enable WebCP in WebView by default for MSAL, Fixes AB#3763874 (#3268)
+- [PATCH] Refine broker-install intent validation, Fixes AB#3674205 (#3261)
+- [MINOR] Fixes AB#3705014 PasskeyWebListener activity leak (#3257)
+- [MINOR] Fixes AB#3755175 Remove filter-then-clone cache flight (#3256)
+- [MINOR] Native Auth V2: Sign-up Fixes AB#3729066 (#3240)
+
+Version 24.7.0
+----------
+- [MINOR] Add Native Auth V2 sign-in support for password first factor and password followed by email OTP MFA, including server-driven method selection, continuation commands, controller orchestration, and token completion (AB#3729067) (#3239)
+- [PATCH] Upgrade Apache HttpCore to 5.4.3 to address CVE-2026-54399 (AB#3746140) (#3242)
+- [PATCH] Enable OAEP with SHA and MGF1 padding by default when ECS configuration is unavailable (#3205)
+- [MINOR] Add the InstallCertActivity span name, distinct from InstallCertOnWpj which names the DRS request rather than the activity hosting it (AB#3733722) (#3241)
+- [MINOR] Carry the executing broker package and battery optimization exemption status across modern MSAL acquire-token-silent success and error results (AB#3731177) (#3236)
+- [MINOR] Add FociQueryOutcome and FociQueryUtilities.queryFociMembership, a classified result for the FoCI membership query, so callers can tell a definitive non-membership response apart from a transient or refresh-token-specific failure. The existing tryFociTokenWithGivenClientId overloads are unchanged in behaviour and now delegate to it (#3234)
+- [PATCH] Retry the Outlook account drawer lookup in OutlookApp.confirmAccount so a transient popup (teaching callout or modal dialog) can't fail the check (#3231)
+- [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
+- [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
+- [MINOR] Security: validate a PKeyAuth WebView-redirect SubmitUrl (attacker-controllable) as an HTTPS URL same-origin with the challenging endpoint before the device key signs or the WebView submits; flight-gated and ships in shadow mode (CWE-918 / AB#3706623)
+- [MINOR] Reenable the GetCookies WebApps API contract for broker discovery (#3230)
+- [MINOR] Add the IPC transport for broker telemetry: the client opts in by putting a serialized BrokerTelemetryRequest (correlation ID and schema version) under BROKER_TELEMETRY_REQUEST on the operation bundle, where the key's presence is the opt-in signal, the broker returns the collected BrokerIpcTelemetry payload under BROKER_IPC_TELEMETRY on the response bundle, and MsalBrokerResultAdapter deserializes it through a strict TypeAdapterFactory that rejects payloads missing required root, performance-record or execution-event fields. An EventTag name this client does not recognise degrades that single event to the new EventTag.Unknown sentinel instead of leaving null in a non-nullable field, keeping the rest of the timeline intact; a non-string tag is malformed and still rejects the payload. Also renames the unreleased EventTag constants CommonHttpRequestExecute and CommonHttpResponseReceived to CommonTokenRequestExecute and CommonTokenResponseReceived (#3232)
+- [MINOR] Bump Kotlin to 2.0.21 with languageVersion/apiVersion pinned to 1.9, so published metadata stays readable by consumers on Kotlin 1.8 and -Xskip-metadata-version-check is no longer needed (#3238)
+- [MINOR] Add an IFidoManagerProvider extension point so a host can fulfil WebView passkey challenges, with Credential Manager as the fallback, and pass the auth flow's correlation id to IFidoManager.authenticate (#3237)
+
+Version 24.6.0
+----------
+- [PATCH] Remove the USE_LOCKS_IN_NAME_VALUE_STORAGE flight and always use per-storage read/write locks in NameValueStorageFileManagerSimpleCacheImpl
+- [PATCH] Security (CWE-918): stop the sso_nonce WebView redirect handler (NonceRedirectHandler) from forwarding the PRT credential header (x-ms-RefreshTokenCredential) to untrusted or cleartext redirect targets; only forward to validated HTTPS AAD cloud hosts and otherwise load the page without the credential, gated by ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION CommonFlight (default on) (#3199)
+- [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId and redirectUri, exposed as DeviceRegistrationClientApplication.getDeviceTokenResult returning the full token response (access token, device info, token type, resource, expiry fields). Deprecate getDeviceToken in favour of it (#3147)
+- [MINOR] Add the Native Auth V2 platform foundation in common4j: HAL response model and parser, typed challenge/poll/verify/token request and response contracts, href validation before continuation state or user input is sent, and V2 request construction, response handling, and HTTP client support (AB#3693580) (#3220)
+- [MINOR] Add Native Auth password-reset SSPR V2 protocol, continuation, command, controller, result, and telemetry support across Common and Common4J (#3221)
+- [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation (#3218)
+- [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
+- [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)
+- [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId and redirectUri, exposed as DeviceRegistrationClientApplication.getDeviceTokenResult returning the full token response (access token, device info, token type, resource, expiry fields) (#3147)
+- [MINOR] MAM Conditional Access onboarding (Phase 1): tag the Company Portal install link with the calling app package as the Play install referrer when the server has not already named one, so Company Portal skips its own sign-in UX and redirects back to the caller after install; scoped to redirects marked intuneAppProtection=1 and enabled by the host SDK through AuthorizationActivityParameters.enableMamCaInstallReferrer (default off) (#3193, #3212)
+- [PATCH] Security: reject silent broker token requests whose request-bundle caller package is not owned by the kernel-attested calling uid (Binder.getCallingUid()), via the caller-validating IPlatformUtil.isValidCallingApp(redirectUri, packageName, callingUid) overload (AndroidPlatformUtil) invoked from BrokerSilentTokenCommandParameters.validate() (unknown_caller). Gated by the VALIDATE_SILENT_CALLER CommonFlight (default on) as a secure-by-default kill-switch; validates the broker-attested callerUid (AB#3687466) (#3198)
+- [MINOR] Deprecate IPlatformUtil.isValidCallingApp(String, String) in favor of the caller-validating isValidCallingApp(String, String, int) overload for the silent broker path; the two-argument overload is retained for the interactive path and flows without an OS-attested per-app caller uid (AB#3687466) (#3198)
+- [PATCH] Fix a lock-ordering deadlock in AndroidKeyStoreUtil by removing the redundant `synchronized` from applyKeyStoreLocaleWorkarounds() (#3208)
 - [MINOR] Attach an immutable, one-shot return PendingIntent to the openid-vc:// hand-off so a signature-pinned Microsoft Authenticator (VID wallet) can bring the calling app's task back to the foreground after VID completes, via a transparent no-history OpenIdVcReturnActivity trampoline; gated by ENABLE_OPEN_ID_VC_RETURN_TO_CALLER CommonFlight (default on) (#3184)
 - [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface (as a binary-compatible default method) so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
 - [PATCH] Security: validate the target of WebView broker-install intent-scheme redirects against an allow-list (Google Play Store only), clearing any explicit component/selector and stripping URI-permission grant flags so resolution is driven solely by the validated package; gated by ENABLE_BROKER_INSTALL_INTENT_VALIDATION CommonFlight (default off) and recording the launched / blocked outcome via the is_broker_install_intent_blocked span attribute (#3170)
 - [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
-- [MINOR] Upgrade build toolchain to Gradle 9.3.1, Android Gradle Plugin 9.1.1, compileSdk/buildToolsVersion 37 (targetSdk unchanged at 36), Kotlin 2.2.21 and JDK 21; bump Robolectric to 4.16.1 for API 37 test compatibility, and adapt SpotBugs 6.x, JaCoCo and dependency configuration accordingly (#3186)
+- [MINOR] Add BrokerOAuth2TokenCache callerAuthorizedForFoci constructor gate: when false, shared FoCI cache reads are suppressed across both env-scoped and env==null chokepoints (getTokenCachesForClientId, getTokenCacheForClient), all loader/silent-flow fallbacks (load, loadWithAggregatedAccountData, saveAndLoadAggregatedAccountDataOptimized, loadAggregatedAccountData — the last returns a sparse singleton so downstream get(0) still resolves to UI-required), and device-wide enumerations (getAccounts(), getFociCacheRecords). Caller's own UID-partitioned accounts always returned. Exposes isCallerAuthorizedForFoci() and BrokerOAuth2TokenCacheTelemetryWrapper delegates the FoCI-touching APIs to the wrapped instance. The 3-arg convenience constructor (which silently defaulted the gate to true) is removed so every production callsite must supply the gate explicitly and fail-open regressions surface at compile time (#3187)
+- [MINOR] Add a non-mutating log_telemetry action to the Auth UX JavaScript bridge that forwards a validated, page-reported server error code to an onboarding telemetry sink seam, kept strictly separate from the number-matching device-store path (#3197)
 
 Version 24.5.0
 ----------

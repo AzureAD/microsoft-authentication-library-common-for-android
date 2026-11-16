@@ -53,4 +53,77 @@ public class CommonFlightsManagerTest {
     public void tearDown() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
+
+    @Test
+    public void testSilentCallerValidationDefaultsOffButCanBeEnabled() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        Assert.assertEquals(Boolean.FALSE, CommonFlight.VALIDATE_SILENT_CALLER.getDefaultValue());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_SILENT_CALLER));
+
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.VALIDATE_SILENT_CALLER.getKey(), "true");
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+        Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.VALIDATE_SILENT_CALLER));
+    }
+
+    @Test
+    public void testMultipleWindows_defaultsOffWithoutConsumerFlightsManager() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        Assert.assertEquals(Boolean.FALSE, CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getDefaultValue());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+    }
+
+    @Test
+    public void testAuthUxWebMessageListener_defaultsOffWithoutConsumerFlightsManager() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        Assert.assertEquals("EnableAuthUxWebMessageListenerTransport",
+                CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT.getKey());
+        Assert.assertEquals(Boolean.FALSE,
+                CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT.getDefaultValue());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT));
+    }
+
+    @Test
+    public void testAuthUxWebMessageListener_consumerCanEnableDisableAndRemoveOverride() {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT));
+
+        provider.addFlight(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT.getKey(), "true");
+        Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT));
+
+        provider.addFlight(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT.getKey(), "false");
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT));
+
+        provider.removeFlight(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT.getKey());
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT));
+    }
+
+    @Test
+    public void testMultipleWindows_consumerCanExplicitlyEnableAndDisable() {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        provider.addFlight(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getKey(), "true");
+        Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+
+        provider.addFlight(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS.getKey(), "false");
+        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS));
+    }
 }

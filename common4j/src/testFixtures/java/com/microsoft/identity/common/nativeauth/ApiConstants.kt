@@ -52,6 +52,6 @@ interface ApiConstants {
     }
 
     object TemporaryMailService {
-        const val BASE_URL = "https://www.1secmail.com/api/v1/"
+        const val BASE_URL = "https://api.mail.tm"
     }
 }

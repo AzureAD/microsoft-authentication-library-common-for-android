@@ -40,7 +40,10 @@ abstract class NativeAuthRequest : ILoggable {
      * are sent as part of HTTP POST request.
      */
     abstract class NativeAuthRequestParameters : ILoggable {
-        abstract val clientId: String
+        /**
+         * Client identifier when required by the endpoint, or `null` for server-href requests.
+         */
+        open val clientId: String? = null
     }
 
     companion object {

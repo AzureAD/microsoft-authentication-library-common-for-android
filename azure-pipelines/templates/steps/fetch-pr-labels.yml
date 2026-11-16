@@ -2,9 +2,26 @@ jobs:
 - job: getLabelsJob
   displayName: Fetch PR Labels
   steps:
+    # Shallow checkout so the persisted repo credential can authenticate the labels API
+    # call -- required for private / GitHub Enterprise repos (e.g. broker on msft.ghe.com).
+    - checkout: self
+      fetchDepth: 1
+      persistCredentials: true
     - bash: |
-        echo "Fetching labels from https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
-        temp=$(curl -s "https://api.github.com/repos/$BUILD_REPOSITORY_ID/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels" | jq -jc '.[] | {name}')
+        # Derive the API base from the repo host: github.com -> api.github.com, else GHE /api/v3.
+        host=$(echo "$BUILD_REPOSITORY_URI" | sed -E 's#^[a-zA-Z]+://([^/]+)/.*#\1#')
+        if [ "$host" = "github.com" ]; then
+          apiBase="https://api.github.com"
+        else
+          apiBase="https://$host/api/v3"
+        fi
+        url="$apiBase/repos/$BUILD_REPOSITORY_NAME/issues/$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER/labels"
+        echo "Fetching labels from $url"
+        # Reuse the credential the checkout persisted (empty for public repos, which is fine).
+        authHeader=$(git config --get-regexp '^http\..*\.extraheader$' | grep -i 'AUTHORIZATION:' | head -n1 | sed -E 's/^[^ ]+[[:space:]]+[Aa][Uu][Tt][Hh][Oo][Rr][Ii][Zz][Aa][Tt][Ii][Oo][Nn]:[[:space:]]*//')
+        curlArgs=(-s -H "Accept: application/vnd.github+json" -H "User-Agent: azure-pipelines-fetch-pr-labels")
+        if [ -n "$authHeader" ]; then curlArgs+=(-H "Authorization: $authHeader"); fi
+        temp=$(curl "${curlArgs[@]}" "$url" | jq -jc '.[] | {name}')
         echo -e "##vso[task.setvariable variable=prLabels;isOutput=true]$temp"
         echo "$temp"
       condition: eq(variables['Build.Reason'], 'PullRequest')

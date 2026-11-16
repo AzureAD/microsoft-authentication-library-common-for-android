@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id 'com.microsoft.identity.buildsystem' version '0.3.0'
@@ -20,6 +21,9 @@ apply from: '../versioning/version_tasks.gradle'
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_1_8
+        // Keep published metadata readable by consumers still on Kotlin 1.8.
+        languageVersion = KotlinVersion.KOTLIN_1_9
+        apiVersion = KotlinVersion.KOTLIN_1_9
     }
 }
 
@@ -68,6 +72,7 @@ if (project.hasProperty("codeCoverageEnabled")) {
 
 codeCoverageReport {
     coverage.enabled = enableCodeCoverage
+    jacocoVersion = "0.8.10"
 }
 
 jacoco {
@@ -90,43 +95,66 @@ tasks.withType(Test) {
     }
 }
 
-tasks.register("jacocoTestReport", JacocoReport) {
-    dependsOn "testLocalDebugUnitTest" // Run Robolectric tests first
+// Registers a JaCoCo XML+HTML coverage report task for a given build variant's unit tests.
+// PR validation builds the 'local' flavor, so the PR checks invoke jacocoTestReport
+// (localDebug) and its behaviour is unchanged. The weekly release pipeline builds the
+// 'dist' flavor and invokes jacocoDistTestReport (distDebug), which reuses the .exec
+// produced by distDebug<Module>UnitTestCoverageReport rather than re-running tests on a
+// variant the weekly infrastructure doesn't build.
+def registerJacocoXmlReport = { String taskName, String variant ->
+    def variantCap = variant.capitalize()
+    tasks.register(taskName, JacocoReport) {
+        dependsOn "test${variantCap}UnitTest" // Run Robolectric tests first
 
-    reports {
-        xml.required = true
-        html.required = true
+        reports {
+            xml.required = true
+            html.required = true
+        }
+
+        def fileFilter = [
+                '**/R.class', '**/R$*.class', '**/BuildConfig.*',
+                '**/Manifest*.*', '**/*Test*.*',
+                'android/**/*.*', 'com/microsoft/aad/adal/**'
+        ]
+
+        def kotlinClasses = fileTree(
+                dir: "$buildDir/intermediates/built_in_kotlinc/${variant}/compile${variantCap}Kotlin/classes",
+                excludes: fileFilter
+        )
+
+        def javaClasses = fileTree(
+                dir: "$buildDir/intermediates/javac/${variant}/compile${variantCap}JavaWithJavac/classes",
+                excludes: fileFilter
+        )
+
+        sourceDirectories.setFrom(files([
+                "$projectDir/src/main/java",
+                "$projectDir/src/main/kotlin"
+        ]))
+        classDirectories.setFrom(files([kotlinClasses, javaClasses]))
+        executionData.setFrom(fileTree(
+                dir: buildDir,
+                includes: [
+                        "jacoco/test${variantCap}UnitTest.exec".toString(),
+                        "outputs/unit_test_code_coverage/${variant}UnitTest/test${variantCap}UnitTest.exec".toString()
+                ]
+        ))
+
+        // Fail fast if no execution data is present (e.g. tests weren't run, or the
+        // build was invoked without -PcodeCoverageEnabled=true). Without this guard
+        // JacocoReport still emits a valid XML reporting 0% coverage, which would be
+        // silently published as a wrong weekly coverage number instead of failing loudly.
+        doFirst {
+            assert executionData.files.any { it.exists() } :
+                    "No JaCoCo .exec execution data found for ${variant}; " +
+                    "the '${taskName}' report would be a misleading 0%. Ensure the " +
+                    "test${variantCap}UnitTest task ran with coverage enabled."
+        }
     }
-
-    def fileFilter = [
-            '**/R.class', '**/R$*.class', '**/BuildConfig.*',
-            '**/Manifest*.*', '**/*Test*.*',
-            'android/**/*.*', 'com/microsoft/aad/adal/**'
-    ]
-
-    def kotlinClasses = fileTree(
-            dir: "$buildDir/intermediates/built_in_kotlinc/localDebug/compileLocalDebugKotlin/classes",
-            excludes: fileFilter
-    )
-
-    def javaClasses = fileTree(
-            dir: "$buildDir/intermediates/javac/localDebug/compileLocalDebugJavaWithJavac/classes",
-            excludes: fileFilter
-    )
-
-    sourceDirectories.setFrom(files([
-            "$projectDir/src/main/java",
-            "$projectDir/src/main/kotlin"
-    ]))
-    classDirectories.setFrom(files([kotlinClasses, javaClasses]))
-    executionData.setFrom(fileTree(
-            dir: buildDir,
-            includes: [
-                    "jacoco/testLocalDebugUnitTest.exec",
-                    "outputs/unit_test_code_coverage/localDebugUnitTest/testLocalDebugUnitTest.exec"
-            ]
-    ))
 }
+
+registerJacocoXmlReport("jacocoTestReport", "localDebug")     // PR validation (local flavor)
+registerJacocoXmlReport("jacocoDistTestReport", "distDebug")  // weekly release (dist flavor)
 
 // In dev, we want to keep the dependencies(common4j, broker4j, common) to 1.0.+ to be able to be consumed by daily dev pipeline.
 // In release/*, we change these to specific versions being consumed.
@@ -273,7 +301,7 @@ dependencies {
 
     implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
-    implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.activity:activity:1.8.2"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"

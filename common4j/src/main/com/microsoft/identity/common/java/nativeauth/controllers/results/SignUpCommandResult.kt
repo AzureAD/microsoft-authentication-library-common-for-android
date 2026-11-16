@@ -145,15 +145,16 @@ interface SignUpCommandResult {
     }
 
     /**
-     * The signup operation cannot progress as the provided attributes are not valid. Some user
-     * attributes can be validated at the server and if the validation fails then this error is returned.
+     * The signup operation cannot progress because one or more provided attributes are invalid.
+     * This can result from local SDK validation or server-side attribute validation.
      */
     data class InvalidAttributes(
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
         val invalidAttributes: List<String>,
-    ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult {
+    ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
+        NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, invalidAttributes=$invalidAttributes)"
 
         override fun toString(): String = "InvalidAttributes(correlationId=$correlationId)"

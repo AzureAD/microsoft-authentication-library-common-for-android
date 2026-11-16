@@ -152,6 +152,11 @@ public class MockPlatformComponentsFactory {
         }
 
         @Override
+        public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName, int callingUid) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void isValidCallingAppForWebApps(int callingUid) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }

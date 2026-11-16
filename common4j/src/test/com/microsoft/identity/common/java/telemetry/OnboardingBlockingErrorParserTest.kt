@@ -30,6 +30,24 @@ import org.junit.Test
 
 class OnboardingBlockingErrorParserTest {
 
+    // --- Single-code qualification policy ---
+
+    @Test
+    fun qualifyBlockingError_ExcludedValuesReturnNull() {
+        listOf(null, "", "   ", "0", "50058", "50097", "50126").forEach {
+            assertNull(OnboardingBlockingErrorParser.qualifyBlockingError(it))
+        }
+    }
+
+    @Test
+    fun qualifyBlockingError_OnboardingValuesAreReturnedUnchanged() {
+        assertEquals("53003", OnboardingBlockingErrorParser.qualifyBlockingError("53003"))
+        assertEquals(
+            "interaction_required",
+            OnboardingBlockingErrorParser.qualifyBlockingError("interaction_required")
+        )
+    }
+
     // --- MicrosoftTokenResponse overload ---
 
     @Test

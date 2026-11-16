@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
@@ -229,9 +230,20 @@ class SwitchBrowserActivity : FragmentActivity() {
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME).orEmpty()
         val isAuthTabSupported = AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
+        Logger.info(
+            methodTag,
+            "Auth Tab decision inputs: flightEnabled=$isAuthTabFlightEnabled, " +
+                "browserPackagePresent=${browserPackageName.isNotBlank()}, " +
+                "isAuthTabSupported=$isAuthTabSupported, " +
+                "browserPackage=$browserPackageName"
+        )
         span?.setAttribute(
             AttributeName.browser_package_name.name,
             browserPackageName
+        )
+        span?.setAttribute(
+            AttributeName.browser_version.name,
+            getBrowserVersion(browserPackageName)
         )
         span?.setAttribute(
             AttributeName.is_auth_tab_supported.name,
@@ -255,6 +267,22 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         Logger.info(methodTag, "Using Custom Tabs strategy")
         return CustomTabsLaunchStrategy(this)
+    }
+
+    /**
+     * Returns the version name of the given browser package, or an empty string if the package
+     * name is blank or the version cannot be resolved.
+     */
+    private fun getBrowserVersion(browserPackageName: String): String {
+        if (browserPackageName.isBlank()) {
+            return ""
+        }
+        return try {
+            packageManager.getPackageInfo(browserPackageName, 0).versionName.orEmpty()
+        } catch (e: PackageManager.NameNotFoundException) {
+            Logger.warn("$TAG:getBrowserVersion", "Browser package not found: $browserPackageName")
+            ""
+        }
     }
 
     private fun onAuthTabResult(resultBundle: Bundle) {
@@ -349,7 +377,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             // User has returned to this activity after CCT was launched, likely due to backing out
             val cancellation = ClientException(
                 ErrorStrings.USER_CANCELLED,
-                "User cancelled authentication by returning from browser"
+                ErrorStrings.AUTH_TAB_CANCELED_MESSAGE
             )
             span?.setStatus(StatusCode.ERROR)
             span?.recordException(cancellation)
@@ -357,7 +385,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             setResultAndFinish(
                 SwitchBrowserProtocolCoordinator.createErrorBundle(
                     ErrorStrings.USER_CANCELLED,
-                    "User cancelled authentication by returning from browser"
+                    ErrorStrings.AUTH_TAB_CANCELED_MESSAGE
                 )
             )
 

@@ -1,10 +1,6 @@
 pluginManagement {
     repositories {
-        // Keep ONLY the ADO feed here. Declaring the public repos (gradlePluginPortal/google/
-        // mavenLocal) breaks plugin resolution in the 1ES pipelines. For a purely local build
-        // without feed access, temporarily uncomment the two lines below.
-        //  mavenCentral()
-        //  gradlePluginPortal()
+        // Resolve plugins and their transitive dependencies through the approved feed.
         maven {
             name "vsts-maven-adal-android"
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"

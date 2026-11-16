@@ -373,6 +373,37 @@ class PasskeyWebListener(
         }
 
         /**
+         * Detaches the passkey listener from a WebView.
+         *
+         * This must be called when the WebView's owning view is destroyed so Chromium does not
+         * retain the WebView and its Activity through the native WebMessageListener holder.
+         *
+         * @param webView WebView to detach from.
+         */
+        @JvmStatic
+        @UiThread
+        fun unhook(webView: WebView) {
+            val methodTag = "$TAG:unhook"
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                Logger.warn(
+                    methodTag,
+                    "Passkey functionality requires Android 9 (Pie) or higher. " +
+                            "Current version: ${Build.VERSION.SDK_INT}"
+                )
+                return
+            }
+
+            if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+                Logger.warn(methodTag, "WEB_MESSAGE_LISTENER not supported on this device/WebView.")
+                return
+            }
+
+            WebViewCompat.removeWebMessageListener(webView, INTERFACE_NAME)
+            Logger.info(methodTag, "PasskeyWebListener successfully detached from WebView.")
+        }
+
+        /**
          * Loads the full js-bridge.js script from assets for debugging.
          */
         private fun loadJsBridgeScript(context: Context): String {

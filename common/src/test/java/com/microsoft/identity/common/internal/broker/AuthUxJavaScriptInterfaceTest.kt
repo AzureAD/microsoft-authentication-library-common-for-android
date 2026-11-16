@@ -23,10 +23,17 @@
 package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import io.opentelemetry.api.trace.Span
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mockStatic
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class AuthUxJavaScriptInterfaceTest {
 
@@ -44,6 +51,61 @@ class AuthUxJavaScriptInterfaceTest {
                 operation: "number_matching",
                 sessionID: $mockSessionId,
                 code_match: $mockNumberMatchValue
+            }
+        }
+    """.trimIndent()
+
+    private val mockErrorCode = "530003"
+
+    // Matches the Auth UX design-doc wire format: dispatched by action_name = "log_telemetry"
+    // (no params.operation), errorCode sent as a JSON number, plus additional params context
+    // fields. Written as strict JSON — quoted keys — so the fixture is exactly what a real JS
+    // sender's JSON.stringify would emit rather than something only a lenient parser accepts.
+    private val logTelemetryTestPayload = """
+        {
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": {
+                "v": 1,
+                "sessionID": "sess-1",
+                "errorCode": $mockErrorCode,
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1"
+            }
+        }
+    """.trimIndent()
+
+    private val logTelemetryMissingErrorCodePayload = """
+        {
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": {
+                "v": 1,
+                "sessionID": "sess-1",
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1"
+            }
+        }
+    """.trimIndent()
+
+    // A future Auth UX version may add new key/value pairs at the top level and inside params;
+    // dispatch must tolerate them and still forward errorCode.
+    private val logTelemetryWithFutureFieldsPayload = """
+        {
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "futureTopLevel": "ignored",
+            "params": {
+                "v": 2,
+                "sessionID": "sess-1",
+                "errorCode": $mockErrorCode,
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1",
+                "futureField": "ignored",
+                "futureNumber": 42
             }
         }
     """.trimIndent()
@@ -78,6 +140,25 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test receiveAuthUxMessage with required fields but no params is a no-op`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host"
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
     fun `test receiveAuthUxMessage with non-json string`() {
         // Call the method
         authUxJavaScriptInterface.receiveAuthUxMessage("NotAJson")
@@ -86,9 +167,805 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test receiveAuthUxMessage contains NullPointerException from span lookup`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        mockStatic(SpanExtension::class.java).use { spanExtension ->
+            spanExtension.`when`<Span> {
+                SpanExtension.current()
+            }.thenThrow(NullPointerException("test failure"))
+
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage contains unexpected exception from span lookup`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        mockStatic(SpanExtension::class.java).use { spanExtension ->
+            spanExtension.`when`<Span> {
+                SpanExtension.current()
+            }.thenThrow(IllegalStateException("test failure"))
+
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry forwards errorCode to sink exactly once`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        // The opaque error code is forwarded to the sink exactly once...
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+        // ...and H3 holds: the telemetry path never touches the number-match device store.
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry and missing errorCode is a no-op`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryMissingErrorCodePayload)
+
+        // Absent errorCode must not throw and must not emit telemetry.
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry tolerates unknown future fields`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryWithFutureFieldsPayload)
+
+        // New top-level and params key/value pairs must not break dispatch; errorCode still forwarded.
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry does not throw when no sink attached`() {
+        // Default no-arg construction (no sink): parses and validates without side effects or throwing.
+        authUxJavaScriptInterface.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with number_matching does not invoke telemetry sink`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(numberMatchTestPayload)
+
+        // Existing number-match behavior is unchanged (regression-safe)...
+        Assert.assertEquals(mockNumberMatchValue, NumberMatchHelper.numberMatchMap[mockSessionId])
+        // ...and the telemetry sink is never invoked for a non-telemetry action.
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test telemetry-only capabilities reject number matching`() {
+        val bridge = AuthUxJavaScriptInterface(
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = true,
+                numberMatchingAllowed = false
+            )
+        )
+
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test closed processor ignores queued callbacks`() {
+        val sink = RecordingTelemetrySink()
+        val bridge = AuthUxJavaScriptInterface(sink)
+        bridge.close()
+
+        bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+        bridge.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(bridge.isClosed)
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test close waits for admitted callback before returning`() {
+        val sinkEntered = CountDownLatch(1)
+        val releaseSink = CountDownLatch(1)
+        val closeStarted = CountDownLatch(1)
+        val closeCompleted = CountDownLatch(1)
+        val sink = AuthUxTelemetrySink {
+            sinkEntered.countDown()
+            check(releaseSink.await(5, TimeUnit.SECONDS)) {
+                "Timed out waiting to release the telemetry sink."
+            }
+            true
+        }
+        val bridge = AuthUxJavaScriptInterface(sink)
+        val executor = Executors.newFixedThreadPool(2)
+
+        try {
+            val processingFuture = executor.submit {
+                bridge.receiveAuthUxMessage(logTelemetryTestPayload)
+            }
+            Assert.assertTrue(sinkEntered.await(5, TimeUnit.SECONDS))
+
+            val closeFuture = executor.submit {
+                closeStarted.countDown()
+                bridge.close()
+                closeCompleted.countDown()
+            }
+            Assert.assertTrue(closeStarted.await(5, TimeUnit.SECONDS))
+
+            Assert.assertFalse(closeCompleted.await(100, TimeUnit.MILLISECONDS))
+            releaseSink.countDown()
+
+            processingFuture.get(5, TimeUnit.SECONDS)
+            closeFuture.get(5, TimeUnit.SECONDS)
+
+            Assert.assertTrue(closeCompleted.await(1, TimeUnit.SECONDS))
+            Assert.assertTrue(bridge.isClosed)
+        } finally {
+            releaseSink.countDown()
+            executor.shutdownNow()
+        }
+    }
+
+    /** Test double that records every telemetry event routed to the sink. */
+    private class RecordingTelemetrySink(
+        /** When false, simulates a host that is not ready to consume yet (e.g. no recorder). */
+        var consume: Boolean = true
+    ) : AuthUxTelemetrySink {
+        val events = mutableListOf<AuthUxTelemetryEvent>()
+        /** Every invocation, including ones this sink declines. */
+        var calls = 0
+        val received: List<String> get() = events.map { it.errorCode }
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            calls++
+            if (!consume) {
+                return false
+            }
+            events.add(event)
+            return true
+        }
+    }
+
+    /** Test double that always throws, to prove a bad sink cannot kill the bridge. */
+    private class ThrowingTelemetrySink : AuthUxTelemetrySink {
+        var calls = 0
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            calls++
+            throw IllegalStateException("sink boom")
+        }
+    }
+
+    /** Runs [block] with [span] installed as the current span. */
+    private fun withCurrentSpan(span: Span, block: () -> Unit) {
+        span.makeCurrent().use { block() }
+    }
+
+    private val authUxErrorCodeAttribute: String
+        get() = AttributeName.authux_js_error_code.name
+
+    @Test
+    fun `test span error-code attribute is set when the sink consumes the code`() {
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink())
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertEquals(mockErrorCode, span.getAttribute(authUxErrorCodeAttribute))
+    }
+
+    @Test
+    fun `test span error-code attribute is unset when the sink declines the code`() {
+        // NOT_CONSUMED means nothing was recorded downstream and the code stays eligible for retry,
+        // so a span carrying it would advertise telemetry that does not exist.
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink(consume = false))
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertFalse(
+            "a declined code must not reach the span",
+            span.hasAttribute(authUxErrorCodeAttribute)
+        )
+    }
+
+    @Test
+    fun `test span error-code attribute is unset when the sink throws`() {
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(ThrowingTelemetrySink())
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertFalse(
+            "a throwing sink recorded nothing, so the span must stay silent",
+            span.hasAttribute(authUxErrorCodeAttribute)
+        )
+    }
+
+    @Test
+    fun `test span error-code attribute holds the last consumed code`() {
+        // setAttribute is single-valued, so a flow reporting several codes keeps only the last one.
+        // Pinned because dashboards read this attribute and the loss is otherwise invisible.
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink())
+
+        withCurrentSpan(span) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"530003\""))
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53003\""))
+        }
+
+        Assert.assertEquals("53003", span.getAttribute(authUxErrorCodeAttribute))
+    }
+
+    @Test
+    fun `test a code not consumed by the sink stays eligible for retry`() {
+        // A not-ready sink returns false; later occurrences must remain eligible.
+        // This differs from deliberate host policy exclusion, which returns true.
+        val sink = RecordingTelemetrySink(consume = false)
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        Assert.assertTrue("nothing consumed yet", sink.received.isEmpty())
+
+        // Host becomes ready; the same code is reported again and must now get through.
+        sink.consume = true
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test all unconsumed occurrences reach the sink`() {
+        val sink = RecordingTelemetrySink(consume = false)
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        for (i in 1..40) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"5300$i\""))
+        }
+        Assert.assertTrue("nothing consumed", sink.received.isEmpty())
+        Assert.assertEquals(40, sink.calls)
+    }
+
+    @Test
+    fun `test a throwing sink does not suppress a later occurrence`() {
+        val sink = ThrowingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(2, sink.calls)
+    }
+
+    @Test
+    fun `test duplicate occurrences survive bridge re-registration`() {
+        val sink = RecordingTelemetrySink()
+
+        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode, mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test a correlationId containing a newline is forwarded unchanged`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1\nFATAL forged line",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        val seen = sink.events.single().correlationId
+        Assert.assertEquals("corr-1\nFATAL forged line", seen)
+    }
+
+    @Test
+    fun `test an oversized correlationId is forwarded unchanged`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        val huge = "corr-" + "A".repeat(200)
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "$huge",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(huge, sink.events.single().correlationId)
+    }
+
+    @Test
+    fun `test an errorCode containing a control character is rejected`() {
+        // An ESC is not in ERROR_CODE_REGEX, so the code is dropped before it reaches the sink.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            logTelemetryPayloadWithErrorCode("\"530003\\u001B[31mred\"")
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test an oversized action_component does not affect dispatch`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        val hugeComponent = "host" + "X".repeat(5_000)
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "$hugeComponent",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test malformed codes do not suppress a later valid occurrence`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        repeat(30) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
+        }
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test a valid code still gets through after malformed messages`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        repeat(5) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
+        }
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test a realistic correlationId is preserved verbatim as the join key`() {
+        // The correlation ID is the key used to join this event against eSTS / Kusto records, so
+        // the bridge must preserve it exactly as received.
+        val guid = "e4fd50ea-aa9c-41c9-8cc1-078ae50ddf0d"
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "$guid",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(guid, sink.events.single().correlationId)
+    }
+
+    @Test
+    fun `test repeated duplicate codes preserve every occurrence`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        for (i in 1..41) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+        Assert.assertEquals(41, sink.calls)
+        Assert.assertEquals(List(41) { mockErrorCode }, sink.received)
+    }
+
+    @Test
+    fun `test log_telemetry carrying a smuggled number_matching operation never reaches the store`() {
+        // H3 invariant: dispatch is decided by action_name FIRST, so a log_telemetry message that
+        // smuggles params.operation = number_matching must NOT mutate the number-match device store.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "operation": "number_matching",
+                    "sessionID": "$mockSessionId",
+                    "code_match": "$mockNumberMatchValue",
+                    "errorCode": $mockErrorCode
+                }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertTrue(
+            "log_telemetry must never write to the number-match store",
+            NumberMatchHelper.numberMatchMap.isEmpty()
+        )
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test disabled telemetry cannot fall through to number matching`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(
+            telemetrySink = sink,
+            capabilities = AuthUxRequestCapabilities(
+                telemetryAllowed = false,
+                numberMatchingAllowed = true
+            )
+        )
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "operation": "number_matching",
+                    "sessionID": "$mockSessionId",
+                    "code_match": "$mockNumberMatchValue",
+                    "errorCode": $mockErrorCode
+                }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test unknown action_name carrying an errorCode does not invoke the sink`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "some_future_action",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test a throwing sink does not propagate out of receiveAuthUxMessage`() {
+        // The whole point of this class is to never kill the broker.
+        val interfaceWithSink = AuthUxJavaScriptInterface(ThrowingTelemetrySink())
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        // Reaching here without an exception is the assertion.
+    }
+
+    @Test
+    fun `test empty and null errorCode are no-ops`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("null"))
+
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test errorCode sent as a quoted string is forwarded`() {
+        // JSON.stringify emits a quoted string for a string-typed field, which is the likeliest
+        // real-world shape alongside the bare number.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"$mockErrorCode\""))
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test over-long errorCode is rejected`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        val tooLong = "5".repeat(33) // regex caps at 32
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"$tooLong\""))
+
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test errorCode containing a newline is rejected before reaching the sink`() {
+        // Log-injection guard: a crafted code must never reach the sink or a log line intact.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            logTelemetryPayloadWithErrorCode("\"530003\\nFATAL fake log line\"")
+        )
+
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test valid symbolic errorCode is accepted`() {
+        // addBlockingError also accepts symbolic constants, so validation must stay permissive
+        // enough for them rather than being numeric-only.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"BROKER_INSTALL\""))
+
+        Assert.assertEquals(listOf("BROKER_INSTALL"), sink.received)
+    }
+
+    @Test
+    fun `test boolean-sourced errorCode is coerced to a string and passes shape validation`() {
+        // Documents a known, accepted limitation: Gson coerces the JSON literal true into "true",
+        // which is alphanumeric and therefore indistinguishable from a symbolic code by shape alone.
+        // Validation bounds charset and length, not semantics — deciding what is a meaningful error
+        // code is the server contract's job, not this bridge's. Recorded here so the behavior is a
+        // documented decision rather than an accident.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("true"))
+
+        Assert.assertEquals(listOf("true"), sink.received)
+    }
+
+    @Test
+    fun `test duplicate errorCodes are forwarded for every occurrence`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode, mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test errorCodes preserve occurrence order including intervening duplicates`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+        val expected = listOf("50076", "50033", "50033", "50076")
+
+        expected.forEach { errorCode ->
+            interfaceWithSink.receiveAuthUxMessage(
+                logTelemetryPayloadWithErrorCode("\"$errorCode\"")
+            )
+        }
+
+        Assert.assertEquals(expected, sink.received)
+    }
+
+    @Test
+    fun `test forwarding has no per-bridge distinct-code cap`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        for (i in 1..15) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
+        }
+
+        Assert.assertEquals(15, sink.received.size)
+    }
+
+    @Test
+    fun `test non-integer schema version still parses and forwards errorCode`() {
+        // params.v is the field designed to change over time; a non-integer value must not drop the
+        // whole message (and with it the errorCode).
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "v": "1.0", "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+        Assert.assertEquals("1.0", sink.events.single().version)
+    }
+
+    @Test
+    fun `test sink receives full telemetry context including correlation id`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        val event = sink.events.single()
+        Assert.assertEquals("corr-1", event.correlationId)
+        Assert.assertEquals(mockErrorCode, event.errorCode)
+        Assert.assertEquals("sess-1", event.sessionId)
+        Assert.assertEquals("ConvergedTFA", event.pageId)
+        Assert.assertEquals("track-1", event.trackingId)
+        Assert.assertEquals("1", event.version)
+    }
+
+    @Test
+    fun `test optional telemetry context is forwarded unchanged`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+        val longTrackingId = "track-" + "A".repeat(200)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "v": "1\nbeta",
+                    "sessionID": "session\nvalue",
+                    "errorCode": $mockErrorCode,
+                    "pageId": "page\rvalue",
+                    "trackingId": "$longTrackingId"
+                }
+            }
+            """.trimIndent()
+        )
+
+        val event = sink.events.single()
+        Assert.assertEquals("session\nvalue", event.sessionId)
+        Assert.assertEquals("page\rvalue", event.pageId)
+        Assert.assertEquals(longTrackingId, event.trackingId)
+        Assert.assertEquals("1\nbeta", event.version)
+    }
+
+    private fun logTelemetryPayloadWithErrorCode(errorCodeLiteral: String): String = """
+        {
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": { "errorCode": $errorCodeLiteral }
+        }
+    """.trimIndent()
+
+    @Test
+    fun `test companion exposes expected tag and interface name`() {
+        Assert.assertEquals(
+            "AuthUxJavaScriptInterface",
+            AuthUxJavaScriptInterface.TAG
+        )
+        Assert.assertEquals(
+            "broker",
+            AuthUxJavaScriptInterface.getInterfaceName()
+        )
+    }
+
+    @Test
+    fun `test isValidUriForInterface with malformed escape returns false`() {
+        val malformedUrl = "https://login.microsoftonline.com/%"
+
+        Assert.assertFalse(
+            AuthUxJavaScriptInterface.isValidUriForInterface(malformedUrl)
+        )
+    }
+
+    @Test
     fun `test isValidUrlForInterface with valid AAD Global URL`() {
         val validUrl = "https://login.microsoftonline.com/common/oauth2/authorize"
         Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects uppercase and mixed-case trusted suffixes`() {
+        listOf(
+            "microsoftonline.com" to "MicrosoftOnline.com",
+            "microsoft.com" to "Microsoft.com",
+            "microsoftonline.us" to "MicrosoftOnline.us",
+            "microsoftonline.cn" to "MicrosoftOnline.cn"
+        ).forEach { (suffix, mixedCaseSuffix) ->
+            listOf(
+                "LOGIN.${suffix.uppercase()}",
+                "login.$mixedCaseSuffix"
+            ).forEach { host ->
+                val url = "https://$host/common/oauth2/authorize"
+                Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts lowercase suffixes with either subdomain casing`() {
+        listOf(
+            "microsoftonline.com",
+            "microsoft.com",
+            "microsoftonline.us",
+            "microsoftonline.cn"
+        ).forEach { suffix ->
+            listOf("login", "LOGIN").forEach { subdomain ->
+                val url = "https://$subdomain.$suffix/common/oauth2/authorize"
+                Assert.assertTrue(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+            }
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects raw claims in query and fragment`() {
+        listOf(
+            "https://login.microsoftonline.com/oauth2/authorize?claims={\"access_token\":{}}",
+            "https://login.microsoftonline.com/oauth2/authorize#claims={\"access_token\":{}}"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
+    }
+
+    @Test
+    fun `test isValidUriForInterface accepts encoded claims`() {
+        val validUrl = "https://login.microsoftonline.com/oauth2/authorize" +
+            "?claims=%7B%22access_token%22%3A%7B%7D%7D"
+
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUriForInterface rejects malformed authorities`() {
+        listOf(
+            "https://.microsoftonline.com/path",
+            "https://login.microsoftonline.com:invalid/path",
+            "https://evil.example\\@login.microsoftonline.com/path"
+        ).forEach { url ->
+            Assert.assertFalse(url, AuthUxJavaScriptInterface.isValidUriForInterface(url))
+        }
     }
 
     @Test

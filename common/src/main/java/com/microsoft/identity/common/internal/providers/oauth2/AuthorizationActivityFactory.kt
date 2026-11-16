@@ -128,6 +128,10 @@ object AuthorizationActivityFactory {
                 parameters.isWebViewWebCpEnabled
             )
             putExtra(
+                AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED,
+                parameters.enableMamCaInstallReferrer
+            )
+            putExtra(
                 DiagnosticContext.CORRELATION_ID,
                 DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
             )

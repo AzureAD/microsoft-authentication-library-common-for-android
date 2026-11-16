@@ -117,6 +117,43 @@ public enum AttributeName {
     application_name,
 
     /**
+     * The preferred authentication method requested by the caller (e.g. "qrpin" for QR + PIN,
+     * "none" when unset), taken from the interactive request parameters.
+     */
+    preferred_auth_method,
+
+    /**
+     * The decision path taken for a WebView camera permission request. One of:
+     * "qrpin_silent_grant", "qrpin_rationale", "qrpin_os_prompt",
+     * "default_silent_grant", "default_os_prompt".
+     */
+    camera_permission_flow,
+
+    /**
+     * Whether the device has any camera hardware (FEATURE_CAMERA_ANY). Recorded on the camera
+     * permission span; does not affect handling.
+     */
+    has_camera_hardware,
+
+    /**
+     * Outcome of a WebView camera permission request: "granted" or "denied" (OK),
+     * "superseded", "error", or "abandoned" (ERROR).
+     */
+    camera_permission_result,
+
+    /**
+     * Outcome of a WebView file upload request: "selected", "cancelled", or "no_data" (OK);
+     * "launch_error", "superseded", or "abandoned" (ERROR).
+     */
+    webview_file_upload_result,
+
+    /**
+     * Privacy-safe bucket for the number of files returned by the system picker:
+     * "0", "1", "2-5", or "6+".
+     */
+    webview_file_upload_file_count_bucket,
+
+    /**
      * The correlation id sent from client app
      */
     correlation_id,
@@ -366,6 +403,26 @@ public enum AttributeName {
     is_new_refresh_token_cred_header_attached,
 
     /**
+     * Indicates whether the sso_nonce redirect target was a trusted host (HTTPS + validated AAD
+     * cloud host) eligible to receive the PRT credential header. Boolean, non-PII (no host emitted).
+     */
+    nonce_redirect_host_trusted,
+
+    /**
+     * Indicates whether the PRT credential header(s) were stripped before loading the sso_nonce
+     * redirect because the target was untrusted while validation enforcement was on. Boolean,
+     * non-PII.
+     */
+    nonce_redirect_credential_header_stripped,
+
+    /**
+     * Indicates whether the nonce-redirect credential-header validation flight
+     * (EnableNonceRedirectCredentialHeaderValidation) was enabled when the redirect was processed.
+     * Boolean, non-PII.
+     */
+    nonce_redirect_validation_flight_enabled,
+
+    /**
      * The time (in milliseconds) spent on generating a keypair.
      */
     elapsed_time_keypair_generation,
@@ -436,6 +493,11 @@ public enum AttributeName {
     auth_tab_fallback_to_custom_tabs,
 
     /**
+     * Records the version of the browser package handling the switch browser flow.
+     */
+    browser_version,
+
+    /**
      * The tenant id for the home tenant of the account for which PRT is required.
      */
     tenant_id,
@@ -464,6 +526,51 @@ public enum AttributeName {
     is_webcp_in_webview_enabled,
 
     /**
+     * Records whether authorize-only Device-CA credential forwarding is enabled.
+     */
+    device_ca_authorize_only_forwarding_enabled,
+
+    /**
+     * Records whether the original request headers were withheld from a Device-CA load.
+     */
+    device_ca_request_headers_skipped,
+
+    /**
+     * Indicates whether native Device-CA management-app handoff routing is enabled.
+     */
+    is_native_device_ca_management_app_handoff_enabled,
+
+    /**
+     * Records the management owner detected for Device-CA routing.
+     */
+    device_ca_management_owner,
+
+    /**
+     * Records the terminal Device-CA routing outcome.
+     */
+    device_ca_routing_outcome,
+
+    /**
+     * Records whether Device-CA marker detection fell back to the legacy substring parser.
+     */
+    device_ca_legacy_marker_parser_fallback_used,
+
+    /**
+     * Records whether the package-targeted management-app HTTPS App Link had no handler, launched, or failed.
+     */
+    device_ca_management_app_link_outcome,
+
+    /**
+     * Records whether the generic Device-CA HTTPS fallback had no handler, launched, or failed.
+     */
+    device_ca_generic_https_launch_outcome,
+
+    /**
+     * Records whether the Device-CA URL was accepted by WebView or failed to load.
+     */
+    device_ca_webview_load_outcome,
+
+    /**
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */
@@ -483,6 +590,162 @@ public enum AttributeName {
      * Record operation name from Webview JavaScript Payload
      */
     authux_js_operation,
+
+    /**
+     * Record the Auth UX server error code forwarded by the {@code log_telemetry} bridge action, so
+     * the telemetry path is queryable in android_spans without waiting for the onboarding blob to
+     * land.
+     *
+     * <p>Set only when the telemetry sink consumes an error code. If multiple codes are consumed
+     * during a flow, this attribute contains the last consumed code.
+     *
+     * <p>"Consumed" means the sink took responsibility for the code, which includes deliberately
+     * dropping it by its own policy — so this reflects what the page reported and the sink accepted,
+     * not necessarily what the onboarding blob ultimately stores. Do not treat it as a mirror of
+     * {@code blocking_errors}.
+     */
+    authux_js_error_code,
+
+    // AuthUxBridge describes one bridge initialization/lifetime, not an authentication request.
+    // Its counters include zero and saturate at Long.MAX_VALUE; absent fields are not zero.
+    // These names are wire contracts and must match the separately maintained Broker allowlist.
+
+    /**
+     * Captured {@code EnableJsApiForAuthUx} decision for an AuthUxBridge span.
+     * String: {@code on}, {@code off}, {@code not_evaluated} or {@code lookup_failed}.
+     * Observing this value does not reread the flight.
+     */
+    authux_bridge_flight,
+
+    /**
+     * Captured {@code EnableAuthUxWebMessageListenerTransport} decision.
+     * String: {@code on}, {@code off}, {@code not_evaluated} or {@code lookup_failed}.
+     * The bridge gate can skip this lookup; {@code on} does not guarantee modern installation.
+     */
+    authux_web_message_listener_flight,
+
+    /**
+     * Actual selection. String: {@code web_message_listener}, {@code javascript_interface},
+     * {@code disabled} or {@code not_selected}. JavaScript Interface selection may precede
+     * installation when the initial URL is ineligible; it is not proof of a usable bridge.
+     */
+    authux_transport,
+
+    /**
+     * Latest selection/setup explanation. String: {@code not_evaluated},
+     * {@code javascript_interface_requested}, {@code web_message_listener_prerequisites_not_met},
+     * {@code web_message_listener_installed}, {@code bridge_not_enabled},
+     * {@code web_message_listener_rolled_back}, {@code web_message_listener_rollback_incomplete}
+     * or {@code bridge_setup_failed}. Incomplete rollback disables the bridge. A later setup
+     * exception can overwrite a successful rollback reason; {@link #authux_rollback_complete}
+     * retains that earlier outcome.
+     */
+    authux_transport_selection_reason,
+
+    /**
+     * Long: initialization exited exceptionally ({@code 1}) or returned normally ({@code 0}).
+     * A normal return includes disabled selection, so {@code 1 - authux_setup_failed}
+     * measures normal initialization return, not successful transport installation.
+     */
+    authux_setup_failed,
+
+    /**
+     * Long count of installation attempts across both transports: one attempt for combined
+     * WebMessageListener and document-start script setup, or one per {@code addJavascriptInterface}
+     * call, including later navigation installations. Not a count of individual WebKit calls.
+     */
+    authux_install_attempts,
+
+    /**
+     * Long count of exceptions from the WebMessageListener setup block or an
+     * {@code addJavascriptInterface} call, even if subsequent rollback and fallback succeeded.
+     * The modern setup block includes post-registration work, not only registration-API calls.
+     */
+    authux_install_failed,
+
+    /**
+     * Long count of failed modern setups that were fully rolled back, permitting fallback.
+     * Retained even if subsequent legacy installation fails and changes the selection reason.
+     */
+    authux_rollback_complete,
+
+    /**
+     * Long count of successful {@code addJavascriptInterface} calls, including later navigation
+     * installations. Unlike transport selection, this records actual installation.
+     */
+    authux_legacy_installed,
+
+    /**
+     * Long count of physical native callbacks admitted before the observation's finish cutoff,
+     * counted once across validation and processing. Does not detect messages that never reached
+     * native code. After draining, processed = received - sum of the seven rejected counters,
+     * provided all fields are present and no counters saturated.
+     */
+    authux_received,
+
+    /**
+     * Long count of admitted callbacks that reached an already-closed processor. Callbacks arriving
+     * after the observation cutoff retain their functional behavior but are not counted here.
+     */
+    authux_rejected_closed,
+
+    /** Long count of native callbacks rejected by the existing origin or main-frame policy. */
+    authux_rejected_origin,
+
+    /** Long count of native callbacks rejected because the WebMessage data type was not a string. */
+    authux_rejected_type,
+
+    /**
+     * Long count of callbacks classified as missing data, malformed payloads or invalid required
+     * telemetry fields. Includes exceptions caught during deserialization, not exceptions from
+     * later processing. This classification is not conclusive evidence of a page defect.
+     * Contains no payload or raw validation input.
+     */
+    authux_rejected_malformed,
+
+    /** Long count of parsed callbacks whose action/operation did not match a supported route. */
+    authux_rejected_unsupported,
+
+    /** Long count of callbacks whose identified operation was not permitted by request capabilities. */
+    authux_rejected_capability,
+
+    /**
+     * Long count of callback processing failures outside the other rejection categories, including
+     * post-parse exceptions regardless of their type, and escaping errors.
+     * Does not establish whether earlier side effects occurred before failure.
+     */
+    authux_rejected_processing,
+
+    /**
+     * Long count of parsed {@code number_matching} messages, excluding {@code log_telemetry}
+     * routing precedence. Counted before fallible legacy telemetry writes and capability checks;
+     * not proof of a store attempt, accepted parameters, later retrieval or MFA completion.
+     */
+    authux_number_match_identified,
+
+    /**
+     * Long count of deliveries whose applicable in-memory onboarding recorder writes completed.
+     * Does not prove final blob delivery, caller receipt or downstream ingestion.
+     */
+    authux_recorder_written,
+
+    /**
+     * Long count of sink deliveries excluded by missing or mismatched host correlation ID.
+     * Records only the disposition, never the correlation ID itself.
+     */
+    authux_recorder_excluded_cid,
+
+    /** Long count of sink deliveries excluded by the existing error-qualification policy. */
+    authux_recorder_excluded_policy,
+
+    /** Long count of recorder deliveries for which the blocking-error append did not complete. */
+    authux_recorder_failed,
+
+    /**
+     * Long count of recorder deliveries whose blocking-error append completed but a subsequent step
+     * write failed. The earlier mutation remains; this does not imply rollback or final blob delivery.
+     */
+    authux_recorder_partial,
 
     /**
      * Record whether or not the request stored a number match entry.
@@ -518,12 +781,6 @@ public enum AttributeName {
      * Records if current flow is in webcp flow.
      */
     is_in_web_cp_flow,
-
-    /**
-     * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
-     * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
-     */
-    is_filter_then_clone_enabled,
 
     /**
      * Indicates whether a desync was detected between the in-memory cache and SharedPreferences
@@ -598,6 +855,13 @@ public enum AttributeName {
      * Indicates the number of retry attempts made in TLS connection when the retry policy is enabled.
      */
     client_tls_retry_number,
+
+    /** Whether the request is assigned to bounded network retries. SystemMetadata. */
+    network_retry_enabled,
+    /** Whether the bounded policy started an additional HTTP attempt. SystemMetadata. */
+    network_request_retried,
+    /** HTTP success of a completed additional attempt; absent otherwise. SystemMetadata. */
+    network_retry_succeeded,
 
     //region KeyPair generation
 
@@ -748,9 +1012,27 @@ public enum AttributeName {
 
     /**
      * Indicates which routing path was taken for a target=_blank URL intercepted
-     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     * by onCreateWindow: null_url, no_user_gesture, openid_vc,
+     * non_ssl, browser, or browser_fallback.
      */
     target_blank_navigation_route,
+
+    /**
+     * The destination host for a target=_blank URL intercepted by onCreateWindow.
+     */
+    target_blank_navigation_destination_host,
+
+    /**
+     * Whether the popup was initiated by a user gesture.
+     */
+    target_blank_navigation_is_user_gesture,
+
+    /**
+     * Latest operation result. Named span events retain each decision's outcome independently;
+     * failures use the existing error_type attribute with an exception class only.
+     * Dispatch/load acceptance does not confirm destination completion.
+     */
+    operation_outcome,
 
     //endregion
 
@@ -779,6 +1061,59 @@ public enum AttributeName {
      * query parameter from eSTS / MSA, indicating the data residency boundary.
      */
     server_caller_data_boundary,
+
+    //endregion
+
+    //region PKeyAuth SubmitUrl same-origin validation (CWE-918 / SSRF, AB#3706623)
+
+    /**
+     * The verdict of PKeyAuth {@code SubmitUrl} same-origin validation for a challenge parsed from an
+     * untrusted WebView redirect. One of {@code ALLOWED}, {@code REJECTED_BACKSLASH_AUTHORITY},
+     * {@code REJECTED_SUBMIT_NOT_HTTPS}, {@code REJECTED_ORIGIN_UNRESOLVABLE}, or
+     * {@code REJECTED_ORIGIN_MISMATCH}. Emitted on every evaluated challenge (including {@code
+     * ALLOWED}) so shadow-mode rejection rates can be measured before enforcement is ramped. Contains
+     * no hostname, URL, nonce, or {@code Context}.
+     */
+    pkeyauth_submit_url_origin_validation_result,
+
+    /**
+     * Whether PKeyAuth {@code SubmitUrl} origin validation was enforcing at evaluation time (i.e. a
+     * non-{@code ALLOWED} verdict blocked the challenge). {@code false} means shadow mode: the verdict
+     * was measured and reported but the challenge still proceeded.
+     */
+    pkeyauth_submit_url_origin_validation_enforced,
+
+    /**
+     * Whether the PKeyAuth {@code SubmitUrl} host is a validated AAD cloud host (per
+     * {@code AzureActiveDirectory.isValidCloudHost}). Answers the cross-origin question without
+     * logging the hostname itself. {@code false} when the {@code SubmitUrl} could not be safely
+     * parsed (e.g. the backslash parser-differential guard fired) or the host is not a known AAD
+     * cloud.
+     */
+    pkeyauth_submit_host_is_aad_cloud,
+
+    /**
+     * Whether the PKeyAuth challenging-origin host is a validated AAD cloud host (per
+     * {@code AzureActiveDirectory.isValidCloudHost}). Answers the cross-origin question without
+     * logging the hostname itself. {@code false} when the challenging origin could not be resolved or
+     * is not a known AAD cloud.
+     */
+    pkeyauth_challenging_host_is_aad_cloud,
+
+    /**
+     * Whether the PKeyAuth challenge that was validated arrived on the WebView main frame. A subframe
+     * challenge is validated against the main-frame origin; this flag lets a false-reject of a
+     * legitimate cross-origin iframe challenge be distinguished in telemetry before deciding whether
+     * to special-case it.
+     */
+    pkeyauth_challenge_is_main_frame,
+
+    /**
+     * Where the PKeyAuth challenging origin came from: {@code recorded} (the last https main-frame
+     * URL), {@code webview_url} (a fallback to {@code WebView#getUrl()}), or {@code none} (neither was
+     * available).
+     */
+    pkeyauth_challenging_origin_source,
 
     //endregion
 }

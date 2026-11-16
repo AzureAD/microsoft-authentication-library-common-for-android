@@ -51,6 +51,7 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
 import org.junit.After;
@@ -237,6 +238,23 @@ public class ExceptionAdapterTests {
         assertTrue(exception instanceof UiRequiredException);
         assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
         assertEquals("UI required.", exception.getMessage());
+    }
+
+    @Test
+    public void testExceptionFromAcquireTokenResult_CopiesBrokerPowerOptimizationInfo() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setErrorDescription("UI required.");
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setTokenResult(new TokenResult(null, errorResponse));
+        result.setBrokerAppPackageName("com.microsoft.broker");
+        result.setPowerOptimizationSettings("NOT_EXEMPT");
+
+        final BaseException exception =
+                ExceptionAdapter.exceptionFromAcquireTokenResult(result, null);
+
+        Assert.assertEquals("com.microsoft.broker", exception.getBrokerAppPackageName());
+        Assert.assertEquals("NOT_EXEMPT", exception.getPowerOptimizationSettings());
     }
 
     // -----------------------------------------------------------------------

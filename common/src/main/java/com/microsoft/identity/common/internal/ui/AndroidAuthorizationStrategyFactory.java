@@ -80,15 +80,20 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
             final boolean isBrokerRequest) {
         final String methodTag = TAG + ":getAuthorizationStrategy";
 
-        final Browser browser = mBrowserSelector.selectBrowser(browserSafeList, preferredBrowserDescriptor);
 
-        if (authorizationAgent == AuthorizationAgent.WEBVIEW || browser == null) {
-            Logger.info(methodTag, "WebView authorization, browser: " + browser);
+        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
+            Logger.info(methodTag, "WebView authorization, WebView agent is selected");
             return getGenericAuthorizationStrategy();
         }
 
-        Logger.info(methodTag, "Browser authorization, browser: " + browser);
-        return getBrowserAuthorizationStrategy(browser, isBrokerRequest);
+        final Browser browser = mBrowserSelector.selectBrowser(browserSafeList, preferredBrowserDescriptor);
+        if (browser == null) {
+            Logger.info(methodTag, "No browser found, using WebView agent");
+            return getGenericAuthorizationStrategy();
+        } else {
+            Logger.info(methodTag, "Browser found: " + browser.getPackageName() + ", using Browser agent");
+            return getBrowserAuthorizationStrategy(browser, isBrokerRequest);
+        }
     }
 
     /**

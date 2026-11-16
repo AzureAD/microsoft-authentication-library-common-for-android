@@ -29,7 +29,6 @@ import android.content.Context
  * Used by OneAuth (via JNI/Djinni SessionCachePersistence adapter).
  * Each app (OneAuth host, broker) has its own sandboxed SharedPreferences file;
  * the same schema and file name are used across apps for consistency.
- * OnboardingTelemetryRecorder also writes to this file on block detection.
  */
 class OnboardingSessionCorrelationStore(context: Context) {
 

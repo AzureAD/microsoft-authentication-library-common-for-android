@@ -7,9 +7,13 @@
 #              works as a Build Validation branch policy on the common repo.
 name: $(date:yyyyMMdd)$(rev:.r)
 
-# PR validation is driven by a Build Validation branch policy in ADO, not by YAML triggers.
-pr: none
-trigger: none
+trigger: none  # Disable CI trigger if you only want PR-based runs
+pr:
+  branches:
+    include:
+      - dev
+      - release/*
+
 
 resources:
   repositories:

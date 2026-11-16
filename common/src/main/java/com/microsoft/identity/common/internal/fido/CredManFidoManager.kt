@@ -64,6 +64,7 @@ class CredManFidoManager (val context: Context,
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String,
+                                      correlationId: String?,
                                       span: Span): String {
         val methodTag = "$TAG:authenticate"
         span.setAttribute(
@@ -104,6 +105,7 @@ class CredManFidoManager (val context: Context,
                      relyingPartyIdentifier = relyingPartyIdentifier,
                      allowedCredentials = allowedCredentials,
                      userVerificationPolicy = userVerificationPolicy,
+                     correlationId = correlationId,
                      span = span)
             } else {
                 throw e

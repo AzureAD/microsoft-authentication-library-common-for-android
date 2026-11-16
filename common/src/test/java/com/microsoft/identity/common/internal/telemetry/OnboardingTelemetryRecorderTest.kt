@@ -32,6 +32,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingTelemetryRecorderTest {
@@ -155,8 +158,6 @@ class OnboardingTelemetryRecorderTest {
         // A corrupted/missing seed leaves sessionCorrelationId empty. finalizeBlob() must
         // refuse to emit in that case: a blob without a sessionCorrelationId cannot be joined
         // with the broker side or with retries, so emitting it would be unattributable noise.
-        // Recording a blocking error first also exercises the persistSessionCorrelation()
-        // no-op guard for the empty-sessionCorrelationId path.
         val r = OnboardingTelemetryRecorder(
             "not valid json", CLIENT_ID, TARGET,
             ApplicationProvider.getApplicationContext()
@@ -237,23 +238,55 @@ class OnboardingTelemetryRecorderTest {
         Assert.assertEquals("MobileOnboardingPhase1", flows.getString(0))
     }
 
-    // --- SharedPreferences persistence ---
+    @Test
+    fun testAddBlockingErrorAndFinalizationLeaveSessionCorrelationStoreUnchanged() {
+        val prefs = ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        val original = prefs.getString(PREFS_FILE, null)
+        val nativeKey = "$CLIENT_ID\u0001$TARGET"
+        val sentinel = JSONObject().put(
+            nativeKey,
+            JSONObject().put("id", "native-session").put("ts", 123456789L)
+        ).toString()
+        try {
+            Assert.assertTrue(prefs.edit().putString(PREFS_FILE, sentinel).commit())
+
+            recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
+
+            Assert.assertEquals(sentinel, prefs.getString(PREFS_FILE, null))
+            val blob = JSONObject(recorder.finalizeBlob())
+            Assert.assertEquals(
+                "BROKER_INSTALLATION_TRIGGERED",
+                blob.getJSONArray("blocking_errors").getString(0)
+            )
+            Assert.assertEquals("test-uuid-123", blob.getString("session_correlation_id"))
+            Assert.assertEquals(sentinel, prefs.getString(PREFS_FILE, null))
+        } finally {
+            Assert.assertTrue(prefs.edit().putString(PREFS_FILE, original).commit())
+        }
+    }
 
     @Test
-    fun testAddBlockingError_PersistsToSharedPreferences() {
-        recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
+    fun testConcurrentMutationAndFinalizationProducesStableSnapshots() {
+        val executor = Executors.newFixedThreadPool(4)
+        val start = CountDownLatch(1)
+        val tasks = (1..50).map { index ->
+            executor.submit {
+                start.await()
+                recorder.addStep("Step$index")
+                recorder.addBlockingError("Error$index")
+                JSONObject(recorder.finalizeBlob())
+            }
+        }
 
-        val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences(
-                "com.microsoft.oneauth.session_correlation_cache",
-                Context.MODE_PRIVATE
-            )
-        val cached = prefs.getString("com.microsoft.oneauth.session_correlation_cache", "") ?: ""
-        Assert.assertFalse("SharedPreferences should contain cached session data", cached.isEmpty())
-        Assert.assertTrue(
-            "Cached data should contain the session correlation ID",
-            cached.contains("test-uuid-123")
-        )
+        start.countDown()
+        tasks.forEach { it.get(10, TimeUnit.SECONDS) }
+        executor.shutdown()
+        Assert.assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS))
+
+        val finalBlob = JSONObject(recorder.finalizeBlob())
+        Assert.assertEquals(50, finalBlob.getJSONArray("steps_list").length())
+        Assert.assertEquals(50, finalBlob.getJSONArray("blocking_errors").length())
     }
 
     companion object {
@@ -263,5 +296,6 @@ class OnboardingTelemetryRecorderTest {
                 "\"onboarding_mode\":\"non-brokered\"}"
         private const val CLIENT_ID = "test-client-id"
         private const val TARGET = "scope1 scope2"
+        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
     }
 }

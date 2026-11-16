@@ -122,4 +122,3 @@ ext {
     dexMakerLibraryVersion = "1.2"
     //#### The ABOVE are TSL version variables - END
 }
-

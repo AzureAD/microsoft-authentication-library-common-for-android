@@ -129,12 +129,5 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
         }
-        if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
-        }
     }
 }

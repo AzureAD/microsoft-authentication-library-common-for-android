@@ -41,7 +41,6 @@ public class LabConstants {
         public static final String MDM_CA = "mdm_ca";
         public static final String MAM_CA = "mam_ca";
         public static final String MAM_ON_SPO = "mam_on_spo";
-        public static final String TP_CA = "tpca";
         public static final String TRUE_MAM_CA = "true_mam_ca";
         public static final String WP = "wp";
         public static final String FEDERATED = "federated";
@@ -55,6 +54,7 @@ public class LabConstants {
         public static final String PPE = "ppe";
         public static final String QR_PIN = "qr_pin";
         public static final String TOKEN_BINDING = "token_binding";
+        public static final String MDM_AND_TOKEN_BINDING = "mdm_and_token_binding";
         public static final String CBA = "cba";
         public static final String RESOURCE_ACCOUNT_1 = "resource_account_1";
         public static final String RESOURCE_ACCOUNT_2 = "resource_account_2";

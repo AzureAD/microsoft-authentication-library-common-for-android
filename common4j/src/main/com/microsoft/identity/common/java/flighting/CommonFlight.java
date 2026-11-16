@@ -31,8 +31,18 @@ import lombok.NonNull;
 
 /**
  * List of Active Common flights.
+ * <p>
+ * {@link CommonFlightsManager} is initialized by the broker only, so in an MSAL or OneAuth app
+ * process these resolve to the compile-time defaults below and no ECS entry can change them. Code
+ * running in the app process should take the decision from the host SDK instead.
  */
 public enum CommonFlight implements IFlightConfig {
+    /**
+     * Allows registered Island production browser identities to request Browser SSO headers.
+     * Disabled by default; the Broker Browser SSO entry point also requires its global SSO flight.
+     */
+    ENABLE_ISLAND_BROWSER_SSO("EnableIslandBrowserSso", false),
+
     /**
      * Flight to control whether or not to use Network capability for performing network check.
      */
@@ -121,9 +131,16 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Enables WebMessageListener transport for eligible Broker Auth UX requests.
+     * Defaults to the managed JavaScript-interface transport. ENABLE_JS_API_FOR_AUTHUX remains
+     * the independent bridge master gate.
+     */
+    ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT("EnableAuthUxWebMessageListenerTransport", false),
+
+    /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
@@ -141,17 +158,26 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
     /**
+     * Flight to withhold the original request headers from Device-CA loads so credentials are
+     * forwarded only by the validated WebCP authorize path. This is disabled by default for
+     * gradual rollout; an explicit {@code true} value enables authorize-only forwarding.
+     */
+    ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING(
+            "EnableDeviceCaAuthorizeOnlyCredentialForwarding",
+            false),
+
+    /**
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
 
-    /**
-     * Flight to enable post-parse validation of the {@code intent://} broker-install request before it
-     * is launched. When enabled, the parsed intent's component and selector are cleared and its target
-     * package must be the Google Play Store before the activity is started. Defaults to off so the
-     * validation can be rolled out progressively via ECS; when off, the legacy launch behavior is used.
-     */
-    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", false),
+    /** Enables broker-install intent validation by default, with legacy behavior when disabled. */
+    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", true),
+
+    /** Flight to enable native Device-CA handoff to the device management app. Default is true. */
+    ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF(
+            "EnableNativeDeviceCaManagementAppHandoff",
+            true),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
@@ -186,14 +212,20 @@ public enum CommonFlight implements IFlightConfig {
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
     /**
+     * Flight controlling silent-caller validation: when enabled, a silent broker token
+     * request whose self-reported caller package is not owned by the kernel-attested calling uid
+     * ({@code Binder.getCallingUid()}) fails the platform check with {@code unknown_caller}
+     * (AB#3687466). Broker ATS admission returns an {@code ArgumentException} for that failure.
+     * Broker applies this gate when admitting the original request, before local execution or
+     * passthrough. Disabled by default while rolling out; redirect validation still runs.
+     * Token command parameter validation does not repeat this caller check.
+     */
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", false),
+
+    /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
      */
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
-
-    /**
-     * Flight to control whether or not to use the optimized saveAndLoadAggregatedAccountData() method.
-     */
-    CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD("UseRefactoredSaveAndLoadAggregatedAccountMethod", false),
 
     /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
@@ -207,10 +239,6 @@ public enum CommonFlight implements IFlightConfig {
     RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
 
     /**
-     * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
-     */
-    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false),
-    /**
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
@@ -219,8 +247,16 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
      * to be intercepted via onCreateWindow and opened in an external browser.
+     * Defaults off for brokerless consumers; BrokerFlight supplies the broker default.
      */
-    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
+
+    /**
+     * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
+     */
+    ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
+            "EnableBrokerWebViewExternalBrowserRedirect",
+            true),
 
     /**
      * Flight to enable file upload support in the embedded WebView.
@@ -276,16 +312,8 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
-    /**
-     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
-     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
-     * references first, then clones only the matching items — avoiding the cost of
-     * cloning the entire cache when only a subset is needed.
-     */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
-
     /**
      * Kill switch for strict redirect-URI matching in
      * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
@@ -320,7 +348,51 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Kill switch for validating the redirect target before the PRT credential header
+     * ({@code x-ms-RefreshTokenCredential}) is forwarded on an {@code sso_nonce} redirect in
+     * {@code NonceRedirectHandler} (CWE-918). When enabled (default), the credential header is
+     * stripped unless the target is an HTTPS, validated AAD cloud host; the navigation still
+     * proceeds without the credential.
+     * Turn off via ECS to revert to the historical behavior of forwarding the header to the
+     * redirect target unconditionally (e.g. if instance-discovery ordering causes a legitimate AAD
+     * host to be treated as untrusted and silently lose SSO).
+     */
+    ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION("EnableNonceRedirectCredentialHeaderValidation", true),
+
+    /**
+     * Master switch for the CWE-918 / SSRF hardening of a PKeyAuth {@code SubmitUrl} parsed from an
+     * untrusted WebView redirect ({@code urn:http-auth:PKeyAuth?...}) (AB#3706623). When enabled
+     * (the default) the challenging origin is recorded and derived, the {@code SubmitUrl} is
+     * evaluated against it (absolute HTTPS, same scheme/host/port), and the verdict is emitted to
+     * telemetry. Whether a rejected verdict actually blocks the challenge is controlled separately by
+     * {@link #ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: with this flight on but enforcement off
+     * the code runs in <em>shadow mode</em> — it measures and reports, but the challenge still
+     * proceeds. Turn this flight off via ECS to make the whole feature a true end-to-end no-op (no
+     * recording, no origin derivation, no evaluation, no telemetry), reverting to the exact pre-fix
+     * behavior.
+     * <p>
+     * Default is true.
+     */
+    ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true),
+
+    /**
+     * Enforcement switch for PKeyAuth {@code SubmitUrl} same-origin validation (AB#3706623). Gated
+     * under {@link #ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: it takes effect only while the
+     * master switch is on. When this flight is enabled a non-{@code ALLOWED} verdict throws and the
+     * challenge is abandoned before the device key signs or the response is submitted. When it is
+     * disabled (the default) the same evaluation and telemetry run, but a rejected challenge is
+     * <em>not</em> blocked — shadow mode — so real-world origin pairs can be measured before
+     * enforcement is ramped. This staged rollout exists because a false reject fails the entire
+     * authorization request (the {@code handleUrl} catch turns a {@link
+     * com.microsoft.identity.common.java.exception.ClientException} into
+     * {@code returnError} + {@code stopLoading}), so eSTS/ADFS topologies must be observed first.
+     * <p>
+     * Default is false.
+     */
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
 
     private String key;
     private Object defaultValue;

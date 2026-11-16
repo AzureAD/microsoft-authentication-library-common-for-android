@@ -44,6 +44,7 @@ public enum UserType {
     PPE(LabConstants.UserType.PPE),
     QR_PIN(LabConstants.UserType.QR_PIN),
     TOKEN_BINDING(LabConstants.UserType.TOKEN_BINDING),
+    MDM_AND_TOKEN_BINDING(LabConstants.UserType.MDM_AND_TOKEN_BINDING),
     CBA(LabConstants.UserType.CBA),
     RESOURCE_ACCOUNT_1(LabConstants.UserType.RESOURCE_ACCOUNT_1),
     RESOURCE_ACCOUNT_2(LabConstants.UserType.RESOURCE_ACCOUNT_2),

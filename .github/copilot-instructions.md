@@ -1,5 +1,9 @@
 # Copilot PR Review & Domain Instructions (Common Android Auth Library)
 
+For repository setup, tooling discovery, and build/test verification, start with
+[the root agent entry point](../AGENTS.md). The domain and review rules below
+remain the source of truth for code suggestions and PR reviews.
+
 These instructions guide AI (and human) PR reviews and code suggestions for the Common library (`AzureAD/microsoft-authentication-library-common-for-android`).  
 This file is self-contained; it includes full baseline & appendices replicated from the Broker guidelines plus deeper Common-specific detail. Changes here cascade to MSAL and Broker—review with elevated rigor. ALWAYS tailor feedback to changed code.
 
@@ -181,6 +185,10 @@ Check safe defaults; flag recorded securely; no code executes insecure branch be
 ## 3. Concurrency & Thread Safety (Security Intersection Where Applicable)
 Escalate to Security if a race compromises auth, tokens, or sensitive data integrity.
 
+Route changed, added, removed, or moved `synchronized` blocks/methods, Kotlin `@Synchronized`, explicit `Lock`/`withLock`/`Mutex`, and changes to lock expressions, helpers, receivers, or shared-state access paths to deeper concurrency analysis. Include refactors whose diff has no new locking tokens. The presence of synchronization elsewhere in a file is not a finding or a reason to audit unrelated code.
+
+Also route changed interface/abstract calls, concrete overridable-method calls in Java and Kotlin (including Java virtual and Kotlin `open` methods), and synchronous callback/listener/lambda invocations while a lock is held. Include changes to injected implementations, hierarchies, overrides, or callback bodies reached by an unchanged locked caller, even without synchronization keywords in the diff. This is focused routing, not a blanket arbitrary-call-under-lock defect.
+
 ### 3.1 What to Flag (Non-Security)
 - Unsynchronized mutable shared state accessed across threads/coroutine contexts (lists/maps/caches/flags).
 - Lazy init races (double-checked locking lacking `volatile` / `@Volatile`).
@@ -202,16 +210,27 @@ Escalate to Security if a race compromises auth, tokens, or sensitive data integ
 - Data exposure via inconsistent logging state.
 
 ### 3.3 Patterns & Fixes
-Bad (data race):
+Bad when callers share a mutable map without a common lock (data race and non-atomic check-then-act):
 ```kotlin
 if (cache[key] == null) {
     cache[key] = computeValue()
 }
 ```
-Good:
+`MutableMap.getOrPut` is not synchronized and does not fix this race. The concurrent-map overload can invoke its initializer more than once across competing calls, even when another call installs the value. Verify the receiver's actual type and overload. Individually thread-safe map operations do not make a compound invariant atomic.
+
+Good under these explicit constraints: a safely published instance owns the map and one stable lock; **all** reads, writes, removals, and iterations use that lock, and the map does not escape. The illustrative initializer `key.length` is bounded, pure, nonblocking, and non-null; the returned `Int` is immutable.
 ```kotlin
-val value = cache.getOrPut(key) { computeValue() }
+private class LengthCache {
+    private val cacheLock = Any()
+    private val cache = mutableMapOf<String, Int>()
+
+    fun lengthFor(key: String): Int = synchronized(cacheLock) {
+        cache[key] ?: key.length.also { cache[key] = it }
+    }
+}
 ```
+Do not replace this initializer with blocking work or move a state-dependent initialization outside the lock without preserving the invariant. Check the concrete concurrent-map implementation's contract before suggesting an alternative API.
+
 (Java volatile double-checked & Kotlin lazy examples omitted here for brevity; use standard safe patterns.)
 
 ### 3.4 Coroutine Best Practices
@@ -237,6 +256,45 @@ Do NOT flag:
 - Intentional thread confinement (single-thread dispatcher/executor) clearly enforced.
 - Read-only data after construction (effectively immutable).
 - Generated code with known synchronization wrappers.
+- Consistent acquisition order across reachable paths, or same-monitor JVM reentry, without a demonstrated conflicting path or invalid intermediate-state access.
+- Stable private `final`/`val` monitors used by all relevant accesses; non-final syntax alone is not a concurrency defect.
+- Helper extraction retaining the same monitor for every caller, or bounded pure computation on thread-owned inputs moved outside a lock while preserving the protected invariant and ordering.
+
+These suppressions require the changed path to preserve confinement, immutability, or the generated wrapper's protection. A new override/callback that bypasses that boundary is not suppressed.
+
+### 3.8 Lock Identity and Before/After Analysis
+- Trace the actual monitor object and aliases, not just lock variable names: an instance synchronized method locks `this`, while a static synchronized method locks the declaring class's `Class` object. Resolve the actual JVM owner for Kotlin `@Synchronized`, including object/companion and static bridges.
+- Compare before/after held-lock sets at each affected shared read/write and call boundary. Trace relevant caller/callee acquisitions, release paths, receiver changes, state ownership, visibility, and concurrent reachability. Follow concrete callees to establish lock order, not to speculate about unknown implementations; state any unresolved call/alias boundary and do not claim a proven deadlock beyond it.
+- Distinguish JVM monitor reentry on the same thread from non-reentrant Kotlin `Mutex`: reacquiring a held mutex before release can self-suspend, or fail for a repeated owner token. For explicit `Lock`, check its actual reentrancy contract and paired release (`finally`/`withLock`); `synchronized(lock)` does not acquire the lock used by `lock.lock()`.
+- Nested locking is not automatically deadlock. For an order-inversion finding, show concurrently reachable paths on the same two distinct locks: T1 holds A and waits for B while T2 holds B and waits for A (ABBA). Both paths using A then B, or reentering A on one thread, are counterexamples unless another concrete conflicting path exists.
+
+### 3.9 Monitor Stability
+- Flag actual concurrent reference replacement or inconsistent protection, not a missing `final`/`val` alone. Example: T1 holds the old object from `synchronized(lock)`, a concurrent assignment replaces `lock`, and T2 enters on the new object to modify the same state. Even `volatile` replacement does not make those monitors identical.
+- Prefer one stable private monitor with all relevant accesses guarded by it. A final reference alone is not proof of safety: different instances' final locks do not protect shared static state, and unguarded accesses still race. A non-final field with verified stable identity and consistent protection is not a finding.
+
+### 3.10 Critical-Section Scope
+- Flag broad/unnecessary critical sections only with a concrete blocking or contention path and a safe narrowing that preserves invariants, atomicity, visibility, ordering, snapshot consistency, and resource lifetime. Do not remove a lock for style or move guarded accesses outside it.
+- Example: a blocking disk write under `stateLock` stalls a UI reader acquiring that same lock. Writing after release is safe only if the data is an immutable snapshot captured under the lock, the resource remains valid, the write API independently prevents partial/interleaved writes where required, write completion is not part of the guarded invariant, and the contract permits the resulting write order.
+- Keep check-and-act atomic: checking `reserved < capacity` under one acquisition and incrementing under a later acquisition can let two callers exceed capacity, even though each access is synchronized.
+- Safe counterexample: compute a bounded, pure value from immutable thread-owned input before locking, then update guarded state under the original monitor. Do not extrapolate this to shared mutable inputs, escaping snapshots, side effects, or operations whose order/lifetime requires the lock.
+
+### 3.11 Refactors and Finding Evidence
+- Compare protection before and after a refactor, including a removed `synchronized`/`@Synchronized`, class-to-instance monitor change, different receiver, or helper extraction. Replacing the original caller's monitor with a helper's own monitor does not preserve the original protection.
+- Dangerous example: Kotlin `@Synchronized fun nextId()` becomes an unannotated wrapper calling an unguarded increment helper; concurrent calls on the same instance can lose updates. The annotation and Java's instance-method `synchronized` hold `this`; changing a static synchronized method to instance synchronization while retaining shared static state likewise splits protection across instances.
+- Safe counterexample: the original synchronized entry point calls a private helper under the same monitor, and every other helper caller holds that same monitor across the entire invariant. Do not demand redundant synchronization on the helper.
+- Cite a changed line (or the affected call/declaration for removed locking), the concrete monitor identity, conflicting paths/threads, before/after protection, actual impact, and minimal invariant-preserving fix. Apply the existing High/Medium impact criteria; never assign blanket severity based on nested locks, non-final references, or scope size.
+
+### 3.12 Runtime Call Targets and Callbacks Under Locks
+- Resolve the concrete held monitors/locks and possible runtime targets through construction, injection, hierarchy, overrides, and callback/lambda wiring. Trace actual callee bodies while the lock remains held, including further acquisitions, blocking/wait dependencies, and access to the caller's invariant. A declared interface/abstract type, a concrete overridable Java or Kotlin method, or a collection name proves neither safety nor a defect.
+- Distinguish registration/enqueueing from invocation before release. Verify the dispatcher/executor's behavior: an executor may run inline. An asynchronous callback is not safe merely because it runs elsewhere if the caller waits for it while holding a lock it needs. `join`/`Future.get`/latch waits do not release held monitors; `Object.wait` releases only its target monitor, not other held locks.
+- Report runtime-target ABBA only with an actual override/callee taking a second distinct lock and a concurrently reachable reverse path on those same objects. Report a waiting-worker cycle only with the caller's wait and the worker's dependency on the held lock. Reacquiring the same non-reentrant `Mutex` through a callback can self-suspend or fail for a repeated owner token.
+- Same-thread JVM monitor reentry itself is benign, but a concrete callback can observe or mutate invalid intermediate state. Name the incomplete invariant, the actual callback access, and the resulting incorrect behavior; complete-state reentry without conflicting accesses is a counterexample.
+- For external/native/reflective targets or unresolved injection, stop at the exact missing implementation/contract; do not invent lock edges, assert a safe default, or call it probable/proven deadlock. At most one clearly non-blocking `Sanity check:` contract note is permitted for a changed risk already established locally, such as new uncontrolled callback execution while a shared auth-cache lock is held. Specify the missing contract and local consequence; a generic interface call alone warrants silence. Do not duplicate an existing lock-order finding.
+- Suppress known bounded, pure, nonblocking leaves and verified targets. For example, an actual non-escaping standard `ArrayList`'s `size()` or indexed `get()` under its owner guard adds no lock/wait edge; still trace operations invoking element/callback code, such as `contains` calling `equals`. A declared `List`/`Map` can instead dispatch to custom code. Truly deferred callbacks after release with no caller wait are counterexamples when state, ordering, and lifetime remain valid.
+- Recommend a snapshot/open call only when state transition or reservation remains atomic under the original guard, the snapshot is immutable, and callback ordering, thread affinity, visibility, resource lifetime, and auth semantics are preserved. Revalidate generation/state or reconcile results after the call where needed. Revalidation alone cannot undo an irreversible operation: establish reservation/ownership and cancellation semantics before starting it; do not introduce duplicate side effects, stale-token/key use, check-then-act splits, or unsafe `volatile` substitutions. A verified consistent lock-order contract can be an alternative; do not mechanically finalize global APIs.
+- Cite the changed call or implementation/injection/override/callback line plus the held monitor, actual runtime callee, competing path or invariant access, and concrete impact. Use existing severity criteria; an interface call is not automatically High severity or a merge blocker.
+
+See [concurrency examples and counterexamples](skills/code-review/references/concurrency-threading.md) for the corresponding review procedure and Kotlin-first compact cases. Preserve intended polymorphism with Kotlin `open`/`override` (classes/functions are final by default); retain Java comparisons for virtual-by-default methods and legacy blocking-thread APIs. Translating examples does not justify changing JVM monitors to coroutine mutexes.
 
 --------------------------------------------------------------------------------
 
@@ -328,6 +386,14 @@ Memory:
 Instrumentation:
 - Add or reuse meaningful spans (do not proliferate trivial micro-spans).
 - Numeric attributes for duration rather than new spans for small code blocks.
+
+### 5.1 Memory and Storage Performance Across Every PR
+
+Apply the [general memory and storage performance screen](skills/code-review/references/performance-resources-dependencies.md#general-memory-and-storage-performance-screen) to every production-code PR, including new features outside authentication/cache code. Check unnecessary whole-data work, repeated reads/decryption/parsing, allocation/copy amplification, collection complexity, cache reuse, retention bounds/invalidation, and work on request/UI paths or under locks. Trace affected callers and callees, including unchanged helpers newly invoked or called more often; do not audit unrelated legacy code.
+
+ATS illustrates this general rule: preserve reusable in-memory account/credential caching and avoid full token-cache decryption during routine saves, including cleanup, metadata, logging, and telemetry helpers. Apply the [ATS examples](skills/code-review/references/performance-resources-dependencies.md#acquiretokensilent-ats-regression-checks) where relevant, but do not restrict checks to ATS or previously optimized classes. Require concrete frequency/scaling/memory-impact evidence, not speculative micro-optimizations; preserve encryption, persistence, synchronization, isolation, freshness, and defensive-copy semantics.
+
+For attribution, append the standalone line `Review rule: memory-storage/v1` once to each actionable finding supported by this guidance. After applying the screen, include `Review screen: memory-storage/v1` and `Guidance revision: unknown` as standalone review-summary lines, including zero-finding reviews; replace `unknown` only with a verified guidance commit SHA or `local-uncommitted` for local guidance edits. See the [attribution contract](skills/code-review/references/performance-resources-dependencies.md#attribution-memory-storagev1); do not tag unrelated findings or claim the marker proves incremental benefit.
 
 --------------------------------------------------------------------------------
 
@@ -545,12 +611,9 @@ Flag:
 
 Require:
 - PR summary migration note.
-- Changelog classification (MAJOR/MINOR).
 - Deprecation annotation before removal (unless urgent security fix).
 
 Avoid false positives for private/internal refactors.
-
-See [changelog.txt](../changelog.txt) for the changelog format.
 
 --------------------------------------------------------------------------------
 

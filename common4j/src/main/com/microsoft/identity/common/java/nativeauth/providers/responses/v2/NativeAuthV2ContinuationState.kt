@@ -1,0 +1,374 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
+
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import com.microsoft.identity.common.java.util.ArgUtils
+import java.io.Serializable
+import java.util.Collections
+
+/**
+ * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
+ * token, the server-provided relation-to-href map, the per-method relation-to-href maps of the
+ * methods the server offered, the requested scopes, the correlation ID, the flow entry relation,
+ * and the internal flow scenario that produced it.
+ *
+ * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
+ * they cannot inspect [continuationToken], [links], [methodLinks], [scopes], [entryRelation], or
+ * [scenario], because those members are `internal` to this module. Only common4j Native Auth V2
+ * protocol code (this package and `nativeauth.providers.v2`) can read them, e.g. to build the next
+ * request.
+ * [toString] and [toUnsanitizedString] deliberately reveal none of this state, not even to
+ * internal callers, since accidentally logging this object anywhere would otherwise be a single
+ * point of failure for a continuation-token leak.
+ *
+ * [Serializable] so MSAL can retain it across process death via `Parcel.writeSerializable` without
+ * reading its `internal` members, as V1 already does for its opaque
+ * `NativeAuthPublicClientApplicationConfiguration`. `serialVersionUID` is pinned rather than
+ * derived from the class shape.
+ */
+class NativeAuthV2ContinuationState private constructor(
+    internal val continuationToken: String,
+    internal val links: Map<String, String>,
+    internal val methodLinks: Map<String, Map<String, String>>,
+    internal val scopes: List<String>,
+    internal val claimsRequestJson: String?,
+    val correlationId: String,
+    internal val entryRelation: NativeAuthV2LinkRelation,
+    internal val scenario: NativeAuthV2FlowScenario,
+    internal val authenticationFactor: String?,
+    // Canonical names of SDK-owned credentials already submitted during a sign-up flow. Only
+    // `password` and legacy `email` names are retained; ordinary attributes remain retryable if
+    // the server asks for them again or rejects their values. Empty for every other flow.
+    internal val submittedAttributes: Set<String> = emptySet(),
+    private val enrollmentChannels: Map<String, String>? = emptyMap(),
+    private val resetPasswordUpdateSubmitted: Boolean = false,
+    private val pendingSignUpAttributes: Map<String, String>? = null
+) : ILoggable, Serializable {
+
+    /**
+     * `true` when the server classified the challenge that produced this state as the first
+     * (single) authentication factor.
+     *
+     * A state whose factor the server never declared reports `false`, so an unclassified step is
+     * treated as "not the first factor" rather than being trusted. The field is deliberately
+     * nullable so that an older serialized stream, which predates it, deserializes to unclassified
+     * and therefore fails closed.
+     */
+    internal val isFirstFactor: Boolean
+        get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
+
+    /**
+     * `true` when the SDK-owned `email` or `password` attribute named by [name]
+     * (case-insensitive) has already been submitted during a sign-up flow. Ordinary attributes
+     * are never retained. Public so the controller, which cannot read the opaque
+     * [submittedAttributes] member, can detect a malformed re-request for a credential.
+     */
+    fun hasSubmittedAttribute(name: String): Boolean =
+        submittedAttributes.any { it.equals(name, ignoreCase = true) }
+
+    /**
+     * Returns a copy of this state with any SDK-owned credential names in [names] added to the set
+     * of submitted attributes, so the successor produced by [next] inherits them. Other attribute
+     * names are deliberately ignored because their values may be corrected and resubmitted.
+     * Public so the controller can preserve this bookkeeping when the server rejects a submission
+     * without returning a successor continuation state.
+     * A nonempty submission also discards pending profile values.
+     */
+    fun withAdditionalSubmittedAttributes(
+        names: Collection<String>
+    ): NativeAuthV2ContinuationState {
+        val merged = LinkedHashSet(submittedAttributes)
+        names.forEach { name ->
+            when {
+                name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_EMAIL)
+                name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_PASSWORD)
+            }
+        }
+        return NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = links,
+            methodLinks = methodLinks,
+            scopes = defensiveCopy(scopes),
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = scenario,
+            authenticationFactor = authenticationFactor,
+            submittedAttributes = Collections.unmodifiableSet(merged),
+            enrollmentChannels = enrollmentChannels,
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = if (names.isEmpty()) pendingSignUpAttributes else null
+        )
+    }
+
+    /**
+     * Retains initial profile values across verification, resend, and enrollment.
+     * Submission discards the pending values.
+     */
+    fun withPendingSignUpAttributes(
+        attributes: Map<String, String>
+    ): NativeAuthV2ContinuationState {
+        require(scenario == NativeAuthV2FlowScenario.SIGN_UP && submittedAttributes.isEmpty())
+        require(attributes.keys.none {
+            it.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) ||
+                it.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true)
+        })
+        return NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
+            resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes))
+        )
+    }
+
+    /** Returns a defensive copy of pending initial sign-up values for the controller's submission. */
+    fun pendingSignUpAttributesForSubmission(): Map<String, String>? =
+        pendingSignUpAttributes?.let { LinkedHashMap(it) }
+
+    /** Discards pending profile input at completion. */
+    fun withoutPendingSignUpAttributes(): NativeAuthV2ContinuationState {
+        return NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
+            resetPasswordUpdateSubmitted
+        )
+    }
+
+    /**
+     * Returns the scopes retained for the
+     * authorization-code token request at flow completion. Controllers outside common4j access
+     * scopes only via this method, keeping the internal [scopes] field opaque.
+     */
+    fun scopesForTokenRequest(): List<String> = ArrayList(scopes)
+
+    /**
+     * Returns the optional claims request retained for the authorization-code token exchange.
+     */
+    fun claimsRequestJsonForTokenRequest(): String? = claimsRequestJson
+
+    /** Returns the originating scenario, never inferred from an enrollment response. */
+    fun flowScenario(): NativeAuthV2FlowScenario = scenario
+
+    /** Continues an existing-account challenge as sign-in, discarding sign-up-only input. */
+    internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState {
+        return NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = links,
+            methodLinks = methodLinks,
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = NativeAuthV2FlowScenario.SIGN_IN,
+            authenticationFactor = authenticationFactor
+        )
+    }
+
+    /** Whether this reset flow has actually submitted a new password. */
+    fun isResetPasswordUpdateSubmitted(): Boolean = resetPasswordUpdateSubmitted
+
+    internal fun withResetPasswordUpdateSubmitted(): NativeAuthV2ContinuationState =
+        NativeAuthV2ContinuationState(
+            continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
+            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
+            pendingSignUpAttributes
+        )
+
+    /**
+     * Returns the href retained for [relation], or `null` if that relation was not present, or was
+     * present but not one of the relations this state retains.
+     */
+    internal fun href(relation: NativeAuthV2LinkRelation): String? = links[relation.value]
+
+    internal fun enrollmentChannel(methodId: String): String? = enrollmentChannels?.get(methodId)
+
+    /** Whether [methodId] identifies an offered SMS enrollment method eligible for risk verification. */
+    fun isSmsEnrollmentMethod(methodId: String): Boolean = enrollmentChannel(methodId) == "sms"
+
+    /**
+     * Returns a successor state in which the links of the server method identified by [methodId]
+     * have been promoted into the state's own relation map, so the next request follows exactly
+     * the href the server attached to that method. Returns `null` when [methodId] is not one of
+     * the methods this state retained, so a stale or fabricated method identifier fails
+     * deterministically instead of falling back to another method's href.
+     */
+    internal fun withSelectedMethod(methodId: String): NativeAuthV2ContinuationState? {
+        val selectedLinks = methodLinks[methodId] ?: return null
+        val merged = LinkedHashMap<String, String>(links)
+        merged.putAll(selectedLinks)
+        return NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = retainSupportedRelations(merged),
+            methodLinks = methodLinks,
+            scopes = defensiveCopy(scopes),
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = scenario,
+            authenticationFactor = authenticationFactor,
+            submittedAttributes = submittedAttributes,
+            enrollmentChannels = enrollmentChannels,
+            resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
+            pendingSignUpAttributes = pendingSignUpAttributes
+        )
+    }
+
+    override fun toUnsanitizedString(): String = REDACTED_STRING
+
+    override fun toString(): String = REDACTED_STRING
+
+    companion object {
+        private const val serialVersionUID = 1L
+        private const val REDACTED_STRING = "NativeAuthV2ContinuationState(<redacted>)"
+        private const val ATTRIBUTE_NAME_EMAIL = "email"
+        private const val ATTRIBUTE_NAME_PASSWORD = "password"
+
+        /**
+         * Link relations this SDK version follows. An unsupported/unrecognised relation is
+         * dropped defensively here rather than carried forward indefinitely in mid-flow state.
+         */
+        private val SUPPORTED_RELATIONS: Set<String> = setOf(
+            NativeAuthV2LinkRelation.CHALLENGE.value,
+            NativeAuthV2LinkRelation.VERIFY.value,
+            NativeAuthV2LinkRelation.ENROLL.value,
+            NativeAuthV2LinkRelation.ACTIVATE.value,
+            NativeAuthV2LinkRelation.RESEND.value,
+            NativeAuthV2LinkRelation.UPDATE.value,
+            NativeAuthV2LinkRelation.POLL.value,
+            NativeAuthV2LinkRelation.RISK_VERIFY.value,
+            NativeAuthV2LinkRelation.CONTINUE.value,
+            NativeAuthV2LinkRelation.RESET_PASSWORD.value,
+            NativeAuthV2LinkRelation.SIGN_IN.value,
+            NativeAuthV2LinkRelation.SIGN_UP.value,
+            NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value,
+            NativeAuthV2LinkRelation.SELF.value
+        )
+
+        /**
+         * Builds the first continuation state from an authorize-challenge [response].
+         */
+        internal fun fromAuthorizeChallengeResponse(
+            response: NativeAuthV2HalApiResponse,
+            continuationToken: String,
+            scopes: List<String>,
+            claimsRequestJson: String? = null,
+            entryRelation: NativeAuthV2LinkRelation,
+            scenario: NativeAuthV2FlowScenario
+        ): NativeAuthV2ContinuationState {
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
+            return NativeAuthV2ContinuationState(
+                continuationToken = continuationToken,
+                links = retainSupportedRelations(response.links),
+                methodLinks = retainMethodLinks(response),
+                scopes = defensiveCopy(scopes),
+                claimsRequestJson = claimsRequestJson,
+                correlationId = response.correlationId,
+                entryRelation = entryRelation,
+                scenario = scenario,
+                authenticationFactor = response.authenticationFactor,
+                submittedAttributes = emptySet()
+            )
+        }
+
+        /**
+         * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
+         * `null` if [response] did not carry a nonblank continuation token.
+         *
+         * [selectedMethod] merges a single method's links into the successor's own relation map.
+         * Otherwise method selection is deferred to [withSelectedMethod].
+         *
+         * Only a `challenge` response carries `challengeContext.authenticationFactor`, so the
+         * successor inherits [previous]'s classification whenever this response does not declare
+         * one. That keeps the factor available on the `verify` steps that follow a challenge,
+         * which is what lets the parser confine a password challenge to the first factor.
+         */
+        internal fun next(
+            previous: NativeAuthV2ContinuationState,
+            response: NativeAuthV2HalApiResponse,
+            selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = null
+        ): NativeAuthV2ContinuationState? {
+            val token = response.continuationToken?.takeUnless { it.isBlank() } ?: return null
+            val merged = LinkedHashMap<String, String>()
+            merged.putAll(response.links)
+            selectedMethod?.links?.let { merged.putAll(it) }
+            return NativeAuthV2ContinuationState(
+                continuationToken = token,
+                links = retainSupportedRelations(merged),
+                methodLinks = retainMethodLinks(response),
+                scopes = defensiveCopy(previous.scopes),
+                claimsRequestJson = previous.claimsRequestJson,
+                correlationId = response.correlationId,
+                entryRelation = previous.entryRelation,
+                scenario = previous.scenario,
+                authenticationFactor = response.authenticationFactor
+                    ?: previous.authenticationFactor,
+                submittedAttributes = previous.submittedAttributes,
+                enrollmentChannels = if (response.action == NativeAuthV2HalAction.ENROLL) {
+                    Collections.unmodifiableMap(LinkedHashMap<String, String>().apply {
+                        response.methods.forEachIndexed { index, method ->
+                            method.enrollmentChannel()?.let { channel ->
+                                put("${method.type?.lowercase(java.util.Locale.ROOT)}:$channel:$index", channel)
+                            }
+                        }
+                    })
+                } else emptyMap(),
+                resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
+                pendingSignUpAttributes = previous.pendingSignUpAttributes
+            )
+        }
+
+        /**
+         * Retains the supported links of every embedded method that carries a nonblank ID, keyed by
+         * that ID, so [withSelectedMethod] can later follow the exact href the server attached to
+         * the method the caller chose. A duplicate ID keeps the first occurrence, matching the
+         * server-order preference the parser applies when it surfaces the methods themselves.
+         */
+        private fun retainMethodLinks(
+            response: NativeAuthV2HalApiResponse
+        ): Map<String, Map<String, String>> {
+            val methodLinks = LinkedHashMap<String, Map<String, String>>()
+            response.methods.forEachIndexed { index, method ->
+                val id = if (response.action == NativeAuthV2HalAction.ENROLL) {
+                    val channel = method.enrollmentChannel() ?: return@forEachIndexed
+                    "${method.type?.lowercase(java.util.Locale.ROOT)}:$channel:$index"
+                } else method.id?.takeUnless { it.isBlank() } ?: return@forEachIndexed
+                if (methodLinks.containsKey(id)) {
+                    return@forEachIndexed
+                }
+                methodLinks[id] = retainSupportedRelations(method.links)
+            }
+            return Collections.unmodifiableMap(methodLinks)
+        }
+
+        private fun retainSupportedRelations(links: Map<String, String>): Map<String, String> =
+            Collections.unmodifiableMap(
+                LinkedHashMap(links.filterKeys { it in SUPPORTED_RELATIONS })
+            )
+
+        private fun defensiveCopy(values: List<String>): List<String> =
+            Collections.unmodifiableList(ArrayList(values))
+    }
+}
