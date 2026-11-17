@@ -135,19 +135,35 @@ class NativeAuthV2HalApiResponseTest {
     }
 
     @Test
-    fun from_whenOAuthErrorIsFlatRedirectToWeb_setsWebFallbackRequired() {
+    fun from_whenOAuthErrorIsExactBrowserPair_setsWebFallbackRequired() {
         val response = responseFrom(
             """
             {
-              "error": "redirect_to_web",
+              "error": "invalid_grant",
+              "suberror": "web_redirect_required",
               "error_description": "Browser required."
             }
             """.trimIndent()
         )
 
-        assertEquals("redirect_to_web", response.serverError?.code)
+        assertEquals("invalid_grant", response.serverError?.code)
+        assertEquals("web_redirect_required", response.serverError?.innerErrorCode)
         assertEquals("Browser required.", response.serverError?.message)
         assertTrue(response.isWebFallbackRequired)
+    }
+
+    @Test
+    fun from_whenBrowserPairDoesNotMatchExactly_doesNotRequireWebFallback() {
+        for (json in listOf(
+            """{"state":"webFallbackRequired"}""",
+            """{"error":"redirect_to_web"}""",
+            """{"error":"invalid_grant"}""",
+            """{"error":"invalidGrant","suberror":"web_redirect_required"}""",
+            """{"error":"invalid_grant","suberror":"WEB_REDIRECT_REQUIRED"}""",
+            """{"error":"invalid_request","suberror":"web_redirect_required"}"""
+        )) {
+            assertFalse(json, responseFrom(json).isWebFallbackRequired)
+        }
     }
 
     @Test

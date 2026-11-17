@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeA
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2EnrollCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ActivateCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2StrongAuthCommandResult
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
@@ -34,7 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
-import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectResetPasswordMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectAuthMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpSubmitCodeCommandResult
@@ -84,16 +84,16 @@ class NativeAuthV2CommandsTest {
     }
 
     @Test
-    fun selectResetPasswordMethod_executeDelegatesAndReturnsResult() {
-        val parameters = parameters<NativeAuthV2SelectResetPasswordMethodCommandParameters>()
-        val result = mockk<NativeAuthV2SelectResetPasswordMethodCommandResult>()
-        every { controller.selectResetPasswordMethod(parameters) } returns result
+    fun selectAuthMethod_executeDelegatesAndReturnsResult() {
+        val parameters = parameters<NativeAuthV2SelectAuthMethodCommandParameters>()
+        val result = mockk<NativeAuthV2SelectAuthMethodCommandResult>()
+        every { controller.selectAuthMethod(parameters) } returns result
 
         val actual =
-            NativeAuthV2SelectResetPasswordMethodCommand(parameters, controller, API_ID).execute()
+            NativeAuthV2SelectAuthMethodCommand(parameters, controller, API_ID).execute()
 
         assertSame(result, actual)
-        verify(exactly = 1) { controller.selectResetPasswordMethod(parameters) }
+        verify(exactly = 1) { controller.selectAuthMethod(parameters) }
     }
 
     @Test

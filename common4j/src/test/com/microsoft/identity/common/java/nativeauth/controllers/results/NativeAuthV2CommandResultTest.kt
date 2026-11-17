@@ -25,12 +25,57 @@ package com.microsoft.identity.common.java.nativeauth.controllers.results
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeAuthV2CommandResultTest {
     private val state = mockk<NativeAuthV2ContinuationState>()
+
+    @Test
+    fun incorrectPassword_preservesDiagnosticsWithoutExposingThemInSanitizedString() {
+        val details = listOf(mapOf("attributeIds" to listOf("password"), "code" to "policy"))
+        val result = NativeAuthV2CommandResult.IncorrectPassword(
+            CORRELATION_ID, ERROR, ERROR_DESCRIPTION, SUB_ERROR,
+            listOf(50126), "trace-id", "timestamp", details
+        )
+
+        assertEquals(CORRELATION_ID, result.correlationId)
+        assertEquals(ERROR, result.error)
+        assertEquals(ERROR_DESCRIPTION, result.errorDescription)
+        assertEquals(SUB_ERROR, result.subError)
+        assertEquals(listOf(50126), result.errorCodes)
+        assertEquals("trace-id", result.traceId)
+        assertEquals("timestamp", result.timestamp)
+        assertEquals(details, result.attributeValidationDetails)
+        for (value in listOf(ERROR, ERROR_DESCRIPTION, SUB_ERROR, "trace-id", "timestamp", "policy")) {
+            assertFalse(result.toString().contains(value))
+        }
+        assertTrue(result.toUnsanitizedString().contains(ERROR_DESCRIPTION))
+    }
+
+    @Test
+    fun passwordNotAccepted_preservesPolicyDetailsWithoutExposingThemInSanitizedString() {
+        val details = listOf(mapOf("attributeIds" to listOf("password"), "code" to "policy"))
+        val result = NativeAuthV2CommandResult.PasswordNotAccepted(
+            CORRELATION_ID, ERROR, ERROR_DESCRIPTION, SUB_ERROR,
+            listOf(120002), "trace-id", "timestamp", details
+        )
+
+        assertEquals(CORRELATION_ID, result.correlationId)
+        assertEquals(ERROR, result.error)
+        assertEquals(ERROR_DESCRIPTION, result.errorDescription)
+        assertEquals(SUB_ERROR, result.subError)
+        assertEquals(listOf(120002), result.errorCodes)
+        assertEquals("trace-id", result.traceId)
+        assertEquals("timestamp", result.timestamp)
+        assertEquals(details, result.attributeValidationDetails)
+        for (value in listOf(ERROR, ERROR_DESCRIPTION, SUB_ERROR, "trace-id", "timestamp", "policy")) {
+            assertFalse(result.toString().contains(value))
+        }
+        assertTrue(result.toUnsanitizedString().contains(ERROR_DESCRIPTION))
+    }
 
     @Test
     fun resultStrings_redactUserFacingAndServiceErrorDetails() {
@@ -48,7 +93,7 @@ class NativeAuthV2CommandResultTest {
                 TARGET,
                 "email"
             ),
-            NativeAuthV2CommandResult.ResetPasswordMethodRequired(
+            NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                 CORRELATION_ID,
                 state,
                 listOf(NativeAuthV2AuthMethod("sms-1", "sms", TARGET))

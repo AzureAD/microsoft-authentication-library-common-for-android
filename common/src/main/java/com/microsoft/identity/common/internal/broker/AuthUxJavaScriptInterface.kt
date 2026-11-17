@@ -24,11 +24,10 @@ package com.microsoft.identity.common.internal.broker
 
 import android.webkit.JavascriptInterface
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonParseException
-import com.google.gson.JsonSyntaxException
-import com.google.gson.stream.MalformedJsonException
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxBridgeTelemetry
+import com.microsoft.identity.common.internal.ui.webview.authux.AuthUxMeasurementObserver.BridgeCounter
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
@@ -85,7 +84,10 @@ fun interface AuthUxTelemetrySink {
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
     private val telemetrySink: AuthUxTelemetrySink? = null,
     private val capabilities: AuthUxRequestCapabilities = AuthUxRequestCapabilities.BROKER
-) : AuthUxMessageProcessor {
+) : TelemetryAwareAuthUxMessageProcessor {
+    @Volatile
+    private var bridgeTelemetry: AuthUxBridgeTelemetry = AuthUxBridgeTelemetry.NONE
+
     // Serializes callbacks with close() so teardown waits for in-flight side effects and rejects queued work.
     private val lifecycleLock = Any()
     private val closed = AtomicBoolean(false)
@@ -99,6 +101,16 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     companion object {
         val TAG = AuthUxJavaScriptInterface::class.java.simpleName
         private const val JAVASCRIPT_INTERFACE_NAME = "broker"
+
+        /** Attaches bridge telemetry before publishing the processor, preserving existing constructors. */
+        @JvmStatic
+        fun createWithTelemetry(
+            telemetrySink: AuthUxTelemetrySink?,
+            capabilities: AuthUxRequestCapabilities,
+            bridgeTelemetry: AuthUxBridgeTelemetry
+        ): AuthUxJavaScriptInterface = AuthUxJavaScriptInterface(telemetrySink, capabilities).also {
+            it.bridgeTelemetry = bridgeTelemetry
+        }
 
         /**
          * Accepted shape for a `log_telemetry` error code.
@@ -205,22 +217,56 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         process(jsonPayload)
     }
 
+    /** Owns callback admission/completion for direct calls, including the JavaScript Interface route. */
     override fun process(jsonPayload: String) {
-        synchronized(lifecycleLock) {
-            processWhileOpen(jsonPayload)
+        val callbackTelemetry = bridgeTelemetry.admitCallback()
+        try {
+            processWithTelemetry(jsonPayload, callbackTelemetry)
+        } finally {
+            callbackTelemetry.completeCallback()
         }
     }
 
-    private fun processWhileOpen(jsonPayload: String) {
+    /** Reuses the caller's admitted or no-op handle; the caller retains completion ownership. */
+    override fun processWithTelemetry(jsonPayload: String, callbackTelemetry: AuthUxBridgeTelemetry) {
+        var rejection: BridgeCounter? = BridgeCounter.REJECTED_PROCESSING
+        try {
+            synchronized(lifecycleLock) {
+                rejection = processWhileOpen(jsonPayload, callbackTelemetry)
+            }
+        } finally {
+            rejection?.let { callbackTelemetry.count(it) }
+        }
+    }
+
+    // A normal processed message has no rejection; only rejected callbacks need a counter.
+    private fun processWhileOpen(jsonPayload: String, callbackTelemetry: AuthUxBridgeTelemetry): BridgeCounter? {
         val methodTag = "$TAG:receiveAuthUxMessage"
         if (closed.get()) {
             Logger.info(methodTag, "Ignoring Auth UX payload after request closure.")
-            return
+            return BridgeCounter.REJECTED_CLOSED
         }
         Logger.info(methodTag, "Received a payload from AuthUX through JavaScript API.")
 
+        // Classify by stage: deserialization can throw unchecked shape/type errors too.
+        val payloadObject = try {
+            parseJsonToAuthUxJsonPayloadObject(jsonPayload)
+        } catch (e: Exception) {
+            Logger.error(
+                methodTag,
+                "Error Parsing JSON payload sent through JavaScriptInterface",
+                e
+            )
+            return BridgeCounter.REJECTED_MALFORMED
+        }
+
         try {
-            val payloadObject = parseJsonToAuthUxJsonPayloadObject(jsonPayload)
+            // Inspect the parsed object without moving the existing fallible telemetry or routing.
+            if (payloadObject?.actionName != ActionNames.LOG_TELEMETRY &&
+                payloadObject?.params?.operation == OperationNames.NUMBER_MATCHING
+            ) {
+                callbackTelemetry.count(BridgeCounter.NUMBER_MATCH_IDENTIFIED)
+            }
 
             val correlationId = payloadObject.correlationId
 
@@ -243,7 +289,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                     correlationId,
                     "Payload from AuthUX contained no \"params\" field."
                 )
-                return
+                return BridgeCounter.REJECTED_MALFORMED
             }
 
             val operation = parameters.operation
@@ -257,7 +303,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 "Action name: [$actionName], operation: [$operation]"
             )
 
-            when {
+            return when {
                 // Match telemetry first so params.operation cannot route it to Number Matching.
                 actionName == ActionNames.LOG_TELEMETRY -> {
                     if (capabilities.telemetryAllowed) {
@@ -268,49 +314,35 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                             correlationId,
                             "Auth UX telemetry is not allowed for this request."
                         )
+                        BridgeCounter.REJECTED_CAPABILITY
                     }
                 }
 
-                operation == OperationNames.NUMBER_MATCHING && capabilities.numberMatchingAllowed ->
+                operation == OperationNames.NUMBER_MATCHING && capabilities.numberMatchingAllowed -> {
                     NumberMatchHelper.storeNumberMatch(
                         parameters.sessionId,
                         parameters.codeMatch
                     )
+                    null
+                }
 
-                else ->
+                else -> {
                     Logger.warn(
                         methodTag,
                         correlationId,
                         "Payload from AuthUX contained an unknown action/operation."
                     )
+                    if (operation == OperationNames.NUMBER_MATCHING) BridgeCounter.REJECTED_CAPABILITY
+                    else BridgeCounter.REJECTED_UNSUPPORTED
+                }
             }
         } catch (e: Exception) { // If we run into exceptions, we don't want to kill the broker
-            when (e) {
-                is NullPointerException -> {
-                    Logger.error(
-                        methodTag,
-                        "Payload with missing mandatory fields sent through JavaScriptInterface",
-                        e
-                    )
-                }
-
-                is MalformedJsonException, is JsonSyntaxException, is JsonParseException -> {
-                    Logger.error(
-                        methodTag,
-                        "Error Parsing JSON payload sent through JavaScriptInterface",
-                        e
-                    )
-                }
-
-                else -> {
-                    Logger.error(
-                        methodTag,
-                        "Unknown error occurred while processing the payload.",
-                        e
-                    )
-                }
-            }
-
+            Logger.error(
+                methodTag,
+                "Unknown error occurred while processing the payload.",
+                e
+            )
+            return BridgeCounter.REJECTED_PROCESSING
         }
     }
 
@@ -340,7 +372,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         correlationId: String,
         parameters: AuthUxParams,
         methodTag: String
-    ) {
+    ): BridgeCounter? {
         val errorCode = parameters.errorCode
         if (errorCode.isNullOrEmpty()) {
             Logger.warn(
@@ -348,7 +380,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 correlationId,
                 "log_telemetry payload contained no \"errorCode\"; ignoring (no-op)."
             )
-            return
+            return BridgeCounter.REJECTED_MALFORMED
         }
 
         if (!ERROR_CODE_REGEX.matches(errorCode)) {
@@ -357,7 +389,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 correlationId,
                 "log_telemetry errorCode failed validation (length=${errorCode.length}); dropping."
             )
-            return
+            return BridgeCounter.REJECTED_MALFORMED
         }
 
         val sink = telemetrySink
@@ -368,7 +400,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 correlationId,
                 "log_telemetry errorCode [$errorCode] received but no telemetry sink is wired; dropping."
             )
-            return
+            return null
         }
 
         val consumed = try {
@@ -390,7 +422,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 "Onboarding telemetry sink threw while handling Auth UX error code [$errorCode]; ignoring.",
                 t
             )
-            return
+            return BridgeCounter.REJECTED_PROCESSING
         }
 
         if (!consumed) {
@@ -400,7 +432,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 "log_telemetry errorCode [$errorCode] was not consumed by the sink; "
                         + "leaving later occurrences eligible."
             )
-            return
+            return null
         }
 
         // Record the last code accepted by the sink. Downstream policy may still exclude it from
@@ -412,6 +444,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             correlationId,
             "Forwarded Auth UX server error code [$errorCode] to onboarding telemetry."
         )
+        return null
     }
 
     /**

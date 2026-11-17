@@ -50,7 +50,7 @@ interface INativeAuthCommandResult : ILoggable {
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2SelectResetPasswordMethodCommandResult,
+        NativeAuthV2SelectAuthMethodCommandResult,
         NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
         NativeAuthV2StrongAuthCommandResult {
@@ -92,7 +92,7 @@ interface INativeAuthCommandResult : ILoggable {
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2SelectResetPasswordMethodCommandResult,
+        NativeAuthV2SelectAuthMethodCommandResult,
         NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
         NativeAuthV2StrongAuthCommandResult

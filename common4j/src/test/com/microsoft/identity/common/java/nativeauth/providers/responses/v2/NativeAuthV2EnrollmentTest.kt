@@ -108,27 +108,48 @@ class NativeAuthV2EnrollmentTest {
     }
 
     @Test
-    fun pendingSignUpInputIsDefensiveNonPasswordContextClearedOnCredentialSubmission() {
+    fun pendingSignUpInputIsDefensiveAndClearedOnProfileOnlySubmission() {
         val state = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
             response("""{"continuationToken":"start"}"""), "start", emptyList(), null,
             NativeAuthV2LinkRelation.SIGN_UP, NativeAuthV2FlowScenario.SIGN_UP)
-        val input = linkedMapOf("email" to "original@contoso.com", "displayName" to "Original")
-        val pending = state.withPendingSignUpAttributes(input, true)
-        input["email"] = "mutated@contoso.com"
+        val input = linkedMapOf("displayName" to "Original")
+        val pending = state.withPendingSignUpAttributes(input)
+        input["displayName"] = "Mutated"
         val exposed = pending.pendingSignUpAttributesForSubmission() as MutableMap
-        exposed["email"] = "mutated-again@contoso.com"
-        assertEquals("original@contoso.com", pending.pendingSignUpAttributesForSubmission()?.get("email"))
-        assertTrue(pending.requiresSignUpPasswordRecollection())
-        assertNotNull(pending.withAdditionalSubmittedAttributes(listOf("displayName"))
-            .pendingSignUpAttributesForSubmission())
-        val submitted = pending.withAdditionalSubmittedAttributes(listOf("email"))
+        exposed["displayName"] = "Mutated again"
+        assertEquals("Original", pending.pendingSignUpAttributesForSubmission()?.get("displayName"))
+        val submitted = pending.withAdditionalSubmittedAttributes(listOf("displayName"))
         assertNull(submitted.pendingSignUpAttributesForSubmission())
-        assertFalse(submitted.requiresSignUpPasswordRecollection())
         assertTrue(runCatching {
-            state.withPendingSignUpAttributes(mapOf("email" to "original", "Password" to "secret"), true)
+            state.withPendingSignUpAttributes(mapOf("Password" to "secret"))
+        }.exceptionOrNull() is IllegalArgumentException)
+        assertTrue(runCatching {
+            state.withPendingSignUpAttributes(mapOf("EMAIL" to "original@contoso.com"))
         }.exceptionOrNull() is IllegalArgumentException)
         assertFalse(pending.toString().contains("original@contoso.com"))
         assertFalse(pending.toUnsanitizedString().contains("Original"))
+    }
+
+    @Test
+    fun pendingSignUpProfileSurvivesSuccessorsAndSerialization() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            "correlation", entryRelation = NativeAuthV2LinkRelation.SIGN_UP,
+            scenario = NativeAuthV2FlowScenario.SIGN_UP
+        )
+        val pending = state.withPendingSignUpAttributes(mapOf("city" to "Redmond"))
+        val successor = NativeAuthV2ContinuationState.next(
+            pending, response("""{"continuationToken":"next"}""")
+        )!!
+        val bytes = java.io.ByteArrayOutputStream().apply {
+            java.io.ObjectOutputStream(this).use { it.writeObject(successor) }
+        }.toByteArray()
+        val restored = java.io.ObjectInputStream(bytes.inputStream()).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        assertEquals(mapOf("city" to "Redmond"), restored.pendingSignUpAttributesForSubmission())
+        val submitted = restored.withAdditionalSubmittedAttributes(listOf("city"))
+        assertNull(submitted.pendingSignUpAttributesForSubmission())
+        assertFalse(pending.toUnsanitizedString().contains("Redmond"))
     }
 
     @Test

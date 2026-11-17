@@ -25,7 +25,7 @@ package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
@@ -88,6 +88,8 @@ class NativeAuthV2SSPRFlowControllerTest {
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
         every { state.correlationId } returns id
+        every { state.flowScenario() } returns
+            com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario.RESET_PASSWORD
         return state
     }
 
@@ -117,11 +119,11 @@ class NativeAuthV2SSPRFlowControllerTest {
             .code(code)
             .build()
 
-    private fun selectResetPasswordMethodParameters(
+    private fun selectAuthMethodParameters(
         state: NativeAuthV2ContinuationState,
         methodId: String
-    ): NativeAuthV2SelectResetPasswordMethodCommandParameters =
-        NativeAuthV2SelectResetPasswordMethodCommandParameters.builder()
+    ): NativeAuthV2SelectAuthMethodCommandParameters =
+        NativeAuthV2SelectAuthMethodCommandParameters.builder()
             .authority(mockAuthority)
             .platformComponents(mockPlatformComponents)
             .correlationId(correlationId)
@@ -328,8 +330,8 @@ class NativeAuthV2SSPRFlowControllerTest {
 
         val result = controller.resetPasswordStart(resetPasswordStartParameters())
 
-        assertTrue(result is NativeAuthV2CommandResult.ResetPasswordMethodRequired)
-        result as NativeAuthV2CommandResult.ResetPasswordMethodRequired
+        assertTrue(result is NativeAuthV2CommandResult.AuthMethodSelectionRequired)
+        result as NativeAuthV2CommandResult.AuthMethodSelectionRequired
         assertEquals(listOf("email-1", "sms-1"), result.authMethods.map { it.id })
         verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
     }
@@ -423,6 +425,8 @@ class NativeAuthV2SSPRFlowControllerTest {
     @Test
     fun testSelectResetPasswordSmsMethodFollowsRiskVerification() {
         val selectionState = mockContinuationState()
+        every { selectionState.flowScenario() } returns
+            com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario.RESET_PASSWORD
         val riskState = mockContinuationState()
         val verificationState = mockContinuationState()
         every {
@@ -441,8 +445,8 @@ class NativeAuthV2SSPRFlowControllerTest {
             codeLength = 6
         )
 
-        val result = controller.selectResetPasswordMethod(
-            selectResetPasswordMethodParameters(selectionState, "sms-1")
+        val result = controller.selectAuthMethod(
+            selectAuthMethodParameters(selectionState, "sms-1")
         )
 
         assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
@@ -521,27 +525,31 @@ class NativeAuthV2SSPRFlowControllerTest {
     fun testSubmitNewPasswordPreservesInvalidPasswordSubError() {
         val state = mockContinuationState()
         val errorCodes = listOf(120002)
+        val details = listOf(mapOf("code" to "futureCode", "attributeIds" to listOf("password")))
 
         every { mockStrategy.performUpdatePassword(state = state, newPassword = any()) } returns
             NativeAuthV2InteractionApiResult.InvalidPassword(
                 correlationId = correlationId,
                 error = "invalid_request",
                 errorDescription = "Password is too weak.",
-                subError = "password_too_weak",
-                errorCodes = errorCodes
+                subError = "attributeValidationError",
+                errorCodes = errorCodes,
+                attributeValidationDetails = details
             )
 
         val result = controller.submitNewPassword(submitNewPasswordParameters(state)) as
             NativeAuthV2CommandResult.PasswordNotAccepted
 
-        assertEquals("password_too_weak", result.subError)
+        assertEquals("attributeValidationError", result.subError)
         assertEquals(errorCodes, result.errorCodes)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test
     fun testResetPasswordStartPreservesUserNotFoundErrorCodes() {
         val state = mockContinuationState()
         val errorCodes = listOf(50034)
+        val details = listOf(mapOf("code" to "userNotFound", "attributeIds" to listOf("email")))
 
         every {
             mockStrategy.performAuthorizeChallengeStart(
@@ -561,13 +569,17 @@ class NativeAuthV2SSPRFlowControllerTest {
             correlationId = correlationId,
             error = "invalidRequest",
             errorDescription = "AADSTS50034: User not found.",
-            errorCodes = errorCodes
+            errorCodes = errorCodes,
+            subError = "userNotFound",
+            attributeValidationDetails = details
         )
 
         val result = controller.resetPasswordStart(resetPasswordStartParameters()) as
             NativeAuthV2CommandResult.UserNotFound
 
         assertEquals(errorCodes, result.errorCodes)
+        assertEquals("userNotFound", result.subError)
+        assertEquals(details, result.attributeValidationDetails)
     }
 
     @Test

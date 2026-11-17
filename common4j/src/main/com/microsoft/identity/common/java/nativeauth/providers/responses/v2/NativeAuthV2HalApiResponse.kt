@@ -101,8 +101,8 @@ class NativeAuthV2HalApiResponse private constructor(
     )
 
     val isWebFallbackRequired: Boolean
-        get() = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
-                state == WEB_FALLBACK_REQUIRED_STATE
+        get() = serverError?.code == "invalid_grant" &&
+                serverError.innerErrorCode == "web_redirect_required"
 
     /**
      * `true` when the server declared this challenge to be a multi-factor (second-factor) step via
@@ -192,8 +192,6 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val ERROR_DESCRIPTION_KEY = "error_description"
         private const val ERROR_CORRELATION_ID_KEY = "correlationId"
         private const val ERROR_CORRELATION_ID_SNAKE_KEY = "correlation_id"
-        private const val REDIRECT_TO_WEB_ERROR_CODE = "redirect_to_web"
-        private const val WEB_FALLBACK_REQUIRED_STATE = "webFallbackRequired"
 
         /**
          * Builds a [NativeAuthV2HalApiResponse] by mapping [halResource]'s wire shape onto this
@@ -354,7 +352,7 @@ class NativeAuthV2HalApiResponse private constructor(
                 is String -> HalServerError(
                     code = errorValue,
                     message = halResource.string(ERROR_DESCRIPTION_KEY),
-                    innerErrorCode = null,
+                    innerErrorCode = halResource.string("suberror"),
                     correlationId = halResource.string(ERROR_CORRELATION_ID_SNAKE_KEY)
                         ?: halResource.string(ERROR_CORRELATION_ID_KEY),
                     details = emptyList(),

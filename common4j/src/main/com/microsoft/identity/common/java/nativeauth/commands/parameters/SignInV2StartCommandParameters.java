@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import javax.annotation.Nullable;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,11 +30,9 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Parameters for the V2 sign-in start operation.
- * Carries the username that initiates the flow and, optionally, the password to submit as soon as
- * the server offers the password first factor. Without a password, sign-in prefers an email
- * one-time-code first factor and falls back to a deferred password state when email is unavailable.
- * The password is never retained in continuation or public state; the controller clears the buffer
- * once the request has been issued.
+ * Carries the username that initiates the flow. When multiple authentication methods are offered,
+ * the caller selects one before its challenge is sent. Passwords are supplied separately through
+ * the password-required continuation, never at sign-in start.
  * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
@@ -50,18 +46,11 @@ public class SignInV2StartCommandParameters extends BaseSignInTokenCommandParame
     @NonNull
     public final String username;
 
-    /**
-     * The password to submit for the password first factor, or {@code null} to start with an email
-     * one-time code when available.
-     */
-    @Nullable
-    public final char[] password;
-
     @NonNull
     @Override
     public String toUnsanitizedString() {
         return "SignInV2StartCommandParameters(username=" + username + ", authority=" + authority
-                + ", challengeTypes=" + challengeType + ", hasPassword=" + (password != null) + ")";
+                + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override
@@ -73,6 +62,6 @@ public class SignInV2StartCommandParameters extends BaseSignInTokenCommandParame
     @Override
     public String toString() {
         return "SignInV2StartCommandParameters(authority=" + authority + ", challengeTypes="
-                + challengeType + ", hasPassword=" + (password != null) + ")";
+                + challengeType + ")";
     }
 }

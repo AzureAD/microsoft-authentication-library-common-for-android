@@ -101,6 +101,10 @@ public enum SpanName {
      */
     DRSNonceRequest,
     /**
+     * DRS endpoint discovery, including the HTTP request and metadata deserialization.
+     */
+    DRSDiscoveryRequest,
+    /**
      * Span name for Device POP crypto operations.
      */
     DevicePopCryptoOperation,
@@ -162,5 +166,10 @@ public enum SpanName {
     /**
      * Span name for original-caller assessment during legacy broker account enumeration.
      */
-    LegacyBrokerUsersCallerEvaluation
+    LegacyBrokerUsersCallerEvaluation,
+
+    /**
+     * Broker Auth UX bridge lifetime guardrails, not authentication outcome or latency.
+     */
+    AuthUxBridge
 }

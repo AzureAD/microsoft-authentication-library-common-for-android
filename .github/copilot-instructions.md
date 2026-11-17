@@ -1,5 +1,9 @@
 # Copilot PR Review & Domain Instructions (Common Android Auth Library)
 
+For repository setup, tooling discovery, and build/test verification, start with
+[the root agent entry point](../AGENTS.md). The domain and review rules below
+remain the source of truth for code suggestions and PR reviews.
+
 These instructions guide AI (and human) PR reviews and code suggestions for the Common library (`AzureAD/microsoft-authentication-library-common-for-android`).  
 This file is self-contained; it includes full baseline & appendices replicated from the Broker guidelines plus deeper Common-specific detail. Changes here cascade to MSAL and Broker—review with elevated rigor. ALWAYS tailor feedback to changed code.
 

@@ -38,7 +38,8 @@ import java.net.URL
  * endpoint, resolved via the
  * [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES]
  * relation. The body carries the `continuationToken` and an `attributes` object mapping each
- * attribute's wire name to its value (for example `email` or `password`).
+ * attribute's wire name to its value (for example `city` or `password`). Email is sent only
+ * as the sign-up username.
  */
 data class NativeAuthV2SubmitAttributesRequest private constructor(
     override var requestUrl: URL,
@@ -64,6 +65,12 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
                 throw ClientException(
                     PASSWORD,
                     "password must not be included in attributes"
+                )
+            }
+            if (attributes.keys.any { it.equals("email", ignoreCase = true) }) {
+                throw ClientException(
+                    "email",
+                    "email must be supplied as the sign-up username, not as an attribute"
                 )
             }
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")

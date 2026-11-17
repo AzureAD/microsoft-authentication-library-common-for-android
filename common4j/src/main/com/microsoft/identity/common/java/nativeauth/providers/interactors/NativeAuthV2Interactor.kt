@@ -498,9 +498,10 @@ class NativeAuthV2Interactor(
     //region sign-up entry
     /**
      * Posts to the server-provided `signUp` href, starting the V2 sign-up flow. The body carries
-     * only the continuation token; the username is supplied later via [performSubmitAttributes].
+     * the username and continuation token, without user attributes.
      */
     fun performSignUpStart(
+        username: String,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2InteractionApiResult {
         LogSession.logMethodCall(
@@ -509,7 +510,7 @@ class NativeAuthV2Interactor(
             methodName = "$TAG.performSignUpStart"
         )
 
-        val request = requestProvider.createSignUpStartRequest(state = state)
+        val request = requestProvider.createSignUpStartRequest(username = username, state = state)
 
         Logger.infoWithObject(
             "$TAG.performSignUpStart",
@@ -531,7 +532,7 @@ class NativeAuthV2Interactor(
      * Posts [attributes] to the server-provided `submitAttributes` href during sign-up.
      *
      * The request sends every supplied attribute, but the state used for parsing records only the
-     * SDK-owned `email` and `password` names. This lets the controller reject a later credential
+     * SDK-owned `password` name. This lets the controller reject a later credential
      * re-request while ordinary attributes remain retryable.
      */
     fun performSubmitAttributes(

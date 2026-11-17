@@ -122,52 +122,50 @@ class NativeAuthV2SignUpResponseParserTest {
     // region sign-up error table
 
     @Test
-    fun parseInteraction_whenSignUpStartFindsExistingAccount_returnsUserAlreadyExists() {
+    fun parseInteraction_whenObsoleteUserAlreadyExistsErrorReturned_retainsRawError() {
         val result = parser.parseInteraction(
             response = responseFrom(USER_ALREADY_EXISTS_JSON),
             previousState = signUpState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.UserAlreadyExists)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
         assertEquals(
             "userAlreadyExists",
-            (result as NativeAuthV2InteractionApiResult.UserAlreadyExists).attributeValidationDetails?.first()?.get("code")
+            (result as NativeAuthV2InteractionApiResult.UnknownError).attributeValidationDetails?.first()?.get("code")
         )
     }
 
     @Test
-    fun parseInteraction_whenAttributeValidationFails_returnsInvalidAttributesWithRejectedNames() {
+    fun parseInteraction_whenPasswordAttributeValidationFails_returnsInvalidPassword() {
         val result = parser.parseInteraction(
             response = responseFrom(PASSWORD_POLICY_VIOLATION_JSON),
             previousState = signUpState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidAttributes)
+        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidPassword)
         assertEquals(
             listOf("password"),
-            (result as NativeAuthV2InteractionApiResult.InvalidAttributes).invalidAttributes
+            (result as NativeAuthV2InteractionApiResult.InvalidPassword).attributeValidationDetails?.first()?.get("attributeIds")
         )
     }
 
     @Test
-    fun parseInteraction_whenAttributeValidationContainsUnrelatedDetails_excludesTheirAttributes() {
+    fun parseInteraction_whenPasswordValidationContainsOtherDetails_preservesAllDetails() {
         val result = parser.parseInteraction(
             response = responseFrom(MIXED_ATTRIBUTE_VALIDATION_JSON),
             previousState = signUpState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidAttributes)
+        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidPassword)
         assertEquals(
             listOf("password"),
-            (result as NativeAuthV2InteractionApiResult.InvalidAttributes).invalidAttributes
+            (result as NativeAuthV2InteractionApiResult.InvalidPassword).attributeValidationDetails?.first()?.get("attributeIds")
         )
+        assertEquals(2, result.attributeValidationDetails?.size)
     }
 
     @Test
     fun parseInteraction_whenUserAlreadyExistsSurfacesOutsideSignUp_staysUnknownError() {
-        // The userAlreadyExists detail is only actionable during the sign-up flow. When the same
-        // detail surfaces in another flow (keyed off the continuation state's scenario, not the
-        // operation), it must not be reinterpreted as UserAlreadyExists.
         val result = parser.parseInteraction(
             response = responseFrom(USER_ALREADY_EXISTS_JSON),
             previousState = resetPasswordState()
@@ -224,24 +222,25 @@ class NativeAuthV2SignUpResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenSignUpResponseRequiresWebFallback_returnsRedirect() {
+    fun parseInteraction_whenSignUpResponseRequiresWebFallback_preservesRawOAuthError() {
         val result = parser.parseInteraction(
             response = responseFrom(
                 """
                 {
                   "continuationToken": "ct-1",
                   "action": "collectAttributes",
-                  "error": { "code": "redirect_to_web", "message": "Use the browser." }
+                  "error": { "code": "invalid_grant", "message": "Use the browser.",
+                    "innerError": {"code": "web_redirect_required"} }
                 }
                 """.trimIndent()
             ),
             previousState = signUpState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
         assertEquals(
-            "redirect_to_web",
-            (result as NativeAuthV2InteractionApiResult.Redirect).redirectReason
+            "web_redirect_required",
+            (result as NativeAuthV2InteractionApiResult.UnknownError).subError
         )
     }
 
