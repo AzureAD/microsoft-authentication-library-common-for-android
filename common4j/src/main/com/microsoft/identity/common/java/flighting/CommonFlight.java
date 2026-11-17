@@ -395,19 +395,7 @@ public enum CommonFlight implements IFlightConfig {
     ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false),
 
     /**
-     * Flight to skip superseded FIDO/passkey challenge pages during interactive WebView back
-     * navigation (AB#3599772).
-     * <p>
-     * When an interactive WebView page initiates a {@code urn:http-auth:PassKey} challenge and
-     * {@code AuthFidoChallengeHandler} submits the response via {@code WebView.loadUrl(submitUrl,
-     * headers)}, Android WebView appends a new history entry on top of the challenge page. Without
-     * this flight, pressing Back on the resulting fallback page ("Sign in another way") navigates
-     * back to the auto-triggering passkey challenge page and re-invokes Credential Manager in a
-     * loop. When enabled, the challenge page history entry is marked superseded upon response
-     * submission and skipped on Back navigation (jumping to an earlier non-superseded page if one
-     * exists, or cancelling authorization if none exists).
-     * <p>
-     * Default is false.
+     * Skips superseded FIDO/passkey challenge pages during interactive WebView back navigation (AB#3599772).
      */
     SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK("SkipPasskeyChallengeOnWebViewBack", false);
 

@@ -43,6 +43,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebBackForwardList;
+import android.webkit.WebHistoryItem;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -133,6 +135,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -249,13 +253,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private final IUrlLoadTracker mUrlLoadTracker;
 
-    /**
-     * Lazy-initialized tracker for superseded FIDO challenge WebView history entries.
-     * Allocated only on the UI thread when {@link CommonFlight#SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK}
-     * is enabled and a passkey challenge is encountered; remains {@code null} when the flight is off.
-     */
     @Nullable
-    private FidoChallengeHistoryTracker mFidoChallengeHistoryTracker;
+    private NavigableMap<Integer, String> mSupersededPasskeyHistoryUrls;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -674,30 +673,74 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Navigates backward in {@code webView} while skipping any {@link android.webkit.WebBackForwardList}
-     * entries marked as superseded FIDO/passkey challenge pages.
-     *
-     * @param webView The authentication {@link WebView}, or {@code null} if unavailable.
-     * @return {@code true} if WebView navigated backward; {@code false} if no valid earlier page
-     * exists and authorization should be cancelled.
+     * Navigates backward in {@code webView}, skipping history entries that already triggered a
+     * passkey challenge when {@link CommonFlight#SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK} is enabled.
      */
-    public boolean navigateBackSkippingSupersededFidoEntries(@Nullable final WebView webView) {
-        if (mFidoChallengeHistoryTracker != null) {
-            return mFidoChallengeHistoryTracker.navigateBackSkippingSupersededEntries(webView);
+    public boolean navigateBackSkippingSupersededPasskeyPages(@Nullable final WebView webView) {
+        if (webView == null) {
+            return false;
         }
-        if (webView != null && webView.canGoBack()) {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK)) {
+            final NavigableMap<Integer, String> supersededUrls = mSupersededPasskeyHistoryUrls;
+            final WebBackForwardList history =
+                    supersededUrls != null && !supersededUrls.isEmpty()
+                            ? webView.copyBackForwardList()
+                            : null;
+            if (history != null) {
+                int targetIndex = history.getCurrentIndex() - 1;
+                while (targetIndex >= 0 && targetIndex < history.getSize()) {
+                    final WebHistoryItem item = history.getItemAtIndex(targetIndex);
+                    final String recordedUrl = supersededUrls.get(targetIndex);
+                    if (recordedUrl == null || item == null || !recordedUrl.equals(item.getUrl())) {
+                        break;
+                    }
+                    targetIndex--;
+                }
+                supersededUrls.tailMap(targetIndex, false).clear();
+                final int steps = targetIndex - history.getCurrentIndex();
+                if (steps < -1) {
+                    if (targetIndex < 0) {
+                        Logger.info(TAG + ":navigateBackSkippingSupersededPasskeyPages",
+                                "Skipping superseded passkey challenge page(s); cancelling authorization.");
+                        return false;
+                    }
+                    if (webView.canGoBackOrForward(steps)) {
+                        Logger.info(TAG + ":navigateBackSkippingSupersededPasskeyPages",
+                                "Skipping superseded passkey challenge page(s); navigating " + steps + " steps.");
+                        webView.goBackOrForward(steps);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+        if (webView.canGoBack()) {
             webView.goBack();
             return true;
         }
         return false;
     }
 
-    @NonNull
-    private FidoChallengeHistoryTracker getOrCreateFidoChallengeHistoryTracker() {
-        if (mFidoChallengeHistoryTracker == null) {
-            mFidoChallengeHistoryTracker = new FidoChallengeHistoryTracker();
+    private void recordSupersededPasskeyHistoryEntry(@NonNull final WebView view) {
+        final WebBackForwardList history = view.copyBackForwardList();
+        if (history == null || history.getCurrentIndex() < 0 || history.getCurrentIndex() >= history.getSize()) {
+            return;
         }
-        return mFidoChallengeHistoryTracker;
+        final int currentIndex = history.getCurrentIndex();
+        final WebHistoryItem currentItem = history.getItemAtIndex(currentIndex);
+        final String currentUrl = currentItem != null ? currentItem.getUrl() : null;
+        if (currentUrl == null) {
+            return;
+        }
+        NavigableMap<Integer, String> supersededUrls = mSupersededPasskeyHistoryUrls;
+        if (supersededUrls == null) {
+            supersededUrls = new TreeMap<>();
+            mSupersededPasskeyHistoryUrls = supersededUrls;
+        } else {
+            supersededUrls.tailMap(currentIndex, false).clear();
+        }
+        supersededUrls.put(currentIndex, currentUrl);
     }
 
     /**
@@ -745,24 +788,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 : null;
                 final IFidoManager fidoManager =
                         FidoManagerFactory.getFidoManager(currentActivity, legacyManager);
-                final boolean skipPasskeyChallengeOnBack =
-                        CommonFlightsManager.INSTANCE.getFlightsProvider()
-                                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK);
-                final AuthFidoChallengeHandler challengeHandler = skipPasskeyChallengeOnBack
-                        ? new AuthFidoChallengeHandler(
-                                fidoManager,
-                                view,
-                                oTelContext,
-                                ViewTreeLifecycleOwner.get(view),
-                                getFlowCorrelationId(),
-                                () -> getOrCreateFidoChallengeHistoryTracker().recordSupersededCurrentEntry(view))
-                        : new AuthFidoChallengeHandler(
-                                fidoManager,
-                                view,
-                                oTelContext,
-                                ViewTreeLifecycleOwner.get(view),
-                                getFlowCorrelationId());
+                final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
+                        fidoManager,
+                        view,
+                        oTelContext,
+                        ViewTreeLifecycleOwner.get(view),
+                        getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK)) {
+                    recordSupersededPasskeyHistoryEntry(view);
+                }
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
                     && isNonceRedirectSchemeAllowed(formattedURL)) {

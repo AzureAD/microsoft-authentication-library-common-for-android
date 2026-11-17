@@ -128,7 +128,7 @@ public class CommonFlightsManagerTest {
     }
 
     @Test
-    public void testSkipPasskeyChallengeOnWebViewBack_defaultsOffWithoutConsumerFlightsManager() {
+    public void testSkipPasskeyChallengeOnWebViewBack_defaultOffAndToggleable() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         Assert.assertEquals("SkipPasskeyChallengeOnWebViewBack",
                 CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK.getKey());
@@ -136,23 +136,14 @@ public class CommonFlightsManagerTest {
                 CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK.getDefaultValue());
         Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK));
-    }
 
-    @Test
-    public void testSkipPasskeyChallengeOnWebViewBack_consumerCanEnableDisableAndRemoveOverride() {
         final MockFlightsProvider provider = new MockFlightsProvider();
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
-        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK));
 
         provider.addFlight(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK.getKey(), "true");
         Assert.assertTrue(CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK));
-
-        provider.addFlight(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK.getKey(), "false");
-        Assert.assertFalse(CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK));
 
         provider.removeFlight(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK.getKey());

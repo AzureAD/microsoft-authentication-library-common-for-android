@@ -45,21 +45,17 @@ import java.util.*
 /**
  * Handles a FidoChallenge by either creating or authenticating with a passkey.
  *
- * @param fidoManager                   IFidoManager instance.
- * @param webView                       Current WebView.
- * @param oTelContext                   Current OTel context, if present.
- * @param lifecycleOwner                Instance to get coroutine scope from.
- * @param correlationId                 Optional correlation ID of the parent authentication flow.
- * @param onChallengeResponseSubmitting Optional UI-thread callback invoked immediately before
- *                                      submitting the challenge response via [WebView.loadUrl].
+ * @param fidoManager       IFidoManager instance.
+ * @param webView           Current WebView.
+ * @param spanContext       Current spanContext, if present.
+ * @param lifecycleOwner    instance to get coroutine scope from.
  */
-class AuthFidoChallengeHandler @JvmOverloads constructor(
+class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
     private val webView: WebView,
     private val oTelContext: Context?,
     private val lifecycleOwner: LifecycleOwner?,
-    private val correlationId: String? = null,
-    private val onChallengeResponseSubmitting: Runnable? = null
+    private val correlationId: String? = null
 ) : IChallengeHandler<FidoChallenge, Void> {
     companion object {
         val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
@@ -205,7 +201,6 @@ class AuthFidoChallengeHandler @JvmOverloads constructor(
         )
         webView.post {
             Logger.info(methodTag, "Responding to Fido challenge.")
-            onChallengeResponseSubmitting?.run()
             webView.loadUrl(submitUrl, header)
         }
     }
