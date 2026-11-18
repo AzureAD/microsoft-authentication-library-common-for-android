@@ -144,6 +144,31 @@ internal class FlightInventoryTest {
         assertEquals(1000, record.default.value)
     }
 
+    @Test
+    fun snapshot_normalizesPrettyPrinterLineEndingsWithoutChangingSource() {
+        val initializer = "new JSONObject() {\n    { put(\"enabled\", true); }\n}"
+        val input = source("DIRECT(\"Direct\", $initializer),\nWRAPPED(\"Wrapped\", ($initializer));")
+        val previous = System.getProperty("line.separator")
+        try {
+            val snapshots = listOf("\n", "\r\n").map { separator ->
+                System.setProperty("line.separator", separator)
+                createSnapshot(listOf(input), emptySet())
+            }
+            assertEquals(canonicalJson(snapshots[0]), canonicalJson(snapshots[1]))
+            for (snapshot in snapshots) {
+                val declarations = snapshot.getJSONArray("declarations")
+                val defaults = (0 until declarations.length())
+                    .map { declarations.getJSONObject(it) }
+                    .associate { it.getString("constant") to it.getJSONObject("default") }
+                assertEquals(initializer, defaults.getValue("DIRECT").getString("expression"))
+                assertEquals("($initializer)", defaults.getValue("WRAPPED").getString("expression"))
+                assertTrue(defaults.values.all { !it.getString("normalizedExpression").contains('\r') })
+            }
+        } finally {
+            System.setProperty("line.separator", previous)
+        }
+    }
+
     private fun expectInvalid(action: () -> Unit) {
         val failure = runCatching(action).exceptionOrNull()
         assertTrue("Expected an explicit invalid-input failure, got $failure", failure is IllegalArgumentException)

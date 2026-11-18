@@ -17,6 +17,7 @@ From `common-java-root`:
 ```
 
 The tool is not a dependency of any runtime library and has no publishing configuration.
+Common4j PR validation runs the tool's tests and packages its distribution.
 
 ## Create a candidate legacy snapshot
 
@@ -45,6 +46,7 @@ Keep private declarations/configuration out of public fixtures and examples.
 The JSON contains sources, included/excluded declarations, and counts for declarations,
 unique ECS keys, exclusions, and unresolved defaults. Defaults retain their source
 expression, normalized expression, type, value when known, and unresolved reason.
+Pretty-printed expressions use LF line endings; original source expressions stay unchanged.
 Annotation types/arguments are recorded as written; they are not evaluated ownership
 or policy assertions. Shared keys remain separate declarations.
 

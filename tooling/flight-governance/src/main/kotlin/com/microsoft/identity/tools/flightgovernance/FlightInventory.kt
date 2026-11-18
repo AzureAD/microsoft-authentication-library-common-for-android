@@ -175,14 +175,15 @@ internal class FlightSourceParser {
         expression: String,
         jsonImported: Boolean
     ): FlightDefault {
+        val normalizedExpression = tree.toString().replace("\r\n", "\n").replace('\r', '\n')
         fun known(type: DefaultType, value: Any?) =
-            FlightDefault(type, expression, tree.toString(), value)
+            FlightDefault(type, expression, normalizedExpression, value)
         fun unresolved(reason: String) =
-            FlightDefault(DefaultType.UNRESOLVED, expression, tree.toString(), unresolvedReason = reason)
+            FlightDefault(DefaultType.UNRESOLVED, expression, normalizedExpression, unresolvedReason = reason)
 
         if (tree is ParenthesizedTree) {
             return defaultValue(tree.expression, expression, jsonImported)
-                .copy(normalizedExpression = tree.toString())
+                .copy(normalizedExpression = normalizedExpression)
         }
         if (tree is LiteralTree) {
             return when (val value = tree.value) {
