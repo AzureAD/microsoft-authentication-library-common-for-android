@@ -70,6 +70,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.P])
 class WebViewAuthorizationFragmentTest {
 
     companion object {
@@ -178,19 +179,6 @@ class WebViewAuthorizationFragmentTest {
         return request
     }
 
-    private fun commitMainFramePage(
-        client: AzureActiveDirectoryWebViewClient,
-        webView: WebView,
-        urls: List<String>,
-        currentIndex: Int
-    ) {
-        val committedUrl = urls[currentIndex]
-        client.onPageStarted(webView, committedUrl, null)
-        stubBackForwardList(webView = webView, urls = urls, currentIndex = currentIndex)
-        client.doUpdateVisitedHistory(webView, committedUrl, false)
-        client.onPageFinished(webView, committedUrl)
-    }
-
     private fun createMockWebView(activity: Activity): WebView {
         val webView = mock(WebView::class.java)
         whenever(webView.context).thenReturn(activity)
@@ -278,11 +266,12 @@ class WebViewAuthorizationFragmentTest {
         doNothing().`when`(fragment).cancelAuthorization(anyBoolean())
         attachWebView(fragment, webView, client)
 
-        val initialUrl = "https://login.live.com/oauth20_authorize.srf"
-        client.onPageStarted(webView, initialUrl, null)
-        client.doUpdateVisitedHistory(webView, initialUrl, false)
-        client.onPageFinished(webView, initialUrl)
-        assertTrue(client.shouldOverrideUrlLoading(webView, TEST_PASSKEY_REDIRECT_URL))
+        stubBackForwardList(
+            webView = webView,
+            urls = listOf("https://login.live.com/oauth20_authorize.srf"),
+            currentIndex = 0
+        )
+        assertTrue(client.shouldOverrideUrlLoading(webView, buildWebResourceRequest(TEST_PASSKEY_REDIRECT_URL)))
 
         whenever(webView.canGoBack()).thenReturn(true)
         fragment.handleBackButtonPressed()
@@ -310,14 +299,14 @@ class WebViewAuthorizationFragmentTest {
         val challengeUrl = "https://login.live.com/oauth20_authorize.srf?login_hint=user%40outlook.com"
         val fallbackUrl = "https://login.live.com/ppsecure/post.srf?contextid=123"
 
-        commitMainFramePage(client, webView, listOf(challengeUrl), currentIndex = 0)
+        stubBackForwardList(webView, listOf(challengeUrl), currentIndex = 0)
         assertTrue(client.shouldOverrideUrlLoading(webView, buildWebResourceRequest(TEST_PASSKEY_REDIRECT_URL)))
 
         // Retry passkey from fallback page (#1) as well, then press Back on #2 -> skips #1 and #0 and cancels.
-        commitMainFramePage(client, webView, listOf(challengeUrl, fallbackUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(challengeUrl, fallbackUrl), currentIndex = 1)
         assertTrue(client.shouldOverrideUrlLoading(webView, buildWebResourceRequest(TEST_PASSKEY_REDIRECT_URL)))
 
-        commitMainFramePage(client, webView, listOf(challengeUrl, fallbackUrl, fallbackUrl), currentIndex = 2)
+        stubBackForwardList(webView, listOf(challengeUrl, fallbackUrl, fallbackUrl), currentIndex = 2)
         whenever(webView.canGoBack()).thenReturn(true)
 
         fragment.handleBackButtonPressed()
@@ -328,8 +317,7 @@ class WebViewAuthorizationFragmentTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P])
-    fun handleBackButtonPressed_flightEnabledWithUncommittedPasskeyRedirect_preservesPreviousCommittedPage() {
+    fun handleBackButtonPressed_flightEnabledWithRedirectOrSubframePasskey_preservesPreviousCommittedPage() {
         configureSkipPasskeyFlight(enabled = true)
         registerTestFidoManager()
 
@@ -341,16 +329,13 @@ class WebViewAuthorizationFragmentTest {
         attachWebView(fragment, webView, client)
 
         val emailEntryUrl = "https://login.live.com/oauth20_authorize.srf"
-        val uncommittedHopUrl = "https://login.live.com/ppsecure/post.srf?opid=111"
         val fallbackUrl = "https://login.live.com/ppsecure/post.srf?opid=222"
 
-        // Case 1: main-frame load starts (onPageStarted) and redirects to passkey before committing;
-        // copyBackForwardList() still points at emailEntryUrl (index 0).
-        commitMainFramePage(client, webView, listOf(emailEntryUrl), currentIndex = 0)
-        client.onPageStarted(webView, uncommittedHopUrl, null)
+        // Case 1: legacy String overload lacks frame metadata -> never supersedes main-frame history.
+        stubBackForwardList(webView, listOf(emailEntryUrl), currentIndex = 0)
         assertTrue(client.shouldOverrideUrlLoading(webView, TEST_PASSKEY_REDIRECT_URL))
 
-        commitMainFramePage(client, webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
         whenever(webView.canGoBack()).thenReturn(true)
 
         fragment.handleBackButtonPressed()
@@ -359,9 +344,9 @@ class WebViewAuthorizationFragmentTest {
         verify(webView, never()).goBackOrForward(anyInt())
         verify(fragment, never()).cancelAuthorization(anyBoolean())
 
-        // Case 2: HTTP server redirect (request.isRedirect == true) to passkey before onPageStarted commits.
+        // Case 2: HTTP server redirect (request.isRedirect == true) to passkey before committing.
         clearInvocations(webView)
-        commitMainFramePage(client, webView, listOf(emailEntryUrl), currentIndex = 0)
+        stubBackForwardList(webView, listOf(emailEntryUrl), currentIndex = 0)
         assertTrue(
             client.shouldOverrideUrlLoading(
                 webView,
@@ -369,7 +354,7 @@ class WebViewAuthorizationFragmentTest {
             )
         )
 
-        commitMainFramePage(client, webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
         whenever(webView.canGoBack()).thenReturn(true)
 
         fragment.handleBackButtonPressed()
@@ -380,7 +365,7 @@ class WebViewAuthorizationFragmentTest {
 
         // Case 3: subframe passkey request (request.isForMainFrame == false) never supersedes main-frame history.
         clearInvocations(webView)
-        commitMainFramePage(client, webView, listOf(emailEntryUrl), currentIndex = 0)
+        stubBackForwardList(webView, listOf(emailEntryUrl), currentIndex = 0)
         assertTrue(
             client.shouldOverrideUrlLoading(
                 webView,
@@ -388,7 +373,7 @@ class WebViewAuthorizationFragmentTest {
             )
         )
 
-        commitMainFramePage(client, webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(emailEntryUrl, fallbackUrl), currentIndex = 1)
         whenever(webView.canGoBack()).thenReturn(true)
 
         fragment.handleBackButtonPressed()
@@ -415,12 +400,11 @@ class WebViewAuthorizationFragmentTest {
         val fallbackUrl = "https://login.live.com/ppsecure/post.srf?opid=222"
         val passwordUrl = "https://login.live.com/ppsecure/post.srf?opid=333"
 
-        commitMainFramePage(client, webView, listOf(emailEntryUrl, passkeyChallengeUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(emailEntryUrl, passkeyChallengeUrl), currentIndex = 1)
         assertTrue(client.shouldOverrideUrlLoading(webView, buildWebResourceRequest(TEST_PASSKEY_REDIRECT_URL)))
 
         // Deeper non-superseded page (#3 -> #2) uses normal single-step goBack().
-        commitMainFramePage(
-            client,
+        stubBackForwardList(
             webView,
             listOf(emailEntryUrl, passkeyChallengeUrl, fallbackUrl, passwordUrl),
             currentIndex = 3
@@ -430,8 +414,7 @@ class WebViewAuthorizationFragmentTest {
         verify(webView).goBack()
 
         // Next Back from fallback (#2) skips superseded passkey page (#1) to email page (#0) via -2 steps.
-        commitMainFramePage(
-            client,
+        stubBackForwardList(
             webView,
             listOf(emailEntryUrl, passkeyChallengeUrl, fallbackUrl),
             currentIndex = 2
@@ -442,10 +425,9 @@ class WebViewAuthorizationFragmentTest {
         verify(fragment, never()).cancelAuthorization(anyBoolean())
 
         // If a recorded history slot changes URL (e.g., replaceState), it is no longer skipped.
-        commitMainFramePage(client, webView, listOf(emailEntryUrl, passkeyChallengeUrl), currentIndex = 1)
+        stubBackForwardList(webView, listOf(emailEntryUrl, passkeyChallengeUrl), currentIndex = 1)
         assertTrue(client.shouldOverrideUrlLoading(webView, buildWebResourceRequest(TEST_PASSKEY_REDIRECT_URL)))
-        commitMainFramePage(
-            client,
+        stubBackForwardList(
             webView,
             listOf(emailEntryUrl, "https://login.live.com/ppsecure/post.srf?different=1", fallbackUrl),
             currentIndex = 2
