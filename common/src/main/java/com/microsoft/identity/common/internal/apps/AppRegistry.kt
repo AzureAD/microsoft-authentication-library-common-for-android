@@ -348,12 +348,12 @@ object AppRegistry {
      * packages. All four identities are gated behind [CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO].
      */
     @JvmField
-    val SAMSUNG_BROWSER_SSO_APPS = setOf(
-        SAMSUNG_BROWSER,
-        SAMSUNG_BROWSER_BETA,
-        SAMSUNG_BROWSER_ENGINEERING,
-        SAMSUNG_BROWSER_BETA_ENGINEERING
-    )
+    val SAMSUNG_BROWSER_SSO_APPS = buildSet {
+        add(SAMSUNG_BROWSER)
+        add(SAMSUNG_BROWSER_BETA)
+        add(SAMSUNG_BROWSER_ENGINEERING)
+        add(SAMSUNG_BROWSER_BETA_ENGINEERING)
+    }
 
     /**
      * Returns Browser SSO identities eligible for the current request.
