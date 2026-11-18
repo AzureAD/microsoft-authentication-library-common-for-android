@@ -467,17 +467,19 @@ public class LocalMSALController extends BaseController {
                                        final SilentTokenCommandParameters parametersWithScopes,
                                        final List<ICacheRecord> cacheRecords) throws ClientException {
         ICacheRecord fullCacheRecord = cacheRecords.get(0);
-        acquireTokenSilentResult.setLocalAuthenticationResult(
-                new LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(
-                                fullCacheRecord,
-                                parametersWithScopes.getAuthenticationScheme()
-                        ),
-                        cacheRecords,
-                        SdkType.MSAL,
-                        true
-                )
+        final LocalAuthenticationResult localResult = new LocalAuthenticationResult(
+                finalizeCacheRecordForResult(
+                        fullCacheRecord,
+                        parametersWithScopes.getAuthenticationScheme()
+                ),
+                cacheRecords,
+                SdkType.MSAL,
+                true
         );
+        // Reject before the refresh-on path can schedule background token acquisition.
+        AgeAssuranceTargetValidator.validate(
+                parametersWithScopes.getClaimsRequestJson(), localResult.getIdToken());
+        acquireTokenSilentResult.setLocalAuthenticationResult(localResult);
     }
 
     private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,

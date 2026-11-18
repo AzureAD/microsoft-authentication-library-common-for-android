@@ -66,6 +66,22 @@ public class AgeAssuranceTargetValidatorTest {
     }
 
     @Test
+    public void onlyStringEntriesInAnArrayOptIn() throws Exception {
+        for (final String properties : Arrays.asList(
+                "null", "\"target-mc\"", "123", "true", "{\"value\":\"target-mc\"}",
+                "[]", "[null,123,true,{\"value\":\"target-mc\"},[\"target-mc\"]]")) {
+            AgeAssuranceTargetValidator.validate(
+                    "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                            + properties + "}}}", "not-a-token");
+        }
+
+        final String mixed = "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                + "[null,123,true,{\"value\":\"target-sm\"},\"target-mc\"]}}}";
+        AgeAssuranceTargetValidator.validate(mixed, token("-mc"));
+        assertMismatch(mixed, token("+sm"));
+    }
+
+    @Test
     public void identitiesRemainOpaqueAndAllIsLiteral() throws Exception {
         AgeAssuranceTargetValidator.validate(
                 claims("target-future.v2/é:_id"), token("-FUTURE.V2/É:_ID"));

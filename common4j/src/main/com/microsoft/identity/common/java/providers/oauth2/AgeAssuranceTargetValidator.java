@@ -58,7 +58,7 @@ public final class AgeAssuranceTargetValidator {
      * Validates the ID token against an immutable, operation-local claims JSON string.
      * Without explicit ID-token targets, the ID token is not parsed and behavior is unchanged.
      *
-     * @throws ClientException with age_assurance_target_mismatch when the signed receipt is
+     * @throws ClientException with age_assurance_target_mismatch when the outcome-prefixed receipt is
      *                        missing, malformed, duplicated or does not match the requested set
      */
     public static void validate(@Nullable final String claimsRequestJson,
