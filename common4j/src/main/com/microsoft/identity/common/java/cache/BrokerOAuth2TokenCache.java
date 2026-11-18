@@ -308,11 +308,7 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme,
-            final boolean shouldSkipAccountAggregation) throws ClientException {
-        SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
-                shouldSkipAccountAggregation);
-
+            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
                     accountRecord,
@@ -322,12 +318,7 @@ public class BrokerOAuth2TokenCache
                     familyId
             );
 
-            if (!shouldSkipAccountAggregation) {
-                return loadAggregatedAccountData(authScheme, cacheRecord);
-            } else {
-                // return a list with only the cacheRecord associated with the request
-                return Collections.singletonList(cacheRecord);
-            }
+            return loadAggregatedAccountData(authScheme, cacheRecord);
         }
     }
 

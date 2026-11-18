@@ -1629,76 +1629,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
-    public void testSaveAndLoadAggregatedAccountDataWithAggregationSkipped() throws ClientException {
-        // First, create guest tenant accounts to simulate multi-tenant scenario
-        final String guestRealm1 = "guest-tenant-1";
-        final String guestRealm2 = "guest-tenant-2";
-
-        // Create guest tenant 1 bundle
-        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle1 =
-                createGuestBundle(guestRealm1);
-
-        // Create guest tenant 2 bundle
-        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle2 =
-                createGuestBundle(guestRealm2);
-
-        // Save guest tenant records to cache using BrokerOAuth2TokenCache API
-        // This properly initializes the cache
-        mBrokerOAuth2TokenCache.save(
-                guestBundle1.mGeneratedAccount,
-                guestBundle1.mGeneratedIdToken,
-                guestBundle1.mGeneratedAccessToken,
-                guestBundle1.mGeneratedRefreshToken,
-                null // familyId
-        );
-
-        mBrokerOAuth2TokenCache.save(
-                guestBundle2.mGeneratedAccount,
-                guestBundle2.mGeneratedIdToken,
-                guestBundle2.mGeneratedAccessToken,
-                guestBundle2.mGeneratedRefreshToken,
-                null // familyId
-        );
-
-        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = true
-        final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
-        final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
-        final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
-        final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
-        final String familyId = null; // Non-FOCI
-        final boolean shouldSkipAccountAggregation = true;
-
-        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                accountRecord,
-                idTokenRecord,
-                accessTokenRecord,
-                refreshTokenRecord,
-                familyId,
-                BEARER_AUTHENTICATION_SCHEME,
-                shouldSkipAccountAggregation
-        );
-
-        // Verify the result - even though there are guest tenant records in cache,
-        // aggregation is skipped so only 1 record should be returned
-        assertNotNull(result);
-        assertEquals("Should return only the saved record without aggregation, ignoring guest tenants", 1, result.size());
-
-        // Verify the returned record contains the saved data (primary account)
-        final ICacheRecord cacheRecord = result.get(0);
-        assertNotNull(cacheRecord);
-        assertNotNull(cacheRecord.getAccount());
-        assertNotNull(cacheRecord.getIdToken());
-        assertNotNull(cacheRecord.getAccessToken());
-        assertNotNull(cacheRecord.getRefreshToken());
-
-        assertEquals(accountRecord, cacheRecord.getAccount());
-        assertEquals(idTokenRecord, cacheRecord.getIdToken());
-        assertEquals(accessTokenRecord, cacheRecord.getAccessToken());
-        assertEquals(refreshTokenRecord, cacheRecord.getRefreshToken());
-    }
-
-    @Test
-    public void testSaveAndLoadAggregatedAccountDataWithoutAggregationSkipped() throws ClientException {
+    public void testSaveAndLoadAggregatedAccountDataIncludesGuestTenants() throws ClientException {
         // First, create guest tenant accounts to simulate multi-tenant scenario
         final String guestRealm1 = "guest-tenant-1";
         final String guestRealm2 = "guest-tenant-2";
@@ -1730,13 +1661,11 @@ public class BrokerOAuth2TokenCacheTest {
                 null // familyId
         );
 
-        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = false
         final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
         final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
         final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
         final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
         final String familyId = null; // Non-FOCI
-        final boolean shouldSkipAccountAggregation = false;
 
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 accountRecord,
@@ -1744,11 +1673,10 @@ public class BrokerOAuth2TokenCacheTest {
                 accessTokenRecord,
                 refreshTokenRecord,
                 familyId,
-                BEARER_AUTHENTICATION_SCHEME,
-                shouldSkipAccountAggregation
+                BEARER_AUTHENTICATION_SCHEME
         );
 
-        // Verify the result - when aggregation is NOT skipped, should return primary + guest tenant records
+        // Saving must return the primary account and its guest tenant records.
         assertNotNull(result);
         // We expect: 1 primary account (realm=REALM) + 2 guest tenants (guestRealm1, guestRealm2) = 3 total
         assertEquals("Should return primary account plus guest tenant accounts", 3, result.size());

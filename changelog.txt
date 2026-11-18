@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Remove the shouldSkipAccountAggregation parameter from BrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData and always aggregate account profiles; remove the obsolete is_account_aggregation_skipped telemetry attribute. Consumers must use the six-argument method (AB#3826586).
 
 Version 25.1.0
 ----------
