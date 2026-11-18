@@ -150,6 +150,40 @@ object AppRegistry {
     private const val ISLAND_DIRECT_DISTRIBUTION_SIGNATURE =
         "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
 
+    private const val SAMSUNG_BROWSER_RELEASE_SIGNATURE =
+        "ABi2fbt8vkzj7SJ8aD5jc4xJFTDFntdkMrYXL3itsvqY1QIw+dZozdop5rgKNxjbrQAd5nntAGpgh9w84O1Xgg=="
+
+    private const val SAMSUNG_BROWSER_ENGINEERING_SIGNATURE =
+        "XYAvJNasdscIqOev4o/ZfgOPiIzvZmX7m0qSI0wxHW/0ISfMsutaiY9Ofk5VP272AtQ9Gi666fACplmOcv0tgw=="
+
+    /** Release signing identity for Samsung Internet Browser. */
+    val SAMSUNG_BROWSER = App(
+        nickName = "Samsung Internet Browser",
+        packageName = "com.sec.android.app.sbrowser",
+        signingCertificateThumbprint = SAMSUNG_BROWSER_RELEASE_SIGNATURE
+    )
+
+    /** Release signing identity for Samsung Internet Browser Beta. */
+    val SAMSUNG_BROWSER_BETA = App(
+        nickName = "Samsung Internet Browser Beta",
+        packageName = "com.sec.android.app.sbrowser.beta",
+        signingCertificateThumbprint = SAMSUNG_BROWSER_RELEASE_SIGNATURE
+    )
+
+    /** Engineering signing identity for Samsung Internet Browser. */
+    val SAMSUNG_BROWSER_ENGINEERING = App(
+        nickName = "Samsung Internet Browser (engineering)",
+        packageName = "com.sec.android.app.sbrowser",
+        signingCertificateThumbprint = SAMSUNG_BROWSER_ENGINEERING_SIGNATURE
+    )
+
+    /** Engineering signing identity for Samsung Internet Browser Beta. */
+    val SAMSUNG_BROWSER_BETA_ENGINEERING = App(
+        nickName = "Samsung Internet Browser Beta (engineering)",
+        packageName = "com.sec.android.app.sbrowser.beta",
+        signingCertificateThumbprint = SAMSUNG_BROWSER_ENGINEERING_SIGNATURE
+    )
+
     val INTUNE_CE_PROD = App(
         nickName = "Intune Company Portal (prod)",
         packageName = INTUNE_APP_PACKAGE_NAME,
@@ -309,12 +343,26 @@ object AppRegistry {
     }
 
     /**
+     * Samsung Internet Browser signing identities: Release and Engineering signers for both
+     * the stable (`com.sec.android.app.sbrowser`) and Beta (`com.sec.android.app.sbrowser.beta`)
+     * packages. All four identities are gated behind [CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO].
+     */
+    @JvmField
+    val SAMSUNG_BROWSER_SSO_APPS = setOf(
+        SAMSUNG_BROWSER,
+        SAMSUNG_BROWSER_BETA,
+        SAMSUNG_BROWSER_ENGINEERING,
+        SAMSUNG_BROWSER_BETA_ENGINEERING
+    )
+
+    /**
      * Returns Browser SSO identities eligible for the current request.
-     * Evaluates the current Island flight through the shared Common flight manager.
-     * Without a host-initialized provider, the flight's default denies Island.
+     * Evaluates partner browser flights ([CommonFlight.ENABLE_ISLAND_BROWSER_SSO] and
+     * [CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO]) through the shared Common flight manager.
+     * Without a host-initialized provider, each flight's default denies those partner identities.
      * Every returned identity still requires package and signing-certificate validation.
      *
-     * @return Chrome, the MSAL test app when debug trust permits it, and Island only when enabled.
+     * @return Chrome, the MSAL test app when debug trust permits it, and enabled partner browsers.
      */
     @JvmStatic
     fun getBrowserSsoAuthorizedApps(): Set<App> = buildSet {
@@ -322,8 +370,12 @@ object AppRegistry {
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
-        if (CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO)) {
+        val flightsProvider = CommonFlightsManager.getFlightsProvider()
+        if (flightsProvider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO)) {
             addAll(ISLAND_BROWSER_SSO_APPS)
+        }
+        if (flightsProvider.isFlightEnabled(CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO)) {
+            addAll(SAMSUNG_BROWSER_SSO_APPS)
         }
     }
 

@@ -55,12 +55,15 @@ import java.lang.reflect.Modifier
 @Config(sdk = [Build.VERSION_CODES.P])
 class AppRegistryTest {
     private var islandEnabled = false
+    private var samsungEnabled = false
 
     @Before
     fun setUpFlights() {
         val provider = mock<IFlightsProvider>()
         whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
             .thenAnswer { islandEnabled }
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO))
+            .thenAnswer { samsungEnabled }
         val manager = mock<IFlightsManager>()
         whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
         CommonFlightsManager.initializeCommonFlightsManager(manager)
@@ -279,6 +282,7 @@ class AppRegistryTest {
         assertTrue(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
         assertFalse(authorizedApps.contains(AppRegistry.EDGE))
         assertTrue(authorizedApps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+        assertTrue(authorizedApps.intersect(AppRegistry.SAMSUNG_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -351,6 +355,46 @@ class AppRegistryTest {
     }
 
     @Test
+    fun samsungBrowserSsoApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
+        val expectedIdentities = setOf(
+            "com.sec.android.app.sbrowser" to SAMSUNG_RELEASE_SIGNATURE,
+            "com.sec.android.app.sbrowser.beta" to SAMSUNG_RELEASE_SIGNATURE,
+            "com.sec.android.app.sbrowser" to SAMSUNG_ENGINEERING_SIGNATURE,
+            "com.sec.android.app.sbrowser.beta" to SAMSUNG_ENGINEERING_SIGNATURE
+        )
+
+        assertEquals(4, AppRegistry.SAMSUNG_BROWSER_SSO_APPS.size)
+        assertEquals(
+            expectedIdentities,
+            AppRegistry.SAMSUNG_BROWSER_SSO_APPS.map {
+                it.packageName to it.signingCertificateThumbprint
+            }.toSet()
+        )
+    }
+
+    @Test
+    fun samsungBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
+        AppRegistry.SAMSUNG_BROWSER_SSO_APPS.forEach {
+            assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
+        }
+    }
+
+    @Test
+    fun samsungBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
+        val samsungPackages = AppRegistry.SAMSUNG_BROWSER_SSO_APPS.map { it.packageName }.toSet()
+        val existingAuthorizationLists = listOf(
+            AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS,
+            AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST
+        )
+
+        existingAuthorizationLists.forEach { authorizedApps ->
+            assertTrue(authorizedApps.none { it.packageName in samsungPackages })
+        }
+    }
+
+    @Test
     fun browserIdentitySets_haveExactlyTheRegisteredVariants() {
         assertEquals(
             setOf(AppRegistry.CHROME, AppRegistry.CHROME_BETA,
@@ -367,6 +411,16 @@ class AppRegistryTest {
                 it.signingCertificateThumbprint != DIRECT_DISTRIBUTION_SIGNATURE
             }.toSet()
         )
+        assertEquals(
+            setOf(
+                AppRegistry.SAMSUNG_BROWSER,
+                AppRegistry.SAMSUNG_BROWSER_BETA,
+                AppRegistry.SAMSUNG_BROWSER_ENGINEERING,
+                AppRegistry.SAMSUNG_BROWSER_BETA_ENGINEERING
+            ),
+            AppRegistry.SAMSUNG_BROWSER_SSO_APPS
+        )
+        assertEquals(2, AppRegistry.SAMSUNG_BROWSER_SSO_APPS.map { it.packageName }.toSet().size)
     }
 
     @Test
@@ -385,6 +439,35 @@ class AppRegistryTest {
     }
 
     @Test
+    fun samsungBrowserSsoEligibility_usesCurrentFlightIndependentlyOfIsland() {
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertTrue(baseline.intersect(AppRegistry.SAMSUNG_BROWSER_SSO_APPS).isEmpty())
+
+        samsungEnabled = true
+        assertEquals(
+            baseline + AppRegistry.SAMSUNG_BROWSER_SSO_APPS,
+            AppRegistry.getBrowserSsoAuthorizedApps()
+        )
+        assertEquals(9, AppRegistry.getBrowserSsoAuthorizedApps().size)
+
+        islandEnabled = true
+        assertEquals(
+            baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS + AppRegistry.SAMSUNG_BROWSER_SSO_APPS,
+            AppRegistry.getBrowserSsoAuthorizedApps()
+        )
+        assertEquals(23, AppRegistry.getBrowserSsoAuthorizedApps().size)
+
+        samsungEnabled = false
+        assertEquals(
+            baseline + AppRegistry.ISLAND_BROWSER_SSO_APPS,
+            AppRegistry.getBrowserSsoAuthorizedApps()
+        )
+
+        islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
+    }
+
+    @Test
     fun browserSsoEligibility_exposesAJavaStaticEntryPoint() {
         val method = AppRegistry::class.java.getDeclaredMethod(
             "getBrowserSsoAuthorizedApps"
@@ -392,6 +475,8 @@ class AppRegistryTest {
         assertTrue(Modifier.isStatic(method.modifiers))
         assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
         islandEnabled = true
+        assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
+        samsungEnabled = true
         assertEquals(AppRegistry.getBrowserSsoAuthorizedApps(), method.invoke(null))
     }
 
@@ -401,15 +486,22 @@ class AppRegistryTest {
         try {
             listOf(false, true, false).forEach { trustDebug ->
                 BrokerData.setShouldTrustDebugBrokers(trustDebug)
-                listOf(false, true).forEach { enabled ->
-                    islandEnabled = enabled
-                    val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
-                    assertEquals(trustDebug, authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
-                    assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
-                    assertEquals(
-                        enabled,
-                        authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS)
-                    )
+                listOf(false, true).forEach { island ->
+                    listOf(false, true).forEach { samsung ->
+                        islandEnabled = island
+                        samsungEnabled = samsung
+                        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
+                        assertEquals(trustDebug, authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+                        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+                        assertEquals(
+                            island,
+                            authorizedApps.containsAll(AppRegistry.ISLAND_BROWSER_SSO_APPS)
+                        )
+                        assertEquals(
+                            samsung,
+                            authorizedApps.containsAll(AppRegistry.SAMSUNG_BROWSER_SSO_APPS)
+                        )
+                    }
                 }
             }
         } finally {
@@ -425,6 +517,16 @@ class AppRegistryTest {
         val apps = AppRegistry.getBrowserSsoAuthorizedApps()
         assertTrue(apps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertTrue(apps.intersect(AppRegistry.ISLAND_BROWSER_SSO_APPS).isEmpty())
+    }
+
+    @Test
+    fun samsungEligibility_withoutAHostFlightProvider_usesTheDisabledDefault() {
+        CommonFlightsManager.resetFlightsManager()
+        assertEquals("EnableSamsungBrowserSso", CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO.key)
+        assertEquals(false, CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO.defaultValue)
+        val apps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertTrue(apps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertTrue(apps.intersect(AppRegistry.SAMSUNG_BROWSER_SSO_APPS).isEmpty())
     }
 
     @Test
@@ -453,6 +555,10 @@ class AppRegistryTest {
     companion object {
         private const val DIRECT_DISTRIBUTION_SIGNATURE =
             "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+        private const val SAMSUNG_RELEASE_SIGNATURE =
+            "ABi2fbt8vkzj7SJ8aD5jc4xJFTDFntdkMrYXL3itsvqY1QIw+dZozdop5rgKNxjbrQAd5nntAGpgh9w84O1Xgg=="
+        private const val SAMSUNG_ENGINEERING_SIGNATURE =
+            "XYAvJNasdscIqOev4o/ZfgOPiIzvZmX7m0qSI0wxHW/0ISfMsutaiY9Ofk5VP272AtQ9Gi666fACplmOcv0tgw=="
 
         @JvmStatic
         @BeforeClass
@@ -474,12 +580,15 @@ class AppRegistryTest {
 @Config(sdk = [Build.VERSION_CODES.S])
 class AppRegistryProductionTrustTest {
     private var islandEnabled = false
+    private var samsungEnabled = false
 
     @Before
     fun setUpFlights() {
         val provider = mock<IFlightsProvider>()
         whenever(provider.isFlightEnabled(CommonFlight.ENABLE_ISLAND_BROWSER_SSO))
             .thenAnswer { islandEnabled }
+        whenever(provider.isFlightEnabled(CommonFlight.ENABLE_SAMSUNG_BROWSER_SSO))
+            .thenAnswer { samsungEnabled }
         val manager = mock<IFlightsManager>()
         whenever(manager.getFlightsProvider(any<Long>())).thenReturn(provider)
         CommonFlightsManager.initializeCommonFlightsManager(manager)
@@ -505,6 +614,24 @@ class AppRegistryProductionTrustTest {
         assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
         assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
         islandEnabled = false
+        assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
+    }
+
+    @Test
+    fun browserSsoEligibility_initializedWithoutDebugTrust_samsungRequiresOnlyItsFlight() {
+        assertFalse(BrokerData.getShouldTrustDebugBrokers())
+
+        val baseline = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertEquals(4, baseline.size)
+        assertTrue(baseline.intersect(AppRegistry.SAMSUNG_BROWSER_SSO_APPS).isEmpty())
+        samsungEnabled = true
+        val authorizedApps = AppRegistry.getBrowserSsoAuthorizedApps()
+        assertEquals(8, authorizedApps.size)
+        assertEquals(4, AppRegistry.SAMSUNG_BROWSER_SSO_APPS.size)
+        assertTrue(authorizedApps.containsAll(AppRegistry.SAMSUNG_BROWSER_SSO_APPS))
+        assertTrue(authorizedApps.containsAll(AppRegistry.CHROME_BROWSER_SSO_APPS))
+        assertFalse(authorizedApps.contains(AppRegistry.MSAL_TEST_APP))
+        samsungEnabled = false
         assertEquals(baseline, AppRegistry.getBrowserSsoAuthorizedApps())
     }
 
