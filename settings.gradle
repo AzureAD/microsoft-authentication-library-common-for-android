@@ -36,3 +36,6 @@ project(':labapi').projectDir = new File('labapi')
 
 include(':LabApiUtilities')
 project(':LabApiUtilities').projectDir = new File('LabApiUtilities')
+
+include(':flight-governance')
+project(':flight-governance').projectDir = new File('tooling/flight-governance')
