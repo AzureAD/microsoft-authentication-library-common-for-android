@@ -47,6 +47,9 @@ public class ClientDataInfo {
 
     private static final String TAG = ClientDataInfo.class.getSimpleName();
 
+    /** Maximum raw input length accepted by {@link #fromPipeDelimited(String)}. */
+    private static final int MAX_RAW_LENGTH = 2048;
+
     /** Maximum length for any individual field when emitting to a span. */
     private static final int MAX_FIELD_LENGTH = 256;
 
@@ -79,6 +82,7 @@ public class ClientDataInfo {
     private static final int PIPE_INDEX_CALLER_DATA_BOUNDARY = 3;
     private static final int PIPE_INDEX_CLOUD_INSTANCE = 4;
     private static final int PIPE_MIN_SEGMENTS = 3;
+    private static final int PIPE_MAX_SPLIT_LIMIT = 6;
 
     private String mError;
     private String mSubError;
@@ -107,11 +111,18 @@ public class ClientDataInfo {
      */
     @Nullable
     public static ClientDataInfo fromPipeDelimited(@Nullable final String decodedValue) {
+        if (decodedValue == null) {
+            return null;
+        }
+        if (decodedValue.length() > MAX_RAW_LENGTH) {
+            Logger.warn(TAG, "clientdata pipe-delimited value exceeds maximum length of " + MAX_RAW_LENGTH + " characters.");
+            return null;
+        }
         if (StringUtil.isNullOrEmpty(decodedValue)) {
             return null;
         }
         try {
-            final String[] segments = decodedValue.split("\\|", -1);
+            final String[] segments = decodedValue.split("\\|", PIPE_MAX_SPLIT_LIMIT);
 
             if (segments.length < PIPE_MIN_SEGMENTS) {
                 Logger.warn(TAG, "clientdata pipe-delimited value has fewer than " + PIPE_MIN_SEGMENTS + " segments.");
@@ -120,13 +131,13 @@ public class ClientDataInfo {
 
             final ClientDataInfo info = new ClientDataInfo();
             info.mRaw = decodedValue;
-            info.mAccountType = emptyToNull(segments[PIPE_INDEX_ACCOUNT_TYPE]);
-            info.mError = emptyToNull(segments[PIPE_INDEX_ERROR]);
-            info.mSubError = emptyToNull(segments[PIPE_INDEX_SUB_ERROR]);
+            info.mAccountType = sanitizeSegment(segments[PIPE_INDEX_ACCOUNT_TYPE]);
+            info.mError = sanitizeSegment(segments[PIPE_INDEX_ERROR]);
+            info.mSubError = sanitizeSegment(segments[PIPE_INDEX_SUB_ERROR]);
             info.mCallerDataBoundary = segments.length > PIPE_INDEX_CALLER_DATA_BOUNDARY
-                    ? emptyToNull(segments[PIPE_INDEX_CALLER_DATA_BOUNDARY]) : null;
+                    ? sanitizeSegment(segments[PIPE_INDEX_CALLER_DATA_BOUNDARY]) : null;
             info.mCloudInstance = segments.length > PIPE_INDEX_CLOUD_INSTANCE
-                    ? emptyToNull(segments[PIPE_INDEX_CLOUD_INSTANCE]) : null;
+                    ? sanitizeSegment(segments[PIPE_INDEX_CLOUD_INSTANCE]) : null;
             return info;
         } catch (final Exception e) {
             Logger.warn(TAG, "Failed to parse clientdata pipe-delimited value: " + e.getMessage());
@@ -179,6 +190,29 @@ public class ClientDataInfo {
             return value;
         }
         return value.substring(0, MAX_FIELD_LENGTH);
+    }
+
+    @Nullable
+    private static String sanitizeSegment(final String segment) {
+        final int length = segment.length();
+        StringBuilder cleaned = null;
+        for (int i = 0; i < length; i++) {
+            final char ch = segment.charAt(i);
+            if (isAsciiControl(ch)) {
+                if (cleaned == null) {
+                    cleaned = new StringBuilder(length);
+                    cleaned.append(segment, 0, i);
+                }
+            } else if (cleaned != null) {
+                cleaned.append(ch);
+            }
+        }
+        final String withoutControlChars = cleaned != null ? cleaned.toString() : segment;
+        return emptyToNull(withoutControlChars.trim());
+    }
+
+    private static boolean isAsciiControl(final char ch) {
+        return ch <= '\u001F' || ch == '\u007F';
     }
 
     @Nullable

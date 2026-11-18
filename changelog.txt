@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Harden ClientDataInfo.fromPipeDelimited with 2048-char raw input bound, bounded pipe splitting, ASCII control-character stripping, and segment whitespace trimming.
 
 Version 25.1.0
 ----------
