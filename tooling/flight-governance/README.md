@@ -49,7 +49,9 @@ Annotation types/arguments are recorded as written; they are not evaluated owner
 or policy assertions. Shared keys remain separate declarations.
 
 Literal values and literal `org.json.JSONObject` constructors are resolved without
-executing input code. Other expressions remain `UNRESOLVED`, never guessed false/zero.
+executing input code. Constructors with anonymous class bodies, including double-brace
+initializers, remain `UNRESOLVED` even when their arguments are literals.
+Other expressions remain `UNRESOLVED`, never guessed false/zero.
 Malformed Java, unsupported declarations, and Git failures produce nonzero exits.
 
 Output is canonical UTF-8 JSON with no volatile timestamp. Creation refuses an existing

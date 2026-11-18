@@ -112,6 +112,31 @@ internal class FlightInventoryTest {
     }
 
     @Test
+    fun snapshot_marksAnonymousJsonConstructorsUnresolved() {
+        val snapshot = createSnapshot(listOf(source("""
+            PLAIN_EMPTY("PlainEmpty", new JSONObject()),
+            PLAIN_LITERAL("PlainLiteral", new JSONObject("{\"enabled\":true}")),
+            ANONYMOUS_EMPTY("AnonymousEmpty", new JSONObject() {{ put("enabled", true); }}),
+            ANONYMOUS_LITERAL("AnonymousLiteral",
+                new JSONObject("{\"enabled\":false}") {{ put("enabled", true); }});
+        """.trimIndent())), emptySet())
+        val declarations = snapshot.getJSONArray("declarations")
+        val defaults = (0 until declarations.length())
+            .map { declarations.getJSONObject(it) }
+            .associate { it.getString("constant") to it.getJSONObject("default") }
+        for (constant in listOf("ANONYMOUS_EMPTY", "ANONYMOUS_LITERAL")) {
+            val default = defaults.getValue(constant)
+            assertEquals("UNRESOLVED", default.getString("type"))
+            assertTrue(default.isNull("value"))
+            assertTrue(default.getString("unresolvedReason").isNotBlank())
+            assertTrue(default.getString("expression").contains("put(\"enabled\", true)"))
+        }
+        assertEquals(2, snapshot.getJSONObject("summary").getInt("unresolvedDefaultCount"))
+        assertEquals(0, defaults.getValue("PLAIN_EMPTY").getJSONObject("value").length())
+        assertTrue(defaults.getValue("PLAIN_LITERAL").getJSONObject("value").getBoolean("enabled"))
+    }
+
+    @Test
     fun parser_normalizesFormattingWithoutLosingOriginalExpression() {
         val record = FlightSourceParser().parse(source("LIMIT(\"Limit\", 1_000);")).single()
         assertEquals("1_000", record.default.expression)

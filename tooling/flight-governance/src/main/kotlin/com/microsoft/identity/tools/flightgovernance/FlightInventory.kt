@@ -209,7 +209,7 @@ internal class FlightSourceParser {
             }
             return known(operand.type, value)
         }
-        if (tree is NewClassTree &&
+        if (tree is NewClassTree && tree.classBody == null &&
             (tree.identifier.toString() == "org.json.JSONObject" ||
                 (jsonImported && tree.identifier.toString() == "JSONObject"))
         ) {
