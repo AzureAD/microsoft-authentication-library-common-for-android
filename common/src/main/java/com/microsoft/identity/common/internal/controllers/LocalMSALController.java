@@ -67,6 +67,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
@@ -466,17 +467,19 @@ public class LocalMSALController extends BaseController {
                                        final SilentTokenCommandParameters parametersWithScopes,
                                        final List<ICacheRecord> cacheRecords) throws ClientException {
         ICacheRecord fullCacheRecord = cacheRecords.get(0);
-        acquireTokenSilentResult.setLocalAuthenticationResult(
-                new LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(
-                                fullCacheRecord,
-                                parametersWithScopes.getAuthenticationScheme()
-                        ),
-                        cacheRecords,
-                        SdkType.MSAL,
-                        true
-                )
+        final LocalAuthenticationResult localResult = new LocalAuthenticationResult(
+                finalizeCacheRecordForResult(
+                        fullCacheRecord,
+                        parametersWithScopes.getAuthenticationScheme()
+                ),
+                cacheRecords,
+                SdkType.MSAL,
+                true
         );
+        // Reject before the refresh-on path can schedule background token acquisition.
+        AgeAssuranceTargetValidator.validate(
+                parametersWithScopes.getClaimsRequestJson(), localResult.getIdToken());
+        acquireTokenSilentResult.setLocalAuthenticationResult(localResult);
     }
 
     private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
@@ -760,6 +763,8 @@ public class LocalMSALController extends BaseController {
 
             // Validate request success, may throw MsalServiceException
             validateDeviceCodeFlowServiceResult(tokenResult);
+            AgeAssuranceTargetValidator.validate(
+                    parameters.getClaimsRequestJson(), tokenResult.getTokenResponse().getIdToken());
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);

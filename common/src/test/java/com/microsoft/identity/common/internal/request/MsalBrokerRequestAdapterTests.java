@@ -114,6 +114,10 @@ public class MsalBrokerRequestAdapterTests {
         final String REDIRECT_URI = "msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
         final String CALLER_PACKAGE_NAME = ApplicationProvider.getApplicationContext().getPackageName();
         final String VERSION = "5.4.0";
+        final String claims = "{\"id_token\":{\"xms_agvs\":{\"essential\":true,"
+                + "\"value\":\"1\",\"values\":[\"1\",\"2\"],"
+                + "\"additionalProperties\":[\"target-mc\",\"target-sm\"]}},"
+                + "\"access_token\":{\"custom\":{\"additionalProperties\":[\"target-other\"]}}}";
 
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
 
@@ -131,12 +135,17 @@ public class MsalBrokerRequestAdapterTests {
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .prompt(OpenIdConnectPromptParameter.LOGIN)
                 .suppressBrokerAccountPicker(true)
+                .claimsRequestJson(claims)
                 .build();
 
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final Bundle requestBundle = msalBrokerRequestAdapter.getRequestBundleForAcquireTokenInteractive(params, negotiatedBrokerProtocolVersion);
 
         assertEquals(negotiatedBrokerProtocolVersion, requestBundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY));
+        final BrokerRequest reconstructed = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
+                requestBundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
+                BrokerRequest.class);
+        assertEquals(claims, reconstructed.getClaims());
     }
 
     @Test

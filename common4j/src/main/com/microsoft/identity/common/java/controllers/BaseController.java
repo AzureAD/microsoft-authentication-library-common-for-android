@@ -70,6 +70,7 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequ
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -945,6 +946,11 @@ public abstract class BaseController {
                         parameters.getEventCollector(),
                         EventTag.BrokerNetworkCallEnd
                 );
+            }
+            if (tokenResult.getSuccess() && parameters instanceof TokenCommandParameters) {
+                AgeAssuranceTargetValidator.validate(
+                        ((TokenCommandParameters) parameters).getClaimsRequestJson(),
+                        tokenResult.getTokenResponse().getIdToken());
             }
             TelemetryHelper.addEvent(
                     parameters.getEventCollector(),
