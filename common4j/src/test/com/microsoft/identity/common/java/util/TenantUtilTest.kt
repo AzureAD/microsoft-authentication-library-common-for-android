@@ -396,4 +396,342 @@ class TenantUtilTest {
         assertEquals(expectedTenantId, result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("sub.domain.contoso.com") }
     }
+
+    // ===== Hardened R1-R4 parsing and compatibility tests =====
+
+    @Test
+    fun `getTenantFromIdentifier returns null for 36-char non-UUID strings`() {
+        val nonUuid36CharInputs = listOf(
+            "------------------------------------",
+            "1234567890abcdef1234567890abcdef1234",
+            "1234567-81234-1234-1234-123456789012",
+            "12345678-1234-1234-1234-1234-5678901"
+        )
+        for (input in nonUuid36CharInputs) {
+            assertEquals(36, input.length)
+            assertNull(
+                "Expected getTenantFromIdentifier to reject 36-char non-UUID: $input",
+                TenantUtil.getTenantFromIdentifier(input)
+            )
+        }
+
+        // Shortened non-canonical UUID segments accepted by UUID.fromString must also be rejected
+        assertNull(TenantUtil.getTenantFromIdentifier("0-0-0-0-0"))
+        assertNull(TenantUtil.getTenantFromIdentifier("1-2-3-4-5"))
+
+        // Canonical all-zero and uppercase all-F GUIDs preserve original hex casing
+        val zeroGuid = "00000000-0000-0000-0000-000000000000"
+        val upperMaxGuid = "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+        assertEquals(zeroGuid, TenantUtil.getTenantFromIdentifier(zeroGuid))
+        assertEquals(upperMaxGuid, TenantUtil.getTenantFromIdentifier(upperMaxGuid))
+    }
+
+    @Test
+    fun `resolveTenantId does not treat 36-char non-UUID strings as GUIDs`() {
+        val nonUuid36CharInputs = listOf(
+            "------------------------------------",
+            "1234567890abcdef1234567890abcdef1234",
+            "1234567-81234-1234-1234-123456789012",
+            "12345678-1234-1234-1234-1234-5678901"
+        )
+        val exception = RuntimeException("Failed to load configuration")
+
+        mockkStatic(AzureActiveDirectory::class)
+
+        for (input in nonUuid36CharInputs) {
+            every {
+                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(input)
+            } throws exception
+
+            val result = TenantUtil.resolveTenantId(input)
+
+            assertNull("Expected null when 36-char non-UUID fails OpenID lookup: $input", result)
+            verify(exactly = 1) {
+                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(input)
+            }
+        }
+    }
+
+    @Test
+    fun `getTenantFromIdentifier trims leading and trailing whitespace for GUID and UPN`() {
+        val paddedMixedCaseGuid = "  12345678-AbCd-EfAb-CdEf-123456789012\t\n"
+        assertEquals(
+            "12345678-AbCd-EfAb-CdEf-123456789012",
+            TenantUtil.getTenantFromIdentifier(paddedMixedCaseGuid)
+        )
+
+        val paddedUpn = "\t user@contoso.com \n"
+        assertEquals("contoso.com", TenantUtil.getTenantFromIdentifier(paddedUpn))
+
+        assertNull(TenantUtil.getTenantFromIdentifier("\t\n\r "))
+    }
+
+    @Test
+    fun `resolveTenantId trims outer whitespace for GUID without calling OpenID configuration`() {
+        val expectedGuid = "12345678-AbCd-EfAb-CdEf-123456789012"
+
+        mockkStatic(AzureActiveDirectory::class)
+
+        assertEquals(
+            expectedGuid,
+            TenantUtil.resolveTenantId("  12345678-AbCd-EfAb-CdEf-123456789012  ")
+        )
+        assertEquals(
+            expectedGuid,
+            TenantUtil.resolveTenantId("\t12345678-AbCd-EfAb-CdEf-123456789012\r\n")
+        )
+        verify(exactly = 0) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(any())
+        }
+    }
+
+    @Test
+    fun `resolveTenantId trims outer whitespace before calling OpenID configuration for domain`() {
+        val paddedDomain = "  contoso.com\t\n"
+        val expectedTenantId = "12345678-1234-1234-1234-123456789012"
+        val mockConfiguration = mockk<OpenIdProviderConfiguration>()
+
+        mockkStatic(AzureActiveDirectory::class)
+        mockkStatic(AzureActiveDirectoryAudience::class)
+
+        every {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com")
+        } returns mockConfiguration
+        every {
+            AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration)
+        } returns expectedTenantId
+
+        val result = TenantUtil.resolveTenantId(paddedDomain)
+
+        assertEquals(expectedTenantId, result)
+        verify(exactly = 1) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com")
+        }
+    }
+
+    @Test
+    fun `resolveTenantId returns null without calling OpenID configuration for blank internal whitespace or URI delimiters`() {
+        val invalidTenantInputs = listOf(
+            "",
+            "   ",
+            "\t\n",
+            "contoso .com",
+            "con\ttoso.com",
+            "con\ntoso.com",
+            "con\rtoso.com",
+            "12345678-1234-1234-1234- 123456789012",
+            "contoso.com/v2.0",
+            "contoso.com\\path",
+            "contoso.com?a=b",
+            "contoso.com#frag",
+            " /contoso.com "
+        )
+
+        mockkStatic(AzureActiveDirectory::class)
+
+        for (input in invalidTenantInputs) {
+            assertNull(
+                "Expected resolveTenantId to short-circuit to null for: $input",
+                TenantUtil.resolveTenantId(input)
+            )
+        }
+        verify(exactly = 0) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(any())
+        }
+    }
+
+    @Test
+    fun `getTenantFromIdentifier extracts domain for Entra B2B EXT and valid multi-label UPNs`() {
+        assertEquals(
+            "contoso.onmicrosoft.com",
+            TenantUtil.getTenantFromIdentifier("alice_fabrikam.com#EXT#@contoso.onmicrosoft.com")
+        )
+        assertEquals(
+            "sub.contoso-dev.com",
+            TenantUtil.getTenantFromIdentifier("  guest_user#EXT#@sub.contoso-dev.com  ")
+        )
+        assertEquals(
+            "xn--bcher-kva.ch",
+            TenantUtil.getTenantFromIdentifier("user+tag@xn--bcher-kva.ch")
+        )
+        assertEquals(
+            "Sub.Contoso.COM",
+            TenantUtil.getTenantFromIdentifier("user@Sub.Contoso.COM")
+        )
+        assertEquals(
+            "a.b",
+            TenantUtil.getTenantFromIdentifier("user@a.b")
+        )
+
+        val label63 = "a".repeat(63)
+        assertEquals(
+            "$label63.com",
+            TenantUtil.getTenantFromIdentifier("user@$label63.com")
+        )
+
+        val label57 = "d".repeat(57)
+        val maxHostname = "$label63.$label63.$label63.$label57.com"
+        assertEquals(253, maxHostname.length)
+        assertEquals(
+            maxHostname,
+            TenantUtil.getTenantFromIdentifier("user@$maxHostname")
+        )
+    }
+
+    @Test
+    fun `getTenantIdFromLoginHint resolves Entra B2B EXT and padded UPNs via OpenID configuration`() {
+        val expectedTenantId = "12345678-1234-1234-1234-123456789012"
+        val mockConfiguration = mockk<OpenIdProviderConfiguration>()
+
+        mockkStatic(AzureActiveDirectory::class)
+        mockkStatic(AzureActiveDirectoryAudience::class)
+
+        every {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.onmicrosoft.com")
+        } returns mockConfiguration
+        every {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("sub.contoso-dev.com")
+        } returns mockConfiguration
+        every {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com")
+        } returns mockConfiguration
+        every {
+            AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration)
+        } returns expectedTenantId
+
+        assertEquals(
+            expectedTenantId,
+            TenantUtil.getTenantIdFromLoginHint(
+                "alice_fabrikam.com#EXT#@contoso.onmicrosoft.com",
+                "corr-ext-1"
+            )
+        )
+        assertEquals(
+            expectedTenantId,
+            TenantUtil.getTenantIdFromLoginHint(
+                "  guest_user#EXT#@sub.contoso-dev.com  ",
+                "corr-ext-2"
+            )
+        )
+        assertEquals(
+            expectedTenantId,
+            TenantUtil.getTenantIdFromLoginHint("\t user@contoso.com \n", "corr-padded")
+        )
+
+        verify(exactly = 1) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.onmicrosoft.com")
+        }
+        verify(exactly = 1) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("sub.contoso-dev.com")
+        }
+        verify(exactly = 1) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com")
+        }
+    }
+
+    @Test
+    fun `getTenantIdFromLoginHint resolves padded GUID login hint without calling OpenID configuration`() {
+        val paddedGuidHint = "  12345678-AbCd-EfAb-CdEf-123456789012\t\n"
+
+        mockkStatic(AzureActiveDirectory::class)
+
+        val result = TenantUtil.getTenantIdFromLoginHint(paddedGuidHint, "corr-guid")
+
+        assertEquals("12345678-AbCd-EfAb-CdEf-123456789012", result)
+        verify(exactly = 0) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(any())
+        }
+    }
+
+    @Test
+    fun `getTenantFromIdentifier and getTenantIdFromLoginHint reject malformed UPNs and 36-char non-UUIDs without OpenID calls`() {
+        val label64 = "a".repeat(64)
+        val label63 = "a".repeat(63)
+        val label58 = "d".repeat(58)
+        val hostname254 = "$label63.$label63.$label63.$label58.com"
+        assertEquals(254, hostname254.length)
+
+        val malformedIdentifiers = listOf(
+            "@contoso.com",
+            "a@b@contoso.com",
+            "user@@contoso.com",
+            "user name@contoso.com",
+            "user\tname@contoso.com",
+            "user\nname@contoso.com",
+            "user@.contoso.com",
+            "user@contoso.com.",
+            "user@contoso..com",
+            "user@...",
+            "user@-contoso.com",
+            "user@contoso-.com",
+            "user@contoso.-com",
+            "user@contoso.com-",
+            "user@con toso.com",
+            "user@contoso.com/path",
+            "user@contoso.com\\path",
+            "user@contoso.com?q=1",
+            "user@contoso.com#frag",
+            "user@contoso.com:8443",
+            "user@$label64.com",
+            "user@$hostname254",
+            "------------------------------------",
+            "1234567890abcdef1234567890abcdef1234",
+            "1234567-81234-1234-1234-123456789012",
+            "12345678-1234-1234-1234-1234-5678901"
+        )
+
+        mockkStatic(AzureActiveDirectory::class)
+
+        for (invalidInput in malformedIdentifiers) {
+            assertNull(
+                "Expected getTenantFromIdentifier to return null for: $invalidInput",
+                TenantUtil.getTenantFromIdentifier(invalidInput)
+            )
+            assertNull(
+                "Expected getTenantIdFromLoginHint to return null for: $invalidInput",
+                TenantUtil.getTenantIdFromLoginHint(invalidInput, "corr-invalid")
+            )
+        }
+        verify(exactly = 0) {
+            AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(any())
+        }
+    }
+
+    @Test
+    fun `TenantUtil preserves Java INSTANCE singleton field and public method descriptors`() {
+        val clazz = TenantUtil::class.java
+        assertTrue(java.lang.reflect.Modifier.isPublic(clazz.modifiers))
+        assertTrue(java.lang.reflect.Modifier.isFinal(clazz.modifiers))
+
+        val instanceField = clazz.getDeclaredField("INSTANCE")
+        assertTrue(java.lang.reflect.Modifier.isPublic(instanceField.modifiers))
+        assertTrue(java.lang.reflect.Modifier.isStatic(instanceField.modifiers))
+        assertTrue(java.lang.reflect.Modifier.isFinal(instanceField.modifiers))
+        assertEquals(clazz, instanceField.type)
+
+        val instance = instanceField.get(null)
+        assertSame(TenantUtil, instance)
+
+        val getTenantMethod = clazz.getMethod("getTenantFromIdentifier", String::class.java)
+        assertEquals(String::class.java, getTenantMethod.returnType)
+        assertEquals("contoso.com", getTenantMethod.invoke(instance, "  user@contoso.com  "))
+
+        val resolveTenantMethod = clazz.getMethod("resolveTenantId", String::class.java)
+        assertEquals(String::class.java, resolveTenantMethod.returnType)
+        assertEquals(
+            "12345678-AbCd-EfAb-CdEf-123456789012",
+            resolveTenantMethod.invoke(instance, "  12345678-AbCd-EfAb-CdEf-123456789012  ")
+        )
+
+        val loginHintMethod = clazz.getMethod(
+            "getTenantIdFromLoginHint",
+            String::class.java,
+            String::class.java
+        )
+        assertEquals(String::class.java, loginHintMethod.returnType)
+        assertEquals(
+            "12345678-1234-1234-1234-123456789012",
+            loginHintMethod.invoke(instance, "12345678-1234-1234-1234-123456789012", "corr-id")
+        )
+    }
 }
