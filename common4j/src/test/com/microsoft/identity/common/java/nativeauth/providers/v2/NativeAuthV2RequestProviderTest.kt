@@ -23,12 +23,14 @@
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.net.HttpConstants
@@ -37,12 +39,86 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.After
 import org.junit.Test
 import java.net.URL
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 class NativeAuthV2RequestProviderTest {
+
+    @After
+    fun tearDown() {
+        BuildValues.setDC("")
+    }
+
+    @Test
+    fun createAuthorizeChallengeStartRequest_preservesAuthorityQueryDcWithoutAddingDeveloperDuplicate() {
+        BuildValues.setDC("developer")
+        val request = provider(
+            authorityUrl = "https://login.contoso.com/tenant.onmicrosoft.com?dc=query-slice&other=value",
+            useMockApi = false
+        ).createAuthorizeChallengeStartRequest(CORRELATION_ID)
+
+        assertEquals(
+            "https://login.contoso.com/tenant.onmicrosoft.com/oauth2/v2.0/authorize-challenge?dc=query-slice&other=value",
+            request.requestUrl.toString()
+        )
+    }
+
+    @Test
+    fun createAuthorizeChallengeStartRequest_usesDeveloperDcUntilServiceReturnsRouting() {
+        BuildValues.setDC("developer")
+        val request = provider(
+            authorityUrl = "https://login.contoso.com/tenant.onmicrosoft.com",
+            useMockApi = false
+        ).createAuthorizeChallengeStartRequest(CORRELATION_ID)
+
+        assertEquals(
+            "https://login.contoso.com/tenant.onmicrosoft.com/oauth2/v2.0/authorize-challenge?dc=developer",
+            request.requestUrl.toString()
+        )
+    }
+
+    @Test
+    fun createAuthorizeChallengeContinueRequest_followsAbsoluteContinueLinkAndPreservesItsQuery() {
+        BuildValues.setDC("developer")
+        val returnedHref = "https://nativeauthsample.ciamlogin.com/" +
+            "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/oauth2/v2.0/authorize-challenge" +
+            "?dc=ESTS-PUB-SEASLR1-FD000-TEST1-100&value=%2B&value=two"
+        val ready = NativeAuthV2ResponseParser().parseInteraction(
+            response = NativeAuthV2HalApiResponse.from(
+                halResource = HalResource.from(
+                    """{"state":"continue","continuationToken":"latest-token",
+                        "_links":{"continue":{"href":"$returnedHref"}}}"""
+                ),
+                statusCode = 200,
+                correlationId = CORRELATION_ID
+            ),
+            previousState = continuationState()
+        ) as NativeAuthV2InteractionApiResult.ReadyToComplete
+
+        val request = provider(
+            authorityUrl = "https://custom.example.com/alias.onmicrosoft.com",
+            useMockApi = false
+        ).createAuthorizeChallengeContinueRequest(ready.continuationState)
+
+        assertEquals(returnedHref, request.requestUrl.toString())
+        assertEquals(
+            mapOf("continuation_token" to "latest-token"),
+            parseFormBody(ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters))
+        )
+    }
+
+    @Test
+    fun createAuthorizeChallengeContinueRequest_whenContinueIsMissing_doesNotRebuildConfiguredEndpoint() {
+        val exception = assertClientException {
+            provider("https://login.contoso.com/tenant", false)
+                .createAuthorizeChallengeContinueRequest(continuationStateWithout(NativeAuthV2LinkRelation.CONTINUE))
+        }
+        assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+    }
 
     @Test
     fun createAuthorizeChallengeStartRequest_matchesIosFormBody() {
@@ -156,11 +232,11 @@ class NativeAuthV2RequestProviderTest {
         val verifyRequest = provider.createVerifyRequest(state, otp = "123456")
         val pollRequest = provider.createPollRequest(state)
 
-        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/challenge"), challengeRequest.requestUrl)
-        assertEquals(URL("https://login.contoso.com/tenant/api/v1.0-internal/risk/phone/verify"), riskVerificationRequest.requestUrl)
-        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/resend"), resendRequest.requestUrl)
-        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/verify"), verifyRequest.requestUrl)
-        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/poll"), pollRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/api/v0.1/auth/challenge"), challengeRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/api/v1.0-internal/risk/phone/verify"), riskVerificationRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/api/v0.1/auth/resend"), resendRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/api/v0.1/auth/verify"), verifyRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/api/v0.1/auth/poll"), pollRequest.requestUrl)
 
         listOf(
             challengeRequest.headers,
@@ -232,7 +308,9 @@ class NativeAuthV2RequestProviderTest {
         )
 
         val startRequest = provider.createAuthorizeChallengeStartRequest(CORRELATION_ID)
-        val continueRequest = provider.createAuthorizeChallengeContinueRequest(continuationState())
+        val continueRequest = provider.createAuthorizeChallengeContinueRequest(
+            continuationState(continueHref = "http://localhost/mock-tenant/oauth2/v2.0/authorize-challenge")
+        )
         val challengeRequest = provider.createChallengeRequest(continuationState())
         val tokenRequest = provider.createTokenRequest(
             code = "authorization-code",
@@ -246,7 +324,7 @@ class NativeAuthV2RequestProviderTest {
         )
         assertEquals(startRequest.requestUrl, continueRequest.requestUrl)
         assertEquals(
-            URL("http://localhost/mock-tenant/api/v0.1/auth/challenge"),
+            URL("http://localhost/api/v0.1/auth/challenge"),
             challengeRequest.requestUrl
         )
         assertEquals(
@@ -266,7 +344,7 @@ class NativeAuthV2RequestProviderTest {
         )
 
         assertEquals(
-            URL("https://login.contoso.com/tenant/api/v0.1/auth/resetpassword"),
+            URL("https://login.contoso.com/api/v0.1/auth/resetpassword"),
             request.requestUrl
         )
         assertCommonHeaders(request.headers, JSON_CONTENT_TYPE)
@@ -287,7 +365,7 @@ class NativeAuthV2RequestProviderTest {
         )
 
         assertEquals(
-            URL("https://login.contoso.com/tenant/api/v0.1/auth/update"),
+            URL("https://login.contoso.com/api/v0.1/auth/update"),
             request.requestUrl
         )
         assertCommonHeaders(request.headers, JSON_CONTENT_TYPE)
@@ -361,7 +439,9 @@ class NativeAuthV2RequestProviderTest {
         return NativeAuthV2RequestProvider(config)
     }
 
-    private fun continuationState() =
+    private fun continuationState(
+        continueHref: String = "https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"
+    ) =
         (NativeAuthV2ResponseParser().parseAuthorizeChallenge(
             response = NativeAuthV2HalApiResponse.from(
                 halResource = HalResource.from(
@@ -370,6 +450,9 @@ class NativeAuthV2RequestProviderTest {
                       "continuation_token": "flow-token",
                       "sign_in": "/oauth2/v2.0/authorize-challenge",
                       "_links": {
+                        "continue": {
+                          "href": "$continueHref"
+                        },
                         "challenge": {
                           "href": "/api/v0.1/auth/challenge"
                         },
@@ -406,6 +489,9 @@ class NativeAuthV2RequestProviderTest {
                       "continuation_token": "flow-token",
                       "sign_in": "/oauth2/v2.0/authorize-challenge",
                       "_links": {
+                        "continue": {
+                          "href": "https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"
+                        },
                         "challenge": {
                           "href": "/api/v0.1/auth/challenge"
                         },
