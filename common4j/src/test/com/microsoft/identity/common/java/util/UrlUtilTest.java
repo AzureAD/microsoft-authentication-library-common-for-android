@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -190,5 +191,58 @@ public class UrlUtilTest {
                 "BZyO5nRGwV_nfq-7yN-Yabvu-3x-EfrvD2D3TWA9WPW2xHqUtAreWtjosHbRxf_vusvWGB4f8RVmSEU" +
                 "QSRLgqSU0FN1Wtczha5jk37o8D9PFsLhNAJuQzgcuEQiYUM6GUCSOZUM6ESibwmXDmNw2",
                 queryParams.get("SubmitUrl"));
+    }
+
+    @Test
+    public void testGetParametersFromNullUrlStringReturnsEmpty() throws ClientException {
+        Assert.assertTrue(UrlUtil.getParameters((String) null).isEmpty());
+    }
+
+    @Test
+    public void testGetParametersFromMalformedUrlStringThrows() {
+        try {
+            // A space is an illegal URI character, forcing a URISyntaxException -> ClientException.
+            UrlUtil.getParameters("https://www.test.com/pa th?a=b");
+            Assert.fail("Expected a ClientException for a malformed URL string.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
+        }
+    }
+
+    @Test
+    public void testGetParametersFromNullUriReturnsEmpty() {
+        Assert.assertTrue(UrlUtil.getParameters((URI) null).isEmpty());
+    }
+
+    @Test
+    public void testGetParametersIgnoresFragmentAndReturnsQuery() throws URISyntaxException {
+        final Map<String, String> params = UrlUtil.getParameters(
+                new URI("https://www.test.com/path?a=b#c=d"));
+        Assert.assertEquals(1, params.size());
+        Assert.assertEquals("b", params.get("a"));
+    }
+
+    @Test
+    public void testUrlFormDecodeDataWithBareKeyUsesEmptyValue() {
+        final Map<String, String> params = UrlUtil.urlFormDecodeData("flag&key=val", "&");
+        Assert.assertEquals(2, params.size());
+        Assert.assertEquals("", params.get("flag"));
+        Assert.assertEquals("val", params.get("key"));
+    }
+
+    @Test
+    public void testMakeUrlReturnsUrlForValidString() throws ClientException, MalformedURLException {
+        Assert.assertEquals(new URL("https://www.test.com"),
+                UrlUtil.makeUrl("https://www.test.com"));
+    }
+
+    @Test
+    public void testMakeUrlThrowsForMalformedString() {
+        try {
+            UrlUtil.makeUrl("not a valid url");
+            Assert.fail("Expected a ClientException for a malformed URL string.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
+        }
     }
 }

@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Upgrade both active build entrypoints to Gradle 9.3.1, Android Gradle Plugin 9.1.1, compileSdk/buildToolsVersion 37, targetSdk 36, Kotlin 2.2.21 and JDK 21 for SDK 36 tests; retain minSdk 24 and Kotlin language/API 1.9 compatibility, use Robolectric 4.16.1, and align SpotBugs 6.x and JaCoCo 0.8.10 configuration (#3186).
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 
 Version 25.1.0

@@ -2,7 +2,8 @@
 
 # Flight source inventory
 
-Build-only Kotlin/JDK 17 tooling shared by flight-governance consumers. It reads
+Build-only Kotlin tooling compiled and tested with JDK 21, retaining a Java 17
+bytecode target, shared by flight-governance consumers. It reads
 committed Java source using the JDK syntax parser, not a single-line/uppercase regex.
 It does not evaluate arbitrary Java, infer owners, change defaults, query ECS,
 or enforce PR policy.

@@ -22,14 +22,15 @@ Changes can affect MSAL, Broker, and legacy ADAL consumers.
 ## Setup and working directories
 
 Use this repository's wrappers, not a globally installed Gradle. The root
-[wrapper](gradle/wrapper/gradle-wrapper.properties) uses Gradle 8.11.1;
+[wrapper](gradle/wrapper/gradle-wrapper.properties) uses Gradle 9.3.1;
 the JVM-only [wrapper](common-java-root/gradle/wrapper/gradle-wrapper.properties)
-uses Gradle 8.1. Do not assume the two builds are interchangeable.
+also uses Gradle 9.3.1. Do not assume the two builds are interchangeable.
 
-1. Use **JDK 17**, matching PR validation. Set `JAVA_HOME` for the current shell
+1. Use **JDK 21**, matching upgraded PR validation and Robolectric SDK 36 tests.
+   JDK 17 remains supported for configuration and compilation. Set `JAVA_HOME` for the current shell
    and ensure `java -version` and the wrapper's `--version` select the intended
    JDK. Java 8 compilation targets do not mean Gradle should run on Java 8.
-2. For Android checks, install Android SDK platform 36 and the build tools
+2. For Android checks, install Android SDK platform 37 and the build tools
    required by [the version configuration](gradle/versions.gradle). Configure
    `ANDROID_HOME` or an untracked root `local.properties` containing `sdk.dir`.
    Android Studio builds also require the Lombok plugin described in the README.
@@ -46,7 +47,7 @@ uses Gradle 8.1. Do not assume the two builds are interchangeable.
 
 Commands below use PowerShell on Windows. Run root commands from this
 repository's root; run JVM-only commands from `common-java-root`.
-On macOS/Linux use `./gradlew` in the corresponding directory, with JDK 17
+On macOS/Linux use `./gradlew` in the corresponding directory, with JDK 21
 and equivalent SDK/feed setup.
 
 ## Fast verification while editing
@@ -151,10 +152,9 @@ unit-test pass does not demonstrate cross-app UI behavior.
 - Use `.\gradlew.bat :common:tasks --all` at the root or
   `.\gradlew.bat :common4j:tasks --all` from `common-java-root` to check task
   availability. These commands still configure the build and need prerequisites.
-- If settings fail with `unknown property 'project'` in the credential block,
-  check that both feed environment variables were provisioned. The current
-  fallback path can fail before dependency resolution; do not work around it
-  by committing credentials or changing repository configuration.
+- Settings use Gradle providers for credential-property fallbacks. If feed access
+  fails, provision credentials through approved local handling; do not work around
+  it by committing credentials or changing repository configuration.
 - Feed 401/403 errors require access/credential correction, not skipped checks.
   Missing JDK/SDK/device/lab setup is an explicit blocker, not a successful run.
 - Report commands, working directories, exit status, and every failed/not-run

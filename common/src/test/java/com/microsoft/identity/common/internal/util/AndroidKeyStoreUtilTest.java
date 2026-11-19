@@ -495,7 +495,7 @@ public class AndroidKeyStoreUtilTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP) // API 21
+    @Config(sdk = Build.VERSION_CODES.M) // API 23 (Robolectric 4.16 dropped SDK 21/22 emulation; the failure path here is SDK-independent - it comes from the mocked KeyPair failing, not the API level)
     public void testGetKeyPairEncryptionPaddings_LegacyAPI_ThrowsClientException() {
         // Act
         try {

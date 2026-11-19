@@ -164,4 +164,32 @@ public class ObjectMapperTest {
         Assert.assertFalse(iterator.hasNext());
     }
 
+    @Test
+    public void test_DeserializeQueryStringToMap() {
+        final Map<String, String> map = ObjectMapper.deserializeQueryStringToMap(
+                "client_id=" + CLIENT_ID + "&scope=openid%20profile&malformed&empty=");
+
+        // Only well-formed, non-empty key/value pairs are retained.
+        Assert.assertEquals(2, map.size());
+        Assert.assertEquals(CLIENT_ID, map.get("client_id"));
+        // Values are URL-decoded.
+        Assert.assertEquals("openid profile", map.get("scope"));
+        // A token without '=' is skipped.
+        Assert.assertFalse(map.containsKey("malformed"));
+        // A token with an empty value is skipped.
+        Assert.assertFalse(map.containsKey("empty"));
+    }
+
+    @Test
+    public void test_DeserializeQueryStringToMapPreservesInsertionOrder() {
+        final Map<String, String> map = ObjectMapper.deserializeQueryStringToMap("a=1&b=2&c=3");
+        Assert.assertEquals("[a, b, c]", map.keySet().toString());
+    }
+
+    @Test
+    public void test_DeserializeQueryStringToMapWithNullOrEmptyReturnsEmpty() {
+        Assert.assertTrue(ObjectMapper.deserializeQueryStringToMap(null).isEmpty());
+        Assert.assertTrue(ObjectMapper.deserializeQueryStringToMap("").isEmpty());
+    }
+
 }
