@@ -102,6 +102,8 @@ public class ServiceException extends BaseException {
 
     private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
+    private transient boolean mLocallySuppressedThrottle = false;
+
     /**
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught.
      * Will use 0 instead.
@@ -113,6 +115,35 @@ public class ServiceException extends BaseException {
      */
     public int getHttpStatusCode() {
         return mHttpStatusCode;
+    }
+
+    /**
+     * Sets the HTTP status code for the request sent to the service.
+     *
+     * @param httpStatusCode HTTP status code
+     */
+    public void setHttpStatusCode(final int httpStatusCode) {
+        mHttpStatusCode = httpStatusCode;
+    }
+
+    /**
+     * Returns whether this exception originated from a locally suppressed Broker throttle window
+     * without issuing an outbound network request.
+     *
+     * @return true if locally suppressed; false otherwise.
+     */
+    public boolean isLocallySuppressedThrottle() {
+        return mLocallySuppressedThrottle;
+    }
+
+    /**
+     * Sets whether this exception originated from a locally suppressed Broker throttle window
+     * without issuing an outbound network request.
+     *
+     * @param locallySuppressedThrottle true if locally suppressed; false otherwise.
+     */
+    public void setLocallySuppressedThrottle(final boolean locallySuppressedThrottle) {
+        mLocallySuppressedThrottle = locallySuppressedThrottle;
     }
 
     /**

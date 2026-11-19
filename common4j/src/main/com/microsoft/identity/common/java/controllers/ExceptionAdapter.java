@@ -66,6 +66,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -224,6 +226,9 @@ public class ExceptionAdapter {
                 !StringUtil.isNullOrEmpty(tokenResult.getErrorResponse().getError())) {
 
             outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
+            if (tokenResult.isLocallySuppressedThrottle()) {
+                outErr.setLocallySuppressedThrottle(true);
+            }
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
             if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
                 outErr.setClientDataInfo(tokenResult.getClientDataInfo());
@@ -327,6 +332,9 @@ public class ExceptionAdapter {
         outErr.setSubErrorCode(exception.getSubErrorCode());
         outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
         outErr.setHttpResponseBody(exception.getHttpResponseBody());
+        if (exception.isLocallySuppressedThrottle()) {
+            outErr.setLocallySuppressedThrottle(true);
+        }
 
         if (exception.getClientDataInfo() != null
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
@@ -420,22 +428,32 @@ public class ExceptionAdapter {
                                                        @Nullable String responseBody) {
         final String methodName = ":applyHttpErrorResponseData";
 
-        if (null != responseHeadersJson && null != responseBody) {
+        if (statusCode == ServiceException.DEFAULT_STATUS_CODE
+                && null == responseHeadersJson
+                && null == responseBody) {
+            return null;
+        }
+
+        HashMap<String, List<String>> responseHeaders = null;
+        if (null != responseHeadersJson) {
             try {
-                return new HttpResponse(
-                        statusCode,
-                        responseBody,
-                        HeaderSerializationUtil.fromJson(responseHeadersJson)
-                );
+                responseHeaders = HeaderSerializationUtil.fromJson(responseHeadersJson);
             } catch (JsonSyntaxException e) {
                 Logger.warn(
                         TAG + methodName,
                         "Failed to deserialize error data: status, headers, response body."
                 );
+                if (statusCode == ServiceException.DEFAULT_STATUS_CODE && null == responseBody) {
+                    return null;
+                }
             }
         }
 
-        return null;
+        return new HttpResponse(
+                statusCode,
+                responseBody,
+                responseHeaders
+        );
     }
 
     public static BaseException baseExceptionFromException(final Throwable exception) {

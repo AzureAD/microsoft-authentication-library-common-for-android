@@ -27,14 +27,21 @@ import lombok.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HeaderSerializationUtil {
 
+    private static final Type HEADER_MAP_TYPE = TypeToken.getParameterized(
+            Map.class,
+            String.class,
+            TypeToken.getParameterized(List.class, String.class).getType()
+    ).getType();
+
     public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+        return new Gson().toJson(headersIn, HEADER_MAP_TYPE);
     }
 
     public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {

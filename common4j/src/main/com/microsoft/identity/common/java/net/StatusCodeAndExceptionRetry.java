@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.net;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.throttling.ServerThrottleManager;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -85,8 +86,12 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
         do {
             try {
                 HttpResponse response = supplier.call();
-                //If there are no retries left, or the response is acceptable, or it is not retryable.
-                if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response, attemptNumber)) {
+                //If there are no retries left, or the response is acceptable, or it is not retryable,
+                //or Broker server-directed throttling suppresses retries on this response.
+                if (attemptNumber <= 0
+                        || isAcceptable.apply(response)
+                        || !isRetryable.apply(response, attemptNumber)
+                        || ServerThrottleManager.shouldSuppressRetry(response)) {
                     return response;
                 }
             } catch (final Exception e) {

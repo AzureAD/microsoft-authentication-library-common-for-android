@@ -38,6 +38,7 @@ public class TokenResult implements IResult {
     @Nullable
     private ClientDataInfo mClientDataInfo;
     private boolean mSuccess = false;
+    private transient boolean mLocallySuppressedThrottle = false;
 
     public TokenResult() {
         // Intentionally blank
@@ -150,6 +151,26 @@ public class TokenResult implements IResult {
      */
     public void setSuccess(boolean success) {
         mSuccess = success;
+    }
+
+    /**
+     * Returns whether this TokenResult was synthesized locally by Broker server-directed
+     * throttling without issuing an outbound network request.
+     *
+     * @return true if locally suppressed due to an active throttle window; false otherwise.
+     */
+    public boolean isLocallySuppressedThrottle() {
+        return mLocallySuppressedThrottle;
+    }
+
+    /**
+     * Sets whether this TokenResult was synthesized locally by Broker server-directed
+     * throttling without issuing an outbound network request.
+     *
+     * @param locallySuppressedThrottle true if locally suppressed; false otherwise.
+     */
+    public void setLocallySuppressedThrottle(final boolean locallySuppressedThrottle) {
+        mLocallySuppressedThrottle = locallySuppressedThrottle;
     }
 
 

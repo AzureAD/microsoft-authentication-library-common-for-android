@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTes
 import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.CONTENT_TYPE;
 import static com.microsoft.identity.common.java.util.HeaderSerializationUtilTest.HeaderNames.SERVER;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4.class)
 public class HeaderSerializationUtilTest {
@@ -106,6 +108,28 @@ public class HeaderSerializationUtilTest {
         assertEquals(
                 testHeaders.get(ACCESS_CONTROL_ALLOW_METHODS).size(),
                 reserializedMap.get(ACCESS_CONTROL_ALLOW_METHODS).size()
+        );
+    }
+
+    @Test
+    public void test_serialization_emptyAndUnmodifiableCollections_succeedsWithoutReflectionErrors() {
+        final String emptyJson = HeaderSerializationUtil.toJson(Collections.<String, List<String>>emptyMap());
+        assertEquals("{}", emptyJson);
+        assertTrue(HeaderSerializationUtil.fromJson(emptyJson).isEmpty());
+
+        final Map<String, List<String>> emptyListHeaders =
+                Collections.singletonMap("X-Empty", Collections.<String>emptyList());
+        final String emptyListJson = HeaderSerializationUtil.toJson(emptyListHeaders);
+        final Map<String, List<String>> roundTripEmptyList = HeaderSerializationUtil.fromJson(emptyListJson);
+        assertTrue(roundTripEmptyList.get("X-Empty").isEmpty());
+
+        final Map<String, List<String>> unmodifiableHeaders = Collections.unmodifiableMap(
+                Collections.singletonMap("Retry-After", Collections.singletonList("60"))
+        );
+        final String unmodifiableJson = HeaderSerializationUtil.toJson(unmodifiableHeaders);
+        assertEquals(
+                Collections.singletonList("60"),
+                HeaderSerializationUtil.fromJson(unmodifiableJson).get("Retry-After")
         );
     }
 }
