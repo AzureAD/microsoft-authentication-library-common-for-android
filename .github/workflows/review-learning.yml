@@ -1,0 +1,285 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+name: Review guidance learning
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - '.github/learning/**'
+      - '.github/workflows/review-learning.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Dry-run proposals or publish a human-reviewed draft'
+        required: true
+        default: dry-run
+        type: choice
+        options: [dry-run, propose]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-learning-${{ github.repository }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: >-
+      github.event.action != 'labeled' ||
+      github.event.label.name == 'learning-live-preview' ||
+      github.event.label.name == 'learning-publish-test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Test isolated learning tooling
+        run: ./gradlew -p .github/learning --no-daemon --console=plain test jacocoTestCoverageVerification
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: >-
+          vars.REVIEW_LEARNING_ENABLED == 'true' &&
+          vars.REVIEW_LEARNING_COPILOT_VERSION != '' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        with:
+          node-version: '22'
+      - name: Verify the pinned CLI protocol offline without Copilot credentials
+        if: >-
+          vars.REVIEW_LEARNING_ENABLED == 'true' &&
+          vars.REVIEW_LEARNING_COPILOT_VERSION != '' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          CLI_VERSION: ${{ vars.REVIEW_LEARNING_COPILOT_VERSION }}
+          CLI_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$CLI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo 'An owner-approved exact Copilot CLI version is required.' >&2
+            exit 1
+          fi
+          npm install --global --no-audit --no-fund "@github/copilot@$CLI_VERSION"
+          ./gradlew -p .github/learning --no-daemon --console=plain test \
+            --tests '*CopilotProtocolTest' \
+            "-PcopilotExecutable=$(command -v copilot)" "-PcopilotModel=$CLI_MODEL"
+
+  prepare:
+    needs: verify
+    if: >-
+      vars.REVIEW_LEARNING_ENABLED == 'true' &&
+      (
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev') ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.action == 'labeled' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.base.repo.full_name == github.repository &&
+          github.event.pull_request.base.ref == 'dev' &&
+          github.event.pull_request.state == 'open' &&
+          github.event.sender.type == 'User' &&
+          vars.REVIEW_LEARNING_POLICY != '' &&
+          contains(fromJSON(vars.REVIEW_LEARNING_POLICY).ownerIds, github.event.sender.id) &&
+          !contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, github.event.sender.id) &&
+          (
+            (
+              github.event.label.name == 'learning-live-preview' &&
+              vars.REVIEW_LEARNING_PREVIEW_SHA != '' &&
+              github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PREVIEW_SHA
+            ) ||
+            (
+              github.event.label.name == 'learning-publish-test' &&
+              vars.REVIEW_LEARNING_PUBLISH_TEST_SHA != '' &&
+              github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PUBLISH_TEST_SHA &&
+              vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true' &&
+              vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true' &&
+              vars.REVIEW_LEARNING_PUBLISH_APP_ID != '' &&
+              vars.REVIEW_LEARNING_PUBLISH_BOT_ID != '' &&
+              contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, fromJSON(vars.REVIEW_LEARNING_PUBLISH_BOT_ID))
+            )
+          )
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build isolated CLI
+        run: ./gradlew -p .github/learning --no-daemon --console=plain installDist
+      - name: Extract and qualify evidence before installing or invoking Copilot
+        id: inspect
+        env:
+          REVIEW_LEARNING_ENABLED: ${{ vars.REVIEW_LEARNING_ENABLED }}
+          REVIEW_LEARNING_POLICY: ${{ vars.REVIEW_LEARNING_POLICY }}
+          REVIEW_LEARNING_PREVIEW_SHA: ${{ vars.REVIEW_LEARNING_PREVIEW_SHA }}
+          REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
+          REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
+          REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          .github/learning/build/install/review-learning/bin/review-learning \
+            inspect "$RUNNER_TEMP/proposal.json"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.inspect.outputs.has_signal == 'true'
+        with:
+          node-version: '22'
+      - name: Install an explicitly pinned Copilot CLI
+        if: steps.inspect.outputs.has_signal == 'true'
+        env:
+          CLI_VERSION: ${{ vars.REVIEW_LEARNING_COPILOT_VERSION }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$CLI_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo 'An owner-approved exact Copilot CLI version is required.' >&2
+            exit 1
+          fi
+          npm install --global --no-audit --no-fund "@github/copilot@$CLI_VERSION"
+      - name: Verify installed CLI exposes no tools before supplying real evidence
+        if: steps.inspect.outputs.has_signal == 'true'
+        env:
+          CLI_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
+        run: |
+          set -euo pipefail
+          ./gradlew -p .github/learning --no-daemon --console=plain test \
+            --tests '*CopilotProtocolTest' \
+            "-PcopilotExecutable=$(command -v copilot)" "-PcopilotModel=$CLI_MODEL"
+      - name: Synthesize and validate bounded guidance proposals
+        if: steps.inspect.outputs.has_signal == 'true'
+        env:
+          REVIEW_LEARNING_ENABLED: ${{ vars.REVIEW_LEARNING_ENABLED }}
+          REVIEW_LEARNING_POLICY: ${{ vars.REVIEW_LEARNING_POLICY }}
+          REVIEW_LEARNING_PREVIEW_SHA: ${{ vars.REVIEW_LEARNING_PREVIEW_SHA }}
+          REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
+          REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
+          REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
+          REVIEW_LEARNING_MODEL: ${{ vars.REVIEW_LEARNING_MODEL }}
+          REVIEW_LEARNING_MAX_AI_CREDITS: ${{ vars.REVIEW_LEARNING_MAX_AI_CREDITS }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          .github/learning/build/install/review-learning/bin/review-learning \
+            prepare "$RUNNER_TEMP/proposal.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: review-learning-proposal
+          path: ${{ runner.temp }}/proposal.json
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: prepare
+    if: >-
+      vars.REVIEW_LEARNING_ENABLED == 'true' &&
+      vars.REVIEW_LEARNING_PUBLISH_APPROVED == 'true' &&
+      vars.REVIEW_LEARNING_PROTECTION_VERIFIED == 'true' &&
+      vars.REVIEW_LEARNING_PUBLISH_APP_ID != '' &&
+      vars.REVIEW_LEARNING_PUBLISH_BOT_ID != '' &&
+      vars.REVIEW_LEARNING_POLICY != '' &&
+      contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, fromJSON(vars.REVIEW_LEARNING_PUBLISH_BOT_ID)) &&
+      (
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.ref == 'refs/heads/dev' &&
+          inputs.mode == 'propose'
+        ) ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.action == 'labeled' &&
+          github.event.label.name == 'learning-publish-test' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.base.repo.full_name == github.repository &&
+          github.event.pull_request.base.ref == 'dev' &&
+          github.event.pull_request.state == 'open' &&
+          github.event.sender.type == 'User' &&
+          vars.REVIEW_LEARNING_PUBLISH_TEST_SHA != '' &&
+          github.event.pull_request.head.sha == vars.REVIEW_LEARNING_PUBLISH_TEST_SHA &&
+          contains(fromJSON(vars.REVIEW_LEARNING_POLICY).ownerIds, github.event.sender.id) &&
+          !contains(fromJSON(vars.REVIEW_LEARNING_POLICY).automationIds, github.event.sender.id)
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build publisher without publication credentials
+        run: ./gradlew -p .github/learning --no-daemon --console=plain installDist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: review-learning-proposal
+          path: ${{ runner.temp }}/review-learning-publication
+      - name: Mint a repository-scoped token for the approved publishing app
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          private-key: ${{ secrets.REVIEW_LEARNING_PUBLISH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Reverify live evidence and protected base, then publish only a draft
+        env:
+          REVIEW_LEARNING_ENABLED: ${{ vars.REVIEW_LEARNING_ENABLED }}
+          REVIEW_LEARNING_POLICY: ${{ vars.REVIEW_LEARNING_POLICY }}
+          REVIEW_LEARNING_PUBLISH_APPROVED: ${{ vars.REVIEW_LEARNING_PUBLISH_APPROVED }}
+          REVIEW_LEARNING_PROTECTION_VERIFIED: ${{ vars.REVIEW_LEARNING_PROTECTION_VERIFIED }}
+          REVIEW_LEARNING_PUBLISH_APP_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_APP_ID }}
+          REVIEW_LEARNING_PUBLISH_BOT_ID: ${{ vars.REVIEW_LEARNING_PUBLISH_BOT_ID }}
+          REVIEW_LEARNING_PUBLISH_TEST_SHA: ${{ vars.REVIEW_LEARNING_PUBLISH_TEST_SHA }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          .github/learning/build/install/review-learning/bin/review-learning \
+            publish "$RUNNER_TEMP/review-learning-publication/proposal.json"
