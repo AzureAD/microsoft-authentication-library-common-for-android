@@ -18,6 +18,10 @@ If a risky combination remains plausible but unverified, post at most one non-bl
 
 For example, an in-memory cache flight such as `ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE` may already be fully rolled out; an in-repository default does not prove that a non-memory-cache combination is reachable.
 
+The narrow [rollout process exception](rollout-guidance.md#decision-procedure) permits at most one visible, non-blocking `Rollout consideration:` per coherent material infrastructure behavior change, not a generic missing-flight finding. Suppress already adequate gates/documented plans and verified mechanical changes; locking syntax, file location, unchanged locks, or unknown production flight state alone are insufficient. If the diff concretely escapes an actual gate, name that path rather than invent cohort state. Do not repeat the same uncertainty as both a rollout note and a `Sanity check:`.
+
+Never recommend a per-request flag for incompatible shared state, lock order/identity, or protocols, or retaining a known broken/vulnerable old path. Once-per-operation reads are not cross-request coordination; stable process/owner selection is not proof of cross-process, persistent-state, or Broker-client version compatibility. Use only a feasible safe-version rollout or bounded deployment-plan clarification for established material risk, not an invented flag or rollback promise.
+
 ## Instrumentation-only tests
 
 Do not request a unit test whose sole purpose is setting span attributes, attaching values, invoking the bare `recordException(...)` attachment call, or populating an instrumentation field.
