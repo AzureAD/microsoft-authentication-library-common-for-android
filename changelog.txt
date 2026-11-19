@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Skip superseded FIDO/passkey challenge pages on interactive WebView back navigation, gated by the SkipPasskeyChallengeOnWebViewBack CommonFlight (default off), Fixes AB#3599772
+- [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 
 Version 25.1.0
 ----------
