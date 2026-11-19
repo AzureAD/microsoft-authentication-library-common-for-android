@@ -14,16 +14,17 @@ internal class FlightPolicyTest {
         "ExampleFeature", "false", null)
 
     @Test
-    fun newDeclarations_requireMetadataAndReleaseDocumentsRegardlessOfDefault() {
+    fun newDeclarations_requireMetadataAndDocumentsForEveryTypeAndDefault() {
         for (default in listOf("true", "false")) {
             val added = flight.copy(defaultExpression = default)
             assertEquals(listOf("MISSING_METADATA"), rules(check(after = listOf(added))))
-            assertEquals(listOf("MISSING_PREMORTEM"),
-                rules(check(after = listOf(added.copy(metadata = release)), documents = emptySet())))
-            assertTrue(check(after = listOf(added.copy(metadata = release))).findings.isEmpty())
+            for (type in listOf("RELEASE", "KILL_SWITCH", "CONFIG")) {
+                val annotated = added.copy(metadata = release.copy(type = type))
+                assertEquals(listOf("MISSING_DOCUMENT"),
+                    rules(check(after = listOf(annotated), documents = emptySet())))
+                assertTrue(check(after = listOf(annotated)).findings.isEmpty())
+            }
         }
-        assertTrue(check(after = listOf(flight.copy(metadata = PolicyMetadata("team", "CONFIG"))))
-            .findings.isEmpty())
     }
 
     @Test
@@ -36,10 +37,11 @@ internal class FlightPolicyTest {
     }
 
     @Test
-    fun ownerFallback_isExplicitAndDoesNotMaskUnresolvedMetadata() {
-        val noOwner = flight.copy(metadata = release.copy(owner = ""))
-        assertEquals(listOf("MISSING_OWNER"), rules(check(after = listOf(noOwner))))
-        assertTrue(check(after = listOf(noOwner), candidates = setOf(flight.id)).findings.isEmpty())
+    fun explicitOwner_isRequiredForEveryTypeAndDoesNotMaskUnresolvedMetadata() {
+        for (type in listOf("RELEASE", "KILL_SWITCH", "CONFIG")) {
+            val noOwner = flight.copy(metadata = release.copy(owner = "", type = type))
+            assertEquals(listOf("MISSING_OWNER"), rules(check(after = listOf(noOwner))))
+        }
         assertEquals(listOf("UNRESOLVED_METADATA"), rules(check(after = listOf(
             flight.copy(metadata = release.copy(invalidArguments = setOf("owner")))
         ))))
@@ -47,35 +49,37 @@ internal class FlightPolicyTest {
 
     @Test
     fun approvedInitialMigration_preservesHistoricalGapOnlyForExactMetadataOnlyChange() {
-        val migrated = flight.copy(metadata = release.copy(premortem = ""))
-        val approval = MigrationApproval(flight.id, requireNotNull(migrated.metadata), "reviewer", "review-123")
-        val input = PolicyInputs(listOf(flight), listOf(migrated), emptySet(), emptySet(),
-            legacy = listOf(flight), approvals = listOf(approval), metadataOnly = true)
-        val approved = FlightPolicy.evaluate(input)
-        assertTrue(approved.findings.isEmpty())
-        assertEquals(listOf(flight.id), approved.legacyDocumentGaps)
-        val denied = listOf(
-            input.copy(approvals = emptyList()),
-            input.copy(metadataOnly = false),
-            input.copy(legacy = emptyList()),
-            input.copy(after = listOf(migrated.copy(key = "Renamed"))),
-            input.copy(after = listOf(migrated.copy(defaultExpression = "true"))),
-            input.copy(after = listOf(migrated.copy(metadata = migrated.metadata?.copy(owner = "different-team")))),
-            input.copy(before = listOf(flight.copy(metadata = PolicyMetadata("team", "CONFIG"))))
-        )
-        for (candidate in denied) {
-            val result = FlightPolicy.evaluate(candidate)
-            assertTrue(result.findings.any { it.rule == "MISSING_PREMORTEM" })
-            assertTrue(result.legacyDocumentGaps.isEmpty())
+        for (type in listOf("RELEASE", "KILL_SWITCH", "CONFIG")) {
+            val migrated = flight.copy(metadata = release.copy(type = type, premortem = ""))
+            val approval = MigrationApproval(flight.id, requireNotNull(migrated.metadata), "reviewer", "review-123")
+            val input = PolicyInputs(listOf(flight), listOf(migrated), emptySet(), emptySet(),
+                legacy = listOf(flight), approvals = listOf(approval), metadataOnly = true)
+            val approved = FlightPolicy.evaluate(input)
+            assertTrue(approved.findings.isEmpty())
+            assertEquals(listOf(flight.id), approved.legacyDocumentGaps)
+            val denied = listOf(
+                input.copy(approvals = emptyList()),
+                input.copy(metadataOnly = false),
+                input.copy(legacy = emptyList()),
+                input.copy(after = listOf(migrated.copy(key = "Renamed"))),
+                input.copy(after = listOf(migrated.copy(defaultExpression = "true"))),
+                input.copy(after = listOf(migrated.copy(metadata = migrated.metadata?.copy(owner = "different-team")))),
+                input.copy(before = listOf(flight.copy(metadata = PolicyMetadata("team", "CONFIG"))))
+            )
+            for (candidate in denied) {
+                val result = FlightPolicy.evaluate(candidate)
+                assertTrue(result.findings.any { it.rule == "MISSING_DOCUMENT" })
+                assertTrue(result.legacyDocumentGaps.isEmpty())
+            }
         }
     }
 
     @Test
-    fun reclassification_doesNotEvadeReleaseDocumentation() {
+    fun reclassification_doesNotEvadeDocumentation() {
         val result = check(before = listOf(flight.copy(metadata = release)),
             after = listOf(flight.copy(metadata = PolicyMetadata("team", "CONFIG"))),
             documents = emptySet())
-        assertEquals(listOf("MISSING_PREMORTEM"), rules(result))
+        assertEquals(listOf("MISSING_DOCUMENT"), rules(result))
     }
 
     @Test
@@ -84,7 +88,7 @@ internal class FlightPolicyTest {
         val deleted = FlightPolicy.evaluate(PolicyInputs(
             listOf(annotated), listOf(annotated), setOf(document), emptySet()
         ))
-        assertEquals(listOf("BROKEN_PREMORTEM"), rules(deleted))
+        assertEquals(listOf("BROKEN_DOCUMENT"), rules(deleted))
         assertTrue(deleted.checked.isEmpty())
         val renamed = "docs/premortem/renamed.md"
         assertTrue(check(before = listOf(annotated),
@@ -95,7 +99,7 @@ internal class FlightPolicyTest {
     @Test
     fun documentMustBeAnExistingRepositoryRelativeMarkdownFile() {
         for (path in listOf("../outside.md", "/outside.md", "C:/outside.md", "docs\\file.md", document)) {
-            assertEquals(listOf("MISSING_PREMORTEM"), rules(check(
+            assertEquals(listOf("MISSING_DOCUMENT"), rules(check(
                 after = listOf(flight.copy(metadata = release.copy(premortem = path))),
                 documents = emptySet()
             )))
@@ -107,9 +111,8 @@ internal class FlightPolicyTest {
     private fun check(
         before: List<PolicyDeclaration> = emptyList(),
         after: List<PolicyDeclaration>,
-        documents: Set<String> = setOf(document),
-        candidates: Set<String> = emptySet()
-    ) = FlightPolicy.evaluate(PolicyInputs(before, after, emptySet(), documents, candidates))
+        documents: Set<String> = setOf(document)
+    ) = FlightPolicy.evaluate(PolicyInputs(before, after, emptySet(), documents))
 
     private fun rules(result: PolicyResult) = result.findings.map { it.rule }
 }

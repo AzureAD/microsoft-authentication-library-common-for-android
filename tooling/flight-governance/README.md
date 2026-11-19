@@ -81,10 +81,12 @@ identify the source, target, merge base, evaluated declarations, findings and ap
 legacy gaps. Policy findings return zero during this pilot; failed or incomplete
 execution returns nonzero and, when the destination is valid, an incomplete report.
 
-New/changed keys, defaults or metadata need owner/type information. Git blame may
-provide an ownership candidate, not confirmation of current ownership. Release
-changes require an existing same-repository Markdown premortem regardless of default.
-Moving from Release to another type does not evade this requirement. Untouched
+New/changed keys, defaults or metadata need an explicit current person/team owner
+and lifecycle type. Git authorship never substitutes for ownership; reviewers confirm
+that the recorded owner is current. Every type (Release, Kill Switch and Config)
+requires an existing same-repository Markdown governance document regardless of default.
+The path uses `FlightMeta.premortem`, whose name is retained for compatibility.
+Changing type does not evade the document requirement. Untouched
 legacy declarations and formatting/comments alone are grandfathered. Removing or
 renaming a linked document is reported even without an enum edit.
 
@@ -129,3 +131,7 @@ The shared ADO step fetches the PR source/target and publishes advisory findings
 incomplete scans fail explicitly. This is checkpoint A only: it changes neither
 branch policies nor the eventual blocking policy mode. Reviewers must still identify
 material behavior changes elsewhere that declaration comparisons cannot infer.
+
+This repository-governance check is separate from the planned monthly, user-invoked
+audit skill for old flights and configuration discrepancies. That later skill is not
+a prerequisite for metadata backfill or PR enforcement and is not a release gate.

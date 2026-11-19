@@ -38,7 +38,7 @@ steps:
     if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect repository history.' }
     if ($shallow -eq 'true') {
         git -C $env:GOV_REPOSITORY fetch --no-tags --unshallow origin
-        if ($LASTEXITCODE -ne 0) { throw 'Cannot obtain full merge-base and ownership history.' }
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot obtain full merge-base and trusted-baseline history.' }
     }
     git -C $env:GOV_REPOSITORY fetch --no-tags origin "+refs/heads/${target}:refs/remotes/origin/$target"
     if ($LASTEXITCODE -ne 0) { throw 'Cannot fetch the PR target.' }

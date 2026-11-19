@@ -34,7 +34,6 @@ internal data class PolicyInputs(
     val after: List<PolicyDeclaration>,
     val beforeFiles: Set<String>,
     val afterFiles: Set<String>,
-    val gitOwnerCandidates: Set<String> = emptySet(),
     val legacy: List<PolicyDeclaration> = emptyList(),
     val approvals: List<MigrationApproval> = emptyList(),
     val metadataOnly: Boolean = false
@@ -73,8 +72,8 @@ internal object FlightPolicy {
                 it == metadata?.premortem && it in input.beforeFiles && it !in input.afterFiles
             } == true
             if (brokenLink) {
-                finding("BROKEN_PREMORTEM", "Previously linked premortem was removed or renamed.",
-                    "Restore the document or update the flight's premortem link.")
+                finding("BROKEN_DOCUMENT", "Previously linked governance document was removed or renamed.",
+                    "Restore the document or update the flight's document link.")
             }
             if (old != null && old.sameBehavior(flight) && old.metadata == metadata) {
                 continue
@@ -82,7 +81,7 @@ internal object FlightPolicy {
             checked.add(flight.id)
             if (metadata == null) {
                 finding("MISSING_METADATA", "Added or modified flight has no governance metadata.",
-                    "Add owner/type metadata and a premortem for a Release flight.")
+                    "Add an explicit owner, lifecycle type and linked governance document.")
                 continue
             }
             if (metadata.invalidArguments.isNotEmpty()) {
@@ -93,11 +92,10 @@ internal object FlightPolicy {
                 finding("MISSING_TYPE", "A supported lifecycle type is required.",
                     "Classify the flight as RELEASE, KILL_SWITCH or CONFIG.")
             }
-            if (metadata.owner.isBlank() && flight.id !in input.gitOwnerCandidates) {
-                finding("MISSING_OWNER", "Neither an explicit owner nor a Git ownership candidate could be resolved.",
-                    "Record an accountable owner/team; Git authorship is not current-owner confirmation.")
+            if (metadata.owner.isBlank()) {
+                finding("MISSING_OWNER", "An explicit accountable owner is required.",
+                    "Record a current person/team; Git authorship does not satisfy ownership.")
             }
-            val requiresDocument = metadata.type == "RELEASE" || old?.metadata?.type == "RELEASE"
             val approvedMigration = old != null && old.metadata == null && old.sameBehavior(flight) &&
                 legacy[flight.id]?.sameBehavior(flight) == true && input.metadataOnly &&
                 metadata.owner.isNotBlank() && metadata.invalidArguments.isEmpty() &&
@@ -105,15 +103,15 @@ internal object FlightPolicy {
                     it.id == flight.id && it.metadata == metadata &&
                         it.reviewedBy.isNotBlank() && it.review.isNotBlank()
                 }
-            if (requiresDocument && !brokenLink) {
+            if (!brokenLink) {
                 if (metadata.premortem.isBlank() && approvedMigration) {
                     gaps.add(flight.id)
                 } else if (!repositoryPath(metadata.premortem) ||
                     !metadata.premortem.endsWith(".md", ignoreCase = true) ||
                     metadata.premortem !in input.afterFiles
                 ) {
-                    finding("MISSING_PREMORTEM", "Release flight requires an existing same-repository Markdown premortem.",
-                        "Add and reference a current premortem, or obtain a separate trusted legacy migration approval.")
+                    finding("MISSING_DOCUMENT", "Every flight type requires an existing same-repository Markdown document.",
+                        "Set the premortem field to a governance document, or obtain a separate trusted legacy migration approval.")
                 }
             }
         }

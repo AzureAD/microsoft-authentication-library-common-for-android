@@ -166,7 +166,7 @@ internal fun comparePr(
     ) { "Supply unique repository-relative Java source paths using / separators" }
     require(repositoryPath(policyPath)) { "Invalid migration-policy path" }
     require(git(root, "rev-parse", "--is-shallow-repository").trim() == "false") {
-        "Full Git history is required for merge-base and ownership checks; fetch the missing history"
+        "Full Git history is required for merge-base and trusted-baseline checks; fetch the missing history"
     }
     fun commit(revision: String): String =
         git(root, "rev-parse", "--verify", "--end-of-options", "$revision^{commit}").trim().also {
@@ -221,17 +221,8 @@ internal fun comparePr(
     }
     val oldDeclarations = before.values.flatMap { it.declarations }
     val newDeclarations = after.values.flatMap { it.declarations }
-    val oldById = oldDeclarations.associateBy { it.id }
-    val ownerCandidates = newDeclarations.filter {
-        it.metadata != null && it.metadata.owner.isBlank() &&
-            (oldById[it.id]?.sameBehavior(it) != true || oldById[it.id]?.metadata != it.metadata)
-    }.filter {
-        val blame = git(root, "blame", "--line-porcelain", "-L", "${it.line},${it.line}", head, "--", it.path)
-        blame.lineSequence().any { line -> line.startsWith("author ") && line.removePrefix("author ").isNotBlank() }
-    }.map { it.id }.toSet()
     return PrComparison(target, head, mergeBase, policyPresent, baseline, FlightPolicy.evaluate(
-        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, afterFiles, ownerCandidates,
-            legacy, approvals, metadataOnly)
+        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, afterFiles, legacy, approvals, metadataOnly)
     ))
 }
 

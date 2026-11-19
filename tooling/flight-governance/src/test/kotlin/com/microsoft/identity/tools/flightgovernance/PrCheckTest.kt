@@ -58,7 +58,7 @@ internal class PrCheckTest {
         writeSource(root, metadata() + "\nFEATURE(\"Example\", false);")
         val head = commit(root)
         val result = comparePr(root, "app", target, head, listOf(sourcePath), policyPath)
-        assertTrue(result.result.findings.any { it.rule == "MISSING_PREMORTEM" })
+        assertTrue(result.result.findings.any { it.rule == "MISSING_DOCUMENT" })
         assertTrue(result.result.legacyDocumentGaps.isEmpty())
         assertEquals(target, result.target)
         assertEquals(baseline, result.baseline)
@@ -79,7 +79,7 @@ internal class PrCheckTest {
         Files.writeString(root.resolve("Runtime.kt"), "internal fun changedBehavior() = true\n")
         val mixed = commit(root)
         assertTrue(comparePr(root, "app", target, mixed, listOf(sourcePath), policyPath)
-            .result.findings.any { it.rule == "MISSING_PREMORTEM" })
+            .result.findings.any { it.rule == "MISSING_DOCUMENT" })
     }
 
     @Test
@@ -93,12 +93,12 @@ internal class PrCheckTest {
         writeSource(root, "OTHER(\"Other\", false), ${metadata()}\nFEATURE(\"Example\", false);")
         val head = commit(root)
         val result = comparePr(root, "app", target, head, listOf(sourcePath), policyPath).result
-        assertTrue(result.findings.any { it.rule == "MISSING_PREMORTEM" })
+        assertTrue(result.findings.any { it.rule == "MISSING_DOCUMENT" })
         assertTrue(result.legacyDocumentGaps.isEmpty())
     }
 
     @Test
-    fun documentDeletionAndGitOwnerFallback_areEvaluatedFromCommits() {
+    fun documentDeletionAndExplicitOwnership_areEvaluatedFromCommits() {
         val root = repository()
         writeSource(root, metadata(owner = "", document = "docs/example.md") + "\nFEATURE(\"Example\", false);")
         Files.createDirectories(root.resolve("docs"))
@@ -106,12 +106,16 @@ internal class PrCheckTest {
         val target = commit(root)
         Files.delete(root.resolve("docs/example.md"))
         val head = commit(root)
-        assertEquals(listOf("BROKEN_PREMORTEM"),
+        assertEquals(listOf("BROKEN_DOCUMENT"),
             comparePr(root, "app", target, head, listOf(sourcePath), policyPath).result.findings.map { it.rule })
         Files.writeString(root.resolve("docs/example.md"), "Restored.\n")
         writeSource(root, metadata(owner = "", document = "docs/example.md") + "\nFEATURE(\"Example\", true);")
         val changed = commit(root)
-        assertTrue(comparePr(root, "app", target, changed, listOf(sourcePath), policyPath).result.findings.isEmpty())
+        assertEquals(listOf("MISSING_OWNER"),
+            comparePr(root, "app", target, changed, listOf(sourcePath), policyPath).result.findings.map { it.rule })
+        writeSource(root, metadata(owner = "team", document = "docs/example.md") + "\nFEATURE(\"Example\", true);")
+        val owned = commit(root)
+        assertTrue(comparePr(root, "app", target, owned, listOf(sourcePath), policyPath).result.findings.isEmpty())
     }
 
     @Test
