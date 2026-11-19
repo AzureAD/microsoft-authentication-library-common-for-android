@@ -365,7 +365,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     public String toString() {
         return "MicrosoftTokenResponse{" +
                 "mExtExpiresOn=" + mExtExpiresOn +
-                ", mClientInfo='" + mClientInfo + '\'' +
+                ", mClientInfo='" + (mClientInfo != null ? "[REDACTED]" : "null") + '\'' +
                 ", mClientId='" + mClientId + '\'' +
                 ", mExtendedExpiresIn=" + mExtendedExpiresIn +
                 ", mFamilyId='" + mFamilyId + '\'' +
@@ -373,4 +373,16 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
     //CHECKSTYLE:ON
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Clears sensitive fields introduced in MicrosoftTokenResponse in addition to
+     * those handled by the parent class.
+     */
+    @Override
+    public void clearSensitiveData() {
+        super.clearSensitiveData();
+        mSessionKeyJwe = null;
+        mClientInfo = null;
+    }
 }
