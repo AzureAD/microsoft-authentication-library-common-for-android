@@ -43,6 +43,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebBackForwardList;
+import android.webkit.WebHistoryItem;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -248,6 +250,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Callback for tracking URL load events.
      */
     private final IUrlLoadTracker mUrlLoadTracker;
+
+    @Nullable
+    private Map<Integer, String> mSupersededPasskeyHistoryUrls;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -638,7 +643,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // poison the PKeyAuth same-origin check (AB#3706623), so we never record from here and pass
         // isForMainFrame=false; on these API levels the origin is captured by onPageStarted instead,
         // which is main-frame-only by the Android contract.
-        return handleUrl(view, url, false);
+        return handleUrl(view, url, false, null);
     }
 
     /**
@@ -654,7 +659,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        return handleUrl(view, requestUrl.toString(), request.isForMainFrame());
+        return handleUrl(view, requestUrl.toString(), request.isForMainFrame(), request);
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
@@ -663,6 +668,84 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     public void setRequestUrl(final String requestUrl) {
         mRequestUrl = requestUrl;
+    }
+
+    /**
+     * Navigates backward in {@code webView}, skipping history entries that already triggered a
+     * passkey challenge. Callers must gate invocations on
+     * {@link CommonFlight#SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK}.
+     */
+    public boolean navigateBackSkippingSupersededPasskeyPages(@Nullable final WebView webView) {
+        if (webView == null) {
+            return false;
+        }
+        final WebBackForwardList history =
+                mSupersededPasskeyHistoryUrls != null && !mSupersededPasskeyHistoryUrls.isEmpty()
+                        ? webView.copyBackForwardList()
+                        : null;
+        if (history == null) {
+            return goBackInWebView(webView);
+        }
+
+        final int currentIndex = history.getCurrentIndex();
+        int targetIndex = currentIndex - 1;
+        while (targetIndex >= 0 && targetIndex < history.getSize()) {
+            final WebHistoryItem item = history.getItemAtIndex(targetIndex);
+            final String recordedUrl = mSupersededPasskeyHistoryUrls.remove(targetIndex);
+            if (recordedUrl == null || item == null || !recordedUrl.equals(item.getUrl())) {
+                break;
+            }
+            targetIndex--;
+        }
+
+        final int steps = targetIndex - currentIndex;
+        if (steps == -1) {
+            return goBackInWebView(webView);
+        }
+        if (targetIndex < 0) {
+            Logger.info(TAG + ":navigateBackSkippingSupersededPasskeyPages",
+                    "Skipping superseded passkey challenge page(s); cancelling authorization.");
+            return false;
+        }
+        if (webView.canGoBackOrForward(steps)) {
+            Logger.info(TAG + ":navigateBackSkippingSupersededPasskeyPages",
+                    "Skipping superseded passkey challenge page(s); navigating " + steps + " steps.");
+            webView.goBackOrForward(steps);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean goBackInWebView(@NonNull final WebView webView) {
+        if (webView.canGoBack()) {
+            webView.goBack();
+            return true;
+        }
+        return false;
+    }
+
+    private void recordSupersededPasskeyHistoryEntry(@NonNull final WebView view,
+                                                     final boolean isForMainFrame,
+                                                     @Nullable final WebResourceRequest request) {
+        if (!isForMainFrame || (request != null && request.isRedirect())) {
+            return;
+        }
+        final WebBackForwardList history = view.copyBackForwardList();
+        if (history == null) {
+            return;
+        }
+        final int currentIndex = history.getCurrentIndex();
+        final WebHistoryItem currentItem =
+                currentIndex >= 0 && currentIndex < history.getSize()
+                        ? history.getItemAtIndex(currentIndex)
+                        : null;
+        if (currentItem == null || currentItem.getUrl() == null) {
+            return;
+        }
+        if (mSupersededPasskeyHistoryUrls == null) {
+            mSupersededPasskeyHistoryUrls = new HashMap<>();
+        }
+        mSupersededPasskeyHistoryUrls.put(currentIndex, currentItem.getUrl());
     }
 
     /**
@@ -680,7 +763,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The string representation of the url.
      * @return false if we will not take action on the url.
      */
-    private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
+    private boolean handleUrl(final WebView view,
+                              final String url,
+                              final boolean isForMainFrame,
+                              @Nullable final WebResourceRequest request) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
@@ -717,6 +803,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         ViewTreeLifecycleOwner.get(view),
                         getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK)) {
+                    recordSupersededPasskeyHistoryEntry(view, isForMainFrame, request);
+                }
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
                     && isNonceRedirectSchemeAllowed(formattedURL)) {

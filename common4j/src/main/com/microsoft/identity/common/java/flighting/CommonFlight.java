@@ -398,7 +398,12 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Default is false.
      */
-    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false),
+
+    /**
+     * Skips superseded FIDO/passkey challenge pages during interactive WebView back navigation (AB#3599772).
+     */
+    SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK("SkipPasskeyChallengeOnWebViewBack", false);
 
     private String key;
     private Object defaultValue;

@@ -416,6 +416,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":handleBackButtonPressed";
         Logger.info(methodTag, "Back button is pressed");
 
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.SKIP_PASSKEY_CHALLENGE_ON_WEBVIEW_BACK)
+                && mAADWebViewClient != null) {
+            if (!mAADWebViewClient.navigateBackSkippingSupersededPasskeyPages(mWebView)) {
+                cancelAuthorization(true);
+            }
+            return;
+        }
+
         if (mWebView.canGoBack()) {
             mWebView.goBack();
         } else {
