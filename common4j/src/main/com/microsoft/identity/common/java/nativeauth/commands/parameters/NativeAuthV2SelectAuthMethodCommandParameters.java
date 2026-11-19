@@ -30,7 +30,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Parameters for selecting a V2 first-factor method.
+ * Parameters for selecting a V2 authentication method.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)

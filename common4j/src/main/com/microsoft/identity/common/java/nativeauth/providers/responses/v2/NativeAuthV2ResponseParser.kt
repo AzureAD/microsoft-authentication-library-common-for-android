@@ -271,15 +271,10 @@ class NativeAuthV2ResponseParser {
                 NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
                     response.correlationId, successor.forExistingAccountSignIn(), methods
                 )
-            response.isSingleFactorChallenge -> NativeAuthV2InteractionApiResult.ChallengeRequired(
+            response.isSingleFactorChallenge || response.isMultiFactorChallenge -> NativeAuthV2InteractionApiResult.ChallengeRequired(
                 correlationId = response.correlationId,
                 continuationState = successor,
                 hint = response.challengeTargetLabel,
-                methods = methods
-            )
-            response.isMultiFactorChallenge -> NativeAuthV2InteractionApiResult.MFARequired(
-                correlationId = response.correlationId,
-                continuationState = successor,
                 methods = methods
             )
             else -> invalidAuthenticationFactorError(response.correlationId)

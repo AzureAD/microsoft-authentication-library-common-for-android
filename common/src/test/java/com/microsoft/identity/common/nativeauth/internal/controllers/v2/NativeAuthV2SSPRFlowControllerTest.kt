@@ -87,6 +87,7 @@ class NativeAuthV2SSPRFlowControllerTest {
 
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
+        every { state.matchesAuthenticationMethod(any(), any()) } returns true
         every { state.correlationId } returns id
         every { state.flowScenario() } returns
             com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario.RESET_PASSWORD

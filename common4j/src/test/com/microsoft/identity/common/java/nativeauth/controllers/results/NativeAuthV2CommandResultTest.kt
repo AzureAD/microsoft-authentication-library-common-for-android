@@ -34,6 +34,25 @@ class NativeAuthV2CommandResultTest {
     private val state = mockk<NativeAuthV2ContinuationState>()
 
     @Test
+    fun authMethodSelectionIsSupportedByFirstFactorAndMfaProducingCommands() {
+        val result = NativeAuthV2CommandResult.AuthMethodSelectionRequired(CORRELATION_ID, state, emptyList())
+        for (operation in listOf(
+            NativeAuthV2ResetPasswordStartCommandResult::class.java,
+            NativeAuthV2SignInStartCommandResult::class.java,
+            NativeAuthV2SignInSubmitCodeCommandResult::class.java,
+            NativeAuthV2SubmitPasswordCommandResult::class.java,
+            NativeAuthV2SubmitNewPasswordCommandResult::class.java,
+            NativeAuthV2StrongAuthCommandResult::class.java,
+            NativeAuthV2ExistingAccountCommandResult::class.java
+        )) {
+            assertTrue(operation.name, operation.isInstance(result))
+        }
+        assertTrue(NativeAuthV2SelectAuthMethodCommandResult::class.java.isInstance(
+            NativeAuthV2CommandResult.MFAVerificationRequired(CORRELATION_ID, state, 6, TARGET, "sms")
+        ))
+    }
+
+    @Test
     fun incorrectPassword_preservesDiagnosticsWithoutExposingThemInSanitizedString() {
         val details = listOf(mapOf("attributeIds" to listOf("password"), "code" to "policy"))
         val result = NativeAuthV2CommandResult.IncorrectPassword(
