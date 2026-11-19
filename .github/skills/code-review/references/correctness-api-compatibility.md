@@ -12,6 +12,7 @@ Review changed code for:
 - Cache lookups that skip authority/tenant normalization.
 - `equals` without matching `hashCode`, or array equality that does not compare contents.
 - Serialization/deserialization that silently accepts missing or malformed required fields.
+- URL checks that treat `android.net.Uri.port == -1` as proof that no explicit port exists. When changed validation restricts ports, verify the authority parsing rejects malformed or overflowing explicit ports rather than accepting them as absent/default ports.
 - Resource ownership or lifecycle behavior that changed without corresponding cleanup.
 
 Use clear preconditions (`require`, `check`, early returns, or guard clauses). Prefer sealed result or domain error types over magic strings, and map external exceptions to domain-specific forms.
