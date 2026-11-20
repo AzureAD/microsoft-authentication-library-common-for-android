@@ -141,7 +141,7 @@ class NativeAuthOAuth2StrategyV2Test {
     }
 
     @Test
-    fun configuration_buildsV2EndpointsFromAuthorityAndDc() {
+    fun configuration_preservesConfiguredDcForInitialV2EntryAndTokenRouting() {
         BuildValues.setDC("westus")
         val config = NativeAuthOAuth2Configuration(
             authorityUrl = URL("https://login.contoso.com/tenant"),
@@ -158,6 +158,10 @@ class NativeAuthOAuth2StrategyV2Test {
         assertEquals(
             URL("https://login.contoso.com/tenant/oauth2/v2.0/token?dc=westus"),
             config.getSignInTokenEndpoint()
+        )
+        assertEquals(
+            URL("https://login.contoso.com/tenant/oauth2/v2.0/token?dc=westus"),
+            config.getNativeAuthV2TokenEndpoint(CORRELATION_ID)
         )
     }
 

@@ -49,6 +49,27 @@ import java.net.URL
 class NativeAuthV2SignInRequestProviderTest {
 
     @Test
+    fun createSignInStartRequest_usesReturnedTenantPathWithCustomOrCiamAuthority() {
+        val tenantId = "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d"
+        val tenantDomain = "nativeauthsample.onmicrosoft.com"
+        listOf("https://custom.example.com", "https://nativeauthsample.ciamlogin.com")
+            .forEach { origin ->
+                listOf(tenantId, tenantDomain).forEach { configuredTenant ->
+                    listOf(tenantId, tenantDomain).forEach { returnedTenant ->
+                        listOf("", "?dc=ESTS-PUB-SEASLR1-FD000-TEST1-100").forEach { query ->
+                            val href = "/$returnedTenant/api/v2.0/signin/start$query"
+                            val request = provider("$origin/$configuredTenant").createSignInStartRequest(
+                                username = "user@contoso.com",
+                                state = entryState(signInHref = href)
+                            )
+                            assertEquals("$origin$href", request.requestUrl.toString())
+                        }
+                    }
+                }
+            }
+    }
+
+    @Test
     fun createSignInStartRequest_postsUsernameAndContinuationTokenToServerHref() {
         val request = provider().createSignInStartRequest(
             username = "user@contoso.com",
