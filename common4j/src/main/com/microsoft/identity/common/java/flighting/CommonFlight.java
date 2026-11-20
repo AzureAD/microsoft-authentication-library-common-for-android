@@ -42,7 +42,7 @@ public enum CommonFlight implements IFlightConfig {
      * Disabled by default; the Broker Browser SSO entry point also requires its global SSO flight.
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.RELEASE)
     ENABLE_ISLAND_BROWSER_SSO("EnableIslandBrowserSso", false),
 
@@ -51,7 +51,7 @@ public enum CommonFlight implements IFlightConfig {
      * Disabled by default; the Broker Browser SSO entry point also requires its global SSO flight.
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.RELEASE)
     ENABLE_SAMSUNG_BROWSER_SSO("EnableSamsungBrowserSso", false),
 
@@ -84,7 +84,7 @@ public enum CommonFlight implements IFlightConfig {
      * The default value is set to ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS.
      */
     @FlightMeta(
-            owner = "Melissa Ahn",
+            owner = "melissaahn",
             type = FlagType.CONFIG)
     ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS),
 
@@ -92,7 +92,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable passkey registration feature.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", true),
 
@@ -100,7 +100,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the timeout duration for UrlConnection connect timeout.
      */
     @FlightMeta(
-            owner = "Melissa Ahn",
+            owner = "melissaahn",
             type = FlagType.CONFIG)
     URL_CONNECTION_CONNECT_TIME_OUT("UrlConnectionConnectTimeOut", DEFAULT_CONNECT_TIME_OUT_MS),
 
@@ -108,7 +108,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the timeout duration for UrlConnection read timeout.
      */
     @FlightMeta(
-            owner = "Dome Pongmongkol",
+            owner = "rapong",
             type = FlagType.CONFIG)
     URL_CONNECTION_READ_TIME_OUT("UrlConnectionReadTimeOut", DEFAULT_READ_TIME_OUT_MS),
 
@@ -116,7 +116,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to disable the network connectivity check.
      */
     @FlightMeta(
-            owner = "Dome Pongmongkol",
+            owner = "rapong",
             type = FlagType.KILL_SWITCH)
     DISABLE_NETWORK_CONNECTIVITY_CHECK("DisableNetworkConnectivityCheck", true),
 
@@ -124,7 +124,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to stop returning AAD RT back to calling apps.
      */
     @FlightMeta(
-            owner = "Melissa Ahn",
+            owner = "melissaahn",
             type = FlagType.RELEASE)
     STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
 
@@ -132,7 +132,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),
 
@@ -140,7 +140,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the re-attachment of new PRT header logic. Default is true.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED("EnableAttachNewPrtHeaderWhenNonceExpired", true),
 
@@ -149,7 +149,7 @@ public enum CommonFlight implements IFlightConfig {
      * This is applicable for API >= 28
      */
     @FlightMeta(
-            owner = "Mohit Chandwani",
+            owner = "mchand",
             type = FlagType.RELEASE)
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithPurposeWrapKey", true),
 
@@ -157,7 +157,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the attachment of PRT header in cross cloud requests. Default is true.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
@@ -165,7 +165,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to make the state parameter required for the switch browser protocol. Overridden in Broker (default: false).
      */
     @FlightMeta(
-            owner = "Mohit Chandwani",
+            owner = "mchand",
             type = FlagType.KILL_SWITCH)
     SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", true),
 
@@ -173,7 +173,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
      */
     @FlightMeta(
-            owner = "Fadi Durah",
+            owner = "fadidurah",
             type = FlagType.RELEASE)
     ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS("EnableAmApiWorkProfileExtraQueryParameters", true),
 
@@ -181,7 +181,7 @@ public enum CommonFlight implements IFlightConfig {
      * This is applicable for API >= 23
      */
     @FlightMeta(
-            owner = "Fadi Durah",
+            owner = "fadidurah",
             type = FlagType.RELEASE)
     ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY("EnableNewKeyGenSpecForWrapWithoutPurposeWrapKey", true),
 
@@ -189,7 +189,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable exposing the JavaScript API for AuthUx requests
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.KILL_SWITCH)
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
@@ -199,7 +199,7 @@ public enum CommonFlight implements IFlightConfig {
      * the independent bridge master gate.
      */
     @FlightMeta(
-            owner = "Praveen Kumar Saminathan",
+            owner = "prsaminathan",
             type = FlagType.RELEASE)
     ENABLE_AUTHUX_WEB_MESSAGE_LISTENER_TRANSPORT("EnableAuthUxWebMessageListenerTransport", false),
 
@@ -207,7 +207,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
@@ -215,7 +215,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", true),
 
@@ -223,7 +223,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the WrappedSecretKey serializer version
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.CONFIG)
     WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 1),
 
@@ -231,7 +231,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the Web CP in WebView.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
@@ -241,7 +241,7 @@ public enum CommonFlight implements IFlightConfig {
      * gradual rollout; an explicit {@code true} value enables authorize-only forwarding.
      */
     @FlightMeta(
-            owner = "Praveen Kumar Saminathan",
+            owner = "prsaminathan",
             type = FlagType.RELEASE)
     ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING(
             "EnableDeviceCaAuthorizeOnlyCredentialForwarding",
@@ -251,19 +251,19 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the Playstore URL launch for broker apps.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
 
     /** Enables broker-install intent validation by default, with legacy behavior when disabled. */
     @FlightMeta(
-            owner = "Mohit Chandwani",
+            owner = "mchand",
             type = FlagType.KILL_SWITCH)
     ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", true),
 
     /** Flight to enable native Device-CA handoff to the device management app. Default is true. */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE,
             premortem = "docs/premortem/ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF-Premortem.md")
     ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF(
@@ -275,7 +275,7 @@ public enum CommonFlight implements IFlightConfig {
      * The web resource running into SSL will itself not be loaded.
      */
     @FlightMeta(
-            owner = "Mohit Chandwani",
+            owner = "mchand",
             type = FlagType.KILL_SWITCH)
     SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", true),
 
@@ -283,7 +283,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable adding username field in broker request for UiRequiredException from broker.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT("AddUsernameInUiRequiredExceptionBrokerResult", true),
 
@@ -291,7 +291,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the timeout to wait for tenant based flight in WebCP.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.CONFIG)
     WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000),
 
@@ -299,7 +299,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable WebView security settings to prevent unauthorized access.
      */
     @FlightMeta(
-            owner = "Siddhi Jain",
+            owner = "siddhijain",
             type = FlagType.KILL_SWITCH)
     ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false),
 
@@ -308,7 +308,7 @@ public enum CommonFlight implements IFlightConfig {
      * config endpoint and only reports the failure result.
      */
     @FlightMeta(
-            owner = "Siddhi Jain",
+            owner = "siddhijain",
             type = FlagType.RELEASE)
     ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true),
 
@@ -316,7 +316,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to disable Web Apps API.
      */
     @FlightMeta(
-            owner = "Melissa Ahn",
+            owner = "melissaahn",
             type = FlagType.KILL_SWITCH)
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
@@ -330,7 +330,7 @@ public enum CommonFlight implements IFlightConfig {
      * Token command parameter validation does not repeat this caller check.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     VALIDATE_SILENT_CALLER("ValidateSilentCaller", false),
 
@@ -338,7 +338,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control whether or not to use in memory cache for accounts and credentials.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
 
@@ -346,7 +346,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
      */
     @FlightMeta(
-            owner = "Melissa Ahn",
+            owner = "melissaahn",
             type = FlagType.RELEASE)
     DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false),
 
@@ -355,7 +355,7 @@ public enum CommonFlight implements IFlightConfig {
      * We want to disable the check by default but have the ability to bring it back just in case.
      */
     @FlightMeta(
-            owner = "Siddhi Jain",
+            owner = "siddhijain",
             type = FlagType.KILL_SWITCH)
     RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
 
@@ -364,7 +364,7 @@ public enum CommonFlight implements IFlightConfig {
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.KILL_SWITCH)
     USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
     
@@ -374,7 +374,7 @@ public enum CommonFlight implements IFlightConfig {
      * Defaults off for brokerless consumers; BrokerFlight supplies the broker default.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
 
@@ -382,7 +382,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE,
             premortem = "docs/premortem/ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT-Premortem.md")
     ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
@@ -394,7 +394,7 @@ public enum CommonFlight implements IFlightConfig {
      * When enabled, the WebView will handle file chooser requests from web pages.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false),
 
@@ -402,7 +402,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable open-id vc redirect handling in webview.
      */
     @FlightMeta(
-            owner = "Siddhi Jain",
+            owner = "siddhijain",
             type = FlagType.RELEASE)
     ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
 
@@ -413,7 +413,7 @@ public enum CommonFlight implements IFlightConfig {
      * pre-existing behavior applies: the openid-vc handler is launched without a return PendingIntent.
      */
     @FlightMeta(
-            owner = "Sowmya Malayanur",
+            owner = "somalaya",
             type = FlagType.RELEASE)
     ENABLE_OPEN_ID_VC_RETURN_TO_CALLER("EnableOpenIdVcReturnToCaller", true),
 
@@ -424,7 +424,7 @@ public enum CommonFlight implements IFlightConfig {
      * Turn off to fall back to global-only discovery, previous behavior.
      */
     @FlightMeta(
-            owner = "Mohit Chandwani",
+            owner = "mchand",
             type = FlagType.KILL_SWITCH)
     ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY("EnableSovereignCloudInstanceDiscovery", true),
 
@@ -435,7 +435,7 @@ public enum CommonFlight implements IFlightConfig {
      * DISABLED_USER, DISABLED_UNTIL_USED, etc.
      */
     @FlightMeta(
-            owner = "Fadi Durah",
+            owner = "fadidurah",
             type = FlagType.RELEASE)
     USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false),
 
@@ -447,7 +447,7 @@ public enum CommonFlight implements IFlightConfig {
      * Default: false (disabled for safe rollout).
      */
     @FlightMeta(
-            owner = "Praveen Kumar Saminathan",
+            owner = "prsaminathan",
             type = FlagType.RELEASE)
     ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
     
@@ -457,7 +457,7 @@ public enum CommonFlight implements IFlightConfig {
      * Enabled by default; can be turned off via ECS if any issues arise in production.
      */
     @FlightMeta(
-            owner = "Siddhi Jain",
+            owner = "siddhijain",
             type = FlagType.KILL_SWITCH)
     ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true),
 
@@ -465,7 +465,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable Auth Tab for the switch browser feature.
      */
     @FlightMeta(
-            owner = "Pedro Romero Vargas",
+            owner = "pedroro",
             type = FlagType.RELEASE)
     ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
@@ -492,7 +492,7 @@ public enum CommonFlight implements IFlightConfig {
      * Enabled by default; can be turned off via ECS to restore the previous behaviour if needed.
      */
     @FlightMeta(
-            owner = "Fadi Durah",
+            owner = "fadidurah",
             type = FlagType.KILL_SWITCH)
     ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true),
 
@@ -505,7 +505,7 @@ public enum CommonFlight implements IFlightConfig {
      * apps. Disable via ECS to force the validation for all flows if needed.
      */
     @FlightMeta(
-            owner = "Cesar Acosta",
+            owner = "cesaracosta",
             type = FlagType.KILL_SWITCH)
     SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE("SkipMultipleAppValidationInAuthService", true),
 
@@ -513,7 +513,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.RELEASE)
     ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
 
@@ -528,7 +528,7 @@ public enum CommonFlight implements IFlightConfig {
      * host to be treated as untrusted and silently lose SSO).
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.KILL_SWITCH)
     ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION("EnableNonceRedirectCredentialHeaderValidation", true),
 
@@ -547,7 +547,7 @@ public enum CommonFlight implements IFlightConfig {
      * Default is true.
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.KILL_SWITCH,
             premortem = "docs/premortem/ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Premortem.md")
     ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true),
@@ -567,7 +567,7 @@ public enum CommonFlight implements IFlightConfig {
      * Default is false.
      */
     @FlightMeta(
-            owner = "Shahzaib Jameel",
+            owner = "shjameel",
             type = FlagType.RELEASE,
             premortem = "docs/premortem/ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Premortem.md")
     ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
