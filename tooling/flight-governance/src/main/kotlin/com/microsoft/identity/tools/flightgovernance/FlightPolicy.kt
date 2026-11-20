@@ -22,21 +22,14 @@ internal data class PolicyDeclaration(
         key == other.key && defaultExpression == other.defaultExpression
 }
 
-internal data class MigrationApproval(
-    val id: String,
-    val metadata: PolicyMetadata,
-    val reviewedBy: String,
-    val review: String
-)
-
 internal data class PolicyInputs(
     val before: List<PolicyDeclaration>,
     val after: List<PolicyDeclaration>,
     val beforeFiles: Set<String>,
     val afterFiles: Set<String>,
     val legacy: List<PolicyDeclaration> = emptyList(),
-    val approvals: List<MigrationApproval> = emptyList(),
-    val metadataOnly: Boolean = false
+    val metadataOnly: Boolean = false,
+    val target: List<PolicyDeclaration> = before
 )
 
 internal data class PolicyFinding(
@@ -54,11 +47,15 @@ internal data class PolicyResult(
 
 /** Evaluates normalized declarations; language extraction and Git access belong to adapters. */
 internal object FlightPolicy {
+    private val supportedTypes = setOf("RELEASE", "KILL_SWITCH", "CONFIG")
+
     fun evaluate(input: PolicyInputs): PolicyResult {
         require(input.before.map { it.id }.distinct().size == input.before.size) { "Duplicate old declaration" }
         require(input.after.map { it.id }.distinct().size == input.after.size) { "Duplicate new declaration" }
+        require(input.target.map { it.id }.distinct().size == input.target.size) { "Duplicate target declaration" }
         val before = input.before.associateBy { it.id }
         val legacy = input.legacy.associateBy { it.id }
+        val target = input.target.associateBy { it.id }
         val findings = mutableListOf<PolicyFinding>()
         val checked = mutableListOf<String>()
         val gaps = mutableListOf<String>()
@@ -88,7 +85,7 @@ internal object FlightPolicy {
                 finding("UNRESOLVED_METADATA", "Unsupported metadata arguments: ${metadata.invalidArguments.sorted()}.",
                     "Use literal owner/document values and a supported lifecycle type.")
             }
-            if (metadata.type !in setOf("RELEASE", "KILL_SWITCH", "CONFIG")) {
+            if (metadata.type !in supportedTypes) {
                 finding("MISSING_TYPE", "A supported lifecycle type is required.",
                     "Classify the flight as RELEASE, KILL_SWITCH or CONFIG.")
             }
@@ -96,22 +93,21 @@ internal object FlightPolicy {
                 finding("MISSING_OWNER", "An explicit accountable owner is required.",
                     "Record a current person/team; Git authorship does not satisfy ownership.")
             }
-            val approvedMigration = old != null && old.metadata == null && old.sameBehavior(flight) &&
-                legacy[flight.id]?.sameBehavior(flight) == true && input.metadataOnly &&
-                metadata.owner.isNotBlank() && metadata.invalidArguments.isEmpty() &&
-                input.approvals.any {
-                    it.id == flight.id && it.metadata == metadata &&
-                        it.reviewedBy.isNotBlank() && it.review.isNotBlank()
-                }
+            val initialLegacyBackfill = input.metadataOnly &&
+                listOf(old, legacy[flight.id], target[flight.id]).all {
+                    it != null && it.metadata == null && it.sameBehavior(flight)
+                } &&
+                metadata.owner.isNotBlank() && metadata.type in supportedTypes &&
+                metadata.invalidArguments.isEmpty()
             if (!brokenLink) {
-                if (metadata.premortem.isBlank() && approvedMigration) {
+                if (metadata.premortem.isBlank() && initialLegacyBackfill) {
                     gaps.add(flight.id)
                 } else if (!repositoryPath(metadata.premortem) ||
                     !metadata.premortem.endsWith(".md", ignoreCase = true) ||
                     metadata.premortem !in input.afterFiles
                 ) {
                     finding("MISSING_DOCUMENT", "Every flight type requires an existing same-repository Markdown document.",
-                        "Set the premortem field to a governance document, or obtain a separate trusted legacy migration approval.")
+                        "Link an existing governance document; only initial metadata-only legacy backfill may record a historical gap.")
                 }
             }
         }

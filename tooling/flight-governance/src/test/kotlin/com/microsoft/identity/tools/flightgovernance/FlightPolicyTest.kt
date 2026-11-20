@@ -48,28 +48,36 @@ internal class FlightPolicyTest {
     }
 
     @Test
-    fun approvedInitialMigration_preservesHistoricalGapOnlyForExactMetadataOnlyChange() {
+    fun initialLegacyBackfill_preservesHistoricalGapOnlyForMetadataOnlyChange() {
         for (type in listOf("RELEASE", "KILL_SWITCH", "CONFIG")) {
-            val migrated = flight.copy(metadata = release.copy(type = type, premortem = ""))
-            val approval = MigrationApproval(flight.id, requireNotNull(migrated.metadata), "reviewer", "review-123")
+            val metadata = release.copy(type = type, premortem = "")
+            val migrated = flight.copy(metadata = metadata)
             val input = PolicyInputs(listOf(flight), listOf(migrated), emptySet(), emptySet(),
-                legacy = listOf(flight), approvals = listOf(approval), metadataOnly = true)
-            val approved = FlightPolicy.evaluate(input)
-            assertTrue(approved.findings.isEmpty())
-            assertEquals(listOf(flight.id), approved.legacyDocumentGaps)
+                legacy = listOf(flight), metadataOnly = true)
+            val result = FlightPolicy.evaluate(input)
+            assertTrue(result.findings.isEmpty())
+            assertEquals(listOf(flight.id), result.legacyDocumentGaps)
             val denied = listOf(
-                input.copy(approvals = emptyList()),
                 input.copy(metadataOnly = false),
                 input.copy(legacy = emptyList()),
+                input.copy(legacy = listOf(flight.copy(defaultExpression = "true"))),
+                input.copy(legacy = listOf(flight.copy(metadata = release))),
+                input.copy(target = listOf(flight.copy(metadata = metadata))),
+                input.copy(target = listOf(flight.copy(defaultExpression = "true"))),
+                input.copy(before = emptyList()),
                 input.copy(after = listOf(migrated.copy(key = "Renamed"))),
                 input.copy(after = listOf(migrated.copy(defaultExpression = "true"))),
-                input.copy(after = listOf(migrated.copy(metadata = migrated.metadata?.copy(owner = "different-team")))),
+                input.copy(after = listOf(migrated.copy(metadata = metadata.copy(owner = "")))),
+                input.copy(after = listOf(migrated.copy(metadata = metadata.copy(type = "UNKNOWN")))),
+                input.copy(after = listOf(migrated.copy(
+                    metadata = metadata.copy(invalidArguments = setOf("owner"))
+                ))),
                 input.copy(before = listOf(flight.copy(metadata = PolicyMetadata("team", "CONFIG"))))
             )
             for (candidate in denied) {
-                val result = FlightPolicy.evaluate(candidate)
-                assertTrue(result.findings.any { it.rule == "MISSING_DOCUMENT" })
-                assertTrue(result.legacyDocumentGaps.isEmpty())
+                val deniedResult = FlightPolicy.evaluate(candidate)
+                assertTrue(deniedResult.findings.any { it.rule == "MISSING_DOCUMENT" })
+                assertTrue(deniedResult.legacyDocumentGaps.isEmpty())
             }
         }
     }

@@ -3,7 +3,6 @@
 
 package com.microsoft.identity.tools.flightgovernance
 
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -48,13 +47,13 @@ internal class PrCheckTest {
     }
 
     @Test
-    fun approvalIsReadFromTarget_notThePrAuthoredPolicy() {
+    fun baselineIsReadFromTarget_notThePrAuthoredPolicy() {
         val root = repository()
         writeSource(root, "FEATURE(\"Example\", false);")
         val baseline = commit(root)
-        writePolicy(root, baseline, approved = false)
+        writePolicy(root, baseline)
         val target = commit(root)
-        writePolicy(root, "f".repeat(40), approved = true)
+        writePolicy(root, "f".repeat(40))
         writeSource(root, metadata() + "\nFEATURE(\"Example\", false);")
         val head = commit(root)
         val result = comparePr(root, "app", target, head, listOf(sourcePath), policyPath)
@@ -65,11 +64,11 @@ internal class PrCheckTest {
     }
 
     @Test
-    fun separateTargetApproval_allowsOnlyInitialMetadataOnlyMigration() {
+    fun trustedBaseline_allowsOnlyInitialMetadataOnlyMigration() {
         val root = repository()
         writeSource(root, "FEATURE(\"Example\", false);")
         val baseline = commit(root)
-        writePolicy(root, baseline, approved = true)
+        writePolicy(root, baseline)
         val target = commit(root)
         writeSource(root, metadata() + "\nFEATURE(\"Example\", false);")
         val migrated = commit(root)
@@ -83,12 +82,34 @@ internal class PrCheckTest {
     }
 
     @Test
+    fun staleBranch_cannotBackfillOverTargetMetadataOrDefaultChanges() {
+        for (targetDeclaration in listOf(
+            metadata() + "\nFEATURE(\"Example\", false);",
+            "FEATURE(\"Example\", true);"
+        )) {
+            val root = repository()
+            writeSource(root, "FEATURE(\"Example\", false);")
+            val baseline = commit(root)
+            writePolicy(root, baseline)
+            val fork = commit(root)
+            writeSource(root, targetDeclaration)
+            val target = commit(root)
+            git(root, "checkout", "--no-track", "-b", "stale-pr", fork)
+            writeSource(root, metadata(owner = "new-team") + "\nFEATURE(\"Example\", false);")
+            val head = commit(root)
+            val result = comparePr(root, "app", target, head, listOf(sourcePath), policyPath).result
+            assertEquals(listOf("MISSING_DOCUMENT"), result.findings.map { it.rule })
+            assertTrue(result.legacyDocumentGaps.isEmpty())
+        }
+    }
+
+    @Test
     fun baselineCannotGrandfatherAKeyAddedAfterCutover() {
         val root = repository()
         writeSource(root, "OTHER(\"Other\", false);")
         val baseline = commit(root)
         writeSource(root, "OTHER(\"Other\", false), FEATURE(\"Example\", false);")
-        writePolicy(root, baseline, approved = true)
+        writePolicy(root, baseline)
         val target = commit(root)
         writeSource(root, "OTHER(\"Other\", false), ${metadata()}\nFEATURE(\"Example\", false);")
         val head = commit(root)
@@ -174,13 +195,13 @@ internal class PrCheckTest {
     }
 
     @Test
-    fun branchOlderThanBaseline_completesWithoutMigrationApprovals() {
+    fun branchOlderThanBaseline_completesWithTargetBaseline() {
         val root = repository()
         writeSource(root, "FEATURE(\"Example\", false);")
         val fork = commit(root)
         Files.writeString(root.resolve("baseline.md"), "Baseline introduced after the source branch.\n")
         val baseline = commit(root)
-        writePolicy(root, baseline, approved = false)
+        writePolicy(root, baseline)
         val target = commit(root)
         git(root, "checkout", "--no-track", "-b", "older-pr", fork)
         writeSource(root, "FEATURE(\"Example\", true);")
@@ -195,13 +216,13 @@ internal class PrCheckTest {
     }
 
     @Test
-    fun olderBranch_cannotClaimApprovalForAFlightAbsentAtItsMergeBase() {
+    fun olderBranch_cannotGrandfatherAFlightAbsentAtItsMergeBase() {
         val root = repository()
         writeSource(root, "OTHER(\"Other\", false);")
         val fork = commit(root)
         writeSource(root, "OTHER(\"Other\", false), FEATURE(\"Example\", false);")
         val baseline = commit(root)
-        writePolicy(root, baseline, approved = true)
+        writePolicy(root, baseline)
         val target = commit(root)
         git(root, "checkout", "--no-track", "-b", "older-pr", fork)
         writeSource(root, "OTHER(\"Other\", false), ${metadata()}\nFEATURE(\"Example\", false);")
@@ -243,15 +264,10 @@ internal class PrCheckTest {
     private fun metadata(owner: String = "team", document: String = "") =
         """@FlightMeta(owner = "$owner", type = FlagType.RELEASE, premortem = "$document")"""
 
-    private fun writePolicy(root: Path, baseline: String, approved: Boolean) {
+    private fun writePolicy(root: Path, baseline: String) {
         Files.createDirectories(root.resolve("config"))
-        val approvals = JSONArray()
-        if (approved) {
-            approvals.put(JSONObject().put("id", id).put("owner", "team").put("type", "RELEASE")
-                .put("premortem", "").put("reviewedBy", "reviewer").put("review", "review-123"))
-        }
         Files.writeString(root.resolve(policyPath), JSONObject().put("schemaVersion", 1)
-            .put("legacyRevision", baseline).put("migrationApprovals", approvals).toString())
+            .put("legacyRevision", baseline).toString())
     }
 
     private fun commit(root: Path): String {

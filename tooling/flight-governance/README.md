@@ -77,7 +77,7 @@ and target branch, not the generated PR merge commit:
 `check-pr` paths are Git paths using `/` separators. Repeat `--source` for additional
 registries. Full history and a single target merge base are required. The checkout
 is read-only; reports must be new files outside it. JSON and a `.json.md` summary
-identify the source, target, merge base, evaluated declarations, findings and approved
+identify the source, target, merge base, evaluated declarations, findings and initial
 legacy gaps. Policy findings return zero during this pilot; failed or incomplete
 execution returns nonzero and, when the destination is valid, an incomplete JSON report.
 Complete JSON is published only after its Markdown summary is written; a failed scan
@@ -101,36 +101,29 @@ can feed the same policy model, but is not implemented here.
 
 The checker reads `--policy` only from the resolved **target commit**. Missing policy
 means no exceptions, not an empty successful policy evaluation. The initial committed
-policy freezes the pre-policy baseline and contains no approvals. The baseline must
-belong to the target's history; the PR source may have branched before it. Migration
-still requires the declaration to exist unchanged at both the baseline and PR merge base.
-
-A separate owner-reviewed target-branch change can add an exact approval:
+policy freezes the pre-policy baseline. The baseline must belong to the target's
+history; the PR source may have branched before it.
 
 ```json
 {
   "schemaVersion": 1,
-  "legacyRevision": "<full-pre-policy-commit-id>",
-  "migrationApprovals": [
-    {
-      "id": "common:example.Flights#FEATURE",
-      "owner": "owning-team",
-      "type": "RELEASE",
-      "premortem": "",
-      "reviewedBy": "reviewing-team",
-      "review": "<approval-reference>"
-    }
-  ]
+  "legacyRevision": "<full-pre-policy-commit-id>"
 }
 ```
 
-Only an initial metadata addition to an unchanged baseline declaration qualifies:
-the exact approved owner/type/document values must match, keys/defaults must stay
-unchanged, and the PR cannot contain runtime changes. The adapter compares Java
-syntax after removing governance metadata/imports; other changed files must be
-Markdown under `docs/`. Prefer explicit metadata imports for migration PRs.
-PR-authored approvals/baseline edits cannot grant an exception. Unknown owners,
-reclassification and changed/new behavior do not qualify; historical gaps stay visible.
+Only the initial metadata addition to an unannotated legacy declaration qualifies.
+The same declaration, key and default must exist without metadata at the frozen
+baseline, PR merge base and current target. Its owner must be explicit, its type
+supported, and its metadata resolvable. Reviewers validate owner/type in the same
+backfill PR; no separate approval PR or per-flight approval list is required.
+
+The PR cannot contain runtime changes. The adapter compares Java syntax after
+removing governance metadata/imports; other changed files must be Markdown under
+`docs/`. Prefer explicit metadata imports for migration PRs. PR-authored baseline
+edits cannot grant an exception. Unknown owners, new keys, changed defaults,
+reclassification and later metadata edits do not qualify, including on branches
+forked before the first backfill. Historical document gaps stay visible in the report
+instead of becoming missing-document findings or fabricated documents.
 
 The shared ADO step fetches the PR source/target and publishes advisory findings;
 incomplete scans fail explicitly. This is checkpoint A only: it changes neither

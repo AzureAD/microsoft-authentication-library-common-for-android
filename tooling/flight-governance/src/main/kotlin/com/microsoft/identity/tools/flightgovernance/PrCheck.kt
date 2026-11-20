@@ -139,7 +139,7 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
                 append("${finding.message} ${finding.fix}\n")
             }
             for (id in result.legacyDocumentGaps) {
-                append("- **Approved legacy document gap:** `$id`.\n")
+                append("- **Initial legacy document gap:** `$id`.\n")
             }
         }
         writePrReport(destination, report, summary)
@@ -196,6 +196,7 @@ internal fun comparePr(
         }
     val before = parse(mergeBase, beforeFiles)
     val after = parse(head, afterFiles)
+    val targetDeclarations = parse(target, targetFiles).values.flatMap { it.declarations }
     require(before.isNotEmpty() || after.isNotEmpty()) { "None of the configured flight sources exist" }
     val changedPaths = git(root, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", mergeBase, head)
         .split('\u0000').filter { it.isNotEmpty() }
@@ -204,7 +205,6 @@ internal fun comparePr(
         changedPaths.all { it in sourcePaths || (it.startsWith("docs/") && it.endsWith(".md")) }
     var baseline: String? = null
     var legacy = emptyList<PolicyDeclaration>()
-    var approvals = emptyList<MigrationApproval>()
     val policyPresent = policyPath in targetFiles
     if (policyPresent) {
         val policy = JSONObject(git(root, "show", "$target:$policyPath"))
@@ -214,19 +214,12 @@ internal fun comparePr(
         baseline = commit(revision)
         git(root, "merge-base", "--is-ancestor", baseline, target)
         legacy = parse(baseline, files(baseline)).values.flatMap { it.declarations }
-        val entries = policy.getJSONArray("migrationApprovals")
-        approvals = (0 until entries.length()).map {
-            val entry = entries.getJSONObject(it)
-            MigrationApproval(entry.getString("id"), PolicyMetadata(
-                entry.getString("owner"), entry.getString("type"), entry.getString("premortem")
-            ), entry.getString("reviewedBy"), entry.getString("review"))
-        }
-        require(approvals.map { it.id }.distinct().size == approvals.size) { "Duplicate migration approval" }
     }
     val oldDeclarations = before.values.flatMap { it.declarations }
     val newDeclarations = after.values.flatMap { it.declarations }
     return PrComparison(target, head, mergeBase, policyPresent, baseline, FlightPolicy.evaluate(
-        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, afterFiles, legacy, approvals, metadataOnly)
+        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, afterFiles,
+            legacy = legacy, metadataOnly = metadataOnly, target = targetDeclarations)
     ))
 }
 
