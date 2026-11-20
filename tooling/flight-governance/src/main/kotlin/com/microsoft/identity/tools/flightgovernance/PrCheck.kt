@@ -10,6 +10,7 @@ import java.io.IOException
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
@@ -44,7 +45,8 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
             .put("status", "incomplete").put("error", message)
         output?.takeIf { outputValidated }?.let {
             try {
-                writePrReport(it, report, "# Flight governance: INCOMPLETE\n\n$message\n")
+                Files.writeString(it, canonicalJson(report) + "\n", StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
             } catch (writeFailure: IOException) {
                 error.println("Cannot write incomplete-scan report: ${writeFailure.message}")
             }
@@ -96,7 +98,9 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
         val repositoryRoot = Path.of(git(directory, "rev-parse", "--show-toplevel").trim()).toRealPath()
         val destination = requireNotNull(output) { "--output is required" }
         require(!destination.startsWith(repositoryRoot)) { "Reports must be outside the input repository" }
-        require(!Files.exists(destination) && !Files.exists(destination.resolveSibling("${destination.fileName}.md"))) {
+        require(!Files.exists(destination, LinkOption.NOFOLLOW_LINKS) &&
+            !Files.exists(destination.resolveSibling("${destination.fileName}.md"), LinkOption.NOFOLLOW_LINKS)
+        ) {
             "Report destinations already exist; refusing to overwrite them"
         }
         outputValidated = true
@@ -208,7 +212,7 @@ internal fun comparePr(
         val revision = policy.getString("legacyRevision")
         require(revision.matches(Regex("[0-9a-f]{40,64}"))) { "Legacy baseline must be an immutable commit ID" }
         baseline = commit(revision)
-        git(root, "merge-base", "--is-ancestor", baseline, mergeBase)
+        git(root, "merge-base", "--is-ancestor", baseline, target)
         legacy = parse(baseline, files(baseline)).values.flatMap { it.declarations }
         val entries = policy.getJSONArray("migrationApprovals")
         approvals = (0 until entries.length()).map {
@@ -227,8 +231,8 @@ internal fun comparePr(
 }
 
 private fun writePrReport(output: Path, report: JSONObject, summary: String) {
-    Files.writeString(output, canonicalJson(report) + "\n", StandardCharsets.UTF_8,
-        StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
     Files.writeString(output.resolveSibling("${output.fileName}.md"), summary, StandardCharsets.UTF_8,
+        StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+    Files.writeString(output, canonicalJson(report) + "\n", StandardCharsets.UTF_8,
         StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
 }

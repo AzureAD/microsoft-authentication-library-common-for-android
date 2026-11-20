@@ -56,8 +56,11 @@ internal class JavaPolicyAdapter {
             }
             val namespace = "com.microsoft.identity.common.java.flighting"
             val imports = unit.imports.map { it.qualifiedIdentifier.toString() }.toSet()
-            val contractInScope = unit.packageName?.toString() == namespace ||
-                "$namespace.FlightMeta" in imports || "$namespace.*" in imports
+            val conflictingImport = imports.any {
+                it.endsWith(".FlightMeta") && it != "$namespace.FlightMeta"
+            }
+            val contractInScope = !conflictingImport && (unit.packageName?.toString() == namespace ||
+                "$namespace.FlightMeta" in imports || "$namespace.*" in imports)
             fun recognized(annotation: AnnotationTree): Boolean =
                 annotation.annotationType.toString() == "$namespace.FlightMeta" ||
                     (contractInScope && annotation.annotationType.toString() == "FlightMeta")

@@ -49,6 +49,27 @@ internal class JavaPolicyAdapterTest {
         assertEquals(null, input.declarations.single().metadata)
     }
 
+    @Test
+    fun explicitUnrelatedImport_takesPrecedenceOverGovernanceWildcard() {
+        val imports = """
+            import com.microsoft.identity.common.java.flighting.*;
+            import unrelated.FlightMeta;
+        """.trimIndent()
+        val constants = """
+            @FlightMeta(owner = "team", type = FlagType.CONFIG, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent()
+        val unrelated = parse(imports, constants)
+        assertEquals(null, unrelated.declarations.single().metadata)
+        val result = FlightPolicy.evaluate(PolicyInputs(emptyList(), unrelated.declarations,
+            emptySet(), setOf("docs/example.md")))
+        assertEquals(listOf("MISSING_METADATA"), result.findings.map { it.rule })
+        val qualified = parse(imports, constants.replace("@FlightMeta",
+            "@com.microsoft.identity.common.java.flighting.FlightMeta"))
+        assertEquals(PolicyMetadata("team", "CONFIG", "docs/example.md"),
+            qualified.declarations.single().metadata)
+    }
+
     private fun parse(imports: String, constants: String) = JavaPolicyAdapter().parse(
         FlightSource("app", "a".repeat(40), "Flights.java", """
             package example;

@@ -79,7 +79,10 @@ registries. Full history and a single target merge base are required. The checko
 is read-only; reports must be new files outside it. JSON and a `.json.md` summary
 identify the source, target, merge base, evaluated declarations, findings and approved
 legacy gaps. Policy findings return zero during this pilot; failed or incomplete
-execution returns nonzero and, when the destination is valid, an incomplete report.
+execution returns nonzero and, when the destination is valid, an incomplete JSON report.
+Complete JSON is published only after its Markdown summary is written; a failed scan
+may have no Markdown summary. Existing destination entries, including dangling
+symlinks, are never overwritten.
 
 New/changed keys, defaults or metadata need an explicit current person/team owner
 and lifecycle type. Git authorship never substitutes for ownership; reviewers confirm
@@ -98,7 +101,9 @@ can feed the same policy model, but is not implemented here.
 
 The checker reads `--policy` only from the resolved **target commit**. Missing policy
 means no exceptions, not an empty successful policy evaluation. The initial committed
-policy freezes the pre-policy baseline and contains no approvals.
+policy freezes the pre-policy baseline and contains no approvals. The baseline must
+belong to the target's history; the PR source may have branched before it. Migration
+still requires the declaration to exist unchanged at both the baseline and PR merge base.
 
 A separate owner-reviewed target-branch change can add an exact approval:
 

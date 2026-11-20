@@ -173,6 +173,58 @@ internal class PrCheckTest {
         assertEquals(listOf("MISSING_METADATA"), result.result.findings.map { it.rule })
     }
 
+    @Test
+    fun branchOlderThanBaseline_completesWithoutMigrationApprovals() {
+        val root = repository()
+        writeSource(root, "FEATURE(\"Example\", false);")
+        val fork = commit(root)
+        Files.writeString(root.resolve("baseline.md"), "Baseline introduced after the source branch.\n")
+        val baseline = commit(root)
+        writePolicy(root, baseline, approved = false)
+        val target = commit(root)
+        git(root, "checkout", "--no-track", "-b", "older-pr", fork)
+        writeSource(root, "FEATURE(\"Example\", true);")
+        val head = commit(root)
+        val report = temporaryFolder.root.toPath().resolve("older-branch.json")
+        assertEquals(0, command(root, target, head, report))
+        val result = JSONObject(Files.readString(report))
+        assertEquals("complete", result.getString("status"))
+        assertEquals(fork, result.getString("mergeBase"))
+        assertEquals(baseline, result.getString("legacyBaseline"))
+        assertEquals("MISSING_METADATA", result.getJSONArray("findings").getJSONObject(0).getString("rule"))
+    }
+
+    @Test
+    fun olderBranch_cannotClaimApprovalForAFlightAbsentAtItsMergeBase() {
+        val root = repository()
+        writeSource(root, "OTHER(\"Other\", false);")
+        val fork = commit(root)
+        writeSource(root, "OTHER(\"Other\", false), FEATURE(\"Example\", false);")
+        val baseline = commit(root)
+        writePolicy(root, baseline, approved = true)
+        val target = commit(root)
+        git(root, "checkout", "--no-track", "-b", "older-pr", fork)
+        writeSource(root, "OTHER(\"Other\", false), ${metadata()}\nFEATURE(\"Example\", false);")
+        val head = commit(root)
+        val comparison = comparePr(root, "app", target, head, listOf(sourcePath), policyPath)
+        assertEquals(fork, comparison.mergeBase)
+        assertEquals(listOf("MISSING_DOCUMENT"), comparison.result.findings.map { it.rule })
+        assertTrue(comparison.result.legacyDocumentGaps.isEmpty())
+    }
+
+    @Test
+    fun summaryWriteFailure_cannotLeaveACompleteJsonReport() {
+        val root = repository()
+        writeSource(root, "FEATURE(\"Example\", false);")
+        val head = commit(root)
+        // JSON's 253-character filename is valid; the appended Markdown name exceeds 255.
+        val report = temporaryFolder.root.toPath().resolve("r".repeat(248) + ".json")
+        Files.writeString(report, "Verify that the JSON destination itself is writable.")
+        Files.delete(report)
+        assertTrue(command(root, head, head, report) != 0)
+        assertEquals("incomplete", JSONObject(Files.readString(report)).getString("status"))
+    }
+
     private fun repository(): Path = temporaryFolder.newFolder().toPath().also { git(it, "init", "-q") }
 
     private fun writeSource(root: Path, constants: String) {
