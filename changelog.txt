@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 0.045.3323-RC1
+Version 0.045.3323-RC2
 ----------
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 - [MINOR] Add Samsung Browser SSO signing identities, Fixes AB#3825751 (#3360)
