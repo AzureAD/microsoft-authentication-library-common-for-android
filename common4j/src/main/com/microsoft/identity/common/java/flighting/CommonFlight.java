@@ -181,6 +181,10 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", true),
 
     /** Flight to enable native Device-CA handoff to the device management app. Default is true. */
+    @FlightMeta(
+            owner = "Sowmya Malayanur",
+            type = FlagType.RELEASE,
+            premortem = "docs/premortem/ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF-Premortem.md")
     ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF(
             "EnableNativeDeviceCaManagementAppHandoff",
             true),
@@ -260,6 +264,10 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable external-browser routing for marked URLs in brokered and brokerless WebViews.
      */
+    @FlightMeta(
+            owner = "Sowmya Malayanur",
+            type = FlagType.RELEASE,
+            premortem = "docs/premortem/ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT-Premortem.md")
     ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
             "EnableBrokerWebViewExternalBrowserRedirect",
             true),
@@ -382,6 +390,10 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Default is true.
      */
+    @FlightMeta(
+            owner = "Shahzaib Jameel",
+            type = FlagType.KILL_SWITCH,
+            premortem = "docs/premortem/ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Premortem.md")
     ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true),
 
     /**
@@ -398,6 +410,10 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Default is false.
      */
+    @FlightMeta(
+            owner = "Shahzaib Jameel",
+            type = FlagType.RELEASE,
+            premortem = "docs/premortem/ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Premortem.md")
     ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
 
     private String key;
