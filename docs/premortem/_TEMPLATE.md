@@ -1,6 +1,10 @@
 <!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
 
-# Premortem: <flight or change>
+# Flight governance document: <flight or change>
+
+Required for new or materially changed flights of every type. Link this document
+using `FlightMeta.premortem`; that field name is retained for compatibility.
+Historical document gaps are accepted for approved initial legacy metadata backfill.
 
 ## Ownership and scope
 
