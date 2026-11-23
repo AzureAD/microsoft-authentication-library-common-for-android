@@ -28,6 +28,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
+import static com.microsoft.identity.common.java.logging.Logger.getLogLevel;
+import static com.microsoft.identity.common.java.logging.Logger.setLogLevel;
+import static com.microsoft.identity.common.java.logging.Logger.setLogger;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
@@ -56,6 +59,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.net.http.SslCertificate;
 import android.net.http.SslError;
 import android.os.Looper;
 import android.webkit.SslErrorHandler;
@@ -101,6 +105,8 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.logging.ILoggerCallback;
+import com.microsoft.identity.common.java.logging.Logger.LogLevel;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -178,6 +184,9 @@ public class AzureActiveDirectoryWebViewClientTest {
             AUTHENTICATOR_MFA_LINKING_PREFIX + "xyz";
     private static final String TEST_SSL_PROTECTION_HTTP_URL = "http://foo";
     private static final String TEST_SSL_PROTECTION_FTP_URL = "ftp://foo";
+    private static final String SSL_ERROR_HOST = "ssl-error.example.invalid";
+    private static final String SSL_ERROR_QUERY_VALUE = "synthetic-query-marker";
+    private static final String SSL_ERROR_CERTIFICATE = "synthetic-certificate-marker";
     private static final String TEST_REDIRECT_URL = "msauth://com.example.app/somehash=?code=AUTH_CODE&state=xyz";
     private static final String TEST_REDIRECT_URL_WITH_FRAGMENT =
             "msauth://com.example.app/somehash=?code=AUTH_CODE#fragment";
@@ -4905,24 +4914,71 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testUrlTracker_onReceivedSslError_callsUpdateLatestUrlStatus() throws ClientException {
-        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(false);
-        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+    public void testOnReceivedSslError_sanitizesDiagnosticsWithPiiDisabled() throws ClientException {
+        verifySslErrorDiagnostics(false, SslError.SSL_EXPIRED);
+    }
 
-        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
-        final SslError mockError = Mockito.mock(SslError.class);
-        final SslErrorHandler mockHandler = Mockito.mock(SslErrorHandler.class);
-        Mockito.when(mockError.toString()).thenReturn("SslError(SSL_EXPIRED)");
+    @Test
+    public void testOnReceivedSslError_sanitizesDiagnosticsWithPiiEnabled() throws ClientException {
+        verifySslErrorDiagnostics(true, SslError.SSL_UNTRUSTED);
+    }
 
-        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+    private void verifySslErrorDiagnostics(final boolean allowPii, final int primaryError) throws ClientException {
+        final SslCertificate certificate = Mockito.mock(SslCertificate.class);
+        when(certificate.toString()).thenReturn(SSL_ERROR_CERTIFICATE);
+        final SslError error = new SslError(primaryError, certificate,
+                "https://" + SSL_ERROR_HOST + "/signin?test=" + SSL_ERROR_QUERY_VALUE);
+        final IFlightsProvider flights = Mockito.mock(IFlightsProvider.class);
+        final MockCommonFlightsManager manager = new MockCommonFlightsManager();
+        manager.setMockCommonFlightsProvider(flights);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
 
-        client.onReceivedSslError(new WebView(mContext), mockHandler, mockError);
+        final String loggerId = getClass().getName() + ":sslError";
+        final boolean previousPii = Logger.getAllowPii();
+        final LogLevel previousLevel = getLogLevel();
+        try {
+            Logger.setAllowPii(allowPii);
+            setLogLevel(LogLevel.WARN);
+            for (final boolean preserveFlow : new boolean[]{false, true}) {
+                when(flights.isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))
+                        .thenReturn(preserveFlow);
+                final ILoggerCallback logger = Mockito.mock(ILoggerCallback.class);
+                setLogger(loggerId, logger);
+                final IUrlLoadTracker tracker = Mockito.mock(IUrlLoadTracker.class);
+                final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(tracker);
+                final SslErrorHandler handler = Mockito.mock(SslErrorHandler.class);
 
-        Mockito.verify(mockTracker).updateLatestUrlStatus("SslError(SSL_EXPIRED)", null);
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+                client.onReceivedSslError(mMockWebView, handler, error);
+
+                Mockito.verify(handler).cancel();
+                final ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+                Mockito.verify(logger, Mockito.timeout(TimeUnit.SECONDS.toMillis(5))).log(
+                        eq("OAuth2WebViewClient:onReceivedSslError"), eq(LogLevel.WARN), message.capture(), eq(false));
+                assertSafeSslDiagnostic(message.getValue(), primaryError);
+                Mockito.verify(tracker).updateLatestUrlStatus("primary error: " + primaryError, null);
+                if (preserveFlow) {
+                    Mockito.verify(client.getCompletionCallback(), never()).onChallengeResponseReceived(any());
+                } else {
+                    final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+                    Mockito.verify(client.getCompletionCallback()).onChallengeResponseReceived(result.capture());
+                    assertEquals("Code:" + OAuth2WebViewClient.ERROR_FAILED_SSL_HANDSHAKE,
+                            result.getValue().getException().getErrorCode());
+                    assertSafeSslDiagnostic(result.getValue().getException().getMessage(), primaryError);
+                }
+            }
+        } finally {
+            setLogger(loggerId, null);
+            setLogLevel(previousLevel);
+            Logger.setAllowPii(previousPii);
+        }
+    }
+
+    private static void assertSafeSslDiagnostic(final String message, final int primaryError) {
+        assertNotNull(message);
+        assertTrue(message.contains("Primary error code: " + primaryError));
+        assertFalse(message.contains(SSL_ERROR_HOST));
+        assertFalse(message.contains(SSL_ERROR_QUERY_VALUE));
+        assertFalse(message.contains(SSL_ERROR_CERTIFICATE));
     }
 
     @Test
