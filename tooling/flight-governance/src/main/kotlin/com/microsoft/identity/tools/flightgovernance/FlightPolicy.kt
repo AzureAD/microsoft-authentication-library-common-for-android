@@ -29,7 +29,8 @@ internal data class PolicyInputs(
     val afterFiles: Set<String>,
     val legacy: List<PolicyDeclaration> = emptyList(),
     val metadataOnly: Boolean = false,
-    val target: List<PolicyDeclaration> = before
+    val target: List<PolicyDeclaration> = before,
+    val targetFiles: Set<String> = beforeFiles
 )
 
 internal data class PolicyFinding(
@@ -66,7 +67,12 @@ internal object FlightPolicy {
                 findings.add(PolicyFinding(rule, flight, message, fix))
             }
             val brokenLink = old?.metadata?.premortem?.takeIf { it.isNotBlank() }?.let {
-                it == metadata?.premortem && it in input.beforeFiles && it !in input.afterFiles
+                it == metadata?.premortem &&
+                    it in input.beforeFiles &&
+                    it in input.targetFiles &&
+                    it !in input.afterFiles &&
+                    ((!old.sameBehavior(flight) || old.metadata != metadata) ||
+                        target[flight.id]?.metadata?.premortem == it)
             } == true
             if (brokenLink) {
                 finding("BROKEN_DOCUMENT", "Previously linked governance document was removed or renamed.",

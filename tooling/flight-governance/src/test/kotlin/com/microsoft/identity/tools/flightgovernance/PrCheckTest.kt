@@ -246,6 +246,58 @@ internal class PrCheckTest {
         assertEquals("incomplete", JSONObject(Files.readString(report)).getString("status"))
     }
 
+    @Test
+    fun divergentBranch_validatesDocumentLinksAgainstProspectiveMergedTree() {
+        val root = repository()
+        Files.createDirectories(root.resolve("docs"))
+        Files.writeString(root.resolve("docs/deleted-on-target.md"), "Will be deleted on target.\n")
+        Files.writeString(root.resolve("docs/retired-on-target.md"), "Will be replaced on target.\n")
+        writeSource(root, metadata(document = "docs/retired-on-target.md") + "\nRETIRED(\"Retired\", false);")
+        val fork = commit(root)
+        Files.delete(root.resolve("docs/deleted-on-target.md"))
+        Files.delete(root.resolve("docs/retired-on-target.md"))
+        Files.writeString(root.resolve("docs/replacement-on-target.md"), "Target replacement.\n")
+        writeSource(root, metadata(document = "docs/replacement-on-target.md") + "\nRETIRED(\"Retired\", false);")
+        val target = commit(root)
+        git(root, "checkout", "--no-track", "-b", "divergent-pr", fork)
+        Files.writeString(root.resolve("docs/new-by-pr.md"), "Supplied by PR.\n")
+        writeSource(root, """
+            ${metadata(document = "docs/retired-on-target.md")}
+            RETIRED("Retired", false),
+            ${metadata(document = "docs/deleted-on-target.md")}
+            STALE_LINK("StaleLink", false),
+            ${metadata(document = "docs/new-by-pr.md")}
+            NEW_WITH_PR_DOC("NewWithPrDoc", false);
+        """.trimIndent())
+        val head = commit(root)
+        val comparison = comparePr(root, "app", target, head, listOf(sourcePath), policyPath)
+        assertEquals(listOf("app:example.Flights#STALE_LINK"),
+            comparison.result.findings.map { it.declaration.id })
+        assertEquals(listOf("MISSING_DOCUMENT"), comparison.result.findings.map { it.rule })
+    }
+
+    @Test
+    fun movedRegistry_marksScanIncompleteInsteadOfSilentlyDroppingNewFlights() {
+        val root = repository()
+        writeSource(root, "EXISTING(\"Existing\", false);")
+        val target = commit(root)
+        Files.createDirectories(root.resolve("moved"))
+        Files.delete(root.resolve(sourcePath))
+        Files.writeString(root.resolve("moved/$sourcePath"), """
+            // Copyright (c) Microsoft Corporation. All rights reserved.
+            package example;
+            enum Flights implements IFlightConfig {
+                EXISTING("Existing", false),
+                ADDED_WITHOUT_METADATA("AddedWithoutMetadata", false);
+                Flights(String key, Object value) {}
+            }
+        """.trimIndent())
+        val head = commit(root)
+        val report = temporaryFolder.root.toPath().resolve("moved-registry.json")
+        assertTrue(command(root, target, head, report) != 0)
+        assertEquals("incomplete", JSONObject(Files.readString(report)).getString("status"))
+    }
+
     private fun repository(): Path = temporaryFolder.newFolder().toPath().also { git(it, "init", "-q") }
 
     private fun writeSource(root: Path, constants: String) {

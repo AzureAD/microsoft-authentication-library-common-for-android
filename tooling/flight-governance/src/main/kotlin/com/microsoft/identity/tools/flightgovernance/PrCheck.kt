@@ -182,13 +182,29 @@ internal fun comparePr(
         .filter { it.isNotBlank() }.toList()
     require(mergeBases.size == 1) { "Exactly one PR-target merge base is required" }
     val mergeBase = mergeBases.single()
-    fun files(revision: String): Set<String> =
+    fun files(revision: String): Map<String, String> =
         git(root, "ls-tree", "-r", "-z", "--full-tree", revision).split('\u0000')
             .filter { it.isNotEmpty() && it.substringBefore(' ') in setOf("100644", "100755") }
-            .map { it.substringAfter('\t') }.toSet()
-    val beforeFiles = files(mergeBase)
-    val afterFiles = files(head)
-    val targetFiles = files(target)
+            .associate {
+                it.substringAfter('\t') to it.substringBefore('\t').substringAfterLast(' ')
+            }
+    val beforeBlobs = files(mergeBase)
+    val afterBlobs = files(head)
+    val targetBlobs = files(target)
+    val beforeFiles = beforeBlobs.keys
+    val afterFiles = afterBlobs.keys
+    val targetFiles = targetBlobs.keys
+    val mergedFiles = (beforeFiles + afterFiles + targetFiles).filterTo(mutableSetOf()) { path ->
+        val baseBlob = beforeBlobs[path]
+        val targetBlob = targetBlobs[path]
+        val headBlob = afterBlobs[path]
+        (targetBlob != null && headBlob != null) ||
+            (baseBlob == null && (targetBlob != null || headBlob != null))
+    }
+    val missingAtHead = sourcePaths.filter { it !in afterFiles }
+    require(missingAtHead.isEmpty()) {
+        "Configured flight source missing at head revision: ${missingAtHead.joinToString()}"
+    }
     val adapter = JavaPolicyAdapter()
     fun parse(revision: String, paths: Set<String>): Map<String, PolicySource> =
         sourcePaths.filter { it in paths }.associateWith {
@@ -197,7 +213,6 @@ internal fun comparePr(
     val before = parse(mergeBase, beforeFiles)
     val after = parse(head, afterFiles)
     val targetDeclarations = parse(target, targetFiles).values.flatMap { it.declarations }
-    require(before.isNotEmpty() || after.isNotEmpty()) { "None of the configured flight sources exist" }
     val changedPaths = git(root, "diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", mergeBase, head)
         .split('\u0000').filter { it.isNotEmpty() }
     val metadataOnly = before.keys == after.keys &&
@@ -213,13 +228,13 @@ internal fun comparePr(
         require(revision.matches(Regex("[0-9a-f]{40,64}"))) { "Legacy baseline must be an immutable commit ID" }
         baseline = commit(revision)
         git(root, "merge-base", "--is-ancestor", baseline, target)
-        legacy = parse(baseline, files(baseline)).values.flatMap { it.declarations }
+        legacy = parse(baseline, files(baseline).keys).values.flatMap { it.declarations }
     }
     val oldDeclarations = before.values.flatMap { it.declarations }
     val newDeclarations = after.values.flatMap { it.declarations }
     return PrComparison(target, head, mergeBase, policyPresent, baseline, FlightPolicy.evaluate(
-        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, afterFiles,
-            legacy = legacy, metadataOnly = metadataOnly, target = targetDeclarations)
+        PolicyInputs(oldDeclarations, newDeclarations, beforeFiles, mergedFiles,
+            legacy = legacy, metadataOnly = metadataOnly, target = targetDeclarations, targetFiles = targetFiles)
     ))
 }
 
