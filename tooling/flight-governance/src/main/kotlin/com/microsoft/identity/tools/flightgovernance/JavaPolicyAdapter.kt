@@ -74,6 +74,7 @@ internal class JavaPolicyAdapter {
                     if (annotations.isNotEmpty()) {
                         val values = mutableMapOf<String, String>()
                         val invalid = mutableSetOf<String>()
+                        val unresolved = mutableMapOf<String, MutableList<String>>()
                         for (annotation in annotations) {
                             remove(annotation)
                             for (argument in annotation.arguments) {
@@ -89,14 +90,20 @@ internal class JavaPolicyAdapter {
                                         }?.substringAfterLast('.')
                                     else -> null
                                 }
-                                if (resolved == null || values.put(key, resolved) != null) invalid.add(key)
+                                if (resolved == null || values.put(key, resolved) != null) {
+                                    invalid.add(key)
+                                    val normalized = (value ?: argument).toString()
+                                        .replace("\r\n", "\n").replace('\r', '\n')
+                                    unresolved.getOrPut(key) { mutableListOf() }.add(normalized)
+                                }
                             }
                         }
                         if (annotations.size != 1) invalid.add("duplicate-annotation")
                         val line = unit.lineMap.getLineNumber(positions.getStartPosition(unit, node))
                         metadata[node.name.toString() to line] = PolicyMetadata(
                             values["owner"].orEmpty(), values["type"].orEmpty(),
-                            values["premortem"].orEmpty(), invalid
+                            values["premortem"].orEmpty(), invalid,
+                            unresolved.mapValues { it.value.toList() }
                         )
                     }
                     return super.visitVariable(node, unused)

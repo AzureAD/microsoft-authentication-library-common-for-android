@@ -38,6 +38,27 @@ internal class JavaPolicyAdapterTest {
         """.trimIndent())
         assertEquals(setOf("owner"), input.declarations.single().metadata?.invalidArguments)
         assertEquals("", input.declarations.single().metadata?.owner)
+        assertEquals(mapOf("owner" to listOf("Owners.CURRENT")),
+            input.declarations.single().metadata?.unresolvedExpressions)
+    }
+
+    @Test
+    fun symbolicOwnerEdit_changesNormalizedMetadataWhileFormattingDoesNot() {
+        val imports = "import com.microsoft.identity.common.java.flighting.*;"
+        val old = parse(imports, """
+            @FlightMeta(owner = Owners.OLD_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        val reformatted = parse(imports, """
+            @FlightMeta(owner = /* same */ Owners . OLD_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        val updated = parse(imports, """
+            @FlightMeta(owner = Owners.NEW_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        assertEquals(old.declarations.single().metadata, reformatted.declarations.single().metadata)
+        assertNotEquals(old.declarations.single().metadata, updated.declarations.single().metadata)
     }
 
     @Test

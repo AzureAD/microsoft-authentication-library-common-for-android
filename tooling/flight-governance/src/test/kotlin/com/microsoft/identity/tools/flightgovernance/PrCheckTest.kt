@@ -298,6 +298,31 @@ internal class PrCheckTest {
         assertEquals("incomplete", JSONObject(Files.readString(report)).getString("status"))
     }
 
+    @Test
+    fun changingUnresolvedOwnerConstant_isReportedWhileFormattingOnlyRemainsGrandfathered() {
+        val root = repository()
+        Files.createDirectories(root.resolve("docs"))
+        Files.writeString(root.resolve("docs/example.md"), "Premortem.\n")
+        writeSource(root, """
+            @FlightMeta(owner = Owners.OLD_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        val base = commit(root)
+        writeSource(root, """
+            @FlightMeta(owner = /* unchanged */ Owners . OLD_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        val reformatted = commit(root)
+        assertTrue(comparePr(root, "app", base, reformatted, listOf(sourcePath), policyPath).result.findings.isEmpty())
+        writeSource(root, """
+            @FlightMeta(owner = Owners.NEW_TEAM, type = FlagType.RELEASE, premortem = "docs/example.md")
+            FEATURE("Example", false);
+        """.trimIndent())
+        val changed = commit(root)
+        val result = comparePr(root, "app", base, changed, listOf(sourcePath), policyPath).result
+        assertEquals(listOf("UNRESOLVED_METADATA", "MISSING_OWNER"), result.findings.map { it.rule })
+    }
+
     private fun repository(): Path = temporaryFolder.newFolder().toPath().also { git(it, "init", "-q") }
 
     private fun writeSource(root: Path, constants: String) {

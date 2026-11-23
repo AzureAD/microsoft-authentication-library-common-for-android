@@ -7,7 +7,8 @@ internal data class PolicyMetadata(
     val owner: String = "",
     val type: String = "",
     val premortem: String = "",
-    val invalidArguments: Set<String> = emptySet()
+    val invalidArguments: Set<String> = emptySet(),
+    val unresolvedExpressions: Map<String, List<String>> = emptyMap()
 )
 
 internal data class PolicyDeclaration(
