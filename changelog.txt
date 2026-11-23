@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Validate ID-token regulatory-target receipts even without explicit targets: accept only missing/empty receipts or one signed "all"; preserve genuinely absent ID-token flows. Explicit targets still require exact case/order-independent identity matching, including literal "all". Mismatches fail closed before client persistence, delivery or proactive refresh.
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 
 Version 25.1.0

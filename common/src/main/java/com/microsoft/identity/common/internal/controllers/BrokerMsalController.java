@@ -409,11 +409,9 @@ public class BrokerMsalController extends BaseController {
             final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
             final Bundle resultBundle = acquireTokenInternal(parameters, interactiveRequestIntent);
             final String negotiatedBrokerProtocolVersion = resultBundle.getString(NEGOTIATED_BP_VERSION_KEY);
-            if (AgeAssuranceTargetValidator.requiresValidation(parameters.getClaimsRequestJson())) {
-                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-                result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-                AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
-            }
+            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+            AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
             // MSAL needs to save this account locally for future token calls.
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
@@ -421,10 +419,6 @@ public class BrokerMsalController extends BaseController {
             if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
                 saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache(),
                         parameters.getClaimsRequestJson());
-            }
-            if (result == null) {
-                verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-                result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
             }
         } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(

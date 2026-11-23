@@ -25,7 +25,8 @@ package com.microsoft.identity.common.java.exception;
 public class ClientException extends BaseException {
 
     /**
-     * An ID token's age-assurance target receipt does not match the explicit requested targets.
+     * An ID token's age-assurance target receipt does not match the requested targets.
+     * With no explicit targets, only an absent/empty receipt or one signed "all" is accepted.
      * Cached mismatches fail closed without automatic reacquisition or bypass. Recovery remains
      * an SDK-owner rollout decision; validation does not partition ID-token or refresh-token storage.
      */

@@ -38,13 +38,25 @@ class NativeAuthTargetBindingTest {
 
     @Test
     fun nativeV1AndV2RejectMismatchBeforeCache() {
+        for (claims in listOf(
+            null, "{}",
+            """{"id_token":{"xms_agvs":{"additionalProperties":["target-mc"]}}}"""
+        )) {
+            assertNativeReceiptRejected(claims, "+sm")
+        }
+        assertNativeReceiptRejected(
+            """{"id_token":{"xms_agvs":{"additionalProperties":["target-mc"]}}}""", null
+        )
+    }
+
+    private fun assertNativeReceiptRejected(claims: String?, receipt: String?) {
         val cache = mockk<OAuth2TokenCache<*, *, *>>(relaxed = true)
         val parameters = SignInStartCommandParameters.builder()
             .platformComponents(mockk<IPlatformComponents>(relaxed = true))
             .username("test@example.com")
             .clientId("test-client")
             .correlationId("test-correlation")
-            .claimsRequestJson("""{"id_token":{"xms_agvs":{"additionalProperties":["target-mc"]}}}""")
+            .claimsRequestJson(claims)
             .oAuth2TokenCache(cache)
             .build()
         val strategy = mockk<NativeAuthOAuth2Strategy>()
@@ -53,22 +65,20 @@ class NativeAuthTargetBindingTest {
         every { strategyV2.getAuthority() } returns "https://example.com/tenant"
         val controller = Controller()
 
-        for (receipt in listOf(null, "+sm")) {
-            val response = MicrosoftStsTokenResponse().apply {
-                idToken = PlainJWT(JWTClaimsSet.Builder()
-                    .claim("xms_agvs", 0).claim("xms_agvt", receipt).build()).serialize()
-            }
-            val result = SignInTokenApiResult.Success("test-correlation", response)
-            for (complete in listOf(
-                { controller.complete(strategy, parameters, result) },
-                { controller.complete(strategyV2, parameters, result) }
-            )) {
-                try {
-                    complete()
-                    fail("Mismatched native tokens must not be cached or returned")
-                } catch (exception: ClientException) {
-                    assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH, exception.errorCode)
-                }
+        val response = MicrosoftStsTokenResponse().apply {
+            idToken = PlainJWT(JWTClaimsSet.Builder()
+                .claim("xms_agvs", 0).claim("xms_agvt", receipt).build()).serialize()
+        }
+        val result = SignInTokenApiResult.Success("test-correlation", response)
+        for (complete in listOf(
+            { controller.complete(strategy, parameters, result) },
+            { controller.complete(strategyV2, parameters, result) }
+        )) {
+            try {
+                complete()
+                fail("Mismatched native tokens must not be cached or returned")
+            } catch (exception: ClientException) {
+                assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH, exception.errorCode)
             }
         }
         verify { cache wasNot Called }

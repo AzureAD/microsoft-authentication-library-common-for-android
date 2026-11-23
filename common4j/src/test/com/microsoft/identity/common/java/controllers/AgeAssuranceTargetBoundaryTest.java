@@ -51,12 +51,37 @@ public class AgeAssuranceTargetBoundaryTest {
     @Test
     public void cachedAndFreshSuccessResultsAreRejectedBeforeDelivery() {
         for (final boolean fromCache : new boolean[]{true, false}) {
-            final AcquireTokenResult result = success(token("+sm"), fromCache);
-            final CommandResult converted = CommandDispatcher.getCommandResultFromTokenResult(
-                    result, parameters(claims("target-mc")));
-            assertEquals(CommandResult.ResultStatus.ERROR, converted.getStatus());
-            assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH,
-                    ((ClientException) converted.getResult()).getErrorCode());
+            for (final String request : new String[]{claims("target-mc"), claims(), null}) {
+                final AcquireTokenResult result = success(token("+sm"), fromCache);
+                final CommandResult converted = CommandDispatcher.getCommandResultFromTokenResult(
+                        result, parameters(request));
+                assertEquals(CommandResult.ResultStatus.ERROR, converted.getStatus());
+                assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH,
+                        ((ClientException) converted.getResult()).getErrorCode());
+            }
+        }
+    }
+
+    @Test
+    public void untargetedNetworkResponseIsCheckedBeforePersistence() throws Exception {
+        final BaseController controller = mock(BaseController.class, Mockito.CALLS_REAL_METHODS);
+        final OAuth2Strategy strategy = mock(OAuth2Strategy.class);
+        final MicrosoftTokenRequest wireRequest = new MicrosoftTokenRequest();
+        final TokenResponse response = new TokenResponse();
+        when(strategy.requestToken(wireRequest)).thenReturn(new TokenResult(response));
+        for (final String request : new String[]{null, claims()}) {
+            response.setIdToken(token("+mc"));
+            try {
+                controller.executeTokenRequest(strategy, wireRequest, parameters(request));
+                fail("An unsolicited named receipt must not be persisted");
+            } catch (final ClientException exception) {
+                assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH, exception.getErrorCode());
+            }
+            for (final String idToken : new String[]{null, token(null), token(""), token("-ALL")}) {
+                response.setIdToken(idToken);
+                assertSame(response, controller.executeTokenRequest(
+                        strategy, wireRequest, parameters(request)).getTokenResponse());
+            }
         }
     }
 
@@ -68,11 +93,19 @@ public class AgeAssuranceTargetBoundaryTest {
         assertEquals(CommandResult.ResultStatus.COMPLETED, matched.getStatus());
         assertSame(result.getLocalAuthenticationResult(), matched.getResult());
 
-        final AcquireTokenResult opaque = success("not-a-token", false);
+        final AcquireTokenResult opaque = success(null, false);
         final CommandResult untargeted = CommandDispatcher.getCommandResultFromTokenResult(
                 opaque, parameters(claims("target-mc").replace("id_token", "access_token")));
         assertEquals(CommandResult.ResultStatus.COMPLETED, untargeted.getStatus());
         assertSame(opaque.getLocalAuthenticationResult(), untargeted.getResult());
+
+        for (final String idToken : new String[]{token(null), token(""), token("+ALL")}) {
+            final AcquireTokenResult untargetedResult = success(idToken, true);
+            final CommandResult accepted = CommandDispatcher.getCommandResultFromTokenResult(
+                    untargetedResult, parameters(null));
+            assertEquals(CommandResult.ResultStatus.COMPLETED, accepted.getStatus());
+            assertSame(untargetedResult.getLocalAuthenticationResult(), accepted.getResult());
+        }
     }
 
     private static TokenCommandParameters parameters(final String claims) {

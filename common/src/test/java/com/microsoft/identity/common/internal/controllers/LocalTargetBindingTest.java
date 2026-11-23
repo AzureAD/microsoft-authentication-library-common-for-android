@@ -51,13 +51,16 @@ public class LocalTargetBindingTest {
         for (final BaseController controller : new BaseController[]{
                 new LocalMSALController(), new NativeAuthMsalController()}) {
             for (final boolean refreshOn : new boolean[]{false, true}) {
-                assertCachedReceiptRejected(controller, refreshOn);
+                for (final String claims : new String[]{null, "{}",
+                        "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":[\"target-mc\"]}}}"}) {
+                    assertCachedReceiptRejected(controller, refreshOn, claims);
+                }
             }
         }
     }
 
     private void assertCachedReceiptRejected(
-            final BaseController controller, final boolean refreshOn) throws Exception {
+            final BaseController controller, final boolean refreshOn, final String claims) throws Exception {
         final AccountRecord account = new AccountRecord();
         final AccessTokenRecord accessToken = mock(AccessTokenRecord.class);
         when(accessToken.shouldRefresh()).thenReturn(refreshOn);
@@ -90,8 +93,7 @@ public class LocalTargetBindingTest {
                 .scopes(new HashSet<>(Collections.singleton("user.read")))
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .sdkType(SdkType.MSAL)
-                .claimsRequestJson("{\"id_token\":{\"xms_agvs\":{"
-                        + "\"additionalProperties\":[\"target-mc\"]}}}")
+                .claimsRequestJson(claims)
                 .build();
 
         try (final MockedStatic<LibraryConfiguration> configuration =

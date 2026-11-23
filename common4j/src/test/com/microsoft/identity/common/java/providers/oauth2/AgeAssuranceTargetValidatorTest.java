@@ -11,7 +11,9 @@ import com.nimbusds.jwt.PlainJWT;
 
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -45,15 +47,44 @@ public class AgeAssuranceTargetValidatorTest {
                 .build()).serialize();
     }
 
+    private static String tokenWithNullReceipt() {
+        return "eyJhbGciOiJub25lIn0." + Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "{\"sub\":\"test-subject\",\"xms_agvs\":0,\"xms_agvt\":null}"
+                        .getBytes(StandardCharsets.UTF_8)) + ".";
+    }
+
     @Test
-    public void noExplicitIdTargetDoesNotInspectToken() throws Exception {
+    public void noExplicitIdTargetValidatesPresentToken() throws Exception {
         for (final String request : Arrays.asList(null, "", "{}", "invalid-json",
-                claims("other-property"), claims(" target-mc"),
+                claims(), claims("other-property"), claims(" target-mc"),
                 claims("target-mc").replace("id_token", "access_token"),
                 claims("target-mc").replace("id_token", "ID_TOKEN"),
                 claims("target-mc").replace("xms_agvs", "XMS_AGVS"),
                 claims("target-mc").replace("additionalProperties", "AdditionalProperties"))) {
-            AgeAssuranceTargetValidator.validate(request, "not-a-token");
+            for (final Object receipt : Arrays.asList(null, "", "+all", "-ALL", "+AlL")) {
+                AgeAssuranceTargetValidator.validate(request, token(receipt));
+            }
+            AgeAssuranceTargetValidator.validate(request, null);
+            assertMismatch(request, "not-a-token");
+            assertMismatch(request, "");
+            assertMismatch(request, " ");
+            assertMismatch(request, token("+mc"));
+            assertMismatch(request, tokenWithNullReceipt());
+        }
+    }
+
+    @Test
+    public void emptyTargetsRejectNamedMalformedDuplicateAndWrongTypeReceipts() throws Exception {
+        for (final String request : Arrays.asList(null, claims())) {
+            for (final Object receipt : Arrays.asList(
+                    0, true, Collections.emptyList(), Collections.singletonList("+all"),
+                    Collections.singletonMap("target", "all"),
+                    "+mc", "-mc", "+all,+mc", "+all,-ALL", "+all,+all", "all",
+                    " ", "\t", "+", "-", "++all", "+-all", "--all", "-+all",
+                    " +all", "+ all", "+all ", "+a ll", "+all,", ",+all", "+all,,",
+                    "+all\n", "+all\u00a0", "+all\uFEFF")) {
+                assertMismatch(request, token(receipt));
+            }
         }
     }
 
@@ -72,7 +103,9 @@ public class AgeAssuranceTargetValidatorTest {
                 "[]", "[null,123,true,{\"value\":\"target-mc\"},[\"target-mc\"]]")) {
             AgeAssuranceTargetValidator.validate(
                     "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
-                            + properties + "}}}", "not-a-token");
+                            + properties + "}}}", token("+all"));
+            assertMismatch("{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                    + properties + "}}}", token("+mc"));
         }
 
         final String mixed = "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
@@ -86,6 +119,10 @@ public class AgeAssuranceTargetValidatorTest {
         AgeAssuranceTargetValidator.validate(
                 claims("target-future.v2/é:_id"), token("-FUTURE.V2/É:_ID"));
         AgeAssuranceTargetValidator.validate(claims("target-all"), token("+ALL"));
+        AgeAssuranceTargetValidator.validate(claims("target-all"), token("-all"));
+        assertMismatch(claims("target-all"), token(""));
+        assertMismatch(claims("target-all"), token(null));
+        assertMismatch(claims("target-all"), tokenWithNullReceipt());
         assertMismatch(claims("target-all"), token("+mc,+sm"));
         assertMismatch(claims("target-mc"), token("+all"));
     }
@@ -110,6 +147,7 @@ public class AgeAssuranceTargetValidatorTest {
                 "target-", "target-+mc", "target--mc", "target-mc,sm",
                 "target-mc ", "target-m c", "target-\nmc")) {
             assertMismatch(claims(property), token("+mc"));
+            assertMismatch(claims(property), null);
         }
     }
 

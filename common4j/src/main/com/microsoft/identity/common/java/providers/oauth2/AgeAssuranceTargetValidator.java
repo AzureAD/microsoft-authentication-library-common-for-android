@@ -13,6 +13,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -22,7 +23,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * This does not interpret age-assurance status or outcome signs, authorize API access, or inspect
  * access tokens. Target names are opaque; "all" is a literal identity, not a wildcard.
  * Matching ignores identity case and order, but requires a plus or minus sign on every returned
- * identity. Missing, malformed, duplicate, or extra receipt entries are rejected regardless of
+ * identity. With no explicit targets, only an absent/empty receipt or a single signed "all"
+ * identity is accepted. Malformed, duplicate, or extra receipt entries are rejected regardless of
  * status, including unknown status (TU0). A matching negative entry is a valid receipt, not
  * evidence of adult authorization.
  */
@@ -31,15 +33,6 @@ public final class AgeAssuranceTargetValidator {
     private static final String RECEIPT_CLAIM = "xms_agvt";
 
     private AgeAssuranceTargetValidator() {
-    }
-
-    /**
-     * Whether this operation explicitly requests ID-token targets. This lets a controller retain
-     * its existing untargeted result handling while validating targeted results before caching.
-     */
-    public static boolean requiresValidation(@Nullable final String claimsRequestJson)
-            throws ClientException {
-        return !requestedTargets(claimsRequestJson).isEmpty();
     }
 
     /**
@@ -56,27 +49,35 @@ public final class AgeAssuranceTargetValidator {
 
     /**
      * Validates the ID token against an immutable, operation-local claims JSON string.
-     * Without explicit ID-token targets, the ID token is not parsed and behavior is unchanged.
+     * Without explicit ID-token targets, a genuinely absent ID token is allowed. A present token
+     * must have no receipt, an empty string receipt, or exactly one signed "all" identity.
      *
-     * @throws ClientException with age_assurance_target_mismatch when the outcome-prefixed receipt is
-     *                        missing, malformed, duplicated or does not match the requested set
+     * @throws ClientException with age_assurance_target_mismatch when the receipt is malformed,
+     *                        duplicated, missing for explicit targets, or does not match the set
      */
     public static void validate(@Nullable final String claimsRequestJson,
                                 @Nullable final String idToken) throws ClientException {
         final Set<String> requested = requestedTargets(claimsRequestJson);
-        if (requested.isEmpty()) {
+        if (requested.isEmpty() && idToken == null) {
             return;
         }
 
-        final Object receipt;
+        final Map<String, ?> tokenClaims;
         try {
-            receipt = new IDToken(idToken).getTokenClaims().get(RECEIPT_CLAIM);
+            tokenClaims = new IDToken(idToken).getTokenClaims();
         } catch (final ServiceException | IllegalArgumentException e) {
             // Do not attach parser exceptions, which may contain token material.
             throw mismatch();
         }
+        if (requested.isEmpty() && !tokenClaims.containsKey(RECEIPT_CLAIM)) {
+            return;
+        }
+        final Object receipt = tokenClaims.get(RECEIPT_CLAIM);
         if (!(receipt instanceof String)) {
             throw mismatch();
+        }
+        if (requested.isEmpty() && ((String) receipt).isEmpty()) {
+            return;
         }
 
         final Set<String> returned = new HashSet<>();
@@ -89,7 +90,9 @@ public final class AgeAssuranceTargetValidator {
                 throw mismatch();
             }
         }
-        if (!requested.equals(returned)) {
+        if (requested.isEmpty()
+                ? returned.size() != 1 || !returned.contains("all")
+                : !requested.equals(returned)) {
             throw mismatch();
         }
     }
