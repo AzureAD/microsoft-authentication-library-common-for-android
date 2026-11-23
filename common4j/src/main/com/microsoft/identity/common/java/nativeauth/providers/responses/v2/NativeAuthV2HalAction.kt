@@ -36,7 +36,6 @@ value class NativeAuthV2HalAction(val value: String) {
         val VERIFY = NativeAuthV2HalAction("verify")
         val UPDATE = NativeAuthV2HalAction("update")
         val POLL = NativeAuthV2HalAction("poll")
-        val RISK_VERIFY = NativeAuthV2HalAction("riskverify")
         val ENROLL = NativeAuthV2HalAction("enroll")
         val REGISTER = NativeAuthV2HalAction("register")
         val ACTIVATE = NativeAuthV2HalAction("activate")

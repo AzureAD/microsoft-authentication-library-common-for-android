@@ -173,15 +173,6 @@ class NativeAuthV2OAuth2Strategy(
         )
     }
 
-    /**
-     * Performs the internal risk-verification hop required after an SMS method challenge.
-     */
-    fun performRiskVerification(
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performRiskVerification(state = state)
-    }
-
     /** Enrolls the selected email/SMS method using an explicit verification contact. */
     fun performEnroll(
         state: NativeAuthV2ContinuationState,

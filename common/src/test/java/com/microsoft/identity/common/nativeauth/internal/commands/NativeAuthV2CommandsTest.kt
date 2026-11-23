@@ -122,8 +122,8 @@ class NativeAuthV2CommandsTest {
     }
 
     @Test
-    fun signUpSubmitCodeResultsUseDedicatedContract() {
-        assertFalse(
+    fun allInteractionCommandsShareTheUnifiedContract() {
+        assertTrue(
             NativeAuthV2SubmitCodeCommandResult::class.java.isAssignableFrom(
                 com.microsoft.identity.common.java.nativeauth.controllers.results
                     .NativeAuthV2CommandResult.AttributesRequired::class.java

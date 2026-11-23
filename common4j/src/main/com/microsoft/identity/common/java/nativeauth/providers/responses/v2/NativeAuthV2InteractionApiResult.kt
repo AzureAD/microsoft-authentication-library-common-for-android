@@ -61,7 +61,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val challengeTargetLabel: String,
-        val codeLength: Int
+        val codeLength: Int,
+        val challengeChannel: String? = null
     ) : NativeAuthV2InteractionApiResult {
         override fun toUnsanitizedString(): String = "ActivationRequired(correlationId=$correlationId, codeLength=$codeLength)"
         override fun toString(): String = toUnsanitizedString()
@@ -86,20 +87,6 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
                 "hint=$hint, methods=${methods.map { it.toUnsanitizedString() }})"
         override fun toString(): String = "ChallengeRequired(correlationId=$correlationId, " +
                 "methods=${methods.map { it.toString() }})"
-    }
-
-    /**
-     * The selected authentication method requires an internal risk-verification request before
-     * the service can return the code-verification contract. This is a protocol-layer transition;
-     * higher layers follow it automatically rather than exposing another application state.
-     */
-    data class RiskVerificationRequired(
-        override val correlationId: String,
-        val continuationState: NativeAuthV2ContinuationState
-    ) : NativeAuthV2InteractionApiResult {
-        override fun toUnsanitizedString(): String =
-            "RiskVerificationRequired(correlationId=$correlationId)"
-        override fun toString(): String = toUnsanitizedString()
     }
 
     /**

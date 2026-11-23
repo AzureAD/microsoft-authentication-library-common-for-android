@@ -59,7 +59,7 @@ import org.junit.Test
 
 /**
  * Unit tests for the V2 self-service password reset (SSPR) orchestration in
- * [NativeAuthV2FlowController]: reset start, method selection and risk verification, code
+ * [NativeAuthV2FlowController]: reset start, method selection, code
  * submission, password update and polling, and explicit sign-in after reset.
  *
  * [NativeAuthV2OAuth2Strategy] and [NativeAuthCIAMAuthority] are mocked so these tests exercise only
@@ -91,6 +91,8 @@ class NativeAuthV2SSPRFlowControllerTest {
         every { state.correlationId } returns id
         every { state.flowScenario() } returns
             com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario.RESET_PASSWORD
+        every { state.pendingSignUpAttributesForSubmission() } returns null
+        every { state.isResetPasswordUpdateSubmitted() } returns false
         return state
     }
 
@@ -359,7 +361,7 @@ class NativeAuthV2SSPRFlowControllerTest {
             continuationState = state,
             hint = null,
             methods = listOf(
-                NativeAuthV2AuthMethod("password-1", "password", null)
+                NativeAuthV2AuthMethod("unsupported-1", "unsupported", null)
             )
         )
 
@@ -374,7 +376,6 @@ class NativeAuthV2SSPRFlowControllerTest {
     @Test
     fun testResetPasswordStartAutomaticallyChallengesSingleSmsMethod() {
         val challengeState = mockContinuationState()
-        val riskState = mockContinuationState()
         val verificationState = mockContinuationState()
         every {
             mockStrategy.performAuthorizeChallengeStart(
@@ -400,12 +401,6 @@ class NativeAuthV2SSPRFlowControllerTest {
         )
         every {
             mockStrategy.performMethodChallenge(challengeState, "sms-1")
-        } returns NativeAuthV2InteractionApiResult.RiskVerificationRequired(
-            correlationId = correlationId,
-            continuationState = riskState
-        )
-        every {
-            mockStrategy.performRiskVerification(riskState)
         } returns NativeAuthV2InteractionApiResult.CodeRequired(
             correlationId = correlationId,
             continuationState = verificationState,
@@ -420,43 +415,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         result as NativeAuthV2CommandResult.CodeRequired
         assertEquals("sms", result.challengeChannel)
         assertEquals(6, result.codeLength)
-        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
-    }
-
-    @Test
-    fun testSelectResetPasswordSmsMethodFollowsRiskVerification() {
-        val selectionState = mockContinuationState()
-        every { selectionState.flowScenario() } returns
-            com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario.RESET_PASSWORD
-        val riskState = mockContinuationState()
-        val verificationState = mockContinuationState()
-        every {
-            mockStrategy.performMethodChallenge(selectionState, "sms-1")
-        } returns NativeAuthV2InteractionApiResult.RiskVerificationRequired(
-            correlationId = correlationId,
-            continuationState = riskState
-        )
-        every {
-            mockStrategy.performRiskVerification(riskState)
-        } returns NativeAuthV2InteractionApiResult.CodeRequired(
-            correlationId = correlationId,
-            continuationState = verificationState,
-            challengeTargetLabel = "+X XXX XXX 34",
-            challengeChannel = "sms",
-            codeLength = 6
-        )
-
-        val result = controller.selectAuthMethod(
-            selectAuthMethodParameters(selectionState, "sms-1")
-        )
-
-        assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
-        result as NativeAuthV2CommandResult.CodeRequired
-        assertEquals(verificationState, result.continuationState)
-        assertEquals("+X XXX XXX 34", result.challengeTargetLabel)
-        assertEquals("sms", result.challengeChannel)
-        assertEquals(6, result.codeLength)
-        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+        verify(exactly = 1) { mockStrategy.performMethodChallenge(challengeState, "sms-1") }
     }
 
     @Test
@@ -505,6 +464,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     fun testSubmitNewPasswordReturnsSignInAfterResetPasswordRequiredWhenUpdateReadyToComplete() {
         val inputState = mockContinuationState()
         val readyState = mockContinuationState()
+        every { readyState.isResetPasswordUpdateSubmitted() } returns true
         val parameters = submitNewPasswordParameters(inputState)
 
         every {
@@ -588,6 +548,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         val inputState = mockContinuationState()
         val pollState = mockContinuationState()
         val readyState = mockContinuationState()
+        every { readyState.isResetPasswordUpdateSubmitted() } returns true
         val parameters = submitNewPasswordParameters(inputState)
 
         every {

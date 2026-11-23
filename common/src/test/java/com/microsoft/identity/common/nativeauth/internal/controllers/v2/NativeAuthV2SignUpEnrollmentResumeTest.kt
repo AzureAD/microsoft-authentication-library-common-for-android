@@ -130,7 +130,7 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
         val password = "weak-password".toCharArray()
         val rejected = controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder())
             .continuationState(passwordRequired.continuationState).attributes(emptyMap())
-            .password(password).build()) as INativeAuthCommandResult.APIError
+            .password(password).build()) as NativeAuthV2CommandResult.PasswordNotAccepted
         assertEquals("invalidRequest", rejected.error)
         assertEquals("Password rejected", rejected.errorDescription)
         assertEquals("attributeValidationError", rejected.subError)
@@ -274,13 +274,12 @@ class NativeAuthV2SignUpEnrollmentResumeTest {
     }
 
     @Test
-    fun unexpectedCompletionAtStartRemainsAnApiError() {
+    fun interactionCompletionAtStartRequiresExplicitSignIn() {
         stubSignUpResponses("""{"state":"continue","continuationToken":"unexpected"}""")
         val result = controller.signUpStart(configured(SignUpV2StartCommandParameters.builder())
             .username("original@contoso.com").build())
 
-        assertTrue(result is INativeAuthCommandResult.APIError)
-        assertEquals("unexpected_api_result", (result as INativeAuthCommandResult.APIError).error)
+        assertTrue(result is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
         assertEquals(1, requests.size)
     }
 

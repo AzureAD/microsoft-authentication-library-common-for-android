@@ -64,39 +64,6 @@ class NativeAuthV2EnrollmentInteractorTest {
     }
 
     @Test
-    fun smsEnrollmentRiskAndActivationUseLatestTokenAndExactServerLinks() {
-        val urls = mutableListOf<URL>()
-        val bodies = mutableListOf<ByteArray>()
-        every { client.method(HttpClient.HttpMethod.POST, capture(urls), any(), capture(bodies)) } returnsMany listOf(
-            HttpResponse(200, """{"action":"riskverify","continuationToken":"risk",
-                "_links":{"riskverify":{"href":"/tenant/api/v2.0/auth/risk?dc=test"}}}""", emptyMap()),
-            HttpResponse(200, """{"action":"activate","continuationToken":"activate","hint":"masked","codeLength":6,
-                "_links":{"activate":{"href":"/tenant/api/v2.0/auth/methods/phone/activate?dc=test"}}}""", emptyMap()),
-            HttpResponse(200, """{"action":"update","continuationToken":"update",
-                "_links":{"update":{"href":"/tenant/api/v2.0/auth/update?dc=test"}}}""", emptyMap())
-        )
-        val risk = interactor.performEnroll(registration().continuationState, "phone:sms:0", "+123456789")
-            as NativeAuthV2InteractionApiResult.RiskVerificationRequired
-        val activate = interactor.performRiskVerification(risk.continuationState)
-            as NativeAuthV2InteractionApiResult.ActivationRequired
-        val next = interactor.performActivate(activate.continuationState, "any-service-validated-code")
-            as NativeAuthV2InteractionApiResult.UpdateRequired
-        assertEquals(listOf(
-            """{"continuationToken":"registration","phoneNumber":"+123456789","channel":"sms"}""",
-            """{"continuationToken":"risk"}""",
-            """{"continuationToken":"activate","otp":"any-service-validated-code"}"""
-        ), bodies.map { String(it, Charsets.UTF_8) })
-        assertEquals(listOf(
-            "https://login.contoso.com/tenant/api/v2.0/auth/methods/phone?dc=test",
-            "https://login.contoso.com/tenant/api/v2.0/auth/risk?dc=test",
-            "https://login.contoso.com/tenant/api/v2.0/auth/methods/phone/activate?dc=test"
-        ), urls.map { it.toString() })
-        assertEquals(NativeAuthV2FlowScenario.RESET_PASSWORD, next.continuationState.flowScenario())
-        assertEquals(listOf("User.Read"), next.continuationState.scopesForTokenRequest())
-        assertFalse(next.continuationState.isResetPasswordUpdateSubmitted())
-    }
-
-    @Test
     fun actualPasswordUpdateBeforeEnrollmentSurvivesActivationAndSerialization() {
         every { client.method(HttpClient.HttpMethod.PUT, any(), any(), any()) } returns HttpResponse(200,
             """{"action":"enroll","continuationToken":"after-update","_embedded":{"methods":[
@@ -105,7 +72,7 @@ class NativeAuthV2EnrollmentInteractorTest {
             as NativeAuthV2InteractionApiResult.RegistrationRequired
         assertTrue(registration.continuationState.isResetPasswordUpdateSubmitted())
         val activation = parser.parseInteraction(response("""
-            {"action":"activate","continuationToken":"activation","hint":"masked","codeLength":6,
+            {"action":"activate","continuationToken":"activation","hint":"masked","codeLength":6,"channel":"email",
             "_links":{"activate":{"href":"/tenant/api/v2.0/auth/email/activate"}}}
         """), registration.continuationState) as NativeAuthV2InteractionApiResult.ActivationRequired
         val bytes = java.io.ByteArrayOutputStream().apply {

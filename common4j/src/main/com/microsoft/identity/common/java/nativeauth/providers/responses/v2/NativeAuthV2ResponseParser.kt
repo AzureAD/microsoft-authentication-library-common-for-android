@@ -143,7 +143,6 @@ class NativeAuthV2ResponseParser {
      * becomes [NativeAuthV2InteractionApiResult.ReadyToComplete]; any other response requires a
      * continuation token before its `action` is switched on to produce
      * [NativeAuthV2InteractionApiResult.ChallengeRequired],
-     * [NativeAuthV2InteractionApiResult.RiskVerificationRequired],
      * [NativeAuthV2InteractionApiResult.CodeRequired],
      * [NativeAuthV2InteractionApiResult.UpdateRequired], or
      * [NativeAuthV2InteractionApiResult.PollInProgress];
@@ -170,8 +169,7 @@ class NativeAuthV2ResponseParser {
         response.serverError?.let { serverError ->
             return mapInteractionError(
                 correlationId = errorCorrelationId,
-                serverError = serverError,
-                scenario = previousState.scenario
+                serverError = serverError
             )
         }
 
@@ -196,7 +194,6 @@ class NativeAuthV2ResponseParser {
             NativeAuthV2HalAction.ACTIVATE -> parseActivate(response, previousState)
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
-            NativeAuthV2HalAction.RISK_VERIFY -> parseRiskVerify(response, previousState)
             NativeAuthV2HalAction.COLLECT_ATTRIBUTES -> parseCollectAttributes(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
@@ -241,11 +238,15 @@ class NativeAuthV2ResponseParser {
         val codeLength = response.codeLength
             ?: return missingFieldError(response.correlationId, CODE_LENGTH_FIELD)
         if (codeLength <= 0) return invalidFieldError(response.correlationId, CODE_LENGTH_FIELD)
+        val channel = response.activationChannel?.lowercase(Locale.ROOT)
+            ?: return missingFieldError(response.correlationId, CHALLENGE_CHANNEL_FIELD)
+        if (!channel.isOneTimeCodeChannel()) return unsupportedChallengeMethodError(response)
         val hint = response.challengeTargetLabel.orEmpty()
         val successor = NativeAuthV2ContinuationState.next(previousState, response)
             ?: return missingContinuationTokenError(response.correlationId)
         return NativeAuthV2InteractionApiResult.ActivationRequired(
-            response.correlationId, successor, hint, codeLength
+            response.correlationId, successor, hint, codeLength,
+            channel
         )
     }
 
@@ -264,13 +265,6 @@ class NativeAuthV2ResponseParser {
         ) ?: return missingContinuationTokenError(response.correlationId)
 
         return when {
-            response.state == "interactionRequired" &&
-                previousState.scenario == NativeAuthV2FlowScenario.SIGN_UP &&
-                response.isSingleFactorChallenge &&
-                methods.any { it.type == "email" || it.type == "password" } ->
-                NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired(
-                    response.correlationId, successor.forExistingAccountSignIn(), methods
-                )
             response.isSingleFactorChallenge || response.isMultiFactorChallenge -> NativeAuthV2InteractionApiResult.ChallengeRequired(
                 correlationId = response.correlationId,
                 continuationState = successor,
@@ -325,21 +319,6 @@ class NativeAuthV2ResponseParser {
         return ParsedMethods.Success(methods.values.toList())
     }
 
-    private fun parseRiskVerify(
-        response: NativeAuthV2HalApiResponse,
-        previousState: NativeAuthV2ContinuationState
-    ): NativeAuthV2InteractionApiResult {
-        if (response.links[NativeAuthV2LinkRelation.RISK_VERIFY.value].isNullOrBlank()) {
-            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.RISK_VERIFY)
-        }
-        val successor = NativeAuthV2ContinuationState.next(previousState, response)
-            ?: return missingContinuationTokenError(response.correlationId)
-        return NativeAuthV2InteractionApiResult.RiskVerificationRequired(
-            correlationId = response.correlationId,
-            continuationState = successor
-        )
-    }
-
     private fun malformedMethodError(
         correlationId: String,
         fieldName: String
@@ -388,7 +367,7 @@ class NativeAuthV2ResponseParser {
             // second-factor step means the server and this SDK disagree about where the flow is,
             // which is unrecoverable: honouring it would re-prompt for a credential the user has
             // already proven.
-            if (!previousState.isFirstFactor) {
+            if (!successor.isFirstFactor) {
                 return passwordOutsideFirstFactorError(response)
             }
             return NativeAuthV2InteractionApiResult.PasswordRequired(
@@ -579,8 +558,7 @@ class NativeAuthV2ResponseParser {
      */
     private fun mapInteractionError(
         correlationId: String,
-        serverError: NativeAuthV2HalApiResponse.HalServerError,
-        scenario: NativeAuthV2FlowScenario
+        serverError: NativeAuthV2HalApiResponse.HalServerError
     ): NativeAuthV2InteractionApiResult {
         val code = serverError.code
         val innerErrorCode = serverError.innerErrorCode
@@ -618,8 +596,7 @@ class NativeAuthV2ResponseParser {
                     attributeValidationDetails = validationDetails(serverError)
                 )
 
-            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
-                    innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
+            innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
                 run {
                     val invalidAttributes = serverError.details
                         .flatMap { it.attributeIds }

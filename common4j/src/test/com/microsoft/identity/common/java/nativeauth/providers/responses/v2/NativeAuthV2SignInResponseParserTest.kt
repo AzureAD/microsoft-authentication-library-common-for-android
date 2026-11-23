@@ -383,46 +383,7 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenSmsChallengeRequiresRiskVerification_returnsInternalTransition() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                """
-                {
-                  "continuationToken": "ct-risk",
-                  "action": "riskverify",
-                  "_links": {
-                    "riskverify": {
-                      "href": "/tenant/api/v1.0-internal/risk/phone/verify"
-                    }
-                  }
-                }
-                """.trimIndent()
-            ),
-            previousState = secondFactorState()
-        )
-
-        assertTrue(result is NativeAuthV2InteractionApiResult.RiskVerificationRequired)
-        val riskVerification = result as NativeAuthV2InteractionApiResult.RiskVerificationRequired
-        assertEquals(
-            "/tenant/api/v1.0-internal/risk/phone/verify",
-            riskVerification.continuationState.href(NativeAuthV2LinkRelation.RISK_VERIFY)
-        )
-    }
-
-    @Test
-    fun parseInteraction_whenRiskVerificationLinkIsMissing_returnsProtocolError() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                """{"continuationToken":"ct-risk","action":"riskverify"}"""
-            ),
-            previousState = secondFactorState()
-        )
-
-        assertInvalidState(result, "missing required link relation 'riskverify'")
-    }
-
-    @Test
-    fun parseInteraction_whenRiskVerificationReturnsSmsCodeContract_returnsCodeRequired() {
+    fun parseInteraction_whenSmsCodeContractIsReturned_returnsCodeRequired() {
         val result = parser.parseInteraction(
             response = responseFrom(
                 """

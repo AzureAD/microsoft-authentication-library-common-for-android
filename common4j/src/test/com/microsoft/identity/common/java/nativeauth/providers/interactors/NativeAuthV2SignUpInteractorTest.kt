@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2SignUpStartRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2SubmitAttributesRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2UpdatePasswordRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
@@ -78,6 +79,34 @@ class NativeAuthV2SignUpInteractorTest {
         responseParser = responseParser,
         requestInterceptor = requestInterceptor
     )
+
+    @Test
+    fun passwordUpdateRecordsSignUpCredentialWithoutBlockingOtherOrigins() {
+        for (scenario in NativeAuthV2FlowScenario.values()) {
+            val initial = com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationStateTestFactory.create(
+                CORRELATION_ID, scenario = scenario)
+            val state = if (scenario == NativeAuthV2FlowScenario.SIGN_UP) {
+                initial.withPendingSignUpAttributes(mapOf("city" to "Original"))
+            } else initial
+            val password = "New-password123!".toCharArray()
+            val request = NativeAuthV2UpdatePasswordRequest.create("client", "token", password,
+                submitAttributesUrl.toString(), jsonHeaders())
+            val httpResponse = HttpResponse(200, """{"action":"collectAttributes"}""", emptyMap())
+            val hal = mockk<NativeAuthV2HalApiResponse>()
+            val parsedState = slot<NativeAuthV2ContinuationState>()
+            every { requestProvider.createUpdatePasswordRequest(state, password) } returns request
+            every { httpClient.method(HttpClient.HttpMethod.PUT, any(), any(), any()) } returns httpResponse
+            every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns hal
+            every { responseParser.parseInteraction(hal, capture(parsedState)) } returns
+                NativeAuthV2InteractionApiResult.AttributesRequired(CORRELATION_ID, state, emptyList())
+            createInteractor().performUpdatePassword(state, password)
+            assertEquals(scenario == NativeAuthV2FlowScenario.SIGN_UP, parsedState.captured.hasSubmittedAttribute("password"))
+            assertTrue(parsedState.captured.isResetPasswordUpdateSubmitted())
+            assertEquals(if (scenario == NativeAuthV2FlowScenario.SIGN_UP) mapOf("city" to "Original") else null,
+                parsedState.captured.pendingSignUpAttributesForSubmission())
+            assertTrue(password.all { it == '\u0000' })
+        }
+    }
 
     @Test
     fun performSignUpStart_postsUsernameAndContinuationTokenAndParsesAsSignUpStart() {

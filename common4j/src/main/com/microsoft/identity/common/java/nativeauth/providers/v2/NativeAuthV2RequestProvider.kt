@@ -227,22 +227,6 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the continuation-only request for the risk-verification hop returned by an SMS
-     * method challenge.
-     */
-    fun createRiskVerificationRequest(
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2ChallengeRequest {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = state.correlationId,
-            methodName = "$TAG.createRiskVerificationRequest"
-        )
-
-        return createChallengeRequest(state, NativeAuthV2LinkRelation.RISK_VERIFY)
-    }
-
-    /**
      * Creates the request object for the sign-in flow's entry (`signin/start`) call, resolved via
      * the [NativeAuthV2LinkRelation.SIGN_IN] relation on [state]. The body carries `username` and
      * `continuationToken`.
@@ -391,7 +375,7 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Shared implementation for continuation-only challenge, resend, and risk-verification
+     * Shared implementation for continuation-only challenge and resend
      * requests.
      */
     private fun createChallengeRequest(

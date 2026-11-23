@@ -51,77 +51,163 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             .build()
 
     @Test
-    fun enrollFollowsSmsRiskOnlyOnceAndUsesLatestState() {
-        val registration = registrationState()
-        val risk = state()
+    fun supportedActionsRouteFromEveryInteractionOperationInEveryOrigin() {
+        NativeAuthV2FlowScenario.values().forEach { scenario ->
+            val prior = NativeAuthV2ContinuationStateTestFactory.registration(state(scenario))
+            val next = state(scenario)
+            val methods = listOf(NativeAuthV2AuthMethod("email-id", "email", "masked"),
+                NativeAuthV2AuthMethod("password-id", "password", null))
+            var response: NativeAuthV2InteractionApiResult = NativeAuthV2InteractionApiResult.UpdateRequired("cid", next)
+            every { strategy.performVerify(any(), any()) } answers { response }
+            every { strategy.performPasswordVerify(any(), any()) } answers { response }
+            every { strategy.performUpdatePassword(any(), any()) } answers { response }
+            every { strategy.performSubmitAttributes(any(), any(), any()) } answers { response }
+            every { strategy.performEnroll(any(), any(), any()) } answers { response }
+            every { strategy.performActivate(any(), any()) } answers { response }
+            every { strategy.performResend(any()) } answers { response }
+            every { strategy.performSignInStart(any(), any()) } answers { response }
+            every { strategy.performSignUpStart(any(), any()) } answers { response }
+            every { strategy.performResetPasswordStart(any(), any()) } answers { response }
+            every { strategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+                AuthorizeChallengeApiResult.ContinuationRequired("cid", prior)
+            every { strategy.performPoll(any()) } returns NativeAuthV2InteractionApiResult.UpdateRequired("cid", next)
+            val code = configured(NativeAuthV2SubmitCodeCommandParameters.builder()).continuationState(prior).code("otp").build()
+            val operations: List<Pair<String, () -> INativeAuthCommandResult>> = listOf(
+                "sign-in code" to { controller.submitSignInCode(code) },
+                "signup code" to { controller.submitSignUpCode(code) },
+                "reset code" to { controller.submitResetPasswordCode(code) },
+                "MFA code" to { controller.submitMFAChallenge(configured(NativeAuthV2SubmitMFAChallengeCommandParameters.builder())
+                    .continuationState(prior).code("otp").build()) },
+                "password" to { controller.submitPassword(configured(NativeAuthV2SubmitPasswordCommandParameters.builder())
+                    .continuationState(prior).password("password".toCharArray()).build()) },
+                "update" to { controller.submitNewPassword(configured(NativeAuthV2SubmitNewPasswordCommandParameters.builder())
+                    .continuationState(prior).newPassword("password".toCharArray()).build()) },
+                "attributes" to { controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder())
+                    .continuationState(prior).attributes(mapOf("city" to "city")).build()) },
+                "enroll" to { controller.enroll(NativeAuthV2EnrollCommandParameters(builder(prior), prior, "phone:sms:0", "contact")) },
+                "activate" to { controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp")) },
+                "resend" to { controller.resendCode(configured(NativeAuthV2ResendCodeCommandParameters.builder()).continuationState(prior).build()) },
+                "start" to {
+                    when (scenario) {
+                        NativeAuthV2FlowScenario.SIGN_IN -> controller.signInStart(configured(SignInV2StartCommandParameters.builder()).username("user@contoso.com").build())
+                        NativeAuthV2FlowScenario.SIGN_UP -> controller.signUpStart(configured(SignUpV2StartCommandParameters.builder()).username("user@contoso.com").build())
+                        NativeAuthV2FlowScenario.RESET_PASSWORD -> controller.resetPasswordStart(configured(ResetPasswordV2StartCommandParameters.builder()).username("user@contoso.com").build())
+                    }
+                }
+            )
+            val outcomes = listOf(
+                NativeAuthV2InteractionApiResult.CodeRequired("cid", next, "masked", "email", 6) to NativeAuthV2CommandResult.CodeRequired::class.java,
+                NativeAuthV2InteractionApiResult.PasswordRequired("cid", next) to NativeAuthV2CommandResult.PasswordRequired::class.java,
+                NativeAuthV2InteractionApiResult.UpdateRequired("cid", next) to NativeAuthV2CommandResult.NewPasswordRequired::class.java,
+                NativeAuthV2InteractionApiResult.AttributesRequired("cid", next, listOf(NativeAuthV2RequiredAttribute("city", "string", true))) to NativeAuthV2CommandResult.AttributesRequired::class.java,
+                NativeAuthV2InteractionApiResult.ChallengeRequired("cid", next, null, methods) to NativeAuthV2CommandResult.AuthMethodSelectionRequired::class.java,
+                NativeAuthV2InteractionApiResult.RegistrationRequired("cid", next, methods) to NativeAuthV2CommandResult.StrongAuthRegistrationRequired::class.java,
+                NativeAuthV2InteractionApiResult.ActivationRequired("cid", next, "masked", 6, "email") to NativeAuthV2CommandResult.StrongAuthVerificationRequired::class.java,
+                NativeAuthV2InteractionApiResult.PollInProgress("cid", next, 0) to NativeAuthV2CommandResult.NewPasswordRequired::class.java,
+                NativeAuthV2InteractionApiResult.UnsupportedAction("cid", "unknown", "invalid_state", "Unknown") to INativeAuthCommandResult.APIError::class.java
+            )
+            outcomes.forEach { (outcome, expected) ->
+                response = outcome
+                operations.forEach { (name, execute) ->
+                    val actual = execute()
+                    assertTrue("$scenario/$name/${outcome.javaClass.simpleName}: $actual", expected.isInstance(actual))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun nonSignUpCredentialAndEmailRepromptsRemainUsable() {
+        listOf(NativeAuthV2FlowScenario.SIGN_IN, NativeAuthV2FlowScenario.RESET_PASSWORD).forEach { scenario ->
+            val prior = NativeAuthV2ContinuationStateTestFactory.passwordCollection(state(scenario))
+                .withAdditionalSubmittedAttributes(listOf("password"))
+            every { strategy.performActivate(any(), any()) } returns NativeAuthV2InteractionApiResult.AttributesRequired(
+                "cid", prior, listOf(NativeAuthV2RequiredAttribute("password", "string", true)))
+            assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+                is NativeAuthV2CommandResult.PasswordRequired)
+            every { strategy.performActivate(any(), any()) } returns NativeAuthV2InteractionApiResult.AttributesRequired(
+                "cid", prior, listOf(NativeAuthV2RequiredAttribute("email", "string", true)))
+            assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+                is NativeAuthV2CommandResult.AttributesRequired)
+            every { strategy.performSubmitAttributes(any(), any(), any()) } returns NativeAuthV2InteractionApiResult.UpdateRequired("cid", prior)
+            assertTrue(controller.submitAttributes(configured(NativeAuthV2SubmitAttributesCommandParameters.builder())
+                .continuationState(prior).attributes(mapOf("email" to "new@contoso.com")).build())
+                is NativeAuthV2CommandResult.NewPasswordRequired)
+            verify { strategy.performSubmitAttributes(prior, mapOf("email" to "new@contoso.com"), null) }
+        }
+    }
+
+    @Test
+    fun automaticExistingAccountChallengeCyclesAreBoundedSeparatelyFromPolls() {
+        val methods = listOf(NativeAuthV2AuthMethod("email-id", "email", "masked"))
+        val next = NativeAuthV2ContinuationStateTestFactory.challenge(
+            NativeAuthV2ContinuationStateTestFactory.existingAccount(state(NativeAuthV2FlowScenario.SIGN_UP)), methods)
+        val challenge = NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired("cid", next, methods)
+        every { strategy.performActivate(any(), any()) } returns challenge
+        every { strategy.performMethodChallenge(any(), any()) } returns challenge
+        val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(next), next, "otp"))
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        verify(exactly = 8) { strategy.performMethodChallenge(next, "email-id") }
+        verify(exactly = 0) { strategy.performPoll(any()) }
+    }
+
+    @Test
+    fun enrollmentCanReturnPasswordUpdateInEveryOriginScenario() {
+        NativeAuthV2FlowScenario.values().forEach { scenario ->
+            val prior = state(scenario)
+            val next = state(scenario)
+            every { strategy.performEnroll(prior, any(), any()) } returns
+                NativeAuthV2InteractionApiResult.UpdateRequired("cid", next)
+            val result = controller.enroll(NativeAuthV2EnrollCommandParameters(
+                builder(prior), prior, "phone:sms:0", "contact"
+            ))
+            assertTrue(result is NativeAuthV2CommandResult.NewPasswordRequired)
+            assertSame(next, (result as NativeAuthV2CommandResult.NewPasswordRequired).continuationState)
+            assertEquals(scenario, result.continuationState.flowScenario())
+        }
+    }
+
+    @Test
+    fun activationCanReturnFirstFactorCodeWithoutChangingOrigin() {
+        val prior = state(NativeAuthV2FlowScenario.SIGN_UP)
+        val next = state(NativeAuthV2FlowScenario.SIGN_UP)
+        every { strategy.performActivate(prior, any()) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired("cid", next, "masked", "email", 6)
+        val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
+        assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
+        assertSame(next, (result as NativeAuthV2CommandResult.CodeRequired).continuationState)
+        verify(exactly = 0) { strategy.performAuthorizeChallengeContinue(any()) }
+    }
+
+    @Test
+    fun enrollmentPollCanReturnActivationUsingNewestState() {
+        val prior = registrationState()
+        val poll = state()
         val activation = state()
-        every { strategy.performEnroll(registration, "phone:sms:0", "contact") } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", risk)
-        every { strategy.performRiskVerification(risk) } returns
-            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6)
+        every { strategy.performEnroll(prior, any(), any()) } returns
+            NativeAuthV2InteractionApiResult.PollInProgress("cid", poll, 0)
+        every { strategy.performPoll(poll) } returns
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6, "sms")
         val result = controller.enroll(NativeAuthV2EnrollCommandParameters(
-            builder(registration), registration, "phone:sms:0", "contact"
+            builder(prior), prior, "phone:sms:0", "contact"
         ))
         assertTrue(result is NativeAuthV2CommandResult.StrongAuthVerificationRequired)
         assertSame(activation, (result as NativeAuthV2CommandResult.StrongAuthVerificationRequired).continuationState)
-        verify(exactly = 1) { strategy.performRiskVerification(risk) }
+        verify(exactly = 1) { strategy.performPoll(poll) }
     }
 
     @Test
-    fun repeatedRiskIsRejectedWithoutAnotherHop() {
-        val registration = registrationState()
-        val risk = state()
-        every { strategy.performEnroll(any(), any(), any()) } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", risk)
-        every { strategy.performRiskVerification(risk) } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
-        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
-            builder(registration), registration, "phone:sms:0", "contact"
-        )) is INativeAuthCommandResult.APIError)
-        verify(exactly = 1) { strategy.performRiskVerification(any()) }
-    }
-
-    @Test
-    fun emailEnrollmentRiskIsRejectedWithoutRiskRequest() {
-        val registration = registrationState()
-        every { strategy.performEnroll(registration, "email:email:1", "contact") } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
-        every { strategy.performRiskVerification(any()) } returns
-            NativeAuthV2InteractionApiResult.ActivationRequired("cid", state(), "masked", 6)
-
-        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
-            builder(registration), registration, "email:email:1", "contact"
-        )) is INativeAuthCommandResult.APIError)
-        verify(exactly = 0) { strategy.performRiskVerification(any()) }
-    }
-
-    @Test
-    fun emailEnrollmentReturnsActivationWithoutRiskRequest() {
+    fun emailEnrollmentReturnsActivation() {
         val registration = registrationState()
         val activation = state()
         every { strategy.performEnroll(registration, "email:email:1", "contact") } returns
-            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6)
+            NativeAuthV2InteractionApiResult.ActivationRequired("cid", activation, "masked", 6, "email")
 
         val result = controller.enroll(NativeAuthV2EnrollCommandParameters(
             builder(registration), registration, "email:email:1", "contact"
         ))
         assertTrue(result is NativeAuthV2CommandResult.StrongAuthVerificationRequired)
         assertSame(activation, (result as NativeAuthV2CommandResult.StrongAuthVerificationRequired).continuationState)
-        verify(exactly = 0) { strategy.performRiskVerification(any()) }
-    }
-
-    @Test
-    fun unofferedSmsMethodCannotTriggerRiskRequest() {
-        val registration = registrationState()
-        every { strategy.performEnroll(registration, "phone:sms:99", "contact") } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", state())
-        every { strategy.performRiskVerification(any()) } returns
-            NativeAuthV2InteractionApiResult.ActivationRequired("cid", state(), "masked", 6)
-
-        assertTrue(controller.enroll(NativeAuthV2EnrollCommandParameters(
-            builder(registration), registration, "phone:sms:99", "contact"
-        )) is INativeAuthCommandResult.APIError)
-        verify(exactly = 0) { strategy.performRiskVerification(any()) }
     }
 
     @Test
@@ -344,7 +430,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             assertEquals(listOf(method), registration.authMethods)
             assertSame(updated, registration.continuationState)
             every { strategy.performEnroll(updated, method.id, "contact") } returns
-                NativeAuthV2InteractionApiResult.ActivationRequired("cid", updated, "masked", 6)
+                NativeAuthV2InteractionApiResult.ActivationRequired("cid", updated, "masked", 6, channel)
             val verification = controller.enroll(NativeAuthV2EnrollCommandParameters(
                 builder(updated), registration.continuationState, method.id, "contact"))
                 as NativeAuthV2CommandResult.StrongAuthVerificationRequired
@@ -374,10 +460,9 @@ class NativeAuthV2EnrollmentFlowControllerTest {
         assertEquals("activation-time", invalidCode.timestamp)
         assertEquals(details, (invalidCode as NativeAuthV2CommandResult.IncorrectCode).attributeValidationDetails)
         every { strategy.performActivate(prior, "otp") } returns
-            NativeAuthV2InteractionApiResult.RiskVerificationRequired("cid", prior)
+            NativeAuthV2InteractionApiResult.UnsupportedAction("cid", "unsupported", "invalid_state", "Unsupported action")
         assertTrue(controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
             is INativeAuthCommandResult.APIError)
-        verify(exactly = 0) { strategy.performRiskVerification(any()) }
     }
 
     @Test

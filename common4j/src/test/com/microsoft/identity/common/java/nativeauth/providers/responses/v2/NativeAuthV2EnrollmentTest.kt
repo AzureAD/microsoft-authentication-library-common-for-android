@@ -33,6 +33,43 @@ import java.net.URL
 class NativeAuthV2EnrollmentTest {
     private val parser = NativeAuthV2ResponseParser()
 
+    @Test
+    fun activationRequiresCurrentServerChannelRegardlessOfPreviousMethod() {
+        val offered = parser.parseInteraction(response("""
+            {"action":"enroll","continuationToken":"offer","_embedded":{"methods":[
+              {"type":"phone","channels":["sms"],"_links":{"enroll":{"href":"/phone/enroll"}}}
+            ]}}
+        """), initial()) as NativeAuthV2InteractionApiResult.RegistrationRequired
+        fun activate(state: NativeAuthV2ContinuationState, metadata: String) =
+            parser.parseInteraction(response("""
+                {"action":"activate","continuationToken":"activation","codeLength":6,$metadata
+                 "_links":{"activate":{"href":"/activate"}}}
+            """), state)
+        val previous = offered.continuationState
+        assertTrue(activate(previous, """"type":"phone",""") is NativeAuthV2InteractionApiResult.UnknownError)
+        val switched = activate(previous, """"type":"phone","channel":"email",""") as NativeAuthV2InteractionApiResult.ActivationRequired
+        assertEquals("email", switched.challengeChannel)
+        assertTrue(activate(switched.continuationState, """"type":"phone",""") is NativeAuthV2InteractionApiResult.UnknownError)
+        assertTrue(activate(initial(), """"type":"phone",""") is NativeAuthV2InteractionApiResult.UnknownError)
+        assertEquals("sms", (activate(initial(), """"type":"SMS",""") as NativeAuthV2InteractionApiResult.ActivationRequired).challengeChannel)
+    }
+
+    @Test
+    fun authenticationMethodSelectionDoesNotSupplyMissingActivationChannel() {
+        val challenge = parser.parseInteraction(response("""
+            {"action":"challenge","continuationToken":"challenge",
+             "challengeContext":{"authenticationFactor":"singleFactor"},"_embedded":{"methods":[
+              {"id":"email-id","type":"email","_links":{"challenge":{"href":"/challenge"}}}
+            ]}}
+        """), initial()) as NativeAuthV2InteractionApiResult.ChallengeRequired
+        val selected = requireNotNull(challenge.continuationState.withSelectedMethod("email-id"))
+        val activation = parser.parseInteraction(response("""
+            {"action":"activate","continuationToken":"activation","codeLength":6,
+             "_links":{"activate":{"href":"/activate"}}}
+        """), selected)
+        assertTrue(activation is NativeAuthV2InteractionApiResult.UnknownError)
+    }
+
     private fun response(json: String) =
         NativeAuthV2HalApiResponse.from(HalResource.from(json), 200, "correlation")
 
@@ -154,7 +191,7 @@ class NativeAuthV2EnrollmentTest {
 
     @Test
     fun activationRequiresExplicitLinkAndPositiveIntegerCodeLength() {
-        val valid = """{"action":"activate","continuationToken":"new","hint":"masked","codeLength":6,
+        val valid = """{"action":"activate","continuationToken":"new","hint":"masked","codeLength":6,"channel":"sms",
             "_links":{"activate":{"href":"/activate?dc=1"}}}"""
         val result = parser.parseInteraction(response(valid), initial())
         assertTrue(result is NativeAuthV2InteractionApiResult.ActivationRequired)
@@ -176,7 +213,7 @@ class NativeAuthV2EnrollmentTest {
     fun activationDefaultsAbsentHintToEmptyWithoutRequiringResend() {
         listOf("", """"hint":null,""", """"hint":"",""").forEach { hint ->
             val result = parser.parseInteraction(response("""
-                {"action":"activate","continuationToken":"new",${hint}"codeLength":6,
+                {"action":"activate","continuationToken":"new",${hint}"codeLength":6,"channel":"email",
                  "_links":{"activate":{"href":"/activate"}}}
             """), initial())
             assertTrue(result.toString(), result is NativeAuthV2InteractionApiResult.ActivationRequired)
@@ -208,7 +245,7 @@ class NativeAuthV2EnrollmentTest {
         assertFalse(email.toString().contains("contact"))
         assertFalse(email.toUnsanitizedString().contains("contact"))
         val activation = parser.parseInteraction(response("""
-            {"action":"activate","continuationToken":"activation","hint":"masked","codeLength":6,
+            {"action":"activate","continuationToken":"activation","hint":"masked","codeLength":6,"channel":"sms",
             "_links":{"activate":{"href":"/tenant/api/v2.0/auth/activate"}}}
         """), registration.continuationState) as NativeAuthV2InteractionApiResult.ActivationRequired
         val request = provider.createActivateRequest(activation.continuationState, "not-locally-validated")

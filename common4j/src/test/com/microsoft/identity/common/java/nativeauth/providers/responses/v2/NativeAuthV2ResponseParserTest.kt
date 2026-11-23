@@ -37,8 +37,8 @@ class NativeAuthV2ResponseParserTest {
     private val parser = NativeAuthV2ResponseParser()
 
     @Test
-    fun existingAccountChallenge_preservesContinuationAndDiscardsSignUpInput() {
-        for (type in listOf("email", "password")) {
+    fun singleFactorChallenge_preservesOriginAndSignUpInput() {
+        for (type in listOf("email", "sms", "password")) {
             val prior = NativeAuthV2ContinuationStateTestFactory.create(
                 CORRELATION_ID, listOf("User.Read"), NativeAuthV2LinkRelation.SIGN_UP,
                 NativeAuthV2FlowScenario.SIGN_UP, CLAIMS_REQUEST_JSON
@@ -49,24 +49,24 @@ class NativeAuthV2ResponseParserTest {
                  "challengeContext":{"authenticationFactor":"singleFactor"},
                  "_embedded":{"methods":[{"id":"method","type":"$type",
                  "_links":{"challenge":{"href":"/tenant/$type/challenge?dc=test"}}}]}}
-            """), prior) as NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired
+            """), prior) as NativeAuthV2InteractionApiResult.ChallengeRequired
             val state = result.continuationState
-            assertEquals(NativeAuthV2FlowScenario.SIGN_IN, state.flowScenario())
+            assertEquals(NativeAuthV2FlowScenario.SIGN_UP, state.flowScenario())
             assertEquals("existing", state.continuationToken)
             assertEquals(prior.correlationId, state.correlationId)
             assertEquals(listOf("User.Read"), state.scopesForTokenRequest())
             assertEquals(CLAIMS_REQUEST_JSON, state.claimsRequestJsonForTokenRequest())
             assertEquals("/tenant/$type/challenge?dc=test",
                 state.withSelectedMethod("method")?.href(NativeAuthV2LinkRelation.CHALLENGE))
-            assertFalse(state.hasSubmittedAttribute("email"))
-            assertFalse(state.hasSubmittedAttribute("password"))
+            assertTrue(state.hasSubmittedAttribute("email"))
+            assertTrue(state.hasSubmittedAttribute("password"))
             assertNull(state.pendingSignUpAttributesForSubmission())
             assertFalse(result.toString().contains("existing"))
         }
     }
 
     @Test
-    fun existingAccountChallenge_doesNotReclassifyOtherScenariosStatesOrFactors() {
+    fun challenge_classificationIsIndependentOfOriginAndRetainsFactor() {
         for (scenario in NativeAuthV2FlowScenario.values()) {
             for (state in listOf("interactionRequired", "other")) {
                 for (factor in listOf("singleFactor", "multiFactor", "unknown")) {
@@ -78,19 +78,20 @@ class NativeAuthV2ResponseParserTest {
                     """), previousState(scenario))
                     val expected = when {
                         factor == "unknown" -> NativeAuthV2InteractionApiResult.UnknownError::class.java
-                        factor == "singleFactor" &&
-                            scenario == NativeAuthV2FlowScenario.SIGN_UP && state == "interactionRequired" ->
-                            NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired::class.java
                         else -> NativeAuthV2InteractionApiResult.ChallengeRequired::class.java
                     }
                     assertTrue("$scenario/$state/$factor: $result", expected.isInstance(result))
+                    if (result is NativeAuthV2InteractionApiResult.ChallengeRequired) {
+                        assertEquals(scenario, result.continuationState.flowScenario())
+                        assertEquals(factor == "multiFactor", result.continuationState.isMultiFactorAuthentication())
+                    }
                 }
             }
         }
     }
 
     @Test
-    fun existingAccountChallenge_requiresValidSupportedMethodAndContinuation() {
+    fun challenge_requiresValidMethodAndContinuation() {
         for (method in listOf(
             """{"id":"m","type":"email"}""",
             """{"type":"password","_links":{"challenge":{"href":"/challenge"}}}""",
@@ -102,6 +103,26 @@ class NativeAuthV2ResponseParserTest {
                  "_embedded":{"methods":[$method]}}
             """), previousState(NativeAuthV2FlowScenario.SIGN_UP))
             assertFalse(result is NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired)
+        }
+
+        @Test
+        fun passwordSubmission_usesCurrentActionRatherThanOriginOrAvailableLinks() {
+            for (scenario in NativeAuthV2FlowScenario.values()) {
+                val prior = previousState(scenario)
+                for (action in listOf("collectAttributes", "verify")) {
+                    val response = responseFrom("""
+                        {"state":"interactionRequired","action":"$action","continuationToken":"next",
+                         "_links":{"submitAttributes":{"href":"/attributes"},"verify":{"href":"/verify"}}}
+                    """)
+                    val state = requireNotNull(NativeAuthV2ContinuationState.next(prior, response))
+                    assertEquals(action == "collectAttributes", state.isPasswordAttributeCollection())
+                    val verified = requireNotNull(NativeAuthV2ContinuationState.next(state, responseFrom("""
+                        {"state":"interactionRequired","action":"verify","continuationToken":"verified",
+                         "_links":{"verify":{"href":"/verify"}}}
+                    """)))
+                    assertFalse(verified.isPasswordAttributeCollection())
+                }
+            }
         }
         val result = parser.parseInteraction(responseFrom("""
             {"state":"interactionRequired","action":"challenge",
@@ -207,8 +228,7 @@ class NativeAuthV2ResponseParserTest {
                 assertDiagnostics(authorizeResult as ApiErrorResult)
 
                 val interactionResult = parser.parseInteraction(response, previousState(scenario))
-                if (scenario == NativeAuthV2FlowScenario.SIGN_UP &&
-                    subError == "attributeValidationError") {
+                if (subError == "attributeValidationError") {
                     assertTrue(interactionResult is NativeAuthV2InteractionApiResult.InvalidAttributes)
                     assertEquals(
                         listOf("email"),

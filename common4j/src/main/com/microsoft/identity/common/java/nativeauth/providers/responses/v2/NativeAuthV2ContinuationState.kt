@@ -65,7 +65,8 @@ class NativeAuthV2ContinuationState private constructor(
     private val enrollmentChannels: Map<String, String>? = emptyMap(),
     private val resetPasswordUpdateSubmitted: Boolean = false,
     private val pendingSignUpAttributes: Map<String, String>? = null,
-    private val authenticationMethodTypes: Map<String, String>? = emptyMap()
+    private val authenticationMethodTypes: Map<String, String>? = emptyMap(),
+    private val action: NativeAuthV2HalAction? = null
 ) : ILoggable, Serializable {
 
     /**
@@ -134,7 +135,8 @@ class NativeAuthV2ContinuationState private constructor(
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
             pendingSignUpAttributes = if (names.isEmpty()) pendingSignUpAttributes else null,
-            authenticationMethodTypes = authenticationMethodTypes
+            authenticationMethodTypes = authenticationMethodTypes,
+            action = action
         )
     }
 
@@ -154,7 +156,7 @@ class NativeAuthV2ContinuationState private constructor(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
             resetPasswordUpdateSubmitted, Collections.unmodifiableMap(LinkedHashMap(attributes)),
-            authenticationMethodTypes
+            authenticationMethodTypes, action
         )
     }
 
@@ -167,7 +169,8 @@ class NativeAuthV2ContinuationState private constructor(
         return NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
             entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels,
-            resetPasswordUpdateSubmitted, authenticationMethodTypes = authenticationMethodTypes
+            resetPasswordUpdateSubmitted, authenticationMethodTypes = authenticationMethodTypes,
+            action = action
         )
     }
 
@@ -186,6 +189,20 @@ class NativeAuthV2ContinuationState private constructor(
     /** Returns the originating scenario, never inferred from an enrollment response. */
     fun flowScenario(): NativeAuthV2FlowScenario = scenario
 
+    /** Existing-account sign-in is the one explicit transition out of the sign-up scenario. */
+    fun isExistingAccountSignIn(): Boolean =
+        scenario == NativeAuthV2FlowScenario.SIGN_IN && entryRelation == NativeAuthV2LinkRelation.SIGN_UP
+
+    /** Password submission is determined by the current server action. */
+    fun isPasswordAttributeCollection(): Boolean =
+        action == NativeAuthV2HalAction.COLLECT_ATTRIBUTES
+
+    fun isPasswordVerification(): Boolean =
+        action == NativeAuthV2HalAction.VERIFY
+
+    /** The normalized channel of an offered enrollment method, without exposing its href. */
+    fun enrollmentChannelForMethod(methodId: String): String? = enrollmentChannel(methodId)
+
     /** Continues an existing-account challenge as sign-in, discarding sign-up-only input. */
     internal fun forExistingAccountSignIn(): NativeAuthV2ContinuationState {
         return NativeAuthV2ContinuationState(
@@ -198,18 +215,26 @@ class NativeAuthV2ContinuationState private constructor(
             entryRelation = entryRelation,
             scenario = NativeAuthV2FlowScenario.SIGN_IN,
             authenticationFactor = authenticationFactor,
-            authenticationMethodTypes = authenticationMethodTypes
+            authenticationMethodTypes = authenticationMethodTypes,
+            action = action
         )
     }
 
     /** Whether this reset flow has actually submitted a new password. */
     fun isResetPasswordUpdateSubmitted(): Boolean = resetPasswordUpdateSubmitted
 
+    /**
+     * Records an update without changing origin or discarding pending profile values.
+     * Only sign-up records the new credential to guard against repeated password collection.
+     */
     internal fun withResetPasswordUpdateSubmitted(): NativeAuthV2ContinuationState =
         NativeAuthV2ContinuationState(
             continuationToken, links, methodLinks, scopes, claimsRequestJson, correlationId,
-            entryRelation, scenario, authenticationFactor, submittedAttributes, enrollmentChannels, true,
-            pendingSignUpAttributes, authenticationMethodTypes
+            entryRelation, scenario, authenticationFactor,
+            Collections.unmodifiableSet(LinkedHashSet(submittedAttributes).apply {
+                if (scenario == NativeAuthV2FlowScenario.SIGN_UP) add(ATTRIBUTE_NAME_PASSWORD)
+            }), enrollmentChannels, true,
+            pendingSignUpAttributes, authenticationMethodTypes, action
         )
 
     /**
@@ -220,7 +245,7 @@ class NativeAuthV2ContinuationState private constructor(
 
     internal fun enrollmentChannel(methodId: String): String? = enrollmentChannels?.get(methodId)
 
-    /** Whether [methodId] identifies an offered SMS enrollment method eligible for risk verification. */
+    /** Whether [methodId] identifies an offered SMS enrollment method. */
     fun isSmsEnrollmentMethod(methodId: String): Boolean = enrollmentChannel(methodId) == "sms"
 
     /**
@@ -248,7 +273,8 @@ class NativeAuthV2ContinuationState private constructor(
             enrollmentChannels = enrollmentChannels,
             resetPasswordUpdateSubmitted = resetPasswordUpdateSubmitted,
             pendingSignUpAttributes = pendingSignUpAttributes,
-            authenticationMethodTypes = authenticationMethodTypes
+            authenticationMethodTypes = authenticationMethodTypes,
+            action = action
         )
     }
 
@@ -274,7 +300,6 @@ class NativeAuthV2ContinuationState private constructor(
             NativeAuthV2LinkRelation.RESEND.value,
             NativeAuthV2LinkRelation.UPDATE.value,
             NativeAuthV2LinkRelation.POLL.value,
-            NativeAuthV2LinkRelation.RISK_VERIFY.value,
             NativeAuthV2LinkRelation.CONTINUE.value,
             NativeAuthV2LinkRelation.RESET_PASSWORD.value,
             NativeAuthV2LinkRelation.SIGN_IN.value,
@@ -306,7 +331,8 @@ class NativeAuthV2ContinuationState private constructor(
                 scenario = scenario,
                 authenticationFactor = response.authenticationFactor,
                 submittedAttributes = emptySet(),
-                authenticationMethodTypes = retainAuthenticationMethodTypes(response)
+                authenticationMethodTypes = retainAuthenticationMethodTypes(response),
+                action = response.action
             )
         }
 
@@ -354,7 +380,8 @@ class NativeAuthV2ContinuationState private constructor(
                 } else emptyMap(),
                 resetPasswordUpdateSubmitted = previous.resetPasswordUpdateSubmitted,
                 pendingSignUpAttributes = previous.pendingSignUpAttributes,
-                authenticationMethodTypes = retainAuthenticationMethodTypes(response)
+                authenticationMethodTypes = retainAuthenticationMethodTypes(response),
+                action = response.action
             )
         }
 

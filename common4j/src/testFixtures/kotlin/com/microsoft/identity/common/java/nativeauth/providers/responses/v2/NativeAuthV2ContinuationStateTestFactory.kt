@@ -31,6 +31,29 @@ import com.google.gson.Gson
  */
 object NativeAuthV2ContinuationStateTestFactory {
 
+    /** Models the current links on a password attribute prompt, irrespective of origin. */
+    @JvmStatic
+    fun passwordCollection(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        requireNotNull(NativeAuthV2ContinuationState.next(state,
+            NativeAuthV2HalApiResponse.from(HalResource.from("""
+                {"continuationToken":"collection-token","state":"interactionRequired","action":"collectAttributes",
+                 "_links":{"submitAttributes":{"href":"/tenant/api/v2.0/auth/attributes/submit"}}}
+            """.trimIndent()), 200, state.correlationId)))
+
+    @JvmStatic
+    fun passwordVerification(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        requireNotNull(NativeAuthV2ContinuationState.next(state,
+            NativeAuthV2HalApiResponse.from(HalResource.from("""
+                {"continuationToken":"verification-token","state":"interactionRequired","action":"verify",
+                 "_links":{"verify":{"href":"/tenant/api/v2.0/auth/methods/password/verify"},
+                           "submitAttributes":{"href":"/tenant/api/v2.0/auth/attributes/submit"}}}
+            """.trimIndent()), 200, state.correlationId)))
+
+    /** Models the explicit existing-account transition, not an unrelated sign-in flow. */
+    @JvmStatic
+    fun existingAccount(state: NativeAuthV2ContinuationState): NativeAuthV2ContinuationState =
+        state.forExistingAccountSignIn()
+
     /** Retains actual server-offered method IDs and types for a first-factor or MFA challenge. */
     @JvmStatic
     fun challenge(

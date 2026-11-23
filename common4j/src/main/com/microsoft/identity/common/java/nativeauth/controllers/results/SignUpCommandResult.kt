@@ -154,7 +154,7 @@ interface SignUpCommandResult {
         val errorDescription: String,
         val invalidAttributes: List<String>,
     ) : SignUpStartCommandResult, SignUpSubmitUserAttributesCommandResult,
-        NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
+        NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, invalidAttributes=$invalidAttributes)"
 
         override fun toString(): String = "InvalidAttributes(correlationId=$correlationId)"

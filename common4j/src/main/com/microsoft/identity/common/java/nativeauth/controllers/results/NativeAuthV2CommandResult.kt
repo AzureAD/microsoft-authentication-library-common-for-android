@@ -27,72 +27,39 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2RequiredAttribute
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
-// Per-operation sealed marker interfaces for exhaustive when() dispatch.
-sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SelectAuthMethodCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2ResetPasswordSubmitCodeCommandResult :
-    NativeAuthV2SubmitCodeCommandResult
-sealed interface NativeAuthV2SignUpSubmitCodeCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SignInSubmitCodeCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SignInStartCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SubmitPasswordCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SubmitMFAChallengeCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SignUpStartCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SubmitAttributesCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SignInAfterSignUpCommandResult : INativeAuthCommandResult
-/** Results of enrolling or activating a strong-auth method in the original flow. */
-sealed interface NativeAuthV2StrongAuthCommandResult : INativeAuthCommandResult
+/** Every V2 interaction uses the same result contract, independent of the submitted operation. */
+sealed interface NativeAuthV2InteractionCommandResult : INativeAuthCommandResult
 
-/** Sign-up discovered an existing account and requires an explicit sign-in credential. */
-sealed interface NativeAuthV2ExistingAccountCommandResult :
-    NativeAuthV2SignUpStartCommandResult,
-    NativeAuthV2SubmitAttributesCommandResult,
-    NativeAuthV2SignUpSubmitCodeCommandResult
-
-/** Registration can interrupt any reachable V2 interaction before the final token exchange. */
-sealed interface NativeAuthV2RegistrationCommandResult :
-    NativeAuthV2ResetPasswordStartCommandResult,
-    NativeAuthV2SelectAuthMethodCommandResult,
-    NativeAuthV2ResetPasswordSubmitCodeCommandResult,
-    NativeAuthV2SignUpSubmitCodeCommandResult,
-    NativeAuthV2SignInSubmitCodeCommandResult,
-    NativeAuthV2ResendCodeCommandResult,
-    NativeAuthV2SubmitNewPasswordCommandResult,
-    NativeAuthV2SignInStartCommandResult,
-    NativeAuthV2SubmitPasswordCommandResult,
-    NativeAuthV2SubmitMFAChallengeCommandResult,
-    NativeAuthV2SignUpStartCommandResult,
-    NativeAuthV2SubmitAttributesCommandResult,
-    NativeAuthV2StrongAuthCommandResult
+// Source aliases keep command names descriptive without enforcing per-operation outcome lists.
+typealias NativeAuthV2ResetPasswordStartCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SelectAuthMethodCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SubmitCodeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2ResetPasswordSubmitCodeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignUpSubmitCodeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignInSubmitCodeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2ResendCodeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SubmitNewPasswordCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignInAfterResetPasswordCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignInStartCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SubmitPasswordCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SubmitMFAChallengeCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignUpStartCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SubmitAttributesCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2SignInAfterSignUpCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2StrongAuthCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2ExistingAccountCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2RegistrationCommandResult = NativeAuthV2InteractionCommandResult
+typealias NativeAuthV2FlowCompletionCommandResult = NativeAuthV2InteractionCommandResult
 
 /**
- * Results producible by the shared V2 terminal path (authorize-challenge continue →
- * authorization-code token exchange → cache persistence), which every V2 flow that reaches
- * completion funnels through. Grouping them lets that path keep a single return type instead of
- * repeating the same three outcomes per operation.
- */
-sealed interface NativeAuthV2FlowCompletionCommandResult :
-    NativeAuthV2SignInAfterResetPasswordCommandResult,
-    NativeAuthV2SignInStartCommandResult,
-    NativeAuthV2SignInSubmitCodeCommandResult,
-    NativeAuthV2SubmitPasswordCommandResult,
-    NativeAuthV2SubmitMFAChallengeCommandResult,
-    NativeAuthV2SignInAfterSignUpCommandResult,
-    NativeAuthV2StrongAuthCommandResult
-
-/**
- * Reflects the possible results from the V2 SSPR (self-service password reset) command flow.
+ * Contains the possible results from every V2 interaction command.
  *
  * Conforms to [INativeAuthCommandResult] and covers all terminal and continuation states
- * returned by the V2 reset-password protocol endpoints.
+ * returned by the V2 interaction protocol endpoints.
  *
  * Error cases reuse the shared [INativeAuthCommandResult.APIError] and
  * [INativeAuthCommandResult.Redirect] types declared in [INativeAuthCommandResult]; those types
- * are wired to the marker interfaces above in [INativeAuthCommandResult].
+ * share [NativeAuthV2InteractionCommandResult] with the result classes below.
  */
 interface NativeAuthV2CommandResult {
     /** A sign-up attempt must continue by verifying the existing account's email code. */
@@ -102,7 +69,7 @@ interface NativeAuthV2CommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String
-    ) : NativeAuthV2ExistingAccountCommandResult, NativeAuthV2SelectAuthMethodCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toString(): String = "ExistingAccountCodeRequired(correlationId=$correlationId)"
         override fun toUnsanitizedString(): String = toString()
     }
@@ -111,7 +78,7 @@ interface NativeAuthV2CommandResult {
     data class ExistingAccountPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState
-    ) : NativeAuthV2ExistingAccountCommandResult, NativeAuthV2SelectAuthMethodCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toString(): String = "ExistingAccountPasswordRequired(correlationId=$correlationId)"
         override fun toUnsanitizedString(): String = toString()
     }
@@ -131,8 +98,9 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val codeLength: Int,
-        val challengeTargetLabel: String
-    ) : NativeAuthV2StrongAuthCommandResult, NativeAuthV2ResendCodeCommandResult {
+        val challengeTargetLabel: String,
+        val challengeChannel: String? = null
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toString(): String = "StrongAuthVerificationRequired(correlationId=$correlationId, codeLength=$codeLength)"
         override fun toUnsanitizedString(): String = toString()
     }
@@ -140,7 +108,7 @@ interface NativeAuthV2CommandResult {
     /**
      * The server has sent a one-time code to the user's registered channel.
      * [continuationState] is the opaque mid-flow state to be passed back on the submit-code step.
-     * Applies to start and resend-code steps.
+     * May follow any supported interaction operation.
      */
     data class CodeRequired(
         override val correlationId: String,
@@ -148,13 +116,7 @@ interface NativeAuthV2CommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
-    ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SelectAuthMethodCommandResult,
-        NativeAuthV2SignInStartCommandResult,
-        NativeAuthV2ResendCodeCommandResult,
-        NativeAuthV2SignUpStartCommandResult,
-        NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
@@ -170,12 +132,7 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val authMethods: List<NativeAuthV2AuthMethod>,
-    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ExistingAccountCommandResult,
-        NativeAuthV2SignInStartCommandResult,
-        NativeAuthV2SignInSubmitCodeCommandResult,
-        NativeAuthV2SubmitPasswordCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AuthMethodSelectionRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
 
@@ -191,9 +148,7 @@ interface NativeAuthV2CommandResult {
     data class NewPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
-        NativeAuthV2SubmitMFAChallengeCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NewPasswordRequired(correlationId=$correlationId)"
 
@@ -212,9 +167,7 @@ interface NativeAuthV2CommandResult {
     data class SignInAfterResetPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2SubmitMFAChallengeCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(correlationId=$correlationId)"
 
@@ -233,11 +186,7 @@ interface NativeAuthV2CommandResult {
         val authenticationResult: ILocalAuthenticationResult?,
         val continuationToken: String?,
         val expiresIn: Int?,
-    ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2ResetPasswordSubmitCodeCommandResult,
-        NativeAuthV2ResendCodeCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2FlowCompletionCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
 
@@ -258,11 +207,7 @@ interface NativeAuthV2CommandResult {
         override val traceId: String? = null,
         override val timestamp: String? = null,
         val attributeValidationDetails: List<Map<String, Any?>>? = null
-    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult,
-        NativeAuthV2SignInSubmitCodeCommandResult,
-        NativeAuthV2SubmitMFAChallengeCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
@@ -278,11 +223,7 @@ interface NativeAuthV2CommandResult {
     data class PasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SignInStartCommandResult,
-        NativeAuthV2SignUpStartCommandResult,
-        NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordRequired(correlationId=$correlationId)"
 
@@ -359,7 +300,7 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
-    ) : NativeAuthV2SubmitNewPasswordCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordResetFailed(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
@@ -380,7 +321,7 @@ interface NativeAuthV2CommandResult {
         override val timestamp: String? = null,
         val subError: String? = null,
         val attributeValidationDetails: List<Map<String, Any?>>? = null
-    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SignInStartCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
@@ -398,10 +339,7 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val requiredAttributes: List<NativeAuthV2RequiredAttribute>,
-    ) : NativeAuthV2SignUpStartCommandResult,
-        NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult,
-        NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesRequired(correlationId=$correlationId, requiredAttributes=${requiredAttributes.map { it.toUnsanitizedString() }})"
 
@@ -426,8 +364,7 @@ interface NativeAuthV2CommandResult {
         val attributeValidationDetails: List<Map<String, Any?>>? = null,
         override val traceId: String? = null,
         override val timestamp: String? = null
-    ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription)"
 
@@ -449,8 +386,7 @@ interface NativeAuthV2CommandResult {
         val attributeValidationDetails: List<Map<String, Any?>>? = null,
         override val traceId: String? = null,
         override val timestamp: String? = null
-    ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
@@ -468,8 +404,7 @@ interface NativeAuthV2CommandResult {
     data class SignInAfterSignUpRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2StrongAuthCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterSignUpRequired(correlationId=$correlationId)"
 
@@ -484,18 +419,7 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val error: String,
         val errorDescription: String,
-    ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SelectAuthMethodCommandResult,
-        NativeAuthV2ResetPasswordSubmitCodeCommandResult,
-        NativeAuthV2ResendCodeCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2SignInStartCommandResult,
-        NativeAuthV2SubmitPasswordCommandResult,
-        NativeAuthV2SubmitMFAChallengeCommandResult,
-        NativeAuthV2SignUpStartCommandResult,
-        NativeAuthV2SignUpSubmitCodeCommandResult,
-        NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SignInAfterSignUpCommandResult {
+    ) : NativeAuthV2InteractionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NotImplemented(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 

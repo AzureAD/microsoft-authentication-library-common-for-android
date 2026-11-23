@@ -47,7 +47,9 @@ class NativeAuthV2HalApiResponse private constructor(
     val serverError: HalServerError?,
     // Attributes the server requested via a top-level `attributes` array on a `collectAttributes`
     // response during sign-up. Empty for every response that does not carry that array.
-    val requiredAttributes: List<RequiredAttribute>
+    val requiredAttributes: List<RequiredAttribute>,
+    /** An activation channel is separate from a resource type such as `phone`. */
+    val activationChannel: String? = null
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
     data class EmbeddedAuthMethod(
@@ -223,7 +225,12 @@ class NativeAuthV2HalApiResponse private constructor(
                 pollIntervalMillis = halResource.int(POLL_INTERVAL_KEY),
                 authenticationFactor = extractAuthenticationFactor(halResource),
                 serverError = serverError,
-                requiredAttributes = extractRequiredAttributes(halResource)
+                requiredAttributes = extractRequiredAttributes(halResource),
+                activationChannel = halResource.string("channel")
+                    ?: halResource.string("challengeChannel")
+                    ?: halResource.string(TYPE_KEY)?.takeIf {
+                        it.equals("email", true) || it.equals("sms", true)
+                    }
             )
         }
 

@@ -149,20 +149,6 @@ class NativeAuthV2JitResendTest {
         assertEquals("redirect-time", redirect.timestamp)
     }
 
-    @Test
-    fun resendRejectsMalformedActivationAndDoesNotFollowUnexpectedRisk() {
-        stubResponses(
-            activation("first", "first"),
-            activation("second", "second", codeLength = 0),
-            """{"action":"riskverify","continuationToken":"risk",
-                "_links":{"riskverify":{"href":"/tenant/risk"}}}"""
-        )
-        val state = enroll(initial(NativeAuthV2FlowScenario.SIGN_IN)).continuationState
-        assertTrue(controller.resendCode(resendParameters(state)) is INativeAuthCommandResult.APIError)
-        assertTrue(controller.resendCode(resendParameters(state)) is INativeAuthCommandResult.APIError)
-        assertEquals(3, bodies.size)
-    }
-
     private fun initial(scenario: NativeAuthV2FlowScenario): NativeAuthV2ContinuationState {
         val state = NativeAuthV2ContinuationStateTestFactory.create(
             "cid", listOf("User.Read"),
