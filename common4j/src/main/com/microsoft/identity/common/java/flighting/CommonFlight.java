@@ -264,7 +264,7 @@ public enum CommonFlight implements IFlightConfig {
     /** Flight to enable native Device-CA handoff to the device management app. Default is true. */
     @FlightMeta(
             owner = "somalaya",
-            type = FlagType.RELEASE,
+            type = FlagType.KILL_SWITCH,
             premortem = "docs/premortem/ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF-Premortem.md")
     ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF(
             "EnableNativeDeviceCaManagementAppHandoff",
@@ -383,7 +383,7 @@ public enum CommonFlight implements IFlightConfig {
      */
     @FlightMeta(
             owner = "somalaya",
-            type = FlagType.RELEASE,
+            type = FlagType.KILL_SWITCH,
             premortem = "docs/premortem/ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT-Premortem.md")
     ENABLE_BROKER_WEBVIEW_EXTERNAL_BROWSER_REDIRECT(
             "EnableBrokerWebViewExternalBrowserRedirect",
