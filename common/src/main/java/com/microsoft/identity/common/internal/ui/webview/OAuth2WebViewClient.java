@@ -189,18 +189,20 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         // Developer does not have option to control this for now
         final String methodTag = TAG + ":onReceivedSslError";
         super.onReceivedSslError(view, handler, error);
-        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL + ". Error: " + error.toString();
+        // The full SSL error contains the failing URL and certificate; neither belongs in diagnostics.
+        final int primaryError = error.getPrimaryError();
+        final String errorMessage = "Received SSL Error during request. Primary error code: " + primaryError;
 
-        Logger.warn(methodTag, errMsg);
+        Logger.warn(methodTag, errorMessage + ". For more info see: " + SSL_HELP_URL);
         final Attributes attributes = Attributes.builder()
-                .put(AttributeName.web_view_ssl_primary_error_code.name(), error.getPrimaryError())
+                .put(AttributeName.web_view_ssl_primary_error_code.name(), primaryError)
                 .build();
         sWebViewSslErrorCount.add(1, attributes);
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR)) {
             // Send the result back to the calling activity
             mCompletionCallback.onChallengeResponseReceived(
                     RawAuthorizationResult.fromException(
-                            new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
+                            new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, errorMessage)));
         }
     }
 
