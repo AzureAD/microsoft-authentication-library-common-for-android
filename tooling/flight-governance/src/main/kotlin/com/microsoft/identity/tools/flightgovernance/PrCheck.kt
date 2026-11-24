@@ -19,7 +19,9 @@ private const val CHECK_USAGE = """Usage: flight-governance check-pr
   --source <relative-java-file> [--source ...]
   --policy <target-tracked-policy-json>
   --output <new-report-json-outside-input-repository>
-Policy findings are advisory. Incomplete execution returns nonzero.
+  [--fail-on-findings]
+By default policy findings are advisory (exit 0); --fail-on-findings exits nonzero on findings.
+Incomplete execution always returns nonzero.
 """
 
 internal data class PrComparison(
@@ -38,10 +40,12 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
     }
     var output: Path? = null
     var outputValidated = false
+    var failOnFindings = false
+    fun modeName() = if (failOnFindings) "blocking" else "report-only"
     fun failed(exception: Exception): Int {
         val message = exception.message ?: exception.javaClass.simpleName
         error.println("Flight governance scan incomplete: $message")
-        val report = JSONObject().put("schemaVersion", 1).put("mode", "report-only")
+        val report = JSONObject().put("schemaVersion", 1).put("mode", modeName())
             .put("status", "incomplete").put("error", message)
         output?.takeIf { outputValidated }?.let {
             try {
@@ -91,6 +95,10 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
                     val requested = Path.of(argument(option)).toAbsolutePath().normalize()
                     output = requested.parent.toRealPath().resolve(requested.fileName)
                 }
+                "--fail-on-findings" -> {
+                    require(!failOnFindings) { "Specify --fail-on-findings once" }
+                    failOnFindings = true
+                }
                 else -> throw IllegalArgumentException("Unknown option: $option")
             }
         }
@@ -111,7 +119,9 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
             requireNotNull(policy) { "--policy is required" }
         )
         val result = comparison.result
-        val report = JSONObject().put("schemaVersion", 1).put("mode", "report-only")
+        val mode = modeName()
+        val findingKind = if (failOnFindings) "blocking" else "advisory"
+        val report = JSONObject().put("schemaVersion", 1).put("mode", mode)
             .put("status", "complete").put("repository", label)
             .put("targetCommit", comparison.target).put("sourceCommit", comparison.head)
             .put("mergeBase", comparison.mergeBase).put("policyCommit", comparison.target)
@@ -125,8 +135,8 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
                     .put("line", it.declaration.line).put("message", it.message).put("fix", it.fix)
             }))
         val summary = buildString {
-            append("# Flight governance: report-only\n\n")
-            append("Scan complete; ${result.findings.size} advisory findings; ")
+            append("# Flight governance: $mode\n\n")
+            append("Scan complete; ${result.findings.size} $findingKind findings; ")
             append("${result.checked.size} added/modified declarations checked.\n\n")
             append("Target: `${comparison.target}`; source: `${comparison.head}`; ")
             append("merge base: `${comparison.mergeBase}`.\n\n")
@@ -143,9 +153,15 @@ internal fun runPrCheck(args: List<String>, out: PrintStream, error: PrintStream
             }
         }
         writePrReport(destination, report, summary)
-        out.println("Flight governance scan complete: ${result.findings.size} advisory findings.")
-        out.println("Report: $destination")
-        0
+        if (failOnFindings && result.findings.isNotEmpty()) {
+            error.println("Flight governance check failed: ${result.findings.size} blocking findings.")
+            error.println("Report: $destination")
+            2
+        } else {
+            out.println("Flight governance scan complete: ${result.findings.size} $findingKind findings.")
+            out.println("Report: $destination")
+            0
+        }
     } catch (exception: IllegalArgumentException) {
         failed(exception)
     } catch (exception: IllegalStateException) {

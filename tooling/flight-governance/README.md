@@ -62,7 +62,7 @@ overwrite; it is not a digital signature or filesystem immutability guarantee.
 Review the candidate and store the approved snapshot in controlled, versioned storage
 before treating it as a trusted legacy baseline. This tool cannot approve it.
 
-## Report-only PR checks
+## PR checks (advisory and blocking)
 
 After building the distribution, invoke the checker with the real PR source revision
 and target branch, not the generated PR merge commit:
@@ -71,18 +71,19 @@ and target branch, not the generated PR merge commit:
 .\tooling\flight-governance\build\install\flight-governance\bin\flight-governance.bat check-pr `
   --repository common C:\src\common --base origin/dev --head <source-commit> `
   --source common4j/src/main/com/microsoft/identity/common/java/flighting/CommonFlight.java `
-  --policy config/flight-governance.json --output C:\temp\flight-pr-report.json
+  --policy config/flight-governance.json --output C:\temp\flight-pr-report.json [--fail-on-findings]
 ```
 
 `check-pr` paths are Git paths using `/` separators. Repeat `--source` for additional
 registries. Full history and a single target merge base are required. The checkout
 is read-only; reports must be new files outside it. JSON and a `.json.md` summary
 identify the source, target, merge base, evaluated declarations, findings and initial
-legacy gaps. Policy findings return zero during this pilot; failed or incomplete
-execution returns nonzero and, when the destination is valid, an incomplete JSON report.
-Complete JSON is published only after its Markdown summary is written; a failed scan
-may have no Markdown summary. Existing destination entries, including dangling
-symlinks, are never overwritten.
+legacy gaps. Without `--fail-on-findings`, policy findings are advisory and return zero
+(used by report-only pilots); with `--fail-on-findings`, policy findings return nonzero
+after writing the complete report. Failed or incomplete execution always returns nonzero
+and, when the destination is valid, writes an incomplete JSON report. Complete JSON is
+published only after its Markdown summary is written; a failed scan may have no Markdown
+summary. Existing destination entries, including dangling symlinks, are never overwritten.
 
 New/changed keys, defaults or metadata need an explicit current person/team owner
 and lifecycle type. Git authorship never substitutes for ownership; reviewers confirm
@@ -125,10 +126,11 @@ reclassification and later metadata edits do not qualify, including on branches
 forked before the first backfill. Historical document gaps stay visible in the report
 instead of becoming missing-document findings or fabricated documents.
 
-The shared ADO step fetches the PR source/target and publishes advisory findings;
-incomplete scans fail explicitly. This is checkpoint A only: it changes neither
-branch policies nor the eventual blocking policy mode. Reviewers must still identify
-material behavior changes elsewhere that declaration comparisons cannot infer.
+The shared ADO step fetches the PR source/target and publishes findings; incomplete
+scans fail explicitly. Common4j enables `failOnFindings: true` so policy violations fail
+the required PR build, while consumers starting a pilot can keep the default
+`failOnFindings: false` (report-only). Reviewers must still identify material behavior
+changes elsewhere that declaration comparisons cannot infer.
 
 This repository-governance check is separate from the planned monthly, user-invoked
 audit skill for old flights and configuration discrepancies. That later skill is not

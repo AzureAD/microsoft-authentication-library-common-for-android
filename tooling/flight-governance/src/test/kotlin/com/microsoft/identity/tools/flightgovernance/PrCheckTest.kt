@@ -323,6 +323,42 @@ internal class PrCheckTest {
         assertEquals(listOf("UNRESOLVED_METADATA", "MISSING_OWNER"), result.findings.map { it.rule })
     }
 
+    @Test
+    fun blockingMode_failsOnPolicyFindingsWhileAllowingCleanAndInitialLegacyBackfill() {
+        val root = repository()
+        writeSource(root, "LEGACY(\"Legacy\", false);")
+        val baseline = commit(root)
+        writePolicy(root, baseline)
+        val target = commit(root)
+
+        // Violation: added flight without metadata must fail in blocking mode with complete report.
+        writeSource(root, "LEGACY(\"Legacy\", false), NEW_FLIGHT(\"NewFlight\", false);")
+        val invalidHead = commit(root)
+        val failingReport = temporaryFolder.root.toPath().resolve("blocking-fail.json")
+        assertEquals(2, command(root, target, invalidHead, failingReport, failOnFindings = true))
+        val failingJson = JSONObject(Files.readString(failingReport))
+        assertEquals("complete", failingJson.getString("status"))
+        assertEquals("blocking", failingJson.getString("mode"))
+        assertEquals("MISSING_METADATA", failingJson.getJSONArray("findings").getJSONObject(0).getString("rule"))
+        val failingMd = Files.readString(failingReport.resolveSibling("blocking-fail.json.md"))
+        assertTrue(failingMd.contains("# Flight governance: blocking"))
+        assertTrue(failingMd.contains("1 blocking findings"))
+
+        // Initial metadata-only legacy backfill from frozen baseline passes in blocking mode.
+        writeSource(root, metadata() + "\nLEGACY(\"Legacy\", false);")
+        val legacyHead = commit(root)
+        val legacyReport = temporaryFolder.root.toPath().resolve("blocking-legacy.json")
+        assertEquals(0, command(root, target, legacyHead, legacyReport, failOnFindings = true))
+        val legacyJson = JSONObject(Files.readString(legacyReport))
+        assertEquals("complete", legacyJson.getString("status"))
+        assertEquals("blocking", legacyJson.getString("mode"))
+        assertEquals(0, legacyJson.getJSONArray("findings").length())
+        assertEquals(listOf("app:example.Flights#LEGACY"),
+            (0 until legacyJson.getJSONArray("legacyDocumentGaps").length()).map {
+                legacyJson.getJSONArray("legacyDocumentGaps").getString(it)
+            })
+    }
+
     private fun repository(): Path = temporaryFolder.newFolder().toPath().also { git(it, "init", "-q") }
 
     private fun writeSource(root: Path, constants: String) {
@@ -355,11 +391,21 @@ internal class PrCheckTest {
         return git(root, "rev-parse", "HEAD").trim()
     }
 
-    private fun command(root: Path, base: String, head: String, output: Path): Int {
+    private fun command(
+        root: Path,
+        base: String,
+        head: String,
+        output: Path,
+        failOnFindings: Boolean = false
+    ): Int {
         val messages = ByteArrayOutputStream()
+        val args = mutableListOf("--repository", "app", root.toString(), "--base", base, "--head", head,
+            "--source", sourcePath, "--policy", policyPath, "--output", output.toString())
+        if (failOnFindings) {
+            args.add("--fail-on-findings")
+        }
         return PrintStream(messages, true, StandardCharsets.UTF_8).use {
-            runPrCheck(listOf("--repository", "app", root.toString(), "--base", base, "--head", head,
-                "--source", sourcePath, "--policy", policyPath, "--output", output.toString()), it, it)
+            runPrCheck(args, it, it)
         }
     }
 

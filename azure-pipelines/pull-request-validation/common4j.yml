@@ -58,6 +58,7 @@ stages:
       - template: ../templates/steps/flight-governance.yml
         parameters:
           repositoryLabel: common
+          failOnFindings: true
           sourcePaths:
           - common4j/src/main/com/microsoft/identity/common/java/flighting/CommonFlight.java
       - script: tree "$(Build.SourcesDirectory)" /F /A
