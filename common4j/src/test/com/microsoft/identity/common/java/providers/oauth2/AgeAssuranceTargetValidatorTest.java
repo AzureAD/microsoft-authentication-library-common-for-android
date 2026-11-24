@@ -1,5 +1,25 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 package com.microsoft.identity.common.java.providers.oauth2;
 
@@ -97,6 +117,56 @@ public class AgeAssuranceTargetValidatorTest {
     }
 
     @Test
+    public void unicodeCaseEquivalentIdentitiesMatchAndDeduplicateRequests() throws Exception {
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u039f\u03a3"), token("+\u03bf\u03c3"));
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u03bf\u03c3"), token("-\u03bf\u03c2"));
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u039f\u03a3", "target-\u03bf\u03c3"), token("+\u03bf\u03c2"));
+    }
+
+    @Test
+    public void unicodeCaseEquivalentReceiptDuplicatesAreRejected() throws Exception {
+        for (final String request : Arrays.asList(claims("target-\u039f\u03a3"),
+                claims("target-\u039f\u03a3", "target-\u03bf\u03c3"))) {
+            assertMismatch(request, token("+\u03bf\u03c2,-\u03bf\u03c3"));
+            assertMismatch(request, token("+\u039f\u03a3,+\u03bf\u03c3"));
+        }
+    }
+
+    @Test
+    public void lookupSentinelRequiresTrustedUntargetedOperation() throws Exception {
+        for (final String request : Arrays.asList(null, claims())) {
+            AgeAssuranceTargetValidator.validate(request, "none", true);
+            assertMismatch(request, "none");
+            assertMismatch(request, "none", false);
+            for (final String invalid : Arrays.asList("NONE", " none", "", "not-a-token")) {
+                assertMismatch(request, invalid, true);
+            }
+        }
+        for (final String request : Arrays.asList(claims("target-mc"), claims("target-all"),
+                claims("target-"))) {
+            assertMismatch(request, "none", true);
+        }
+    }
+
+    @Test
+    public void lookupModeStillValidatesRealIdTokens() throws Exception {
+        for (final Object receipt : Arrays.asList(null, "", "+all", "-ALL")) {
+            AgeAssuranceTargetValidator.validate(null, token(receipt), true);
+        }
+        for (final Object receipt : Arrays.asList("+mc", "+all,-ALL", "all", 123,
+                Collections.singletonList("+all"))) {
+            assertMismatch(null, token(receipt), true);
+        }
+        assertMismatch(null, tokenWithNullReceipt(), true);
+        AgeAssuranceTargetValidator.validate(claims("target-mc"), token("-MC"), true);
+        assertMismatch(claims("target-mc"), token("+all"), true);
+        assertMismatch(claims("target-mc"), null, true);
+    }
+
+    @Test
     public void onlyStringEntriesInAnArrayOptIn() throws Exception {
         for (final String properties : Arrays.asList(
                 "null", "\"target-mc\"", "123", "true", "{\"value\":\"target-mc\"}",
@@ -178,8 +248,13 @@ public class AgeAssuranceTargetValidatorTest {
     }
 
     private static void assertMismatch(final String request, final String token) throws Exception {
+        assertMismatch(request, token, false);
+    }
+
+    private static void assertMismatch(final String request, final String token,
+                                       final boolean isLookupMode) throws Exception {
         try {
-            AgeAssuranceTargetValidator.validate(request, token);
+            AgeAssuranceTargetValidator.validate(request, token, isLookupMode);
             fail("Expected target mismatch");
         } catch (final ClientException exception) {
             assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH, exception.getErrorCode());

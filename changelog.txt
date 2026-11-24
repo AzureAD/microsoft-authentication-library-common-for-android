@@ -1,6 +1,9 @@
 vNext
 ----------
-- [MINOR] Validate ID-token regulatory-target receipts even without explicit targets: accept only missing/empty receipts or one signed "all"; preserve genuinely absent ID-token flows. Explicit targets still require exact case/order-independent identity matching, including literal "all". Mismatches fail closed before client persistence, delivery or proactive refresh.
+- [MAJOR] Validate ID-token regulatory-target receipts even without explicit targets: accept only missing/empty receipts or one signed "all"; preserve genuinely absent ID-token flows and the exact "none" sentinel only for untargeted lookup operations. Explicit targets still require exact case/order-independent identity matching, including literal "all". Mismatches fail closed before client persistence, delivery or proactive refresh.
+  Upgrade impact: an untargeted silent request can now fail with age_assurance_target_mismatch on an existing cached ID token with named targets. The SDK does not automatically reacquire tokens, evict entries, start interactive recovery, bypass validation, or introduce a new cache partition.
+  Before rollout, SDK owners must inventory affected targeted/untargeted flows and existing cache entries, validate upgrades with MSAL/Broker consumers, and agree on an application-visible migration and error-handling policy. Matching explicit targets is appropriate only when the operation actually requests those targets; it is not an untargeted migration workaround.
+  Pending owner decisions (merge/release gate): migration of existing target-bound cache entries, deployment/dependency sequencing, and broker compatibility. No migration policy or owner approval is established by this change; external-broker persistence cannot be undone by this client-side check.
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 
 Version 25.1.0

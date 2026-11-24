@@ -411,7 +411,8 @@ public class BrokerMsalController extends BaseController {
             final String negotiatedBrokerProtocolVersion = resultBundle.getString(NEGOTIATED_BP_VERSION_KEY);
             verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
             result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-            AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
+            AgeAssuranceTargetValidator.validateResult(
+                    parameters.getClaimsRequestJson(), result, parameters.isLookupMode());
             // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
             // MSAL needs to save this account locally for future token calls.
             // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
@@ -691,7 +692,8 @@ public class BrokerMsalController extends BaseController {
                             return acquireDeviceCodeFlowToken(authorizationResult, parameters);
                         } else {
                             AgeAssuranceTargetValidator.validateResult(
-                                    parameters.getClaimsRequestJson(), acquireTokenResult);
+                                    parameters.getClaimsRequestJson(), acquireTokenResult,
+                                    parameters.isLookupMode());
                             return acquireTokenResult;
                         }
                     }
@@ -760,7 +762,8 @@ public class BrokerMsalController extends BaseController {
                         verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
                         final AcquireTokenResult result =
                                 mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-                        AgeAssuranceTargetValidator.validateResult(parameters.getClaimsRequestJson(), result);
+                        AgeAssuranceTargetValidator.validateResult(
+                                parameters.getClaimsRequestJson(), result, parameters.isLookupMode());
                         return result;
                     }
 

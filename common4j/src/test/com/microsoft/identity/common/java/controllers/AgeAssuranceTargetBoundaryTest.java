@@ -1,10 +1,31 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 package com.microsoft.identity.common.java.controllers;
 
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
@@ -15,6 +36,14 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_VALUE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_MODE_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_VALUE;
 import static com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidatorTest.claims;
 import static com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidatorTest.token;
 import static org.junit.Assert.assertEquals;
@@ -81,6 +110,57 @@ public class AgeAssuranceTargetBoundaryTest {
                 response.setIdToken(idToken);
                 assertSame(response, controller.executeTokenRequest(
                         strategy, wireRequest, parameters(request)).getTokenResponse());
+            }
+        }
+    }
+
+    @Test
+    public void lookupContextIsPreservedAtNetworkAndDispatchBoundaries() throws Exception {
+        final BaseController controller = mock(BaseController.class, Mockito.CALLS_REAL_METHODS);
+        final OAuth2Strategy strategy = mock(OAuth2Strategy.class);
+        final MicrosoftTokenRequest wireRequest = new MicrosoftTokenRequest();
+        final TokenResponse response = new TokenResponse();
+        response.setIdToken("none");
+        when(strategy.requestToken(wireRequest)).thenReturn(new TokenResult(response));
+
+        for (final boolean lookup : new boolean[]{true, false}) {
+            for (final String request : new String[]{null, claims(), claims("target-mc"),
+                    claims("target-all")}) {
+                final TokenCommandParameters parameters = TokenCommandParameters.builder()
+                        .platformComponents(mock(IPlatformComponents.class))
+                        .claimsRequestJson(request)
+                        .extraTokenBodyParameters(lookup ? Arrays.asList(
+                                new AbstractMap.SimpleEntry<>(NATIVEBROKER_KEY, NATIVEBROKER_VALUE),
+                                new AbstractMap.SimpleEntry<>(NATIVEBROKER_MODE_KEY, LOOKUP_MODE_VALUE))
+                                : Collections.emptyList())
+                        .build();
+                final boolean accepted = lookup && (request == null || request.equals(claims()));
+                try {
+                    assertSame(response, controller.executeTokenRequest(
+                            strategy, wireRequest, parameters).getTokenResponse());
+                    if (!accepted) {
+                        fail("The sentinel requires trusted lookup mode without targets");
+                    }
+                } catch (final ClientException exception) {
+                    if (accepted) {
+                        throw exception;
+                    }
+                    assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH,
+                            exception.getErrorCode());
+                }
+                for (final boolean fromCache : new boolean[]{true, false}) {
+                    final AcquireTokenResult result = success("none", fromCache);
+                    final CommandResult converted = CommandDispatcher.getCommandResultFromTokenResult(
+                            result, parameters);
+                    assertEquals(accepted ? CommandResult.ResultStatus.COMPLETED
+                            : CommandResult.ResultStatus.ERROR, converted.getStatus());
+                    if (accepted) {
+                        assertSame(result.getLocalAuthenticationResult(), converted.getResult());
+                    } else {
+                        assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH,
+                                ((ClientException) converted.getResult()).getErrorCode());
+                    }
+                }
             }
         }
     }

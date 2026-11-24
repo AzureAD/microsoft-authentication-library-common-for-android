@@ -1132,7 +1132,10 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             true
         )
         // Reject before the refresh-on path can schedule background token acquisition.
-        AgeAssuranceTargetValidator.validate(parametersWithScopes.claimsRequestJson, localResult.idToken)
+        AgeAssuranceTargetValidator.validate(
+            parametersWithScopes.claimsRequestJson, localResult.idToken,
+            parametersWithScopes.isLookupMode
+        )
         acquireTokenSilentResult.localAuthenticationResult = localResult
     }
 

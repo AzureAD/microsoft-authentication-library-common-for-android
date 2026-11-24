@@ -1017,7 +1017,8 @@ public class CommandDispatcher {
             try {
                 if (commandParameters instanceof TokenCommandParameters) {
                     AgeAssuranceTargetValidator.validateResult(
-                            ((TokenCommandParameters) commandParameters).getClaimsRequestJson(), result);
+                            ((TokenCommandParameters) commandParameters).getClaimsRequestJson(), result,
+                            ((TokenCommandParameters) commandParameters).isLookupMode());
                 }
             } catch (final ClientException e) {
                 return new CommandResult<>(CommandResult.ResultStatus.ERROR, e,

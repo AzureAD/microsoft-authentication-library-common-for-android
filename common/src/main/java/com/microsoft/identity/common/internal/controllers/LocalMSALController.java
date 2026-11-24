@@ -478,7 +478,8 @@ public class LocalMSALController extends BaseController {
         );
         // Reject before the refresh-on path can schedule background token acquisition.
         AgeAssuranceTargetValidator.validate(
-                parametersWithScopes.getClaimsRequestJson(), localResult.getIdToken());
+                parametersWithScopes.getClaimsRequestJson(), localResult.getIdToken(),
+                parametersWithScopes.isLookupMode());
         acquireTokenSilentResult.setLocalAuthenticationResult(localResult);
     }
 
@@ -764,7 +765,8 @@ public class LocalMSALController extends BaseController {
             // Validate request success, may throw MsalServiceException
             validateDeviceCodeFlowServiceResult(tokenResult);
             AgeAssuranceTargetValidator.validate(
-                    parameters.getClaimsRequestJson(), tokenResult.getTokenResponse().getIdToken());
+                    parameters.getClaimsRequestJson(), tokenResult.getTokenResponse().getIdToken(),
+                    parameters.isLookupMode());
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);

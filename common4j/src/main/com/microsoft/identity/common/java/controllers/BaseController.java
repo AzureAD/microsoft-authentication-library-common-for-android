@@ -950,7 +950,8 @@ public abstract class BaseController {
             if (tokenResult.getSuccess() && parameters instanceof TokenCommandParameters) {
                 AgeAssuranceTargetValidator.validate(
                         ((TokenCommandParameters) parameters).getClaimsRequestJson(),
-                        tokenResult.getTokenResponse().getIdToken());
+                        tokenResult.getTokenResponse().getIdToken(),
+                        ((TokenCommandParameters) parameters).isLookupMode());
             }
             TelemetryHelper.addEvent(
                     parameters.getEventCollector(),
