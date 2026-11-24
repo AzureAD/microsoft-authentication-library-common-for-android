@@ -21,7 +21,11 @@ private const val USAGE = """Usage: flight-governance
 
 /** Writes a deterministic, create-once source inventory; it does not enforce flight policy. */
 fun main(args: Array<String>) {
-    exitProcess(runInventory(args.toList(), System.out, System.err))
+    exitProcess(if (args.firstOrNull() == "check-pr") {
+        runPrCheck(args.drop(1), System.out, System.err)
+    } else {
+        runInventory(args.toList(), System.out, System.err)
+    })
 }
 
 internal data class SourceRequest(
@@ -159,7 +163,7 @@ internal fun canonicalJson(value: Any?): String = when (value) {
     else -> JSONObject.valueToString(value)
 }
 
-private fun git(root: Path, vararg arguments: String): String {
+internal fun git(root: Path, vararg arguments: String): String {
     val process = ProcessBuilder(listOf("git", "-C", root.toString()) + arguments)
         .redirectErrorStream(true)
         .start()
