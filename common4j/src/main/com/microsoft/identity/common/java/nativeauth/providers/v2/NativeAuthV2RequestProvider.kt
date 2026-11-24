@@ -370,9 +370,7 @@ class NativeAuthV2RequestProvider(
      */
     fun createTokenRequest(
         code: String,
-        scopes: List<String>,
-        correlationId: String,
-        claimsRequestJson: String? = null
+        correlationId: String
     ): NativeAuthV2TokenRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -383,8 +381,6 @@ class NativeAuthV2RequestProvider(
         return NativeAuthV2TokenRequest.create(
             clientId = config.clientId,
             code = code,
-            scopes = scopes,
-            claimsRequestJson = claimsRequestJson,
             requestUrl = config.getNativeAuthV2TokenEndpoint(correlationId).toString(),
             headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )

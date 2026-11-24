@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
+- [PATCH] Remove scopes and claims from Native Auth V2 authorization-code token-request APIs, retaining original scopes for local cache metadata.
 
 Version 25.1.0
 ----------

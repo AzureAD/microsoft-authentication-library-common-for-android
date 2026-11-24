@@ -122,7 +122,7 @@ class NativeAuthV2RequestProviderTest {
             provider(
                 authorityUrl = "http://login.contoso.com/tenant",
                 useMockApi = false
-            ).createTokenRequest(code = "authorization-code", scopes = SCOPES, correlationId = CORRELATION_ID)
+            ).createTokenRequest(code = "authorization-code", correlationId = CORRELATION_ID)
         }
 
         assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
@@ -186,7 +186,7 @@ class NativeAuthV2RequestProviderTest {
     }
 
     @Test
-    fun createTokenRequest_buildsTokenExchangeRequestAndIsOnlyRequestThatCarriesScopes() {
+    fun createTokenRequest_buildsTokenExchangeRequestWithoutScopesOrClaims() {
         val provider = provider(
             authorityUrl = "https://login.contoso.com/tenant",
             useMockApi = false
@@ -194,7 +194,6 @@ class NativeAuthV2RequestProviderTest {
 
         val request = provider.createTokenRequest(
             code = "authorization-code",
-            scopes = SCOPES,
             correlationId = CORRELATION_ID
         )
 
@@ -205,7 +204,8 @@ class NativeAuthV2RequestProviderTest {
 
         assertTrue(formBody.contains("code=authorization-code"))
         assertTrue(formBody.contains("grant_type=authorization_code"))
-        assertTrue(formBody.contains("scope=openid+profile"))
+        assertFalse(formBody.contains("scope="))
+        assertFalse(formBody.contains("claims"))
         assertTrue(formBody.contains("client_info=true"))
     }
 
@@ -236,7 +236,6 @@ class NativeAuthV2RequestProviderTest {
         val challengeRequest = provider.createChallengeRequest(continuationState())
         val tokenRequest = provider.createTokenRequest(
             code = "authorization-code",
-            scopes = SCOPES,
             correlationId = CORRELATION_ID
         )
 

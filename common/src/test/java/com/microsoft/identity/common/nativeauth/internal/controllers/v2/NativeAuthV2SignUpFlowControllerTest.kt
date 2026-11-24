@@ -592,9 +592,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = any(),
-                correlationId = correlationId,
-                claimsRequestJson = any()
+                correlationId = correlationId
             )
         } returns SignInTokenApiResult.Success(correlationId, tokenResponse)
         every { mockStrategy.getAuthority() } returns "https://login.contoso.com/common"
@@ -620,9 +618,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = any(),
-                correlationId = correlationId,
-                claimsRequestJson = any()
+                correlationId = correlationId
             )
         } returns SignInTokenApiResponse(
             statusCode = 400,
@@ -648,11 +644,10 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterSignUpUsesExplicitScopesForTokenRequestAndCachePersistence() {
+    fun testSignInAfterSignUpUsesExplicitScopesForCachePersistence() {
         val state = mockContinuationState()
         val explicitScopes = listOf("Different.Scope")
         val expectedScopes = setOf("Different.Scope", "openid", "offline_access", "profile")
-        val tokenScopes = slot<List<String>>()
         val cacheRequest = slot<MicrosoftStsAuthorizationRequest>()
         val tokenCache = mockTokenCache()
         val tokenResponse = mockk<MicrosoftStsTokenResponse>(relaxed = true)
@@ -662,9 +657,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = capture(tokenScopes),
-                correlationId = correlationId,
-                claimsRequestJson = any()
+                correlationId = correlationId
             )
         } returns SignInTokenApiResult.Success(correlationId, tokenResponse)
         every { mockStrategy.getAuthority() } returns "https://login.contoso.com/common"
@@ -680,106 +673,62 @@ class NativeAuthV2SignUpFlowControllerTest {
             )
         )
 
-        assertEquals(expectedScopes, tokenScopes.captured.toSet())
         assertEquals(expectedScopes, cacheRequest.captured.scope.split(" ").toSet())
     }
 
     @Test
-    fun testSignInAfterSignUpFallsBackToRetainedScopes() {
+    fun testSignInAfterSignUpRetainsEntryScopesForCacheUnlessExplicitlyEmpty() {
         val state = mockContinuationState()
-        val retainedScopes = listOf("Retained.Scope")
+        val retainedScopes = listOf("Retained.Scope", "OPENID", "PROFILE", "OFFLINE_ACCESS")
         val expectedScopes = setOf("Retained.Scope", "openid", "offline_access", "profile")
+        val tokenCache = mockTokenCache()
+        val tokenResponse = mockk<MicrosoftStsTokenResponse>(relaxed = true)
+        val cacheRequest = slot<MicrosoftStsAuthorizationRequest>()
         every { state.scopesForTokenRequest() } returns retainedScopes
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), any())
-        } returns SignInTokenApiResult.UnknownError(
-            correlationId = correlationId,
-            error = "expected_test_stop",
-            errorDescription = "Expected test stop before cache persistence.",
-            errorCodes = emptyList()
-        )
+            mockStrategy.performTokenRequest(any(), any())
+        } returns SignInTokenApiResult.Success(correlationId, tokenResponse)
+        every { mockStrategy.getAuthority() } returns "https://login.contoso.com/common"
+        every {
+            tokenCache.saveAndLoadAggregatedAccountData(any(), capture(cacheRequest), tokenResponse)
+        } returns listOf(mockk(relaxed = true))
 
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
+        for (scopes in listOf<List<String>?>(null, emptyList())) {
+            val result = controller.signInAfterSignUp(
+                signInAfterSignUpParameters(state, scopes = scopes, tokenCache = tokenCache)
+            )
 
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = match { it.toSet() == expectedScopes },
-                correlationId = correlationId,
-                claimsRequestJson = any()
+            assertTrue(result is NativeAuthV2CommandResult.Complete)
+            assertEquals(
+                if (scopes == null) expectedScopes else setOf("openid", "profile", "offline_access"),
+                cacheRequest.captured.scope.split(" ").toSet()
             )
         }
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = emptyList()))
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = match { it.toSet() == setOf("openid", "profile", "offline_access") },
-                correlationId = correlationId,
-                claimsRequestJson = any()
-            )
+        verify(exactly = 2) {
+            mockStrategy.performTokenRequest("auth-code", correlationId)
         }
     }
 
     @Test
-    fun testSignInAfterSignUpUsesExplicitClaimsInsteadOfRetainedClaims() {
-        val state = mockContinuationState()
-        val retainedClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
-        val explicitClaims = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
-        every { state.claimsRequestJsonForTokenRequest() } returns retainedClaims
-        stubTokenRequestCapture(state)
-
-        controller.signInAfterSignUp(
-            signInAfterSignUpParameters(state, claimsRequestJson = explicitClaims)
-        )
-
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = any(),
-                correlationId = correlationId,
-                claimsRequestJson = explicitClaims
-            )
-        }
-    }
-
-    @Test
-    fun testSignInAfterSignUpFallsBackToRetainedClaimsWhenExplicitClaimsAreAbsent() {
+    fun testSignInAfterSignUpExchangesOnlyCodeRegardlessOfCallerAndRetainedClaims() {
         val state = mockContinuationState()
         val retainedClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
         every { state.claimsRequestJsonForTokenRequest() } returns retainedClaims
         stubTokenRequestCapture(state)
 
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state))
-
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = any(),
-                correlationId = correlationId,
-                claimsRequestJson = retainedClaims
+        for (claims in listOf(null, "   ", """{"access_token":{"xms_cc":{"values":["cp1"]}}}""")) {
+            val result = controller.signInAfterSignUp(
+                signInAfterSignUpParameters(state, claimsRequestJson = claims)
             )
+            assertTrue(result is INativeAuthCommandResult.APIError)
         }
-    }
 
-    @Test
-    fun testSignInAfterSignUpFallsBackToRetainedClaimsWhenExplicitClaimsAreBlank() {
-        val state = mockContinuationState()
-        val retainedClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
-        every { state.claimsRequestJsonForTokenRequest() } returns retainedClaims
-        stubTokenRequestCapture(state)
-
-        controller.signInAfterSignUp(
-            signInAfterSignUpParameters(state, claimsRequestJson = "   ")
-        )
-
-        verify(exactly = 1) {
+        verify(exactly = 3) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = any(),
-                correlationId = correlationId,
-                claimsRequestJson = retainedClaims
+                correlationId = correlationId
             )
         }
     }
@@ -792,7 +741,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), any())
+            mockStrategy.performTokenRequest(any(), any())
         } returns SignInTokenApiResult.Success(correlationId, tokenResponse)
         every { mockStrategy.getAuthority() } returns "https://login.contoso.com/common"
         every {
@@ -809,7 +758,7 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
-    fun testSignUpEntryAndTokenCanonicalizeOidcDefaultsWithoutChangingResourceScopes() {
+    fun testSignUpEntryCanonicalizesOidcDefaultsWithoutChangingResourceScopes() {
         val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
         val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
         every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
@@ -817,17 +766,6 @@ class NativeAuthV2SignUpFlowControllerTest {
         controller.signUpStart(signUpStartParameters().toBuilder().scopes(requestedScopes).build())
         verify(exactly = 1) {
             mockStrategy.performAuthorizeChallengeStart(correlationId, any(), any(), expectedScopes, null)
-        }
-        val state = mockContinuationState()
-        every { state.scopesForTokenRequest() } returns requestedScopes
-        every { state.claimsRequestJsonForTokenRequest() } returns null
-        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
-            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
-        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
-            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
-        controller.signInAfterSignUp(signInAfterSignUpParameters(state, scopes = null))
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest("auth-code", expectedScopes, correlationId, null)
         }
     }
 
@@ -956,7 +894,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), any())
+            mockStrategy.performTokenRequest(any(), any())
         } returns SignInTokenApiResult.UnknownError(
             correlationId = correlationId,
             error = "expected_test_stop",
