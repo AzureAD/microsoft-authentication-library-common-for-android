@@ -1,0 +1,86 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+parameters:
+- name: repositoryRoot
+  type: string
+  default: $(Build.SourcesDirectory)
+- name: toolingRoot
+  type: string
+  default: $(Build.SourcesDirectory)
+- name: repositoryLabel
+  type: string
+- name: sourcePaths
+  type: object
+- name: policyPath
+  type: string
+  default: config/flight-governance.json
+- name: reportDirectory
+  type: string
+  default: $(Build.ArtifactStagingDirectory)/flight-governance
+- name: artifactName
+  type: string
+  default: flight-governance
+
+steps:
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $env:JAVA_HOME = $env:GOV_JAVA_HOME
+    Write-Host '##vso[task.setvariable variable=flightGovernanceReportExists]false'
+    $report = Join-Path $env:GOV_REPORT_DIRECTORY 'report.json'
+    try {
+        New-Item -ItemType Directory -Path $env:GOV_REPORT_DIRECTORY -Force | Out-Null
+        $target = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+        $source = $env:SYSTEM_PULLREQUEST_SOURCECOMMITID
+        if ($source -notmatch '^[0-9a-f]{40,64}$' -or [string]::IsNullOrWhiteSpace($target)) {
+            throw 'PR source commit and target branch are required; do not substitute the generated merge commit.'
+        }
+        git -C $env:GOV_REPOSITORY check-ref-format --branch $target
+        if ($LASTEXITCODE -ne 0) { throw 'Invalid PR target branch.' }
+        $shallow = git -C $env:GOV_REPOSITORY rev-parse --is-shallow-repository
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect repository history.' }
+        if ($shallow -eq 'true') {
+            git -C $env:GOV_REPOSITORY fetch --no-tags --unshallow origin
+            if ($LASTEXITCODE -ne 0) { throw 'Cannot obtain full merge-base and trusted-baseline history.' }
+        }
+        git -C $env:GOV_REPOSITORY fetch --no-tags origin "+refs/heads/${target}:refs/remotes/origin/$target"
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot fetch the PR target.' }
+        git -C $env:GOV_REPOSITORY fetch --no-tags origin $source
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot fetch the PR source commit.' }
+        $toolName = if ($IsWindows) { 'flight-governance.bat' } else { 'flight-governance' }
+        $tool = Join-Path $env:GOV_TOOLING "tooling/flight-governance/build/install/flight-governance/bin/$toolName"
+        $arguments = @('check-pr', '--repository', $env:GOV_LABEL, $env:GOV_REPOSITORY,
+            '--base', "refs/remotes/origin/$target", '--head', $source,
+            '--policy', $env:GOV_POLICY, '--output', $report)
+        foreach ($path in ($env:GOV_SOURCE_PATHS | ConvertFrom-Json)) {
+            $arguments += @('--source', $path)
+        }
+        & $tool @arguments
+        if ($LASTEXITCODE -ne 0) { throw 'Flight governance scan is incomplete; see the report and task log.' }
+        $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+        if ($result.status -ne 'complete') { throw 'The scan did not produce a complete report.' }
+        if ($result.findings.Count -gt 0) {
+            Write-Host "##vso[task.logissue type=warning]Flight governance: $($result.findings.Count) advisory findings; see the attached report."
+        }
+        Write-Host "##vso[task.uploadsummary]$report.md"
+    } finally {
+        if (Test-Path -LiteralPath $report -PathType Leaf) {
+            Write-Host '##vso[task.setvariable variable=flightGovernanceReportExists]true'
+        }
+    }
+  displayName: Report flight governance (non-blocking policy findings)
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+  env:
+    GOV_REPOSITORY: ${{ parameters.repositoryRoot }}
+    GOV_TOOLING: ${{ parameters.toolingRoot }}
+    GOV_LABEL: ${{ parameters.repositoryLabel }}
+    GOV_SOURCE_PATHS: ${{ convertToJson(parameters.sourcePaths) }}
+    GOV_POLICY: ${{ parameters.policyPath }}
+    GOV_REPORT_DIRECTORY: ${{ parameters.reportDirectory }}
+    GOV_JAVA_HOME: $(JAVA_HOME_17_X64)
+- task: PublishPipelineArtifact@1
+  displayName: Publish flight-governance report
+  condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'), eq(variables['flightGovernanceReportExists'], 'true'))
+  inputs:
+    targetPath: ${{ parameters.reportDirectory }}
+    artifact: ${{ parameters.artifactName }}
