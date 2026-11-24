@@ -8,11 +8,12 @@ package com.microsoft.identity.common.java.flighting
  *
  * Completeness and premortem requirements are enforced by development tooling, not this annotation.
  *
- * @property owner Accountable person or team. Empty permits a tooling-resolved ownership candidate;
- * git authorship alone does not confirm current ownership.
+ * @property owner Explicit accountable current person or team. The empty default preserves source
+ * compatibility but does not satisfy governance checks for new or changed declarations.
  * @property type Intended lifecycle of the flight.
- * @property premortem Repository-relative premortem path. Required by policy for new or materially
- * changed release flights, regardless of their default value.
+ * @property premortem Repository-relative governance document path, retaining the original field
+ * name. Required for new or materially changed flights of every type, regardless of default value;
+ * approved initial legacy backfill may retain a recorded historical document gap.
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.BINARY)
