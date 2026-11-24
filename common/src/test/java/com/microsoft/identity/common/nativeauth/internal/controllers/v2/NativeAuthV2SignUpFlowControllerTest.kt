@@ -876,7 +876,10 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
-        every { state.matchesAuthenticationMethod(any(), any()) } returns true
+        every { state.matchesAuthenticationMethod(any(), any()) } answers {
+            secondArg<String>().equals("email", ignoreCase = true) ||
+                secondArg<String>().equals("password", ignoreCase = true)
+        }
         every { state.correlationId } returns id
         every { state.scopesForTokenRequest() } returns emptyList()
         every { state.hasSubmittedAttribute(any()) } returns false

@@ -368,6 +368,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Challenges the selected method in the continuation's original flow and authentication factor.
+     * Rejects unsupported primary SMS sign-in before issuing a challenge.
      * Rejects verification challenges that do not match the selected method's server-declared type.
      */
     fun selectAuthMethod(
@@ -396,6 +397,16 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         state: NativeAuthV2ContinuationState,
         methodId: String
     ): NativeAuthV2SelectAuthMethodCommandResult {
+        if (!state.isMultiFactorAuthentication() &&
+            state.flowScenario() == NativeAuthV2FlowScenario.SIGN_IN &&
+            state.matchesAuthenticationMethod(methodId, METHOD_TYPE_SMS)) {
+            Logger.warn(TAG, state.correlationId, "SMS is not supported as a primary sign-in method.")
+            return NativeAuthV2CommandResult.NotImplemented(
+                correlationId = state.correlationId,
+                error = UNSUPPORTED_CHALLENGE_METHOD,
+                errorDescription = "SMS is not supported as a primary sign-in method."
+            )
+        }
         val challengeResult = oAuth2Strategy.performMethodChallenge(
             state = state,
             methodId = methodId

@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Unify Native Auth V2 first-factor and MFA method selection and reject mismatched method challenges.
+- [PATCH] Unify Native Auth V2 first-factor and MFA method selection, reject mismatched method challenges, and reject unsupported primary SMS sign-in before sending a challenge.
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 
 Version 25.1.0

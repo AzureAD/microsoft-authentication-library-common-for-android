@@ -135,6 +135,7 @@ class NativeAuthV2SignInFlowControllerTest {
         val challengeState = mockContinuationState()
         val verificationState = mockContinuationState()
         every { challengeState.flowScenario() } returns NativeAuthV2FlowScenario.SIGN_IN
+        every { challengeState.matchesAuthenticationMethod(any(), "sms") } returns false
         val methods = listOf(
             NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
             NativeAuthV2AuthMethod("pwd-1", "password", null)
@@ -765,11 +766,48 @@ class NativeAuthV2SignInFlowControllerTest {
     // -----------------------------------------------------------------------------------------
 
     @Test
+    fun testSelectAuthMethodRejectsPrimarySmsBeforeSendingChallenge() {
+        for (methodType in listOf("sms", "SMS")) {
+            val state = NativeAuthV2ContinuationStateTestFactory.challenge(
+                NativeAuthV2ContinuationStateTestFactory.create(
+                    correlationId, scenario = NativeAuthV2FlowScenario.SIGN_IN
+                ),
+                listOf(
+                    NativeAuthV2AuthMethod("email-id", "email", "***"),
+                    NativeAuthV2AuthMethod("sms-id", methodType, "***1234")
+                ),
+                "singleFactor"
+            )
+            every { mockStrategy.performMethodChallenge(state, "sms-id") } returns
+                NativeAuthV2InteractionApiResult.CodeRequired(correlationId, state, "***1234", "sms", 6)
+
+            val result = controller.selectAuthMethod(
+                NativeAuthV2SelectAuthMethodCommandParameters.builder()
+                    .authority(mockAuthority)
+                    .platformComponents(mockPlatformComponents)
+                    .correlationId(correlationId)
+                    .scopes(emptyList())
+                    .continuationState(state)
+                    .methodId("sms-id")
+                    .build()
+            )
+
+            assertTrue(result is NativeAuthV2CommandResult.NotImplemented)
+            result as NativeAuthV2CommandResult.NotImplemented
+            assertEquals("unsupported_challenge_method", result.error)
+            assertEquals(correlationId, result.correlationId)
+        }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+        verify(exactly = 0) { mockStrategy.performRiskVerification(any()) }
+    }
+
+    @Test
     fun testSelectAuthMethodValidatesSuccessfulChallengesIncludingAfterRiskVerification() {
         for ((scenario, factor, selectedType) in listOf(
             Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "email"),
             Triple(NativeAuthV2FlowScenario.SIGN_IN, "singleFactor", "password"),
             Triple(NativeAuthV2FlowScenario.RESET_PASSWORD, "singleFactor", "email"),
+            Triple(NativeAuthV2FlowScenario.RESET_PASSWORD, "singleFactor", "sms"),
             Triple(NativeAuthV2FlowScenario.SIGN_IN, "multiFactor", "sms")
         )) {
             val mismatchedType = when (selectedType) {
