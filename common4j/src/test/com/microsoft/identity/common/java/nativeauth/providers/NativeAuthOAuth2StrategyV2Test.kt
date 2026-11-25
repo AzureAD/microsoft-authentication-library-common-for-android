@@ -33,14 +33,21 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Auth
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
+import com.microsoft.identity.common.java.net.HttpResponse
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Test
 import java.net.URL
 
@@ -62,6 +69,137 @@ class NativeAuthOAuth2StrategyV2Test {
         ),
         nativeAuthV2Interactor = v2Interactor
     )
+
+    @Test
+    fun signInFlow_followsReturnedPasswordAndAbsoluteContinueRoutes() {
+        val entryHref = "/tenant-id/api/v2.0/signin/start"
+        val challengeHref = "/tenant-id/api/v2.0/password/challenge?dc=service"
+        val verifyHref = "/tenant.onmicrosoft.com/api/v2.0/signin/verify?dc=service&x=%2B&x=%2F"
+        val continueHref = "https://service.ciamlogin.com/tenant-id/oauth2/v2.0/authorize-challenge?dc=service"
+        val urls = mutableListOf<URL>()
+        val bodies = mutableListOf<ByteArray>()
+        val client = mockk<UrlConnectionHttpClient>()
+        every { client.post(capture(urls), any(), capture(bodies)) } returnsMany listOf(
+            HttpResponse(401, """{"continuation_token":"entry-token","sign_in":"$entryHref"}""", emptyMap()),
+            HttpResponse(200, """{"authorizationCode":"auth-code"}""", emptyMap())
+        )
+        every {
+            client.method(HttpClient.HttpMethod.POST, capture(urls), any(), capture(bodies))
+        } returnsMany listOf(
+            HttpResponse(200, """{"action":"challenge","continuationToken":"challenge-token",
+                "challengeContext":{"authenticationFactor":"singleFactor"},
+                "_embedded":{"methods":[{"id":"password","type":"password",
+                "_links":{"challenge":{"href":"$challengeHref"}}}]}}""", emptyMap()),
+            HttpResponse(200, """{"action":"verify","type":"password","continuationToken":"password-token",
+                "_links":{"verify":{"href":"$verifyHref"}}}""", emptyMap()),
+            HttpResponse(200, """{"state":"continue","continuationToken":"complete-token",
+                "_links":{"continue":{"href":"$continueHref"}}}""", emptyMap())
+        )
+        val routedStrategy = createRoutingStrategy(client)
+
+        val entry = routedStrategy.performAuthorizeChallengeStart(
+            CORRELATION_ID, NativeAuthV2LinkRelation.SIGN_IN.value,
+            NativeAuthV2FlowScenario.SIGN_IN, SCOPES
+        ) as AuthorizeChallengeApiResult.ContinuationRequired
+        val challenge = routedStrategy.performSignInStart(USERNAME, entry.continuationState)
+            as NativeAuthV2InteractionApiResult.ChallengeRequired
+        val passwordRequired = routedStrategy.performMethodChallenge(challenge.continuationState, "password")
+            as NativeAuthV2InteractionApiResult.PasswordRequired
+        val password = "test-password".toCharArray()
+        val ready = routedStrategy.performPasswordVerify(passwordRequired.continuationState, password)
+            as NativeAuthV2InteractionApiResult.ReadyToComplete
+        val completed = routedStrategy.performAuthorizeChallengeContinue(ready.continuationState)
+            as AuthorizeChallengeApiResult.AuthorizationCode
+
+        assertEquals("auth-code", completed.code)
+        assertEquals(
+            listOf(
+                "https://custom.example.com/alias/oauth2/v2.0/authorize-challenge?dc=configured",
+                "https://custom.example.com$entryHref",
+                "https://custom.example.com$challengeHref",
+                "https://custom.example.com$verifyHref",
+                continueHref
+            ),
+            urls.map { it.toString() }
+        )
+        val verifyBody = JSONObject(String(bodies[3], Charsets.UTF_8))
+        assertEquals("password-token", verifyBody.getString("continuationToken"))
+        assertEquals("test-password", verifyBody.getString("password"))
+        verify(exactly = 2) { client.post(any(), any(), any()) }
+        verify(exactly = 3) { client.method(HttpClient.HttpMethod.POST, any(), any(), any()) }
+    }
+
+    @Test
+    fun signUpFlow_followsReturnedSelfLinkForAttributesAndAbsoluteContinueRoute() {
+        val entryHref = "/tenant-id/api/v2.0/signup/start?dc=service"
+        val attributesHref = "/tenant.onmicrosoft.com/api/v2.0/signup/attributes?dc=service&x=a%2Bb&x=c%2Fd"
+        val continueHref = "https://service.ciamlogin.com/tenant-id/oauth2/v2.0/authorize-challenge"
+        val urls = mutableListOf<URL>()
+        val bodies = mutableListOf<ByteArray>()
+        val client = mockk<UrlConnectionHttpClient>()
+        every { client.post(capture(urls), any(), capture(bodies)) } returnsMany listOf(
+            HttpResponse(401, """{"continuation_token":"entry-token","sign_up":"$entryHref"}""", emptyMap()),
+            HttpResponse(200, """{"authorizationCode":"auth-code"}""", emptyMap())
+        )
+        every {
+            client.method(HttpClient.HttpMethod.POST, capture(urls), any(), capture(bodies))
+        } returnsMany listOf(
+            HttpResponse(200, """{"action":"collectAttributes","continuationToken":"attributes-token",
+                "attributes":[{"attributeId":"displayName","inputType":"text","required":true}],
+                "_links":{"self":{"href":"$attributesHref"}}}""", emptyMap()),
+            HttpResponse(200, """{"state":"continue","continuationToken":"complete-token",
+                "_links":{"continue":{"href":"$continueHref"}}}""", emptyMap())
+        )
+        val routedStrategy = createRoutingStrategy(client)
+
+        val entry = routedStrategy.performAuthorizeChallengeStart(
+            CORRELATION_ID, NativeAuthV2LinkRelation.SIGN_UP.value,
+            NativeAuthV2FlowScenario.SIGN_UP, SCOPES
+        ) as AuthorizeChallengeApiResult.ContinuationRequired
+        val attributes = routedStrategy.performSignUpStart(USERNAME, entry.continuationState)
+            as NativeAuthV2InteractionApiResult.AttributesRequired
+        val ready = routedStrategy.performSubmitAttributes(
+            attributes.continuationState, mapOf("displayName" to "Test user")
+        ) as NativeAuthV2InteractionApiResult.ReadyToComplete
+        val completed = routedStrategy.performAuthorizeChallengeContinue(ready.continuationState)
+            as AuthorizeChallengeApiResult.AuthorizationCode
+
+        assertEquals("auth-code", completed.code)
+        assertEquals(
+            listOf(
+                "https://custom.example.com/alias/oauth2/v2.0/authorize-challenge?dc=configured",
+                "https://custom.example.com$entryHref",
+                "https://custom.example.com$attributesHref",
+                continueHref
+            ),
+            urls.map { it.toString() }
+        )
+        val attributesBody = JSONObject(String(bodies[2], Charsets.UTF_8))
+        assertEquals("attributes-token", attributesBody.getString("continuationToken"))
+        assertEquals("Test user", attributesBody.getJSONObject("attributes").getString("displayName"))
+        verify(exactly = 2) { client.post(any(), any(), any()) }
+        verify(exactly = 2) { client.method(HttpClient.HttpMethod.POST, any(), any(), any()) }
+    }
+
+    private fun createRoutingStrategy(client: UrlConnectionHttpClient): NativeAuthV2OAuth2Strategy {
+        val config = NativeAuthOAuth2Configuration(
+            authorityUrl = URL("https://custom.example.com/alias?dc=configured"),
+            clientId = "client-id",
+            challengeType = "oob",
+            capabilities = null,
+            useMockApiForNativeAuth = false
+        )
+        return NativeAuthV2OAuth2Strategy(
+            strategyParameters = mockk(relaxed = true),
+            config = config,
+            nativeAuthV2Interactor = NativeAuthV2Interactor(
+                httpClient = client,
+                requestProvider = NativeAuthV2RequestProvider(config),
+                responseHandler = NativeAuthV2ResponseHandler(),
+                responseParser = NativeAuthV2ResponseParser()
+            )
+        )
+    }
 
     @Test
     fun authorizeChallengeMethods_delegateAndReturnInteractorResults() {

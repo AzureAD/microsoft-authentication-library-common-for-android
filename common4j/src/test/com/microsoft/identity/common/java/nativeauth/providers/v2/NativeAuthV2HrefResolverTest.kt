@@ -504,14 +504,17 @@ class NativeAuthV2HrefResolverTest {
         val warnings = CopyOnWriteArrayList<String>()
         val delivered = CountDownLatch(1)
         val identifier = "NativeAuthV2HrefResolverTest-${System.nanoTime()}"
+        val startTag = "$identifier-start"
         val fenceTag = "$identifier-fence"
         Logger.setLogger(identifier) { tag, level, message, _ ->
+            if (tag == startTag) warnings.clear()
             if (tag == fenceTag) delivered.countDown()
             if (tag == NativeAuthV2HrefResolver::class.java.simpleName && level == Logger.LogLevel.WARN) {
                 warnings.add(message)
             }
         }
         try {
+            Logger.warn(startTag, "Start warning log capture.")
             block()
             Logger.warn(fenceTag, "Drain warning logs.")
             assertTrue("Warning log delivery timed out.", delivered.await(30, TimeUnit.SECONDS))
