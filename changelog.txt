@@ -5,6 +5,7 @@ vNext
   Before rollout, SDK owners must inventory affected targeted/untargeted flows and existing cache entries, validate upgrades with MSAL/Broker consumers, and agree on an application-visible migration and error-handling policy. Matching explicit targets is appropriate only when the operation actually requests those targets; it is not an untargeted migration workaround.
   Pending owner decisions (merge/release gate): migration of existing target-bound cache entries, deployment/dependency sequencing, and broker compatibility. No migration policy or owner approval is established by this change; external-broker persistence cannot be undone by this client-side check.
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
+- [PATCH] Remove scopes and claims from Native Auth V2 authorization-code token-request APIs, always retaining the initial flow scopes for local cache metadata after sign-up or password reset.
 
 Version 25.1.0
 ----------
