@@ -24,7 +24,13 @@
 package com.microsoft.identity.common.java.controllers;
 
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.SilentTokenCommand;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -51,8 +57,69 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 public class AgeAssuranceTargetBoundaryTest {
+    @Test
+    public void receiptMismatchIsTerminalEvenAfterBrokerFallback() throws Exception {
+        for (final BaseException fallback : new BaseException[]{
+                null,
+                new ClientException(ErrorStrings.NO_ACCOUNT_FOUND),
+                new ClientException(ErrorStrings.NO_TOKENS_FOUND),
+                new UiRequiredException("invalid_grant", "Refresh required")}) {
+            final BaseController broker = mock(BaseController.class);
+            final BaseController local = mock(BaseController.class);
+            final BaseController third = mock(BaseController.class);
+            final IControllerFactory factory = mock(IControllerFactory.class);
+            final SilentTokenCommandParameters parameters = silentParameters();
+            final ClientException mismatch = new ClientException(
+                    ClientException.AGE_ASSURANCE_TARGET_MISMATCH);
+            when(factory.getAllControllers()).thenReturn(Arrays.asList(broker, local, third));
+            when(broker.acquireTokenSilent(parameters)).thenThrow(
+                    fallback == null ? mismatch : fallback);
+            when(local.acquireTokenSilent(parameters)).thenThrow(mismatch);
+
+            try {
+                new SilentTokenCommand(parameters, factory, mock(CommandCallback.class), "test").execute();
+                fail("Receipt mismatch must be the terminal error");
+            } catch (final ClientException exception) {
+                assertSame(mismatch, exception);
+            }
+            verify(broker).acquireTokenSilent(parameters);
+            if (fallback == null) {
+                verifyNoInteractions(local);
+            } else {
+                verify(local).acquireTokenSilent(parameters);
+            }
+            verifyNoInteractions(third);
+        }
+    }
+
+    @Test
+    public void ordinaryBrokerFallbackStillReturnsLocalSuccess() throws Exception {
+        final BaseController broker = mock(BaseController.class);
+        final BaseController local = mock(BaseController.class);
+        final IControllerFactory factory = mock(IControllerFactory.class);
+        final SilentTokenCommandParameters parameters = silentParameters();
+        final AcquireTokenResult result = success(token("-mc"), true);
+        when(factory.getAllControllers()).thenReturn(Arrays.asList(broker, local));
+        when(broker.acquireTokenSilent(parameters)).thenThrow(
+                new ClientException(ErrorStrings.NO_ACCOUNT_FOUND));
+        when(local.acquireTokenSilent(parameters)).thenReturn(result);
+
+        assertSame(result, new SilentTokenCommand(
+                parameters, factory, mock(CommandCallback.class), "test").execute());
+    }
+
+    private static SilentTokenCommandParameters silentParameters() {
+        return SilentTokenCommandParameters.builder()
+                .platformComponents(mock(IPlatformComponents.class))
+                .applicationName("test")
+                .claimsRequestJson(claims("target-mc"))
+                .build();
+    }
+
     @Test
     public void networkMismatchThrowsBeforeReturningTokensForPersistence() throws Exception {
         final BaseController controller = mock(BaseController.class, Mockito.CALLS_REAL_METHODS);
