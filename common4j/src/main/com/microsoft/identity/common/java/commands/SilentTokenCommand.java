@@ -107,6 +107,9 @@ public class SilentTokenCommand extends TokenCommand {
                         return result;
                     }
                 } catch (final UiRequiredException | ClientException e) {
+                    if (ClientException.AGE_ASSURANCE_TARGET_MISMATCH.equals(e.getErrorCode())) {
+                        throw e;
+                    }
                     if (ii == 0 ) {
                         exceptionFromFirstController = e;
                     }

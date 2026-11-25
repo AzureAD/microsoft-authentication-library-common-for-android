@@ -104,6 +104,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.oauth2.AgeAssuranceTargetValidator
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.AcquireTokenResult
@@ -1121,7 +1122,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         cacheRecords: List<ICacheRecord>
     ) {
         val fullCacheRecord = cacheRecords[0]
-        acquireTokenSilentResult.localAuthenticationResult = LocalAuthenticationResult(
+        val localResult = LocalAuthenticationResult(
             finalizeCacheRecordForResult(
                 fullCacheRecord,
                 parametersWithScopes.authenticationScheme
@@ -1130,6 +1131,12 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             SdkType.MSAL,
             true
         )
+        // Reject before the refresh-on path can schedule background token acquisition.
+        AgeAssuranceTargetValidator.validate(
+            parametersWithScopes.claimsRequestJson, localResult.idToken,
+            parametersWithScopes.isLookupMode
+        )
+        acquireTokenSilentResult.localAuthenticationResult = localResult
     }
 
     /**

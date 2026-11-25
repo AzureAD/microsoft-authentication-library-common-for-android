@@ -1,0 +1,266 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+package com.microsoft.identity.common.java.providers.oauth2;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
+
+import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
+public class AgeAssuranceTargetValidatorTest {
+    public static String claims(final String... properties) {
+        final JsonArray values = new JsonArray();
+        for (final String property : properties) {
+            values.add(property);
+        }
+        final JsonObject information = new JsonObject();
+        information.add("additionalProperties", values);
+        final JsonObject idToken = new JsonObject();
+        idToken.add("xms_agvs", information);
+        final JsonObject request = new JsonObject();
+        request.add("id_token", idToken);
+        return request.toString();
+    }
+
+    public static String token(final Object receipt) {
+        return new PlainJWT(new JWTClaimsSet.Builder()
+                .subject("test-subject")
+                .claim("xms_agvs", 0)
+                .claim("xms_agvt", receipt)
+                .build()).serialize();
+    }
+
+    private static String tokenWithNullReceipt() {
+        return "eyJhbGciOiJub25lIn0." + Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "{\"sub\":\"test-subject\",\"xms_agvs\":0,\"xms_agvt\":null}"
+                        .getBytes(StandardCharsets.UTF_8)) + ".";
+    }
+
+    @Test
+    public void noExplicitIdTargetValidatesPresentToken() throws Exception {
+        for (final String request : Arrays.asList(null, "", "{}", "invalid-json",
+                claims(), claims("other-property"), claims(" target-mc"),
+                claims("target-mc").replace("id_token", "access_token"),
+                claims("target-mc").replace("id_token", "ID_TOKEN"),
+                claims("target-mc").replace("xms_agvs", "XMS_AGVS"),
+                claims("target-mc").replace("additionalProperties", "AdditionalProperties"))) {
+            for (final Object receipt : Arrays.asList(null, "", "+all", "-ALL", "+AlL")) {
+                AgeAssuranceTargetValidator.validate(request, token(receipt));
+            }
+            AgeAssuranceTargetValidator.validate(request, null);
+            assertMismatch(request, "not-a-token");
+            assertMismatch(request, "");
+            assertMismatch(request, " ");
+            assertMismatch(request, token("+mc"));
+            assertMismatch(request, tokenWithNullReceipt());
+        }
+    }
+
+    @Test
+    public void emptyTargetsRejectNamedMalformedDuplicateAndWrongTypeReceipts() throws Exception {
+        for (final String request : Arrays.asList(null, claims())) {
+            for (final Object receipt : Arrays.asList(
+                    0, true, Collections.emptyList(), Collections.singletonList("+all"),
+                    Collections.singletonMap("target", "all"),
+                    "+mc", "-mc", "+all,+mc", "+all,-ALL", "+all,+all", "all",
+                    " ", "\t", "+", "-", "++all", "+-all", "--all", "-+all",
+                    " +all", "+ all", "+all ", "+a ll", "+all,", ",+all", "+all,,",
+                    "+all\n", "+all\u00a0", "+all\uFEFF")) {
+                assertMismatch(request, token(receipt));
+            }
+        }
+    }
+
+    @Test
+    public void signedExactSetIgnoresCaseOrderAndOutcome() throws Exception {
+        AgeAssuranceTargetValidator.validate(
+                claims("target-mc", "TARGET-SM", "target-MC", "unrelated"),
+                token("-sm,+MC"));
+        AgeAssuranceTargetValidator.validate(claims("target-mc"), token("-mc"));
+    }
+
+    @Test
+    public void unicodeCaseEquivalentIdentitiesMatchAndDeduplicateRequests() throws Exception {
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u039f\u03a3"), token("+\u03bf\u03c3"));
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u03bf\u03c3"), token("-\u03bf\u03c2"));
+        AgeAssuranceTargetValidator.validate(
+                claims("target-\u039f\u03a3", "target-\u03bf\u03c3"), token("+\u03bf\u03c2"));
+    }
+
+    @Test
+    public void unicodeCaseEquivalentReceiptDuplicatesAreRejected() throws Exception {
+        for (final String request : Arrays.asList(claims("target-\u039f\u03a3"),
+                claims("target-\u039f\u03a3", "target-\u03bf\u03c3"))) {
+            assertMismatch(request, token("+\u03bf\u03c2,-\u03bf\u03c3"));
+            assertMismatch(request, token("+\u039f\u03a3,+\u03bf\u03c3"));
+        }
+    }
+
+    @Test
+    public void lookupSentinelRequiresTrustedUntargetedOperation() throws Exception {
+        for (final String request : Arrays.asList(null, claims())) {
+            AgeAssuranceTargetValidator.validate(request, "none", true);
+            assertMismatch(request, "none");
+            assertMismatch(request, "none", false);
+            for (final String invalid : Arrays.asList("NONE", " none", "", "not-a-token")) {
+                assertMismatch(request, invalid, true);
+            }
+        }
+        for (final String request : Arrays.asList(claims("target-mc"), claims("target-all"),
+                claims("target-"))) {
+            assertMismatch(request, "none", true);
+        }
+    }
+
+    @Test
+    public void lookupModeStillValidatesRealIdTokens() throws Exception {
+        for (final Object receipt : Arrays.asList(null, "", "+all", "-ALL")) {
+            AgeAssuranceTargetValidator.validate(null, token(receipt), true);
+        }
+        for (final Object receipt : Arrays.asList("+mc", "+all,-ALL", "all", 123,
+                Collections.singletonList("+all"))) {
+            assertMismatch(null, token(receipt), true);
+        }
+        assertMismatch(null, tokenWithNullReceipt(), true);
+        AgeAssuranceTargetValidator.validate(claims("target-mc"), token("-MC"), true);
+        assertMismatch(claims("target-mc"), token("+all"), true);
+        assertMismatch(claims("target-mc"), null, true);
+    }
+
+    @Test
+    public void onlyStringEntriesInAnArrayOptIn() throws Exception {
+        for (final String properties : Arrays.asList(
+                "null", "\"target-mc\"", "123", "true", "{\"value\":\"target-mc\"}",
+                "[]", "[null,123,true,{\"value\":\"target-mc\"},[\"target-mc\"]]")) {
+            AgeAssuranceTargetValidator.validate(
+                    "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                            + properties + "}}}", token("+all"));
+            assertMismatch("{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                    + properties + "}}}", token("+mc"));
+        }
+
+        final String mixed = "{\"id_token\":{\"xms_agvs\":{\"additionalProperties\":"
+                + "[null,123,true,{\"value\":\"target-sm\"},\"target-mc\"]}}}";
+        AgeAssuranceTargetValidator.validate(mixed, token("-mc"));
+        assertMismatch(mixed, token("+sm"));
+    }
+
+    @Test
+    public void identitiesRemainOpaqueAndAllIsLiteral() throws Exception {
+        AgeAssuranceTargetValidator.validate(
+                claims("target-future.v2/é:_id"), token("-FUTURE.V2/É:_ID"));
+        AgeAssuranceTargetValidator.validate(claims("target-all"), token("+ALL"));
+        AgeAssuranceTargetValidator.validate(claims("target-all"), token("-all"));
+        assertMismatch(claims("target-all"), token(""));
+        assertMismatch(claims("target-all"), token(null));
+        assertMismatch(claims("target-all"), tokenWithNullReceipt());
+        assertMismatch(claims("target-all"), token("+mc,+sm"));
+        assertMismatch(claims("target-mc"), token("+all"));
+    }
+
+    @Test
+    public void missingNonStringAndMalformedReceiptsFailEvenForUnknownStatus() throws Exception {
+        for (final Object receipt : Arrays.asList(null, 0, true,
+                Collections.singletonList("+mc"), Collections.singletonMap("target", "mc"),
+                "", "mc", "+", "-", "++mc", "+-mc", "--mc", "-+mc",
+                " +mc", "+ mc", "+mc ", "+m c", "+mc,", ",+mc", "+mc,,+sm",
+                "+mc,+MC", "+mc,-mc", "+mc,+sm", "+sm", "+mc\n", "+mc\u00a0")) {
+            assertMismatch(claims("target-mc"), token(receipt));
+        }
+        assertMismatch(claims("target-mc", "target-sm"), token("+mc"));
+        assertMismatch(claims("target-mc"), null);
+        assertMismatch(claims("target-mc"), "not-a-token");
+    }
+
+    @Test
+    public void malformedExplicitTargetsAreNotSilentlyIgnored() throws Exception {
+        for (final String property : Arrays.asList(
+                "target-", "target-+mc", "target--mc", "target-mc,sm",
+                "target-mc ", "target-m c", "target-\nmc")) {
+            assertMismatch(claims(property), token("+mc"));
+            assertMismatch(claims(property), null);
+        }
+    }
+
+    @Test
+    public void concurrentRequestsDoNotShareTargets() throws Exception {
+        final ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            final Callable<Void> mc = () -> {
+                for (int i = 0; i < 50; i++) {
+                    AgeAssuranceTargetValidator.validate(claims("target-mc"), token("-mc"));
+                    assertMismatch(claims("target-mc"), token("+sm"));
+                }
+                return null;
+            };
+            final Callable<Void> sm = () -> {
+                for (int i = 0; i < 50; i++) {
+                    AgeAssuranceTargetValidator.validate(claims("target-sm"), token("+sm"));
+                    assertMismatch(claims("target-sm"), token("-mc"));
+                }
+                return null;
+            };
+            for (final Future<Void> result : executor.invokeAll(Arrays.asList(mc, sm))) {
+                result.get();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private static void assertMismatch(final String request, final String token) throws Exception {
+        assertMismatch(request, token, false);
+    }
+
+    private static void assertMismatch(final String request, final String token,
+                                       final boolean isLookupMode) throws Exception {
+        try {
+            AgeAssuranceTargetValidator.validate(request, token, isLookupMode);
+            fail("Expected target mismatch");
+        } catch (final ClientException exception) {
+            assertEquals(ClientException.AGE_ASSURANCE_TARGET_MISMATCH, exception.getErrorCode());
+            assertEquals("The ID token age-assurance targets do not match the requested targets.",
+                    exception.getMessage());
+            assertNull(exception.getCause());
+        }
+    }
+}
