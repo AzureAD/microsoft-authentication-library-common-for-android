@@ -169,6 +169,7 @@ public class CommandUtil {
     ) {
         final SignInWithContinuationTokenCommandParameters commandParameters =
                 SignInWithContinuationTokenCommandParameters.builder()
+                        .claimsRequestJson(parameters.getClaimsRequestJson())
                         .authenticationScheme(parameters.getAuthenticationScheme())
                         .platformComponents(parameters.getPlatformComponents())
                         .applicationName(parameters.getApplicationName())
@@ -239,6 +240,7 @@ public class CommandUtil {
     ) {
         final JITContinueCommandParameters commandParameters =
                 JITContinueCommandParameters.builder()
+                        .claimsRequestJson(parameters.getClaimsRequestJson())
                         .authenticationScheme(parameters.getAuthenticationScheme())
                         .platformComponents(parameters.getPlatformComponents())
                         .applicationName(parameters.getApplicationName())

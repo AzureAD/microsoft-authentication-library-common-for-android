@@ -7,6 +7,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,6 +32,40 @@ class CommandUtilTest {
         platformComponents = AndroidPlatformComponentsFactory.createFromContext(
             context
         )
+    }
+
+    @Test
+    fun testCreateSignInWithContinuationTokenCommandParameters_preservesClaims() {
+        for (claims in listOf(null, "", """{"id_token":{"auth_time":{"essential":true}}}""")) {
+            val parameters = SignInStartCommandParameters.builder()
+                .username("user@example.com")
+                .claimsRequestJson(claims)
+                .platformComponents(platformComponents)
+                .build()
+
+            val continuation = CommandUtil.createSignInWithContinuationTokenCommandParameters(
+                parameters, "correlation", "continuation"
+            )
+
+            assertEquals(claims, continuation.claimsRequestJson)
+        }
+    }
+
+    @Test
+    fun testCreateJITContinueCommandParameters_preservesClaims() {
+        for (claims in listOf(null, "", """{"id_token":{"auth_time":{"essential":true}}}""")) {
+            val parameters = SignInStartCommandParameters.builder()
+                .username("user@example.com")
+                .claimsRequestJson(claims)
+                .platformComponents(platformComponents)
+                .build()
+
+            val continuation = CommandUtil.createJITContinueCommandParameters(
+                parameters, "correlation", "grant", "continuation"
+            )
+
+            assertEquals(claims, continuation.claimsRequestJson)
+        }
     }
 
     @Test
