@@ -570,7 +570,10 @@ public enum CommonFlight implements IFlightConfig {
             owner = "shjameel",
             type = FlagType.RELEASE,
             premortem = "docs/premortem/ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION-Premortem.md")
-    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false),
+
+    /** Temporary test flight without metadata to verify blocking PR governance check. */
+    TEMP_TEST_UNANNOTATED_FLIGHT("TempTestUnannotatedFlight", false);
 
     private String key;
     private Object defaultValue;
