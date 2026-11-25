@@ -22,12 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.ObjectMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -35,60 +32,44 @@ import java.nio.charset.StandardCharsets
 class NativeAuthV2TokenRequestTest {
 
     @Test
-    fun create_whenScopesAreEmpty_throwsClientException() {
-        assertThrows(ClientException::class.java) {
-            createRequest(emptyList())
-        }
-    }
-
-    @Test
-    fun create_whenAnyScopeIsBlank_throwsClientException() {
-        listOf(
-            listOf(""),
-            listOf("   "),
-            listOf("openid", " ")
-        ).forEach { scopes ->
-            assertThrows(ClientException::class.java) {
-                createRequest(scopes)
-            }
-        }
-    }
-
-    @Test
-    fun create_whenScopesAreValid_serializesSpaceDelimitedScopeInFinalFormBody() {
-        val request = createRequest(listOf("openid", "offline_access", "User.Read"))
-
-        val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-
-        assertTrue(formBody.contains("scope=openid+offline_access+User.Read"))
-    }
-
-    @Test
-    fun create_whenClaimsAreProvided_retainsLocalClaimsButOmitsThemFromTokenForm() {
-        val request = createRequest(
-            scopes = listOf("openid"),
-            claimsRequestJson = CLAIMS_REQUEST_JSON
-        )
-
-        val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-
-        assertEquals(CLAIMS_REQUEST_JSON, request.parameters.claimsRequestJson)
-        assertFalse(parseFormBody(formBody).containsKey("claims"))
-        assertEquals("openid", parseFormBody(formBody)["scope"])
-    }
-
-    private fun createRequest(
-        scopes: List<String>,
-        claimsRequestJson: String? = null
-    ): NativeAuthV2TokenRequest =
-        NativeAuthV2TokenRequest.create(
+    fun tokenRequestLoggingNeverIncludesAuthorizationCode() {
+        val code = "test-secret-authorization-code"
+        val request = NativeAuthV2TokenRequest.create(
             clientId = "client-id",
-            code = "authorization-code",
-            scopes = scopes,
-            claimsRequestJson = claimsRequestJson,
+            code = code,
             requestUrl = "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
             headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
         )
+
+        for (description in listOf(
+            request.toString(), request.toUnsanitizedString(),
+            request.parameters.toString(), request.parameters.toUnsanitizedString()
+        )) {
+            assertFalse("Token request logging must not include the authorization code", description.contains(code))
+        }
+    }
+
+    @Test
+    fun create_serializesTokenExchangeFieldsWithoutScopesOrClaims() {
+        val request = NativeAuthV2TokenRequest.create(
+            clientId = "client-id",
+            code = "authorization-code",
+            requestUrl = "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
+        )
+
+        val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+
+        assertEquals(
+            mapOf(
+                "client_id" to "client-id",
+                "grant_type" to "authorization_code",
+                "code" to "authorization-code",
+                "client_info" to "true"
+            ),
+            parseFormBody(formBody)
+        )
+    }
 
     private fun parseFormBody(body: String): Map<String, String> =
         body.split("&").associate { parameter ->
@@ -96,8 +77,4 @@ class NativeAuthV2TokenRequestTest {
             URLDecoder.decode(name, StandardCharsets.UTF_8.name()) to
                 URLDecoder.decode(value, StandardCharsets.UTF_8.name())
         }
-
-    private companion object {
-        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
-    }
 }

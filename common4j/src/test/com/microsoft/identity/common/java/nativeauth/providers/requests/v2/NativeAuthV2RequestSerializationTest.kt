@@ -144,9 +144,7 @@ class NativeAuthV2RequestSerializationTest {
         val token = NativeAuthV2TokenRequest.NativeAuthV2TokenRequestParameters(
             clientId = CLIENT_ID,
             grantType = "authorization_code",
-            code = "code",
-            scope = "User.Read offline_access",
-            claimsRequestJson = null
+            code = "code"
         )
 
         val startForm = ObjectMapper.serializeObjectToFormUrlEncoded(start)
@@ -157,7 +155,8 @@ class NativeAuthV2RequestSerializationTest {
         assertTrue(continuationForm.contains("continuation_token=$CONTINUATION_TOKEN"))
         assertTrue(tokenForm.contains("grant_type=authorization_code"))
         assertTrue(tokenForm.contains("code=code"))
-        assertTrue(tokenForm.contains("scope=User.Read+offline_access"))
+        assertFalse(tokenForm.contains("scope="))
+        assertFalse(tokenForm.contains("claims"))
         assertTrue(tokenForm.contains("client_info=true"))
     }
 

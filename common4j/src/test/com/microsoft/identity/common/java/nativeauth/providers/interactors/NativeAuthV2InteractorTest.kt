@@ -520,13 +520,9 @@ class NativeAuthV2InteractorTest {
 
     @Test
     fun performTokenRequest_postsFormBodyAndReturnsTokenResult() {
-        val scopes = listOf("User.Read", "offline_access")
-        val claimsRequestJson = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         val request = NativeAuthV2TokenRequest.create(
             clientId = CLIENT_ID,
             code = AUTHORIZATION_CODE,
-            scopes = scopes,
-            claimsRequestJson = claimsRequestJson,
             requestUrl = tokenUrl.toString(),
             headers = formHeaders()
         )
@@ -542,18 +538,14 @@ class NativeAuthV2InteractorTest {
         every {
             requestProvider.createTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = scopes,
-                correlationId = CORRELATION_ID,
-                claimsRequestJson = claimsRequestJson
+                correlationId = CORRELATION_ID
             )
         } returns request
         every { responseHandler.getTokenApiResponse(CORRELATION_ID, httpResponse) } returns expected
 
         val actual = createInteractor().performTokenRequest(
             code = AUTHORIZATION_CODE,
-            scopes = scopes,
-            correlationId = CORRELATION_ID,
-            claimsRequestJson = claimsRequestJson
+            correlationId = CORRELATION_ID
         )
 
         assertSame(expected, actual)
@@ -565,16 +557,13 @@ class NativeAuthV2InteractorTest {
                 "client_id" to CLIENT_ID,
                 "grant_type" to "authorization_code",
                 "code" to AUTHORIZATION_CODE,
-                "scope" to "User.Read offline_access",
                 "client_info" to "true"
             )
         )
         verify(exactly = 1) {
             requestProvider.createTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = scopes,
-                correlationId = CORRELATION_ID,
-                claimsRequestJson = claimsRequestJson
+                correlationId = CORRELATION_ID
             )
         }
         verify(exactly = 1) { responseHandler.getTokenApiResponse(CORRELATION_ID, httpResponse) }
@@ -660,11 +649,9 @@ class NativeAuthV2InteractorTest {
 
     @Test
     fun performTokenRequest_propagatesResponseHandlerException() {
-        val scopes = listOf("User.Read", "offline_access")
         val request = NativeAuthV2TokenRequest.create(
             clientId = CLIENT_ID,
             code = AUTHORIZATION_CODE,
-            scopes = scopes,
             requestUrl = tokenUrl.toString(),
             headers = formHeaders()
         )
@@ -675,7 +662,6 @@ class NativeAuthV2InteractorTest {
         every {
             requestProvider.createTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = scopes,
                 correlationId = CORRELATION_ID
             )
         } returns request
@@ -684,7 +670,6 @@ class NativeAuthV2InteractorTest {
         try {
             createInteractor().performTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = scopes,
                 correlationId = CORRELATION_ID
             )
             fail("Expected performTokenRequest to rethrow the response handler failure")

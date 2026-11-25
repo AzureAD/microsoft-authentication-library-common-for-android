@@ -28,8 +28,15 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.Reset
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
+import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import io.mockk.every
@@ -39,10 +46,98 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.URL
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class NativeAuthV2OAuth2StrategyTest {
+
+    @Test
+    fun flowRequestsSendScopesAndClaimsOnlyOnInitialAuthorizeChallenge() {
+        val correlationId = "correlation-id"
+        val scopes = listOf("User.Read", "openid", "profile", "offline_access")
+        for ((relation, scenario) in listOf(
+            NativeAuthV2LinkRelation.SIGN_IN to NativeAuthV2FlowScenario.SIGN_IN,
+            NativeAuthV2LinkRelation.SIGN_UP to NativeAuthV2FlowScenario.SIGN_UP,
+            NativeAuthV2LinkRelation.RESET_PASSWORD to NativeAuthV2FlowScenario.RESET_PASSWORD
+        )) {
+            val bodies = mutableListOf<ByteArray>()
+            val urls = mutableListOf<URL>()
+            val httpClient = mockk<UrlConnectionHttpClient>()
+            every { httpClient.post(any(), any(), any()) } answers {
+                urls.add(firstArg())
+                bodies.add(thirdArg<ByteArray>())
+                when (bodies.size) {
+                    1 -> HttpResponse(401, """
+                        {"continuation_token":"initial","_links":{
+                          "${relation.value}":{"href":"/tenant/api/v2.0/auth/${relation.value}/start"}
+                        }}
+                    """.trimIndent(), emptyMap())
+                    3 -> HttpResponse(200, """{"code":"authorization-code"}""", emptyMap())
+                    4 -> HttpResponse(200, """
+                        {"access_token":"test-access-token","scope":"User.Read",
+                         "token_type":"Bearer","expires_in":3600}
+                    """.trimIndent(), emptyMap())
+                    else -> error("Unexpected request in the test flow")
+                }
+            }
+            every { httpClient.method(HttpClient.HttpMethod.POST, any(), any(), any()) } answers {
+                urls.add(secondArg())
+                bodies.add(arg<ByteArray>(3))
+                HttpResponse(200, """{"state":"continue","continuation_token":"completion"}""", emptyMap())
+            }
+            val config = config()
+            val strategy = NativeAuthV2OAuth2Strategy(
+                strategyParameters = OAuth2StrategyParameters.builder().build(),
+                config = config,
+                nativeAuthV2Interactor = NativeAuthV2Interactor(
+                    httpClient, NativeAuthV2RequestProvider(config),
+                    NativeAuthV2ResponseHandler(), NativeAuthV2ResponseParser()
+                )
+            )
+
+            val start = strategy.performAuthorizeChallengeStart(
+                correlationId, relation.value, scenario, scopes, CLAIMS_REQUEST_JSON
+            ) as AuthorizeChallengeApiResult.ContinuationRequired
+            val entry = when (relation) {
+                NativeAuthV2LinkRelation.SIGN_IN -> strategy.performSignInStart("user@contoso.com", start.continuationState)
+                NativeAuthV2LinkRelation.SIGN_UP -> strategy.performSignUpStart("user@contoso.com", start.continuationState)
+                else -> strategy.performResetPasswordStart("user@contoso.com", start.continuationState)
+            } as NativeAuthV2InteractionApiResult.ReadyToComplete
+            assertEquals(scopes, entry.continuationState.scopesForTokenRequest())
+            assertEquals(CLAIMS_REQUEST_JSON, entry.continuationState.claimsRequestJsonForTokenRequest())
+            val continuation = strategy.performAuthorizeChallengeContinue(entry.continuationState)
+                as AuthorizeChallengeApiResult.AuthorizationCode
+            val token = strategy.performTokenRequest(continuation.code, correlationId)
+                as SignInTokenApiResult.Success
+
+            assertEquals("User.Read", token.tokenResponse.scope)
+            val initialForm = parseFormBody(bodies[0])
+            assertEquals(scopes.joinToString(" "), initialForm["scope"])
+            assertEquals(CLAIMS_REQUEST_JSON, initialForm["claims"])
+            val entryBody = String(bodies[1], StandardCharsets.UTF_8)
+            assertFalse(entryBody.contains("\"scope\""))
+            assertFalse(entryBody.contains("\"claims\""))
+            assertEquals(mapOf("continuation_token" to "completion"), parseFormBody(bodies[2]))
+            assertTrue(urls.last().path.endsWith("/oauth2/v2.0/token"))
+            assertEquals(
+                mapOf("client_id" to "client-id", "grant_type" to "authorization_code",
+                    "code" to "authorization-code", "client_info" to "true"),
+                parseFormBody(bodies[3])
+            )
+            verify(exactly = 3) { httpClient.post(any(), any(), any()) }
+            verify(exactly = 1) { httpClient.method(HttpClient.HttpMethod.POST, any(), any(), any()) }
+        }
+    }
+
+    private fun parseFormBody(body: ByteArray): Map<String, String> =
+        String(body, StandardCharsets.UTF_8).split("&").associate { parameter ->
+            val (name, value) = parameter.split("=", limit = 2)
+            URLDecoder.decode(name, StandardCharsets.UTF_8.name()) to
+                URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+        }
 
     @Test
     fun nativeAuthV2Configuration_doesNotExposeUnguardedAuthorizeChallengeEndpoint() {
