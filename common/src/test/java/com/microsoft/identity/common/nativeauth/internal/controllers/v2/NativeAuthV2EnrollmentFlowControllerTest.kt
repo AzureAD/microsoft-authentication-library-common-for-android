@@ -228,7 +228,7 @@ class NativeAuthV2EnrollmentFlowControllerTest {
     }
 
     @Test
-    fun activationCompletesSignInUsingRetainedScopesAndClaims() {
+    fun activationExchangesOnlyAuthorizationCodeDespiteRetainedScopesAndClaims() {
         val claims = """{"id_token":{"auth_time":null}}"""
         val prior = NativeAuthV2ContinuationStateTestFactory.create(
             "cid", scenario = NativeAuthV2FlowScenario.SIGN_IN, claimsRequestJson = claims)
@@ -236,14 +236,13 @@ class NativeAuthV2EnrollmentFlowControllerTest {
             NativeAuthV2InteractionApiResult.ReadyToComplete("cid", prior)
         every { strategy.performAuthorizeChallengeContinue(prior) } returns
             AuthorizeChallengeApiResult.AuthorizationCode("cid", "authorization-code")
-        every { strategy.performTokenRequest(any(), any(), any(), any()) } returns
+        every { strategy.performTokenRequest(any(), any()) } returns
             com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult.Redirect(
                 "cid", "stop-before-cache")
         val result = controller.activate(NativeAuthV2ActivateCommandParameters(builder(prior), prior, "otp"))
         assertTrue(result is INativeAuthCommandResult.Redirect)
         verify(exactly = 1) {
-            strategy.performTokenRequest("authorization-code", match { "scope" in it && "openid" in it },
-                "cid", claims)
+            strategy.performTokenRequest("authorization-code", "cid")
         }
     }
 
