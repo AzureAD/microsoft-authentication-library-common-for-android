@@ -24,11 +24,30 @@ package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 
 import com.microsoft.identity.common.java.util.ObjectMapper
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 class NativeAuthV2TokenRequestTest {
+
+    @Test
+    fun tokenRequestLoggingNeverIncludesAuthorizationCode() {
+        val code = "test-secret-authorization-code"
+        val request = NativeAuthV2TokenRequest.create(
+            clientId = "client-id",
+            code = code,
+            requestUrl = "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
+        )
+
+        for (description in listOf(
+            request.toString(), request.toUnsanitizedString(),
+            request.parameters.toString(), request.parameters.toUnsanitizedString()
+        )) {
+            assertFalse("Token request logging must not include the authorization code", description.contains(code))
+        }
+    }
 
     @Test
     fun create_serializesTokenExchangeFieldsWithoutScopesOrClaims() {

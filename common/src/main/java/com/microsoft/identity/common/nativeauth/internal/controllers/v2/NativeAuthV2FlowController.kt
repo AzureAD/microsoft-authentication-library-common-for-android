@@ -1240,7 +1240,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             methodName = "$TAG.completeFlow"
         )
 
-        val scopes = addV2DefaultScopes(parameters.scopes ?: state.scopesForTokenRequest())
+        val scopes = addV2DefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
             cacheCommandParameters = parameters.toBuilder()
@@ -1273,7 +1273,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Shared terminal path: continues the authorize-challenge interaction, exchanges the resulting
      * authorization code for tokens without scopes or claims, and saves the account and tokens
-     * using [cacheCommandParameters] for local cache metadata only.
+     * using [cacheCommandParameters] for local cache metadata only. Completion after sign-up or
+     * password reset always uses the scopes retained by the initial authorize-challenge request.
      */
     private fun exchangeCodeAndSaveTokens(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
@@ -1813,8 +1814,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             methodName = "$TAG.completeFlowSignUp"
         )
 
-        val requestedScopes = parameters.scopes ?: state.scopesForTokenRequest()
-        val scopes = addV2DefaultScopes(requestedScopes)
+        val scopes = addV2DefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
             cacheCommandParameters = parameters.toBuilder()

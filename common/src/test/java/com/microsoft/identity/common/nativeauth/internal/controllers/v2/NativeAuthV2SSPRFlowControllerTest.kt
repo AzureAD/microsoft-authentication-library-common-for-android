@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 
+import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
@@ -62,9 +63,8 @@ import org.junit.Test
  * [NativeAuthV2FlowController]: reset start, method selection and risk verification, code
  * submission, password update and polling, and explicit sign-in after reset.
  *
- * [NativeAuthV2OAuth2Strategy] and [NativeAuthCIAMAuthority] are mocked so these tests exercise only
- * the controller's branching, error mapping, and token-request/cache parameter handling, not the
- * HTTP or cache implementations.
+ * HTTP and cache persistence are mocked. Scope-target fallback is checked with the real
+ * [MicrosoftStsAccountCredentialAdapter].
  */
 class NativeAuthV2SSPRFlowControllerTest {
 
@@ -764,6 +764,24 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
+    fun testResetPasswordRejectsAuthorizationCodeBeforeExplicitCompletionSignIn() {
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "premature-code")
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unexpected_api_result", result.error)
+        assertEquals(correlationId, result.correlationId)
+        verify(exactly = 0) {
+            mockStrategy.performResetPasswordStart(any(), any())
+            mockStrategy.performAuthorizeChallengeContinue(any())
+            mockStrategy.performTokenRequest(any(), any())
+        }
+    }
+
+    @Test
     fun testSignInAfterResetPasswordReturnsAPIErrorWhenTokenRequestFails() {
         val state = mockContinuationState()
         val parameters = signInAfterResetPasswordParameters(state)
@@ -829,7 +847,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesRetainedScopesUnlessOverriddenForCachePersistence() {
+    fun testSignInAfterResetPasswordRetainsCacheTargetWhenTokenResponseOmitsScope() {
         val state = mockContinuationState()
         val flowScopes = listOf("OPENID", "OFFLINE_ACCESS", "User.Read")
         val cacheRequestSlot = slot<MicrosoftStsAuthorizationRequest>()
@@ -837,6 +855,8 @@ class NativeAuthV2SSPRFlowControllerTest {
         val mockTokenCache =
             mockk<OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>>()
         val mockTokenResponse = mockk<MicrosoftStsTokenResponse>(relaxed = true)
+        every { mockTokenResponse.scope } returns null
+        every { mockTokenResponse.clientInfo } returns "eyJ1aWQiOiJ1aWQiLCJ1dGlkIjoidXRpZCJ9"
 
         every { state.scopesForTokenRequest() } returns flowScopes
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
@@ -869,12 +889,15 @@ class NativeAuthV2SSPRFlowControllerTest {
             }
 
             assertEquals("Stop after cache request capture.", thrown.message)
-            val expectedScopes = (callerScopes ?: listOf("User.Read")) +
-                listOf("openid", "offline_access", "profile")
+            val expectedScopes = setOf("User.Read", "openid", "offline_access", "profile")
             assertEquals(
-                expectedScopes.toSet(),
+                expectedScopes,
                 cacheRequestSlot.captured.scope.split(" ").toSet()
             )
+            val accessToken = MicrosoftStsAccountCredentialAdapter().createAccessToken(
+                mockStrategy, cacheRequestSlot.captured, mockTokenResponse
+            )
+            assertEquals("User.Read", accessToken.target)
         }
         verify(exactly = 3) { mockStrategy.performTokenRequest("auth-code", correlationId) }
     }
