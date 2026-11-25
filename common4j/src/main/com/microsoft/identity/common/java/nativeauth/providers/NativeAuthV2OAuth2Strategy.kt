@@ -258,15 +258,11 @@ class NativeAuthV2OAuth2Strategy(
      */
     fun performTokenRequest(
         code: String,
-        scopes: List<String>,
-        correlationId: String,
-        claimsRequestJson: String? = null
+        correlationId: String
     ): SignInTokenApiResult {
         return nativeAuthV2Interactor.performTokenRequest(
             code = code,
-            scopes = scopes,
-            correlationId = correlationId,
-            claimsRequestJson = claimsRequestJson
+            correlationId = correlationId
         )
     }
 
