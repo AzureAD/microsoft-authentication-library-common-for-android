@@ -34,16 +34,20 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
  */
 object TenantUtil {
     private const val TAG: String = "TenantUtil"
-    private val EMAIL_REGEX = Regex("""^[^@]+@[^@]+\.[^@]+$""")
-    private val UUID_REGEX = Regex("""^[0-9A-Fa-f\-]{36}$""")
-
+    private const val MAX_DNS_HOSTNAME_LENGTH: Int = 253
+    private val UUID_REGEX = Regex(
+        """^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"""
+    )
+    private val DOMAIN_REGEX = Regex(
+        """^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$"""
+    )
 
     /**
      * Extracts tenant information from an identifier.
      *
-     * This method can handle two types of identifiers:
-     * - Email addresses/UPNs: Returns the domain part after the "@" symbol
-     * - Tenant GUIDs: Returns the GUID as-is
+     * Leading and trailing whitespace is trimmed prior to classification:
+     * - Email addresses/UPNs: Returns the multi-label DNS hostname after the single "@" symbol
+     * - Tenant GUIDs: Returns the canonical 8-4-4-4-12 GUID with original hex casing preserved
      *
      * @param identifier The identifier string which could be:
      *                   - An email address or UPN (e.g., "user@contoso.com")
@@ -54,16 +58,18 @@ object TenantUtil {
      */
     fun getTenantFromIdentifier(identifier: String?): String? {
         val methodTag = "$TAG:getTenantFromIdentifier"
-        if (identifier.isNullOrBlank()) {
+        val trimmedIdentifier = identifier?.trim()
+        if (trimmedIdentifier.isNullOrEmpty()) {
             return null
         }
 
-        if (UUID_REGEX.matches(identifier)) {
-            return identifier
+        if (UUID_REGEX.matches(trimmedIdentifier)) {
+            return trimmedIdentifier
         }
 
-        if (EMAIL_REGEX.matches(identifier)) {
-            return identifier.substringAfter("@").trim()
+        val domain = extractDomainFromEmailOrUpn(trimmedIdentifier)
+        if (domain != null) {
+            return domain
         }
 
         Logger.warn(methodTag, "Identifier is neither a valid email/UPN nor a GUID.")
@@ -73,9 +79,12 @@ object TenantUtil {
     /**
      * Resolves a tenant identifier to a tenant ID (GUID).
      *
-     * If the input is already a valid GUID, it is returned as-is.
-     * Otherwise, the method treats it as a hostname/domain and attempts to resolve
-     * the tenant ID by loading the OpenID provider configuration metadata.
+     * Leading and trailing whitespace is trimmed prior to classification.
+     * If the trimmed input is already a valid canonical GUID, it is returned as-is.
+     * Blank inputs and non-GUID inputs containing internal whitespace or URI delimiters
+     * ('/', '\', '?', '#') return null immediately without making OpenID metadata requests.
+     * Otherwise, the method attempts to resolve the tenant ID by loading the OpenID provider
+     * configuration metadata for the trimmed tenant identifier.
      *
      * @param tenant The tenant identifier, which can be either:
      *               - A tenant ID (GUID) (e.g., "12345678-1234-1234-1234-123456789012")
@@ -84,17 +93,30 @@ object TenantUtil {
      */
     fun resolveTenantId(tenant: String): String? {
         val methodTag = "$TAG:resolveTenantId"
+        val trimmedTenant = tenant.trim()
+        if (trimmedTenant.isEmpty()) {
+            Logger.warn(methodTag, "Tenant identifier is blank.")
+            return null
+        }
 
         // If already a GUID, return as-is
-        if (UUID_REGEX.matches(tenant)) {
+        if (UUID_REGEX.matches(trimmedTenant)) {
             Logger.info(methodTag, "Tenant is already a GUID, returning as-is.")
-            return tenant
+            return trimmedTenant
+        }
+
+        if (containsWhitespaceOrUriDelimiters(trimmedTenant)) {
+            Logger.warn(
+                methodTag,
+                "Tenant identifier contains invalid whitespace or URI delimiter characters."
+            )
+            return null
         }
 
         // Otherwise, resolve via OpenID configuration
         try {
             val configuration =
-                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(tenant)
+                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(trimmedTenant)
             val tenantId =
                 AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(configuration)
             Logger.info(methodTag, "Successfully got tenant ID from identifier.")
@@ -113,7 +135,7 @@ object TenantUtil {
      * for the specified tenant.
      *
      * @param loginHint The login hint string (e.g., "user@contoso.com")
-     * @param correlationId Correlation ID for the request, u
+     * @param correlationId Correlation ID for the request
      * @return The resolved tenant ID if successful, null if the login hint is invalid,
      *         the tenant cannot be resolved, or if an error occurs during resolution
      */
@@ -125,5 +147,30 @@ object TenantUtil {
         }
 
         return resolveTenantId(tenantName)
+    }
+
+    private fun extractDomainFromEmailOrUpn(trimmedIdentifier: String): String? {
+        val atIndex = trimmedIdentifier.indexOf('@')
+        if (atIndex <= 0 || atIndex != trimmedIdentifier.lastIndexOf('@')) {
+            return null
+        }
+
+        val localPart = trimmedIdentifier.substring(0, atIndex)
+        if (localPart.any { it.isWhitespace() }) {
+            return null
+        }
+
+        val domainPart = trimmedIdentifier.substring(atIndex + 1)
+        if (domainPart.length > MAX_DNS_HOSTNAME_LENGTH || !DOMAIN_REGEX.matches(domainPart)) {
+            return null
+        }
+
+        return domainPart
+    }
+
+    private fun containsWhitespaceOrUriDelimiters(value: String): Boolean {
+        return value.any { ch ->
+            ch.isWhitespace() || ch == '/' || ch == '\\' || ch == '?' || ch == '#'
+        }
     }
 }
