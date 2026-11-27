@@ -612,9 +612,7 @@ class NativeAuthV2Interactor(
     //region token
     fun performTokenRequest(
         code: String,
-        scopes: List<String>,
-        correlationId: String,
-        claimsRequestJson: String? = null
+        correlationId: String
     ): SignInTokenApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -624,9 +622,7 @@ class NativeAuthV2Interactor(
 
         val request = requestProvider.createTokenRequest(
             code = code,
-            scopes = scopes,
-            correlationId = correlationId,
-            claimsRequestJson = claimsRequestJson
+            correlationId = correlationId
         )
 
         Logger.infoWithObject(

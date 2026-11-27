@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 
+import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
@@ -62,9 +63,8 @@ import org.junit.Test
  * [NativeAuthV2FlowController]: reset start, method selection and risk verification, code
  * submission, password update and polling, and explicit sign-in after reset.
  *
- * [NativeAuthV2OAuth2Strategy] and [NativeAuthCIAMAuthority] are mocked so these tests exercise only
- * the controller's branching, error mapping, and token-request/cache parameter handling, not the
- * HTTP or cache implementations.
+ * HTTP and cache persistence are mocked. Scope-target fallback is checked with the real
+ * [MicrosoftStsAccountCredentialAdapter].
  */
 class NativeAuthV2SSPRFlowControllerTest {
 
@@ -197,7 +197,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
-    fun testEntryAndTokenCanonicalizeOidcDefaultsWithoutChangingResourceScopes() {
+    fun testEntryCanonicalizesOidcDefaultsWithoutChangingResourceScopes() {
         val requestedScopes = listOf("OPENID", "PROFILE", "OFFLINE_ACCESS", "User.Read", "user.read", "User.Read", "openid", "profile", "offline_access")
         val expectedScopes = listOf("openid", "profile", "offline_access", "User.Read", "user.read", "User.Read")
         every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
@@ -211,17 +211,6 @@ class NativeAuthV2SSPRFlowControllerTest {
                 expectedScopes,
                 null
             )
-        }
-        val state = mockContinuationState()
-        every { state.scopesForTokenRequest() } returns requestedScopes
-        every { state.claimsRequestJsonForTokenRequest() } returns null
-        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
-            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
-        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
-            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
-        controller.signInAfterResetPassword(signInAfterResetPasswordParameters(state, null))
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest("auth-code", expectedScopes, correlationId, null)
         }
     }
 
@@ -775,6 +764,24 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
+    fun testResetPasswordRejectsAuthorizationCodeBeforeExplicitCompletionSignIn() {
+        every { mockStrategy.performAuthorizeChallengeStart(any(), any(), any(), any(), any()) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "premature-code")
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unexpected_api_result", result.error)
+        assertEquals(correlationId, result.correlationId)
+        verify(exactly = 0) {
+            mockStrategy.performResetPasswordStart(any(), any())
+            mockStrategy.performAuthorizeChallengeContinue(any())
+            mockStrategy.performTokenRequest(any(), any())
+        }
+    }
+
+    @Test
     fun testSignInAfterResetPasswordReturnsAPIErrorWhenTokenRequestFails() {
         val state = mockContinuationState()
         val parameters = signInAfterResetPasswordParameters(state)
@@ -788,9 +795,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = any(),
-                scopes = any(),
-                correlationId = any(),
-                claimsRequestJson = null
+                correlationId = any()
             )
         } returns SignInTokenApiResult.UnknownError(
             correlationId = correlationId,
@@ -808,76 +813,7 @@ class NativeAuthV2SSPRFlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesCallerScopesForTokenRequest() {
-        val state = mockContinuationState()
-        val flowScopes = listOf("openid", "offline_access", "User.Read")
-        val callerScopes = listOf("Different.Scope")
-        val expectedScopes = callerScopes + "openid" + "offline_access" + "profile"
-
-        every { state.scopesForTokenRequest() } returns flowScopes
-        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
-            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
-        every {
-            mockStrategy.performTokenRequest(any(), any(), any(), null)
-        } returns SignInTokenApiResult.UnknownError(
-            correlationId = correlationId,
-            error = "invalid_grant",
-            errorDescription = "Expected test stop before cache save.",
-            errorCodes = emptyList()
-        )
-
-        controller.signInAfterResetPassword(
-            signInAfterResetPasswordParameters(state, callerScopes)
-        )
-
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = match { it.toSet() == expectedScopes.toSet() },
-                correlationId = correlationId,
-                claimsRequestJson = null
-            )
-        }
-    }
-
-    @Test
-    fun testSignInAfterResetPasswordUsesCallerClaimsForTokenRequest() {
-        val state = mockContinuationState()
-        val flowScopes = listOf("openid", "offline_access")
-        val expectedScopes = setOf("openid", "offline_access", "profile")
-        val claimsRequestJson = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
-
-        every { state.scopesForTokenRequest() } returns flowScopes
-        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
-            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
-        every {
-            mockStrategy.performTokenRequest(any(), any(), any(), any())
-        } returns SignInTokenApiResult.UnknownError(
-            correlationId = correlationId,
-            error = "invalid_grant",
-            errorDescription = "Expected test stop before cache save.",
-            errorCodes = emptyList()
-        )
-
-        controller.signInAfterResetPassword(
-            signInAfterResetPasswordParameters(
-                state = state,
-                claimsRequestJson = claimsRequestJson
-            )
-        )
-
-        verify(exactly = 1) {
-            mockStrategy.performTokenRequest(
-                code = "auth-code",
-                scopes = match { it.toSet() == expectedScopes },
-                correlationId = correlationId,
-                claimsRequestJson = claimsRequestJson
-            )
-        }
-    }
-
-    @Test
-    fun testSignInAfterResetPasswordTreatsBlankCallerClaimsAsAbsentAndRetainsEntryClaims() {
+    fun testSignInAfterResetPasswordExchangesOnlyCodeRegardlessOfCallerAndRetainedClaims() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access")
         val flowClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
@@ -887,7 +823,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), flowClaims)
+            mockStrategy.performTokenRequest(any(), any())
         } returns SignInTokenApiResult.UnknownError(
             correlationId = correlationId,
             error = "invalid_grant",
@@ -895,33 +831,32 @@ class NativeAuthV2SSPRFlowControllerTest {
             errorCodes = emptyList()
         )
 
-        controller.signInAfterResetPassword(
-            signInAfterResetPasswordParameters(state, claimsRequestJson = "   ")
-        )
+        for (claims in listOf(null, "   ", """{"access_token":{"xms_cc":{"values":["cp1"]}}}""")) {
+            val result = controller.signInAfterResetPassword(
+                signInAfterResetPasswordParameters(state, claimsRequestJson = claims)
+            )
+            assertTrue(result is INativeAuthCommandResult.APIError)
+        }
 
-        verify(exactly = 1) {
+        verify(exactly = 3) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = match {
-                    it.toSet() == setOf("openid", "offline_access", "profile")
-                },
-                correlationId = correlationId,
-                claimsRequestJson = flowClaims
+                correlationId = correlationId
             )
         }
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesCallerScopesForTokenRequestAndCachePersistence() {
+    fun testSignInAfterResetPasswordRetainsCacheTargetWhenTokenResponseOmitsScope() {
         val state = mockContinuationState()
-        val flowScopes = listOf("openid", "offline_access", "User.Read")
-        val callerScopes = listOf("Different.Scope")
-        val tokenScopesSlot = slot<List<String>>()
+        val flowScopes = listOf("OPENID", "OFFLINE_ACCESS", "User.Read")
         val cacheRequestSlot = slot<MicrosoftStsAuthorizationRequest>()
         val stopAfterCapture = RuntimeException("Stop after cache request capture.")
         val mockTokenCache =
             mockk<OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>>()
         val mockTokenResponse = mockk<MicrosoftStsTokenResponse>(relaxed = true)
+        every { mockTokenResponse.scope } returns null
+        every { mockTokenResponse.clientInfo } returns "eyJ1aWQiOiJ1aWQiLCJ1dGlkIjoidXRpZCJ9"
 
         every { state.scopesForTokenRequest() } returns flowScopes
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
@@ -929,9 +864,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = any(),
-                scopes = capture(tokenScopesSlot),
-                correlationId = any(),
-                claimsRequestJson = null
+                correlationId = any()
             )
         } returns SignInTokenApiResult.Success(
             correlationId = correlationId,
@@ -942,27 +875,31 @@ class NativeAuthV2SSPRFlowControllerTest {
             mockTokenCache.saveAndLoadAggregatedAccountData(any(), capture(cacheRequestSlot), any())
         } throws stopAfterCapture
 
-        val parameters = signInAfterResetPasswordParameters(state, callerScopes)
-            .toBuilder()
-            .oAuth2TokenCache(mockTokenCache)
-            .clientId("client-id")
-            .callerPackageName("com.contoso.app")
-            .callerSignature("signature")
-            .build()
+        for (callerScopes in listOf(null, emptyList(), listOf("Different.Scope"))) {
+            val parameters = signInAfterResetPasswordParameters(state, callerScopes)
+                .toBuilder()
+                .oAuth2TokenCache(mockTokenCache)
+                .clientId("client-id")
+                .callerPackageName("com.contoso.app")
+                .callerSignature("signature")
+                .build()
 
-        val thrown = assertThrows(RuntimeException::class.java) {
-            controller.signInAfterResetPassword(parameters)
+            val thrown = assertThrows(RuntimeException::class.java) {
+                controller.signInAfterResetPassword(parameters)
+            }
+
+            assertEquals("Stop after cache request capture.", thrown.message)
+            val expectedScopes = setOf("User.Read", "openid", "offline_access", "profile")
+            assertEquals(
+                expectedScopes,
+                cacheRequestSlot.captured.scope.split(" ").toSet()
+            )
+            val accessToken = MicrosoftStsAccountCredentialAdapter().createAccessToken(
+                mockStrategy, cacheRequestSlot.captured, mockTokenResponse
+            )
+            assertEquals("User.Read", accessToken.target)
         }
-
-        assertEquals("Stop after cache request capture.", thrown.message)
-        assertEquals(
-            setOf("Different.Scope", "openid", "offline_access", "profile"),
-            tokenScopesSlot.captured.toSet()
-        )
-        assertEquals(
-            tokenScopesSlot.captured.toSet(),
-            cacheRequestSlot.captured.scope.split(" ").toSet()
-        )
+        verify(exactly = 3) { mockStrategy.performTokenRequest("auth-code", correlationId) }
     }
 
     @Test
@@ -976,7 +913,7 @@ class NativeAuthV2SSPRFlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), any())
+            mockStrategy.performTokenRequest(any(), any())
         } returns SignInTokenApiResult.Success(
             correlationId = correlationId,
             tokenResponse = mockTokenResponse
@@ -999,24 +936,5 @@ class NativeAuthV2SSPRFlowControllerTest {
         }
 
         assertEquals(ClientException.TOKEN_CACHE_SAVE_FAILED, thrown.errorCode)
-    }
-
-    @Test
-    fun testContinuationNullScopesRetainEntryButExplicitEmptyUsesOnlyDefaults() {
-        val state = mockContinuationState()
-        every { state.scopesForTokenRequest() } returns listOf("Retained.Scope")
-        every { state.claimsRequestJsonForTokenRequest() } returns null
-        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
-            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
-        every { mockStrategy.performTokenRequest(any(), any(), any(), any()) } returns
-            SignInTokenApiResult.UnknownError(correlationId, "test_stop", "test stop", emptyList())
-        listOf<List<String>?>(null, emptyList()).forEach { scopes ->
-            controller.signInAfterResetPassword(signInAfterResetPasswordParameters(state, scopes))
-            val expected = setOf("openid", "profile", "offline_access") +
-                if (scopes == null) setOf("Retained.Scope") else emptySet()
-            verify(exactly = 1) {
-                mockStrategy.performTokenRequest("auth-code", match { it.toSet() == expected }, correlationId, null)
-            }
-        }
     }
 }
