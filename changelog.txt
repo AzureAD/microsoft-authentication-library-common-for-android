@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Unify Native Auth V2 first-factor and MFA method selection, reject mismatched method challenges, and reject unsupported primary SMS sign-in before sending a challenge.
 - [MINOR] Add Samsung Internet Browser signing identities to AppRegistry behind default-off EnableSamsungBrowserSso, Fixes AB#3825751
 - [PATCH] Remove scopes and claims from Native Auth V2 authorization-code token-request APIs, always retaining the initial flow scopes for local cache metadata after sign-up or password reset.
 

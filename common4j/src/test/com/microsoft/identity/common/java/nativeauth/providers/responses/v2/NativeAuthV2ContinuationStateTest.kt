@@ -40,6 +40,24 @@ import java.io.Serializable
 class NativeAuthV2ContinuationStateTest {
 
     @Test
+    fun multiFactorClassificationSurvivesSerializationWithoutClassifyingUnspecifiedStateAsMfa() {
+        val unspecified = NativeAuthV2ContinuationStateTestFactory.create(CORRELATION_ID)
+        assertFalse(unspecified.isMultiFactorAuthentication())
+        val original = NativeAuthV2ContinuationStateTestFactory.multiFactor(unspecified)
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        assertTrue(restored.isMultiFactorAuthentication())
+        assertEquals(unspecified.flowScenario(), restored.flowScenario())
+        assertEquals(unspecified.scopesForTokenRequest(), restored.scopesForTokenRequest())
+        assertEquals(REDACTED_STRING, restored.toString())
+    }
+
+    @Test
     fun testFixtureCreatesRepresentativeContinuationState() {
         val state = NativeAuthV2ContinuationStateTestFactory.create(
             correlationId = CORRELATION_ID,
@@ -103,6 +121,7 @@ class NativeAuthV2ContinuationStateTest {
                     "methods": [
                       {
                         "id": "email",
+                        "type": "email",
                         "_links": {
                           "challenge": {
                             "href": "/tenant/email-challenge"
@@ -138,6 +157,59 @@ class NativeAuthV2ContinuationStateTest {
             selected.href(NativeAuthV2LinkRelation.CHALLENGE)
         )
         assertEquals("/tenant/email-verify", selected.href(NativeAuthV2LinkRelation.VERIFY))
+        assertTrue(restored.matchesAuthenticationMethod("email", "EMAIL"))
+        assertTrue(selected.matchesAuthenticationMethod("email", "email"))
+        assertFalse(selected.matchesAuthenticationMethod("email", "password"))
+        assertFalse(selected.matchesAuthenticationMethod("not-offered", "email"))
+    }
+
+    @Test
+    fun authenticationMethodTypesSurviveLocalCopiesAndAreReplacedByNewServerOffers() {
+        val original = NativeAuthV2ContinuationStateTestFactory.challenge(
+            NativeAuthV2ContinuationStateTestFactory.create(
+                CORRELATION_ID, scenario = NativeAuthV2FlowScenario.SIGN_UP),
+            listOf(NativeAuthV2AuthMethod("email-id", "email", "***"))
+        )
+        for (copy in listOf(
+            original.withPendingSignUpAttributes(mapOf("displayName" to "Test")),
+            original.withoutPendingSignUpAttributes(),
+            original.withAdditionalSubmittedAttributes(listOf("email")),
+            original.forExistingAccountSignIn(),
+            original.withResetPasswordUpdateSubmitted(),
+            requireNotNull(original.withSelectedMethod("email-id"))
+        )) {
+            assertTrue(copy.matchesAuthenticationMethod("email-id", "email"))
+            assertFalse(copy.matchesAuthenticationMethod("email-id", "password"))
+        }
+        val successor = NativeAuthV2ContinuationStateTestFactory.challenge(
+            original, listOf(NativeAuthV2AuthMethod("sms-id", "sms", "***")), "multiFactor"
+        )
+        assertTrue(successor.matchesAuthenticationMethod("sms-id", "sms"))
+        assertFalse(successor.matchesAuthenticationMethod("email-id", "email"))
+        assertFalse(NativeAuthV2ContinuationStateTestFactory.create(CORRELATION_ID)
+            .matchesAuthenticationMethod("email-id", "email"))
+    }
+
+    @Test
+    fun authenticationMethodTypesIgnoreMissingMetadataAndKeepFirstDuplicateId() {
+        val state = requireNotNull(NativeAuthV2ContinuationState.next(
+            createState(),
+            responseFrom("""
+                {"continuationToken":"next","_embedded":{"methods":[
+                  {"id":"email-id","type":"email"},
+                  {"id":"email-id","type":"password"},
+                  {"id":"missing-type"},
+                  {"id":"blank-type","type":" "},
+                  {"id":" ","type":"sms"},
+                  {"type":"sms"}
+                ]}}
+            """.trimIndent())
+        ))
+        assertTrue(state.matchesAuthenticationMethod("email-id", "email"))
+        assertFalse(state.matchesAuthenticationMethod("email-id", "password"))
+        assertFalse(state.matchesAuthenticationMethod("missing-type", "email"))
+        assertFalse(state.matchesAuthenticationMethod("blank-type", " "))
+        assertFalse(state.matchesAuthenticationMethod(" ", "sms"))
     }
 
     @Test

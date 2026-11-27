@@ -51,7 +51,7 @@ interface INativeAuthCommandResult : ILoggable {
         NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2SelectAuthMethodCommandResult,
-        NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
+        NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
         NativeAuthV2StrongAuthCommandResult {
             companion object {
@@ -93,7 +93,7 @@ interface INativeAuthCommandResult : ILoggable {
         NativeAuthV2SignUpSubmitCodeCommandResult, NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2SelectAuthMethodCommandResult,
-        NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
+        NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult,
         NativeAuthV2StrongAuthCommandResult
     {

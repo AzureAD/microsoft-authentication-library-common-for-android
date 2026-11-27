@@ -73,9 +73,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
      * target label for that challenge (e.g. a partially-masked email or phone number) and is
      * therefore omitted from [toString], though present in [toUnsanitizedString].
      *
-     * [methods] carries every valid method the server offered, in server order, for flows that
-     * select a method explicitly (V2 sign-in). It is empty for flows whose parser already selected
-     * the single supported method implicitly (V2 SSPR).
+     * [methods] carries every valid method the server offered, in server order, for both
+     * first-factor and multi-factor challenges. The continuation retains the server's factor.
      */
     data class ChallengeRequired(
         override val correlationId: String,
@@ -86,22 +85,6 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override fun toUnsanitizedString(): String = "ChallengeRequired(correlationId=$correlationId, " +
                 "hint=$hint, methods=${methods.map { it.toUnsanitizedString() }})"
         override fun toString(): String = "ChallengeRequired(correlationId=$correlationId, " +
-                "methods=${methods.map { it.toString() }})"
-    }
-
-    /**
-     * The first factor has been satisfied and the server requires a second factor. [methods] are
-     * the multi-factor methods the server offered, in server order; the caller must select one
-     * explicitly, and no challenge is sent until it does.
-     */
-    data class MFARequired(
-        override val correlationId: String,
-        val continuationState: NativeAuthV2ContinuationState,
-        val methods: List<NativeAuthV2AuthMethod>
-    ) : NativeAuthV2InteractionApiResult {
-        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, " +
-                "methods=${methods.map { it.toUnsanitizedString() }})"
-        override fun toString(): String = "MFARequired(correlationId=$correlationId, " +
                 "methods=${methods.map { it.toString() }})"
     }
 

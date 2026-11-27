@@ -78,8 +78,8 @@ class NativeAuthV2ResponseParserTest {
                     """), previousState(scenario))
                     val expected = when {
                         factor == "unknown" -> NativeAuthV2InteractionApiResult.UnknownError::class.java
-                        factor == "multiFactor" -> NativeAuthV2InteractionApiResult.MFARequired::class.java
-                        scenario == NativeAuthV2FlowScenario.SIGN_UP && state == "interactionRequired" ->
+                        factor == "singleFactor" &&
+                            scenario == NativeAuthV2FlowScenario.SIGN_UP && state == "interactionRequired" ->
                             NativeAuthV2InteractionApiResult.ExistingAccountChallengeRequired::class.java
                         else -> NativeAuthV2InteractionApiResult.ChallengeRequired::class.java
                     }
