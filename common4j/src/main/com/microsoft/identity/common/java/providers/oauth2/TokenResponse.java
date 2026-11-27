@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 
 import java.util.Map;
 
@@ -39,7 +40,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  *       (so that the caller does NOT have to persist the request object even after the request is made).
  */
 
-public class TokenResponse implements ISuccessResponse {
+public class TokenResponse implements ISuccessResponse, ISensitiveData {
 
     /**
      * RECOMMENDED.  The lifetime in seconds of the access token.  For
@@ -329,16 +330,31 @@ public class TokenResponse implements ISuccessResponse {
         return "TokenResponse{" +
                 "mExpiresIn=" + mExpiresIn +
                 ", mRefreshIn=" + mRefreshIn +
-                ", mAccessToken='" + mAccessToken + '\'' +
+                ", mAccessToken='" + (mAccessToken != null ? "[REDACTED:" + mAccessToken.length() + "chars]" : "null") + '\'' +
                 ", mTokenType='" + mTokenType + '\'' +
-                ", mRefreshToken='" + mRefreshToken + '\'' +
+                ", mRefreshToken='" + (mRefreshToken != null ? "[REDACTED:" + mRefreshToken.length() + "chars]" : "null") + '\'' +
                 ", mScope='" + mScope + '\'' +
                 ", mState='" + mState + '\'' +
-                ", mIdToken='" + mIdToken + '\'' +
+                ", mIdToken='" + (mIdToken != null ? "[REDACTED:" + mIdToken.length() + "chars]" : "null") + '\'' +
                 ", mResponseReceivedTime=" + mResponseReceivedTime +
                 '}';
     }
     //CHECKSTYLE:ON
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Nulls out the access token, refresh token, and ID token fields held by this response
+     * so that they become eligible for garbage collection. Subclasses should override this
+     * method, call {@code super.clearSensitiveData()}, and clear any additional sensitive
+     * fields they introduce.
+     */
+    @Override
+    public void clearSensitiveData() {
+        mAccessToken = null;
+        mRefreshToken = null;
+        mIdToken = null;
+    }
 
     @Nullable
     @Override

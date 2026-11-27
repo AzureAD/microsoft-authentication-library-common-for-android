@@ -27,6 +27,7 @@ import lombok.NonNull;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.ISensitiveData;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -45,7 +46,7 @@ import lombok.EqualsAndHashCode;
  * http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
  */
 @EqualsAndHashCode
-public class IDToken {
+public class IDToken implements ISensitiveData {
 
     private static final String TAG = IDToken.class.getSimpleName();
 
@@ -190,8 +191,8 @@ public class IDToken {
      */
     public static final String UPDATED_AT = "updated_at";
 
-    private final Map<String, ?> mTokenClaims;
-    private final String mRawIdToken;
+    private Map<String, ?> mTokenClaims;
+    private String mRawIdToken;
 
     /**
      * Constructor of IDToken.
@@ -281,5 +282,11 @@ public class IDToken {
 
     public String getStringClaim(@NonNull final String claimName) {
         return mTokenClaims != null ? (String) this.mTokenClaims.get(claimName) : null;
+    }
+
+    @Override
+    public void clearSensitiveData() {
+        mRawIdToken = null;
+        mTokenClaims = null;
     }
 }

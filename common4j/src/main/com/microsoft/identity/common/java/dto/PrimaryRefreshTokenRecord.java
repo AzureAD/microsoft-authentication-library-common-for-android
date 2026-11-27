@@ -188,6 +188,19 @@ public class PrimaryRefreshTokenRecord extends Credential {
         mSessionKeyRollingDate = sessionKeyRollingDate;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Clears the session key and session key rolling date in addition to the
+     * fields cleared by the parent {@link Credential#clearSensitiveData()}.
+     */
+    @Override
+    public void clearSensitiveData() {
+        super.clearSensitiveData();
+        mSessionKey = null;
+        mSessionKeyRollingDate = null;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -198,7 +211,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
         return "PrimaryRefreshTokenRecord{" +
                 "mFamilyId='" + mFamilyId + '\'' +
                 ", mExpiresOn='" + mExpiresOn + '\'' +
-                ", mSessionKey='" + mSessionKey + '\'' +
+                ", mSessionKey='" + (mSessionKey != null ? "[REDACTED:" + mSessionKey.length() + "chars]" : "null") + '\'' +
                 ", mPrtProtocolVersion='" + mPrtProtocolVersion + '\'' +
                 ", mSessionKeyRollingDate='" + mSessionKeyRollingDate + '\'' +
                 "} " + super.toString();
