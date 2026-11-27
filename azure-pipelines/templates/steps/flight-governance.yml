@@ -21,11 +21,15 @@ parameters:
 - name: artifactName
   type: string
   default: flight-governance
+- name: failOnFindings
+  type: boolean
+  default: false
 
 steps:
 - pwsh: |
     $ErrorActionPreference = 'Stop'
     $env:JAVA_HOME = $env:GOV_JAVA_HOME
+    $failOnFindings = $env:GOV_FAIL_ON_FINDINGS -eq 'true'
     Write-Host '##vso[task.setvariable variable=flightGovernanceReportExists]false'
     $report = Join-Path $env:GOV_REPORT_DIRECTORY 'report.json'
     try {
@@ -52,23 +56,34 @@ steps:
         $arguments = @('check-pr', '--repository', $env:GOV_LABEL, $env:GOV_REPOSITORY,
             '--base', "refs/remotes/origin/$target", '--head', $source,
             '--policy', $env:GOV_POLICY, '--output', $report)
+        if ($failOnFindings) {
+            $arguments += '--fail-on-findings'
+        }
         foreach ($path in ($env:GOV_SOURCE_PATHS | ConvertFrom-Json)) {
             $arguments += @('--source', $path)
         }
         & $tool @arguments
-        if ($LASTEXITCODE -ne 0) { throw 'Flight governance scan is incomplete; see the report and task log.' }
+        $exitCode = $LASTEXITCODE
+        if (-not (Test-Path -LiteralPath $report -PathType Leaf)) {
+            throw 'Flight governance scan is incomplete; see the task log.'
+        }
         $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
         if ($result.status -ne 'complete') { throw 'The scan did not produce a complete report.' }
+        Write-Host "##vso[task.uploadsummary]$report.md"
         if ($result.findings.Count -gt 0) {
+            if ($failOnFindings) {
+                Write-Host "##vso[task.logissue type=error]Flight governance: $($result.findings.Count) blocking findings; see the attached report."
+                throw "Flight governance check failed with $($result.findings.Count) blocking finding(s)."
+            }
             Write-Host "##vso[task.logissue type=warning]Flight governance: $($result.findings.Count) advisory findings; see the attached report."
         }
-        Write-Host "##vso[task.uploadsummary]$report.md"
+        if ($exitCode -ne 0) { throw "Flight governance scan failed with exit code $exitCode." }
     } finally {
         if (Test-Path -LiteralPath $report -PathType Leaf) {
             Write-Host '##vso[task.setvariable variable=flightGovernanceReportExists]true'
         }
     }
-  displayName: Report flight governance (non-blocking policy findings)
+  displayName: ${{ iif(parameters.failOnFindings, 'Check flight governance (blocking)', 'Report flight governance (non-blocking policy findings)') }}
   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
   env:
     GOV_REPOSITORY: ${{ parameters.repositoryRoot }}
@@ -77,6 +92,7 @@ steps:
     GOV_SOURCE_PATHS: ${{ convertToJson(parameters.sourcePaths) }}
     GOV_POLICY: ${{ parameters.policyPath }}
     GOV_REPORT_DIRECTORY: ${{ parameters.reportDirectory }}
+    GOV_FAIL_ON_FINDINGS: ${{ lower(parameters.failOnFindings) }}
     GOV_JAVA_HOME: $(JAVA_HOME_17_X64)
 - task: PublishPipelineArtifact@1
   displayName: Publish flight-governance report
