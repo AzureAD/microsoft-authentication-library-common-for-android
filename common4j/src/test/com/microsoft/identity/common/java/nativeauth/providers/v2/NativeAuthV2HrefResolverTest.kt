@@ -148,6 +148,33 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
+    fun resolve_whenTenantTemplateHasNoConfiguredTenant_rejectsWithCorrelationId() {
+        val exception = assertClientException {
+            resolver("https://login.contoso.com/").resolve(
+                "/{tenant}/api/v2.0/auth/challenge", CORRELATION_ID
+            )
+        }
+
+        assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+    }
+
+    @Test
+    fun resolve_whenTemplateIsNotSupportedLeadingTenant_rejectsWithCorrelationId() {
+        for (href in listOf(
+            "/{other}/api/v2.0/auth/challenge",
+            "/tenant/api/v2.0/{tenant}/challenge",
+            "/{tenant}/api/v2.0/auth/challenge?value={other}",
+            "https://other.example.com/{tenant}/api/v2.0/auth/challenge"
+        )) {
+            val exception = assertClientException { resolver().resolve(href, CORRELATION_ID) }
+
+            assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+            assertEquals(CORRELATION_ID, exception.correlationId)
+        }
+    }
+
+    @Test
     fun resolve_whenHrefIsMalformedOrAbsoluteHostIsMissing_rejectsMalformedUrl() {
         listOf(
             "/api/v0.1/auth/challenge?value=%",
@@ -487,6 +514,28 @@ class NativeAuthV2HrefResolverTest {
         }
         assertEquals(1, warnings.size)
         assertTrue(warnings.single().contains("authority differs"))
+    }
+
+    @Test
+    fun resolve_whenAuthorityAndDeveloperSlicesDiffer_comparesTheInitialRequestSlice() {
+        BuildValues.setDC("developer")
+        for (returned in listOf("query-slice", "developer")) {
+            val href = "/tenant/api/v2.0/signin/start?dc=$returned"
+            val warnings = captureWarnings {
+                assertEquals(
+                    "https://login.contoso.com$href",
+                    resolver("https://login.contoso.com/tenant?dc=query-slice")
+                        .resolve(href, CORRELATION_ID).toString()
+                )
+            }
+
+            if (returned == "query-slice") {
+                assertTrue(warnings.isEmpty())
+            } else {
+                assertEquals(1, warnings.size)
+                assertTrue(warnings.single().contains("test slice differs"))
+            }
+        }
     }
 
     @Test

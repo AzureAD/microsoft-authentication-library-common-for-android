@@ -53,6 +53,43 @@ class NativeAuthV2RequestProviderTest {
     }
 
     @Test
+    fun createChallengeRequest_whenParserSelectsTenantTemplate_expandsOnlyTenantAndPreservesQuery() {
+        val query = "?dc=service&value=%2B&value=%2f"
+        for (tenant in listOf("tenant.onmicrosoft.com", "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d", "tenant%2Dalias")) {
+            for (prefix in listOf("", "/")) {
+                val result = NativeAuthV2ResponseParser().parseInteraction(
+                    response = NativeAuthV2HalApiResponse.from(
+                        halResource = HalResource.from(
+                            """{"action":"challenge","continuationToken":"challenge-token",
+                                "challengeContext":{"authenticationFactor":"singleFactor"},
+                                "_embedded":{"methods":[{"id":"email","type":"email",
+                                "_links":{"challenge":[
+                                    {"href":"$prefix{tenant}/api/v2.0/auth/challenge$query","templated":true},
+                                    {"href":"/concrete-tenant/api/v2.0/auth/challenge"}
+                                ]}}]}}"""
+                        ),
+                        statusCode = 200,
+                        correlationId = CORRELATION_ID
+                    ),
+                    previousState = continuationState()
+                ) as NativeAuthV2InteractionApiResult.ChallengeRequired
+                val selectedState = requireNotNull(result.continuationState.withSelectedMethod("email"))
+
+                val request = provider(
+                    authorityUrl = "https://login.contoso.com/$tenant?dc=developer",
+                    useMockApi = false
+                ).createChallengeRequest(selectedState)
+
+                assertEquals(
+                    "https://login.contoso.com/$tenant/api/v2.0/auth/challenge$query",
+                    request.requestUrl.toString()
+                )
+                assertEquals("challenge-token", request.parameters.continuationToken)
+            }
+        }
+    }
+
+    @Test
     fun createAuthorizeChallengeStartRequest_preservesAuthorityQueryDcWithoutAddingDeveloperDuplicate() {
         BuildValues.setDC("developer")
         val request = provider(

@@ -26,7 +26,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.v2
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.util.CommonURIBuilder
 import java.net.MalformedURLException
@@ -38,9 +37,16 @@ import java.net.URL
  * Resolves Native Auth V2 server-provided hrefs against the configured authority.
  *
  * Relative hrefs supply the entire path and query beneath the configured origin; the configured
- * tenant path and developer-supplied `dc` never override service routing. Absolute HTTPS hrefs are
+ * tenant path and developer-supplied `dc` never override concrete service routing. A leading
+ * `{tenant}` placeholder is expanded using the configured tenant. Absolute HTTPS hrefs are
  * followed as returned, including a different origin, with warnings for authority or slice mismatches.
  * Invalid paths and insecure non-mock URLs are rejected before receiving sensitive flow state.
+ *
+ * Custom domains are alternative service origins across V2 endpoints, not host restrictions on
+ * subsequent requests. Service-provided links determine destinations for every V2 relation,
+ * including credential submissions; absolute links are not rewritten to the configured origin.
+ * Header interceptors receive the actual resolved destination and should scope sensitive custom
+ * headers accordingly.
  */
 class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration) {
 
@@ -77,7 +83,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
                 )
             }
 
-            val uri = URI(trimmedHref)
+            val uri = URI(expandTenantTemplate(trimmedHref, correlationId))
             validateUserInfoAndFragment(uri, correlationId)
             val resolved = if (uri.isAbsolute) {
                 resolveAbsolute(uri, correlationId)
@@ -101,6 +107,25 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
                 correlationId = correlationId
             )
         }
+    }
+
+    private fun expandTenantTemplate(href: String, correlationId: String): String {
+        val prefix = when {
+            href.startsWith("/$TENANT_TEMPLATE/") -> "/$TENANT_TEMPLATE"
+            href.startsWith("$TENANT_TEMPLATE/") -> TENANT_TEMPLATE
+            else -> return href
+        }
+        val authority = config.getNativeAuthV2AuthorityUrl(correlationId)
+        val tenant = authority.toURI().rawPath.orEmpty().trimStart('/').substringBefore('/')
+        if (tenant.isBlank()) {
+            throw clientException(
+                errorCode = ClientException.MALFORMED_URL,
+                message = "Native Auth V2 tenant template requires a configured tenant path.",
+                correlationId = correlationId
+            )
+        }
+        val leadingSlash = if (href.startsWith(PATH_SEPARATOR)) PATH_SEPARATOR else ""
+        return "$leadingSlash$tenant${href.removePrefix(prefix)}"
     }
 
     private fun resolveAbsolute(uri: URI, correlationId: String): URL {
@@ -187,8 +212,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
                 "Native Auth V2 service URL authority differs from the configured authority; following the service URL."
             )
         }
-        val configuredSlices = BuildValues.getDC().takeIf { it.isNotEmpty() }?.let { listOf(it) }
-            ?: slices(authority.toURI())
+        val configuredSlices = slices(config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toURI())
         if (configuredSlices != slices(uri)) {
             Logger.warn(
                 TAG, correlationId,
@@ -279,6 +303,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         private const val API_PATH_PREFIX = "/api/"
         private const val OAUTH2_PATH_PREFIX = "/oauth2/"
         private const val DC_QUERY_PARAMETER = "dc"
+        private const val TENANT_TEMPLATE = "{tenant}"
         private const val CURRENT_DIRECTORY_SEGMENT = "."
         private const val PARENT_DIRECTORY_SEGMENT = ".."
         private val SUPPORTED_API_PATH_PREFIXES = listOf(API_PATH_PREFIX, OAUTH2_PATH_PREFIX)
