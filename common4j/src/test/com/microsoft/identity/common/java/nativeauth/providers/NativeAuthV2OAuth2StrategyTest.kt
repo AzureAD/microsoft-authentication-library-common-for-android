@@ -86,7 +86,11 @@ class NativeAuthV2OAuth2StrategyTest {
             every { httpClient.method(HttpClient.HttpMethod.POST, any(), any(), any()) } answers {
                 urls.add(secondArg())
                 bodies.add(arg<ByteArray>(3))
-                HttpResponse(200, """{"state":"continue","continuation_token":"completion"}""", emptyMap())
+                HttpResponse(200, """
+                    {"state":"continue","continuation_token":"completion","_links":{
+                      "continue":{"href":"https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"}
+                    }}
+                """.trimIndent(), emptyMap())
             }
             val config = config()
             val strategy = NativeAuthV2OAuth2Strategy(

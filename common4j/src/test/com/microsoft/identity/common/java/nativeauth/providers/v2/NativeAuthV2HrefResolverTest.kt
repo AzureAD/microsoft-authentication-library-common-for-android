@@ -23,13 +23,19 @@
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.net.URL
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class NativeAuthV2HrefResolverTest {
     @After
@@ -69,14 +75,14 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenRelativeHrefIsValid_preservesTenantPathAndHrefQuery() {
+    fun resolve_whenRelativeHrefIsValid_usesOnlyAuthorityOriginAndHrefQuery() {
         val url = resolver().resolve(
             "/api/v0.1/auth/challenge?dc=westus&prompt=login",
             CORRELATION_ID
         )
 
         assertEquals(
-            "https://login.contoso.com/tenant/api/v0.1/auth/challenge?dc=westus&prompt=login",
+            "https://login.contoso.com/api/v0.1/auth/challenge?dc=westus&prompt=login",
             url.toString()
         )
     }
@@ -84,8 +90,6 @@ class NativeAuthV2HrefResolverTest {
     @Test
     fun resolve_whenHrefCrossesSecurityBoundary_rejectsWithCorrelationId() {
         mapOf(
-            "https://evil.example.com/api/v0.1/auth/challenge" to ClientException.UNKNOWN_AUTHORITY,
-            "https://login.contoso.com:8443/api/v0.1/auth/challenge" to ClientException.UNKNOWN_AUTHORITY,
             "http://login.contoso.com/api/v0.1/auth/challenge" to ClientException.UNSUPPORTED_URL,
             "//evil.example.com/api/v0.1/auth/challenge" to ClientException.UNSUPPORTED_URL,
             "https://user@login.contoso.com/api/v0.1/auth/challenge" to ClientException.UNSUPPORTED_URL,
@@ -114,9 +118,9 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenMockModeUsesForeignHostOrPort_rejectsWithCorrelationId() {
+    fun resolve_whenMockModeUsesForeignHttpHostOrPort_rejectsWithCorrelationId() {
         listOf(
-            "https://evil.example.com/api/v0.1/auth/challenge",
+            "http://other.example.com/api/v0.1/auth/challenge",
             "http://login.contoso.com:8080/api/v0.1/auth/challenge"
         ).forEach { href ->
             val exception = assertClientException {
@@ -126,7 +130,7 @@ class NativeAuthV2HrefResolverTest {
                 ).resolve(href, CORRELATION_ID)
             }
 
-            assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
+            assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
             assertEquals(CORRELATION_ID, exception.correlationId)
         }
     }
@@ -137,6 +141,33 @@ class NativeAuthV2HrefResolverTest {
             val exception = assertClientException {
                 resolver().resolve(href, CORRELATION_ID)
             }
+
+            assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+            assertEquals(CORRELATION_ID, exception.correlationId)
+        }
+    }
+
+    @Test
+    fun resolve_whenTenantTemplateHasNoConfiguredTenant_rejectsWithCorrelationId() {
+        val exception = assertClientException {
+            resolver("https://login.contoso.com/").resolve(
+                "/{tenant}/api/v2.0/auth/challenge", CORRELATION_ID
+            )
+        }
+
+        assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+    }
+
+    @Test
+    fun resolve_whenTemplateIsNotSupportedLeadingTenant_rejectsWithCorrelationId() {
+        for (href in listOf(
+            "/{other}/api/v2.0/auth/challenge",
+            "/tenant/api/v2.0/{tenant}/challenge",
+            "/{tenant}/api/v2.0/auth/challenge?value={other}",
+            "https://other.example.com/{tenant}/api/v2.0/auth/challenge"
+        )) {
+            val exception = assertClientException { resolver().resolve(href, CORRELATION_ID) }
 
             assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
             assertEquals(CORRELATION_ID, exception.correlationId)
@@ -179,7 +210,7 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenRelativeHrefUsesOauthPathWithoutLeadingSlash_preservesTenantPath() {
+    fun resolve_whenRelativeHrefUsesOauthPathWithoutLeadingSlash_preservesReturnedPath() {
         val url = resolver().resolve(
             "tenant/oauth2/v2.0/token?client_info=1",
             CORRELATION_ID
@@ -192,7 +223,7 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenRelativeHrefUsesTenantIdPrefix_replacesItWithConfiguredTenantPath() {
+    fun resolve_whenRelativeHrefUsesTenantIdPrefix_preservesItInsteadOfConfiguredTenantPath() {
         val url = resolver(
             authorityUrl = "https://login.contoso.com/tenant-alias"
         ).resolve(
@@ -201,7 +232,7 @@ class NativeAuthV2HrefResolverTest {
         )
 
         assertEquals(
-            "https://login.contoso.com/tenant-alias/api/v0.1/auth/resetpassword?dc=westus",
+            "https://login.contoso.com/00000000-0000-0000-0000-000000000001/api/v0.1/auth/resetpassword?dc=westus",
             url.toString()
         )
     }
@@ -209,7 +240,7 @@ class NativeAuthV2HrefResolverTest {
     @Test
     fun resolve_whenRelativeHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
         listOf(
-            "/unexpected/api/v0.1/auth/challenge",
+            "/unexpected/custom/challenge",
             "/unexpected/tenant/oauth2/v2.0/token"
         ).forEach { href ->
             val exception = assertClientException {
@@ -226,7 +257,7 @@ class NativeAuthV2HrefResolverTest {
         val url = resolver().resolve("/api/v0.1/auth/challenge/", CORRELATION_ID)
 
         assertEquals(
-            "https://login.contoso.com/tenant/api/v0.1/auth/challenge/",
+            "https://login.contoso.com/api/v0.1/auth/challenge/",
             url.toString()
         )
     }
@@ -270,8 +301,7 @@ class NativeAuthV2HrefResolverTest {
     @Test
     fun resolve_whenAbsoluteHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
         listOf(
-            "https://login.contoso.com/unexpected/api/v0.1/auth/challenge",
-            "https://login.contoso.com/00000000-0000-0000-0000-000000000001/api/v0.1/auth/challenge",
+            "https://login.contoso.com/unexpected/custom/challenge",
             "https://login.contoso.com/unexpected/tenant/oauth2/v2.0/token"
         ).forEach { href ->
             val exception = assertClientException {
@@ -326,7 +356,7 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenDcIsConfigured_appendsEncodedDcWithoutChangingOriginalQuery() {
+    fun resolve_whenDcIsConfigured_ignoresItWithoutChangingOriginalQuery() {
         BuildValues.setDC("west us")
 
         val url = resolver().resolve(
@@ -335,8 +365,8 @@ class NativeAuthV2HrefResolverTest {
         )
 
         assertEquals(
-            "https://login.contoso.com/tenant/api/v0.1/auth/challenge" +
-                "?item=one&item=two&=unnamed&dc=west%20us",
+            "https://login.contoso.com/api/v0.1/auth/challenge" +
+                "?item=one&item=two&=unnamed",
             url.toString()
         )
     }
@@ -355,7 +385,7 @@ class NativeAuthV2HrefResolverTest {
         )
 
         assertEquals(
-            "https://login.contoso.com/tenant/api/v0.1/auth/challenge?DC=eastus&item=one",
+            "https://login.contoso.com/api/v0.1/auth/challenge?DC=eastus&item=one",
             relativeUrl.toString()
         )
         assertEquals(
@@ -365,7 +395,7 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
-    fun resolve_whenAbsoluteHrefHasNoQueryAndDcConfigured_appendsDcQuery() {
+    fun resolve_whenAbsoluteHrefHasNoQueryAndDcConfigured_doesNotAppendDcQuery() {
         BuildValues.setDC("westus")
 
         val url = resolver().resolve(
@@ -374,9 +404,173 @@ class NativeAuthV2HrefResolverTest {
         )
 
         assertEquals(
-            "https://login.contoso.com/api/v0.1/auth/challenge?dc=westus",
+            "https://login.contoso.com/api/v0.1/auth/challenge",
             url.toString()
         )
+    }
+
+    @Test
+    fun resolve_forCustomAndCiamAuthorities_usesReturnedTenantAndRawQuery() {
+        BuildValues.setDC("developer-slice")
+        val tenantId = "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d"
+        val tenantDomain = "nativeauthsample.onmicrosoft.com"
+        val queries = listOf(
+            "",
+            "?dc=ESTS-PUB-SEASLR1-FD000-TEST1-100",
+            "?dc=service&item=one%2Ftwo&item=%2B&=unnamed&flag&empty=",
+            "?"
+        )
+        listOf("https://custom.example.com", "https://nativeauthsample.ciamlogin.com")
+            .forEach { origin ->
+                listOf(tenantId, tenantDomain).forEach { configuredTenant ->
+                    listOf(tenantId, tenantDomain).forEach { returnedTenant ->
+                        queries.forEach { query ->
+                            val href = "/$returnedTenant/api/v2.0/signin/start$query"
+                            val result = resolver("$origin/$configuredTenant?dc=authority-slice")
+                                .resolve(href, CORRELATION_ID)
+                            assertEquals("$origin$href", result.toString())
+                        }
+                    }
+                }
+            }
+    }
+
+    @Test
+    fun resolve_absoluteContinuation_usesExactServiceOriginTenantAndQuery() {
+        BuildValues.setDC("ignored")
+        val href = "https://nativeauthsample.ciamlogin.com:8443/" +
+            "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/oauth2/v2.0/authorize-challenge" +
+            "?dc=service&item=one%2Ftwo&item=%2B&=unnamed"
+
+        assertEquals(
+            href,
+            resolver("https://custom.example.com/nativeauthsample.onmicrosoft.com")
+                .resolve(href, CORRELATION_ID).toString()
+        )
+    }
+
+    @Test
+    fun resolve_preservesEncodedPathBytes() {
+        val href = "/tenant.onmicrosoft.com/api/v2.0/methods/email%2Btest/challenge?value=%2f"
+        assertEquals(
+            "https://login.contoso.com$href",
+            resolver().resolve(href, CORRELATION_ID).toString()
+        )
+    }
+
+    @Test
+    fun resolve_logsOriginMismatchWithoutLoggingUrlOrQueryValues() {
+        val warnings = captureWarnings {
+            resolver().resolve(
+                "https://different.example.com/other-tenant/api/v2.0/signin/start?secret=private-value",
+                CORRELATION_ID
+            )
+        }
+
+        assertEquals(1, warnings.size)
+        assertTrue(warnings.single().contains("authority differs"))
+        assertTrue(warnings.single().contains(CORRELATION_ID))
+        assertFalse(warnings.single().contains("different.example.com"))
+        assertFalse(warnings.single().contains("private-value"))
+    }
+
+    @Test
+    fun resolve_logsSliceMismatchIncludingMissingSliceInEitherDirection() {
+        listOf("developer" to "service", "developer" to "", "" to "service").forEach { (configured, returned) ->
+            BuildValues.setDC(configured)
+            val query = if (returned.isEmpty()) "" else "?dc=$returned"
+            val warnings = captureWarnings {
+                resolver().resolve("/tenant/api/v2.0/signin/start$query", CORRELATION_ID)
+            }
+            assertEquals(1, warnings.size)
+            assertTrue(warnings.single().contains("test slice differs"))
+        }
+    }
+
+    @Test
+    fun resolve_matchingAuthorityAndSlice_doesNotWarnForCaseOrExplicitDefaultPort() {
+        BuildValues.setDC("service")
+        val warnings = captureWarnings {
+            resolver("https://login.contoso.com/tenant.onmicrosoft.com").resolve(
+                "https://LOGIN.CONTOSO.COM:443/TENANT.ONMICROSOFT.COM/" +
+                    "api/v2.0/signin/start?dc=service",
+                CORRELATION_ID
+            )
+        }
+        assertTrue(warnings.isEmpty())
+    }
+
+    @Test
+    fun resolve_logsTenantMismatchButStillUsesReturnedTenantPath() {
+        val warnings = captureWarnings {
+            val result = resolver("https://login.contoso.com/alias.onmicrosoft.com").resolve(
+                "/4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/api/v2.0/signin/start",
+                CORRELATION_ID
+            )
+            assertEquals(
+                "https://login.contoso.com/4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/api/v2.0/signin/start",
+                result.toString()
+            )
+        }
+        assertEquals(1, warnings.size)
+        assertTrue(warnings.single().contains("authority differs"))
+    }
+
+    @Test
+    fun resolve_whenAuthorityAndDeveloperSlicesDiffer_comparesTheInitialRequestSlice() {
+        BuildValues.setDC("developer")
+        for (returned in listOf("query-slice", "developer")) {
+            val href = "/tenant/api/v2.0/signin/start?dc=$returned"
+            val warnings = captureWarnings {
+                assertEquals(
+                    "https://login.contoso.com$href",
+                    resolver("https://login.contoso.com/tenant?dc=query-slice")
+                        .resolve(href, CORRELATION_ID).toString()
+                )
+            }
+
+            if (returned == "query-slice") {
+                assertTrue(warnings.isEmpty())
+            } else {
+                assertEquals(1, warnings.size)
+                assertTrue(warnings.single().contains("test slice differs"))
+            }
+        }
+    }
+
+    @Test
+    fun resolve_comparesAuthorityQuerySliceWhenDeveloperSliceIsAbsent() {
+        val warnings = captureWarnings {
+            resolver("https://login.contoso.com/tenant?dc=expected").resolve(
+                "/tenant/api/v2.0/signin/start?dc=returned", CORRELATION_ID
+            )
+        }
+        assertEquals(1, warnings.size)
+        assertTrue(warnings.single().contains("test slice differs"))
+    }
+
+    private fun captureWarnings(block: () -> Unit): List<String> {
+        val warnings = CopyOnWriteArrayList<String>()
+        val delivered = CountDownLatch(1)
+        val identifier = "NativeAuthV2HrefResolverTest-${System.nanoTime()}"
+        val startTag = "$identifier-start"
+        val fenceTag = "$identifier-fence"
+        Logger.setLogger(identifier) { tag, level, message, _ ->
+            if (tag == startTag) warnings.clear()
+            if (tag == fenceTag) delivered.countDown()
+            if (tag == NativeAuthV2HrefResolver::class.java.simpleName && level == Logger.LogLevel.WARN) {
+                warnings.add(message)
+            }
+        }
+        try {
+            Logger.warn(startTag, "Start warning log capture.")
+            block()
+            Logger.warn(fenceTag, "Drain warning logs.")
+            assertTrue("Warning log delivery timed out.", delivered.await(30, TimeUnit.SECONDS))
+        } finally {
+            Logger.setLogger(identifier, null)
+        }
+        return warnings.toList()
     }
 
     private fun assertClientException(block: () -> Unit): ClientException {

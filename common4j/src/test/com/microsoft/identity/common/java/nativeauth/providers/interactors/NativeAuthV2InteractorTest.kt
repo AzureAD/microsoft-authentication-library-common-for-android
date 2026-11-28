@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeStartRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2ChallengeRequest
@@ -59,6 +60,56 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 class NativeAuthV2InteractorTest {
+
+    @Test
+    fun signInFlow_dispatchesReturnedEntryAndAbsoluteContinuationUrls() {
+        val initialUrl = "https://custom.example.com/alias.onmicrosoft.com/oauth2/v2.0/authorize-challenge?dc=configured"
+        val entryHref = "/4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/api/v2.0/signin/start?dc=service&x=%2B"
+        val continueHref = "https://nativeauthsample.ciamlogin.com/" +
+            "4710d5e4-43bb-4ff9-89af-30ed8fe31c6d/oauth2/v2.0/authorize-challenge?dc=service&x=%2F"
+        val urls = mutableListOf<URL>()
+        val bodies = mutableListOf<ByteArray>()
+        val client = mockk<UrlConnectionHttpClient>()
+        every { client.post(capture(urls), any(), capture(bodies)) } returnsMany listOf(
+            HttpResponse(401, """{"continuation_token":"entry-token","sign_in":"$entryHref"}""", emptyMap()),
+            HttpResponse(200, """{"authorizationCode":"auth-code"}""", emptyMap())
+        )
+        every {
+            client.method(HttpClient.HttpMethod.POST, capture(urls), any(), capture(bodies))
+        } returns HttpResponse(200, """{"state":"continue","continuationToken":"latest-token",
+            "_links":{"continue":{"href":"$continueHref"}}}""", emptyMap())
+        val interactor = NativeAuthV2Interactor(
+            httpClient = client,
+            requestProvider = NativeAuthV2RequestProvider(
+                NativeAuthOAuth2Configuration(
+                    authorityUrl = URL("https://custom.example.com/alias.onmicrosoft.com?dc=configured"),
+                    clientId = CLIENT_ID,
+                    challengeType = "oob",
+                    capabilities = null,
+                    useMockApiForNativeAuth = false
+                )
+            ),
+            responseHandler = NativeAuthV2ResponseHandler(),
+            responseParser = NativeAuthV2ResponseParser()
+        )
+
+        val entry = interactor.performAuthorizeChallengeStart(
+            CORRELATION_ID, NativeAuthV2LinkRelation.SIGN_IN, NativeAuthV2FlowScenario.SIGN_IN, emptyList()
+        ) as AuthorizeChallengeApiResult.ContinuationRequired
+        val ready = interactor.performSignInStart("user@contoso.com", entry.continuationState)
+            as NativeAuthV2InteractionApiResult.ReadyToComplete
+        val result = interactor.performAuthorizeChallengeContinue(ready.continuationState)
+            as AuthorizeChallengeApiResult.AuthorizationCode
+
+        assertEquals("auth-code", result.code)
+        assertEquals(
+            listOf(initialUrl, "https://custom.example.com$entryHref", continueHref),
+            urls.map { it.toString() }
+        )
+        assertFormBody(bodies.last(), mapOf("continuation_token" to "latest-token"))
+        verify(exactly = 2) { client.post(any(), any(), any()) }
+        verify(exactly = 1) { client.method(HttpClient.HttpMethod.POST, any(), any(), any()) }
+    }
 
     private val authorizeChallengeUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/authorize-challenge")
     private val resetPasswordUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/reset-password/start")

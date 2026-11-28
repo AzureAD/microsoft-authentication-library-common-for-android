@@ -248,6 +248,7 @@ class NativeAuthOAuth2Configuration(
         return authorityUrl
     }
 
+    /** Builds only the initial V2 endpoint, retaining configured routing until the service responds. */
     internal fun getNativeAuthV2AuthorizeChallengeEndpoint(correlationId: String): URL {
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getNativeAuthV2AuthorityUrl(correlationId),

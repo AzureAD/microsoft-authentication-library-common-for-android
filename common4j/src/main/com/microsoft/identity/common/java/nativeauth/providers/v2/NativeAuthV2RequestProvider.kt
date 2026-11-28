@@ -124,7 +124,7 @@ class NativeAuthV2RequestProvider(
 
     /**
      * Creates the request object for a subsequent call of a Native Auth V2 flow to
-     * `/oauth2/v2.0/authorize-challenge`.
+     * `/oauth2/v2.0/authorize-challenge`, following the service's `continue` relation.
      */
     fun createAuthorizeChallengeContinueRequest(state: NativeAuthV2ContinuationState): AuthorizeChallengeContinueRequest {
         LogSession.logMethodCall(
@@ -135,7 +135,7 @@ class NativeAuthV2RequestProvider(
 
         return AuthorizeChallengeContinueRequest.create(
             continuationToken = state.continuationToken,
-            requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(state.correlationId).toString(),
+            requestUrl = resolveHref(state, NativeAuthV2LinkRelation.CONTINUE).toString(),
             headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
