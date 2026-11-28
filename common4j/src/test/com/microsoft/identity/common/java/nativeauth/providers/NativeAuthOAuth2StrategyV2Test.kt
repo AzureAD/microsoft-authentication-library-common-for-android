@@ -263,7 +263,6 @@ class NativeAuthOAuth2StrategyV2Test {
         every {
             v2Interactor.performTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = SCOPES,
                 correlationId = CORRELATION_ID
             )
         } returns result
@@ -272,7 +271,6 @@ class NativeAuthOAuth2StrategyV2Test {
             result,
             strategy.performTokenRequest(
                 code = AUTHORIZATION_CODE,
-                scopes = SCOPES,
                 correlationId = CORRELATION_ID
             )
         )

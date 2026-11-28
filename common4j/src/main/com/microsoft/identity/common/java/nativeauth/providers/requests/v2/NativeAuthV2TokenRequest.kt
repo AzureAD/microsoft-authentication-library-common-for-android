@@ -29,7 +29,8 @@ import java.net.URL
 
 /**
  * Represents a request to the existing OAuth `/oauth2/v2.0/token` endpoint, exchanging a Native
- * Auth V2 authorization code for tokens.
+ * Auth V2 authorization code for tokens. Scopes and claims are supplied during
+ * authorize-challenge and are not serialized into the token request.
  */
 data class NativeAuthV2TokenRequest private constructor(
     override var requestUrl: URL,
@@ -43,8 +44,6 @@ data class NativeAuthV2TokenRequest private constructor(
         fun create(
             clientId: String,
             code: String,
-            scopes: List<String>,
-            claimsRequestJson: String? = null,
             requestUrl: String,
             headers: Map<String, String?>
         ): NativeAuthV2TokenRequest {
@@ -52,10 +51,6 @@ data class NativeAuthV2TokenRequest private constructor(
             ArgUtils.validateNonNullArg(code, "code")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
-            ArgUtils.validateNonNullArg(scopes, "scopes")
-            scopes.forEachIndexed { index, scope ->
-                ArgUtils.validateNonNullArg(scope, "scopes[$index]")
-            }
 
             return NativeAuthV2TokenRequest(
                 requestUrl = URL(requestUrl),
@@ -63,9 +58,7 @@ data class NativeAuthV2TokenRequest private constructor(
                 parameters = NativeAuthV2TokenRequestParameters(
                     clientId = clientId,
                     grantType = GRANT_TYPE_AUTHORIZATION_CODE,
-                    code = code,
-                    scope = scopes.joinToString(" "),
-                    claimsRequestJson = claimsRequestJson
+                    code = code
                 )
             )
         }
@@ -83,12 +76,9 @@ data class NativeAuthV2TokenRequest private constructor(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("code") val code: String,
-        @SerializedName("scope") val scope: String,
-        // V2 claims belong on initial authorize-challenge, never on the token wire request.
-        @Transient val claimsRequestJson: String?,
         @SerializedName("client_info") private val clientInfo: Boolean = true
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, scope=$scope, clientInfo=$clientInfo)"
+        override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, clientInfo=$clientInfo)"
 
         override fun toString(): String = toUnsanitizedString()
     }

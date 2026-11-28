@@ -131,7 +131,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     strategy, parameters.tokenParameters.toBuilder(),
                     result.continuationState.scopesForTokenRequest(),
-                    result.continuationState.claimsRequestJsonForTokenRequest(), result.continuationState
+                    result.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
                     result.correlationId, result.continuationState, result.methods
@@ -368,6 +368,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Challenges the selected method in the continuation's original flow and authentication factor.
+     * Rejects unsupported primary SMS sign-in before issuing a challenge.
      * Rejects verification challenges that do not match the selected method's server-declared type.
      */
     fun selectAuthMethod(
@@ -396,6 +397,16 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         state: NativeAuthV2ContinuationState,
         methodId: String
     ): NativeAuthV2SelectAuthMethodCommandResult {
+        if (!state.isMultiFactorAuthentication() &&
+            state.flowScenario() == NativeAuthV2FlowScenario.SIGN_IN &&
+            state.matchesAuthenticationMethod(methodId, METHOD_TYPE_SMS)) {
+            Logger.warn(TAG, state.correlationId, "SMS is not supported as a primary sign-in method.")
+            return NativeAuthV2CommandResult.NotImplemented(
+                correlationId = state.correlationId,
+                error = UNSUPPORTED_CHALLENGE_METHOD,
+                errorDescription = "SMS is not supported as a primary sign-in method."
+            )
+        }
         val challengeResult = oAuth2Strategy.performMethodChallenge(
             state = state,
             methodId = methodId
@@ -551,7 +562,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     oAuth2Strategy = oAuth2Strategy,
                     parametersBuilder = parameters.toBuilder(),
                     scopes = verifyResult.continuationState.scopesForTokenRequest(),
-                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
@@ -1061,7 +1071,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     oAuth2Strategy = oAuth2Strategy,
                     parametersBuilder = parameters.toBuilder(),
                     scopes = verifyResult.continuationState.scopesForTokenRequest(),
-                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> NativeAuthV2CommandResult.AuthMethodSelectionRequired(
@@ -1142,7 +1151,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                         oAuth2Strategy = oAuth2Strategy,
                         parametersBuilder = parameters.toBuilder(),
                         scopes = verifyResult.continuationState.scopesForTokenRequest(),
-                        claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                         state = verifyResult.continuationState
                     )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
@@ -1196,14 +1204,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             methodName = "$TAG.completeFlow"
         )
 
-        val scopes = addV2DefaultScopes(parameters.scopes ?: state.scopesForTokenRequest())
-        val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
-            ?: state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
+        val scopes = addV2DefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            tokenCommandParameters = parameters.toBuilder()
+            cacheCommandParameters = parameters.toBuilder()
                 .scopes(scopes)
-                .claimsRequestJson(claimsRequestJson)
                 .build(),
             state = state
         )
@@ -1211,21 +1216,19 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Completes the V2 sign-in flow once the server has signalled that every required factor is
-     * satisfied. Shares [exchangeCodeAndSaveTokens] with SSPR, so scopes, claims, correlation ID,
+     * satisfied. Shares [exchangeCodeAndSaveTokens] with SSPR, so cache scopes, correlation ID,
      * token exchange, and cache persistence behave identically across both flows.
      */
     private fun completeSignIn(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
         parametersBuilder: BaseSignInTokenCommandParameters.BaseSignInTokenCommandParametersBuilder<*, *>,
         scopes: List<String>?,
-        claimsRequestJson: String?,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            tokenCommandParameters = parametersBuilder
+            cacheCommandParameters = parametersBuilder
                 .scopes(addV2DefaultScopes(scopes))
-                .claimsRequestJson(claimsRequestJson?.takeUnless { it.isBlank() })
                 .build(),
             state = state
         )
@@ -1233,12 +1236,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Shared terminal path: continues the authorize-challenge interaction, exchanges the resulting
-     * authorization code for tokens using [tokenCommandParameters]' merged scopes and claims, and
-     * saves the account and tokens to the cache.
+     * authorization code for tokens without scopes or claims, and saves the account and tokens
+     * using [cacheCommandParameters] for local cache metadata only. Completion after sign-up or
+     * password reset always uses the scopes retained by the initial authorize-challenge request.
      */
     private fun exchangeCodeAndSaveTokens(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        tokenCommandParameters: BaseSignInTokenCommandParameters,
+        cacheCommandParameters: BaseSignInTokenCommandParameters,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
         LogSession.logMethodCall(
@@ -1278,9 +1282,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         val tokenResult = oAuth2Strategy.performTokenRequest(
             code = code,
-            scopes = tokenCommandParameters.scopes ?: emptyList(),
-            correlationId = state.correlationId,
-            claimsRequestJson = tokenCommandParameters.claimsRequestJson
+            correlationId = state.correlationId
         )
 
         val successTokenResult = when (tokenResult) {
@@ -1309,7 +1311,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         val complete = saveAndReturnTokens(
             oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = tokenCommandParameters,
+            parametersWithScopes = cacheCommandParameters,
             tokenApiResult = successTokenResult
         )
 
@@ -1762,7 +1764,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Completes the V2 sign-up flow. Shares [exchangeCodeAndSaveTokens] with SSPR and sign-in, so
-     * scopes, claims, correlation ID, token exchange, and cache persistence behave identically
+     * cache scopes, correlation ID, token exchange, and cache persistence behave identically
      * across all flows.
      */
     private fun completeFlowSignUp(
@@ -1776,15 +1778,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             methodName = "$TAG.completeFlowSignUp"
         )
 
-        val requestedScopes = parameters.scopes ?: state.scopesForTokenRequest()
-        val scopes = addV2DefaultScopes(requestedScopes)
-        val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
-            ?: state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
+        val scopes = addV2DefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            tokenCommandParameters = parameters.toBuilder()
+            cacheCommandParameters = parameters.toBuilder()
                 .scopes(scopes)
-                .claimsRequestJson(claimsRequestJson)
                 .build(),
             state = state
         )

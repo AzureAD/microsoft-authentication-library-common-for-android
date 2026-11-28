@@ -2417,9 +2417,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedSslError(final WebView view,
                                    final SslErrorHandler handler,
                                    final SslError error) {
-        // Track SSL error for the URL
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.updateLatestUrlStatus(error.toString(), null);
+            // Preserve the Android SSL error prefix for telemetry, but omit the certificate and URL.
+            mUrlLoadTracker.updateLatestUrlStatus("primary error: " + error.getPrimaryError(), null);
         }
 
         super.onReceivedSslError(view, handler, error);
